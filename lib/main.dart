@@ -1,3 +1,4 @@
+import 'package:fittor/fittor.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -7,18 +8,21 @@ import 'features/coupons/presentation/pages/coupon_home_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  AppPref.init();
+  await AppPref.init();
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatelessWidget with FittorAppMixin {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget responsive(BuildContext context) {
     return MultiProvider(
       providers: providers,
-      child: MaterialApp(home: CouponHomePage()),
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: CouponHomePage(),
+      ),
     );
   }
 }

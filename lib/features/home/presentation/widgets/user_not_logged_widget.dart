@@ -1,10 +1,9 @@
 // lib/features/home/presentation/widgets/user_not_logged_widget.dart
 
+import 'package:fittor/fittor.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_constants.dart';
-import '../../../../core/utils/responsive.dart';
 import '../../../../core/utils/size_box.dart';
 import '../../../../core/widgets/common_button.dart';
 import '../../../../core/widgets/common_text_widget.dart';
@@ -91,7 +90,6 @@ class _UserNotLoggedWidgetState extends State<UserNotLoggedWidget>
       body: SafeArea(
         child: Column(
           children: [
-            if (widget.isArrowEnabled) _buildAppBar(),
             Expanded(
               child: FadeTransition(
                 opacity: _fadeAnimation,
@@ -107,44 +105,18 @@ class _UserNotLoggedWidgetState extends State<UserNotLoggedWidget>
     );
   }
 
-  Widget _buildAppBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: widget.onBackPressed ?? () => context.pop(),
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppConstants.white.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(
-                Icons.arrow_back_rounded,
-                color: AppConstants.white,
-                size: 24,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildContent() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const SizeBoxH(10),
           _buildIllustration(),
-          const SizeBoxH(40),
+          30.h,
           _buildTextContent(),
-          const SizeBoxH(50),
+          110.h,
           _buildActionButtons(),
-          const SizeBoxH(30),
+          30.h,
         ],
       ),
     );
@@ -152,8 +124,8 @@ class _UserNotLoggedWidgetState extends State<UserNotLoggedWidget>
 
   Widget _buildIllustration() {
     return Container(
-      width: Responsive.width * 60,
-      height: Responsive.width * 60,
+      width: context.wp(100),
+      height: context.hp(25),
       decoration: BoxDecoration(
         gradient: RadialGradient(
           colors: [
@@ -169,7 +141,6 @@ class _UserNotLoggedWidgetState extends State<UserNotLoggedWidget>
   }
 
   Widget _buildAnimatedIcon() {
-    // Try to use Lottie animation if available, fallback to regular icon
     return TweenAnimationBuilder<double>(
       tween: Tween<double>(begin: 0, end: 1),
       duration: const Duration(milliseconds: 1500),
@@ -236,9 +207,9 @@ class _UserNotLoggedWidgetState extends State<UserNotLoggedWidget>
     return Column(
       children: [
         _buildLoginButton(),
-        const SizeBoxH(16),
+        20.h,
         _buildSignUpButton(),
-        const SizeBoxH(24),
+        20.h,
         _buildGuestContinueButton(),
       ],
     );
@@ -348,21 +319,15 @@ class _UserNotLoggedWidgetState extends State<UserNotLoggedWidget>
   }
 
   void _handleLogin() {
-    // Navigate to login page or show login modal
-    // Example: context.go('/login');
     debugPrint('Navigate to login');
   }
 
   void _handleSignUp() {
-    // Navigate to sign up page or show sign up modal
-    // Example: context.go('/signup');
     debugPrint('Navigate to sign up');
   }
 
   void _handleGuestContinue() {
-    // Continue as guest - maybe set a flag in shared preferences
-    // Example: AppPref.setGuestMode(true);
-    context.pop();
+    // context.pop();
     debugPrint('Continue as guest');
   }
 }
