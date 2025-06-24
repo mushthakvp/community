@@ -37,6 +37,7 @@ class _AppState extends State<App> {
       scaffoldBackgroundColor: AppConstants.black,
       fontFamily: AppConstants.fontFamily,
       appBarTheme: const AppBarTheme(
+        surfaceTintColor: AppConstants.black,
         backgroundColor: AppConstants.black,
         foregroundColor: AppConstants.black,
         elevation: 0,
