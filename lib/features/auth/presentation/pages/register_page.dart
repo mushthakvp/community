@@ -12,7 +12,6 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/route_constants.dart';
 import '../../../../core/error/error_handler.dart';
 import '../../../../core/utils/validators.dart';
-import '../../../../core/widgets/buttons/primary_button.dart';
 import '../../../../core/widgets/common/app_bar.dart';
 import '../../../../core/widgets/common/text_widget.dart';
 import '../../../../core/widgets/inputs/text_field.dart';
@@ -42,9 +41,37 @@ class _RegisterPageState extends State<RegisterPage>
 
   // Data
   List<String> _professions = [];
+  List<String> _filteredProfessions = [];
   List<Map<String, dynamic>> _countries = [];
+  List<Map<String, dynamic>> _filteredCountries = [];
   List<Map<String, dynamic>> _states = [];
+  List<Map<String, dynamic>> _filteredStates = [];
   List<Map<String, dynamic>> _districts = [];
+  List<Map<String, dynamic>> _filteredDistricts = [];
+
+  // Search Controllers
+  final TextEditingController _professionSearchController =
+      TextEditingController();
+  final TextEditingController _countrySearchController =
+      TextEditingController();
+  final TextEditingController _stateSearchController = TextEditingController();
+  final TextEditingController _districtSearchController =
+      TextEditingController();
+
+  // Form field keys for validation
+  final GlobalKey<FormFieldState> _nameFieldKey = GlobalKey<FormFieldState>();
+  final GlobalKey<FormFieldState> _emailFieldKey = GlobalKey<FormFieldState>();
+  final GlobalKey<FormFieldState> _phoneFieldKey = GlobalKey<FormFieldState>();
+  final GlobalKey<FormFieldState> _dobFieldKey = GlobalKey<FormFieldState>();
+  final GlobalKey<FormFieldState> _professionFieldKey =
+      GlobalKey<FormFieldState>();
+  final GlobalKey<FormFieldState> _countryFieldKey =
+      GlobalKey<FormFieldState>();
+  final GlobalKey<FormFieldState> _stateFieldKey = GlobalKey<FormFieldState>();
+  final GlobalKey<FormFieldState> _passwordFieldKey =
+      GlobalKey<FormFieldState>();
+  final GlobalKey<FormFieldState> _confirmPasswordFieldKey =
+      GlobalKey<FormFieldState>();
 
   @override
   void initState() {
@@ -73,6 +100,10 @@ class _RegisterPageState extends State<RegisterPage>
     _pageController.dispose();
     _slideAnimationController.dispose();
     _scaleAnimationController.dispose();
+    _professionSearchController.dispose();
+    _countrySearchController.dispose();
+    _stateSearchController.dispose();
+    _districtSearchController.dispose();
     super.dispose();
   }
 
@@ -92,7 +123,9 @@ class _RegisterPageState extends State<RegisterPage>
 
       setState(() {
         _professions = professionList.cast<String>();
+        _filteredProfessions = List.from(_professions);
         _countries = locationData.cast<Map<String, dynamic>>();
+        _filteredCountries = List.from(_countries);
       });
     } catch (e) {
       debugPrint('Error loading data: $e');
@@ -155,6 +188,7 @@ class _RegisterPageState extends State<RegisterPage>
         Expanded(
           child: PageView(
             controller: _pageController,
+            physics: const NeverScrollableScrollPhysics(), // Disable swipe
             onPageChanged: (page) => setState(() => _currentPage = page),
             children: [
               _buildBasicInfoPage(authProvider),
@@ -220,45 +254,41 @@ class _RegisterPageState extends State<RegisterPage>
               },
             ),
             const SizedBox(height: 24),
-            _buildAnimatedField(
-              delay: 100,
-              child: CommonTextField(
-                controller: authProvider.nameController,
-                hintText: 'Full Name *',
-                prefixIcon: const Icon(
-                  Icons.person_outline,
-                  color: AppConstants.white,
-                ),
-                validator: (value) => Validators.required(value, 'name'),
+
+            CommonTextField(
+              key: _nameFieldKey,
+              controller: authProvider.nameController,
+              hintText: 'Full Name *',
+              prefixIcon: const Icon(
+                Icons.person_outline,
+                color: AppConstants.white,
               ),
+              validator: (value) => Validators.required(value, 'name'),
+            ),
+
+            const SizedBox(height: 20),
+            CommonTextField(
+              key: _emailFieldKey,
+              controller: authProvider.emailController,
+              hintText: 'Email Address *',
+              keyboardType: TextInputType.emailAddress,
+              prefixIcon: const Icon(
+                Icons.email_outlined,
+                color: AppConstants.white,
+              ),
+              validator: Validators.email,
             ),
             const SizedBox(height: 20),
-            _buildAnimatedField(
-              delay: 200,
-              child: CommonTextField(
-                controller: authProvider.emailController,
-                hintText: 'Email Address *',
-                keyboardType: TextInputType.emailAddress,
-                prefixIcon: const Icon(
-                  Icons.email_outlined,
-                  color: AppConstants.white,
-                ),
-                validator: Validators.email,
+            CommonTextField(
+              key: _phoneFieldKey,
+              controller: authProvider.phoneController,
+              hintText: 'Phone Number *',
+              keyboardType: TextInputType.phone,
+              prefixIcon: const Icon(
+                Icons.phone_outlined,
+                color: AppConstants.white,
               ),
-            ),
-            const SizedBox(height: 20),
-            _buildAnimatedField(
-              delay: 300,
-              child: CommonTextField(
-                controller: authProvider.phoneController,
-                hintText: 'Phone Number *',
-                keyboardType: TextInputType.phone,
-                prefixIcon: const Icon(
-                  Icons.phone_outlined,
-                  color: AppConstants.white,
-                ),
-                validator: Validators.phone,
-              ),
+              validator: Validators.phone,
             ),
           ],
         ),
@@ -285,22 +315,15 @@ class _RegisterPageState extends State<RegisterPage>
             color: AppConstants.white.withOpacity(0.7),
           ),
           const SizedBox(height: 32),
-          _buildAnimatedField(delay: 100, child: const GenderSelection()),
+          const GenderSelection(),
           const SizedBox(height: 24),
-          _buildAnimatedField(
-            delay: 200,
-            child: _buildDateOfBirthField(authProvider),
-          ),
+          _buildDateOfBirthField(authProvider),
+
           const SizedBox(height: 20),
-          _buildAnimatedField(
-            delay: 300,
-            child: _buildProfessionField(authProvider),
-          ),
+          _buildProfessionField(authProvider),
+
           const SizedBox(height: 20),
-          _buildAnimatedField(
-            delay: 400,
-            child: _buildLocationFields(authProvider),
-          ),
+          _buildLocationFields(authProvider),
         ],
       ),
     );
@@ -325,71 +348,51 @@ class _RegisterPageState extends State<RegisterPage>
             color: AppConstants.white.withOpacity(0.7),
           ),
           const SizedBox(height: 32),
-          _buildAnimatedField(
-            delay: 100,
-            child: PasswordField(
-              controller: authProvider.passwordController,
-              hintText: 'Create Password *',
-              isVisible: authProvider.isPasswordVisible,
-              onToggleVisibility: authProvider.togglePasswordVisibility,
-              validator: Validators.password,
-            ),
+          PasswordField(
+            key: _passwordFieldKey,
+            controller: authProvider.passwordController,
+            hintText: 'Create Password *',
+            isVisible: authProvider.isPasswordVisible,
+            onToggleVisibility: authProvider.togglePasswordVisibility,
+            validator: Validators.password,
           ),
+
           const SizedBox(height: 20),
-          _buildAnimatedField(
-            delay: 200,
-            child: PasswordField(
-              controller: authProvider.confirmPasswordController,
-              hintText: 'Confirm Password *',
-              isVisible: authProvider.isConfirmPasswordVisible,
-              onToggleVisibility: authProvider.toggleConfirmPasswordVisibility,
-              validator: (value) => Validators.confirmPassword(
-                value,
-                authProvider.passwordController.text,
-              ),
+          PasswordField(
+            key: _confirmPasswordFieldKey,
+            controller: authProvider.confirmPasswordController,
+            hintText: 'Confirm Password *',
+            isVisible: authProvider.isConfirmPasswordVisible,
+            onToggleVisibility: authProvider.toggleConfirmPasswordVisibility,
+            validator: (value) => Validators.confirmPassword(
+              value,
+              authProvider.passwordController.text,
             ),
           ),
+
           const SizedBox(height: 20),
-          _buildAnimatedField(
-            delay: 300,
-            child: CommonTextField(
-              controller: authProvider.referralCodeController,
-              hintText: 'Referral Code (Optional)',
-              prefixIcon: const Icon(
-                Icons.card_giftcard_outlined,
-                color: AppConstants.white,
-              ),
+          CommonTextField(
+            controller: authProvider.referralCodeController,
+            hintText: 'Referral Code (Optional)',
+            prefixIcon: const Icon(
+              Icons.card_giftcard_outlined,
+              color: AppConstants.white,
             ),
           ),
+
           const SizedBox(height: 32),
-          _buildAnimatedField(
-            delay: 400,
-            child: TermsCheckbox(
-              onTermsPressed: () => _openUrl('https://vivera.com/terms'),
-              onPrivacyPressed: () => _openUrl('https://vivera.com/privacy'),
-            ),
+          TermsCheckbox(
+            onTermsPressed: () => _openUrl('https://vivera.com/terms'),
+            onPrivacyPressed: () => _openUrl('https://vivera.com/privacy'),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildAnimatedField({required int delay, required Widget child}) {
-    return TweenAnimationBuilder<double>(
-      duration: Duration(milliseconds: 600 + delay),
-      tween: Tween(begin: 0.0, end: 1.0),
-      curve: Curves.easeOutBack,
-      builder: (context, value, _) {
-        return Transform.translate(
-          offset: Offset(0, 30 * (1 - value)),
-          child: Opacity(opacity: value, child: child),
-        );
-      },
-    );
-  }
-
   Widget _buildDateOfBirthField(AuthProvider authProvider) {
     return CommonTextField(
+      key: _dobFieldKey,
       controller: TextEditingController(
         text: authProvider.selectedDateOfBirth?.toString().split(' ')[0] ?? '',
       ),
@@ -409,6 +412,7 @@ class _RegisterPageState extends State<RegisterPage>
 
   Widget _buildProfessionField(AuthProvider authProvider) {
     return CommonTextField(
+      key: _professionFieldKey,
       controller: TextEditingController(text: authProvider.selectedProfession),
       hintText: 'Select Profession *',
       readOnly: true,
@@ -425,6 +429,7 @@ class _RegisterPageState extends State<RegisterPage>
     return Column(
       children: [
         CommonTextField(
+          key: _countryFieldKey,
           controller: TextEditingController(text: authProvider.selectedCountry),
           hintText: 'Select Country *',
           readOnly: true,
@@ -440,6 +445,7 @@ class _RegisterPageState extends State<RegisterPage>
         ),
         const SizedBox(height: 20),
         CommonTextField(
+          key: _stateFieldKey,
           controller: TextEditingController(text: authProvider.selectedState),
           hintText: 'Select State *',
           readOnly: true,
@@ -484,37 +490,129 @@ class _RegisterPageState extends State<RegisterPage>
   Widget _buildNavigationButtons(AuthProvider authProvider) {
     return Container(
       padding: const EdgeInsets.all(24),
-      child: Row(
-        children: [
-          if (_currentPage > 0)
+      decoration: BoxDecoration(
+        color: AppConstants.black,
+        border: Border(
+          top: BorderSide(color: AppConstants.white.withOpacity(0.1), width: 1),
+        ),
+      ),
+      child: SafeArea(
+        child: Row(
+          children: [
+            if (_currentPage > 0) ...[
+              Expanded(
+                flex: 2,
+                child: Container(
+                  height: 56,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppConstants.appPrimaryColor,
+                      width: 2,
+                    ),
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: () => _previousPage(),
+                      child: Container(
+                        alignment: Alignment.center,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.arrow_back_ios,
+                              color: AppConstants.appPrimaryColor,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 8),
+                            const CommonTextWidget(
+                              text: 'Back',
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: AppConstants.appPrimaryColor,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+            ],
             Expanded(
-              child: PrimaryButton(
-                text: 'Back',
-                onPressed: () => _previousPage(),
-                backgroundColor: Colors.transparent,
-                borderColor: AppConstants.appPrimaryColor,
-                textColor: AppConstants.appPrimaryColor,
+              flex: 3,
+              child: Container(
                 height: 56,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  gradient: const LinearGradient(
+                    colors: [AppConstants.appPrimaryColor, Color(0xFF00D4AA)],
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppConstants.appPrimaryColor.withOpacity(0.3),
+                      blurRadius: 15,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: authProvider.isLoading
+                        ? null
+                        : () => _currentPage == 2
+                              ? _handleRegister(authProvider)
+                              : _nextPage(authProvider),
+                    child: Container(
+                      alignment: Alignment.center,
+                      child: authProvider.isLoading
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppConstants.black,
+                              ),
+                            )
+                          : Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                CommonTextWidget(
+                                  text: _currentPage == 2
+                                      ? 'Create Account'
+                                      : 'Next',
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppConstants.black,
+                                ),
+                                if (_currentPage != 2) ...[
+                                  const SizedBox(width: 8),
+                                  const Icon(
+                                    Icons.arrow_forward_ios,
+                                    color: AppConstants.black,
+                                    size: 16,
+                                  ),
+                                ],
+                              ],
+                            ),
+                    ),
+                  ),
+                ),
               ),
             ),
-          if (_currentPage > 0) const SizedBox(width: 16),
-          Expanded(
-            child: PrimaryButton(
-              text: _currentPage == 2 ? 'Create Account' : 'Next',
-              onPressed: () => _currentPage == 2
-                  ? _handleRegister(authProvider)
-                  : _nextPage(),
-              isLoading: authProvider.isLoading,
-              height: 56,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  void _nextPage() {
-    if (_validateCurrentPage()) {
+  void _nextPage(AuthProvider authProvider) {
+    if (_validateCurrentPage(authProvider)) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
@@ -529,43 +627,96 @@ class _RegisterPageState extends State<RegisterPage>
     );
   }
 
-  bool _validateCurrentPage() {
-    final authProvider = context.read<AuthProvider>();
-
+  bool _validateCurrentPage(AuthProvider authProvider) {
     switch (_currentPage) {
       case 0:
-        return authProvider.nameController.text.trim().isNotEmpty &&
-            authProvider.emailController.text.trim().isNotEmpty &&
-            authProvider.phoneController.text.trim().isNotEmpty &&
-            Validators.email(authProvider.emailController.text) == null &&
-            Validators.phone(authProvider.phoneController.text) == null;
+        // Validate basic info page
+        bool isValid = true;
+
+        if (_nameFieldKey.currentState?.validate() == false) isValid = false;
+        if (_emailFieldKey.currentState?.validate() == false) isValid = false;
+        if (_phoneFieldKey.currentState?.validate() == false) isValid = false;
+
+        if (!isValid) {
+          _showValidationError('Please fill all required fields correctly.');
+        }
+
+        return isValid;
+
       case 1:
-        return authProvider.selectedGender.isNotEmpty &&
-            authProvider.selectedDateOfBirth != null &&
-            authProvider.selectedProfession.isNotEmpty &&
-            authProvider.selectedCountry.isNotEmpty &&
-            authProvider.selectedState.isNotEmpty;
+        // Validate personal info page
+        bool isValid = true;
+        String errorMessage = '';
+
+        if (authProvider.selectedGender.isEmpty) {
+          errorMessage = 'Please select your gender';
+          isValid = false;
+        } else if (authProvider.selectedDateOfBirth == null) {
+          errorMessage = 'Please select your date of birth';
+          isValid = false;
+        } else if (authProvider.selectedProfession.isEmpty) {
+          errorMessage = 'Please select your profession';
+          isValid = false;
+        } else if (authProvider.selectedCountry.isEmpty) {
+          errorMessage = 'Please select your country';
+          isValid = false;
+        } else if (authProvider.selectedState.isEmpty) {
+          errorMessage = 'Please select your state';
+          isValid = false;
+        }
+
+        if (!isValid) {
+          _showValidationError(errorMessage);
+        }
+
+        return isValid;
+
       case 2:
-        return authProvider.passwordController.text.trim().length >= 6 &&
-            authProvider.passwordController.text ==
-                authProvider.confirmPasswordController.text &&
-            authProvider.agreeToTerms;
+        // Validate account setup page
+        bool isValid = true;
+        String errorMessage = '';
+
+        if (_passwordFieldKey.currentState?.validate() == false) {
+          errorMessage = 'Please enter a valid password';
+          isValid = false;
+        } else if (_confirmPasswordFieldKey.currentState?.validate() == false) {
+          errorMessage = 'Passwords do not match';
+          isValid = false;
+        } else if (!authProvider.agreeToTerms) {
+          errorMessage = 'Please agree to the terms and conditions';
+          isValid = false;
+        }
+
+        if (!isValid) {
+          _showValidationError(errorMessage);
+        }
+
+        return isValid;
+
       default:
         return true;
     }
   }
 
-  void _handleRegister(AuthProvider authProvider) {
-    if (_formKey.currentState!.validate() && authProvider.agreeToTerms) {
-      authProvider.register();
-    } else if (!authProvider.agreeToTerms) {
-      ErrorHandler.showError(
-        context,
-        ValidationFailure(
-          message: 'Please agree to the terms and conditions',
-          code: 400,
+  void _showValidationError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: CommonTextWidget(
+          text: message,
+          fontSize: 14,
+          color: AppConstants.white,
         ),
-      );
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
+  }
+
+  void _handleRegister(AuthProvider authProvider) {
+    if (_validateCurrentPage(authProvider)) {
+      authProvider.register();
     }
   }
 
@@ -593,129 +744,191 @@ class _RegisterPageState extends State<RegisterPage>
     );
     if (date != null) {
       authProvider.setDateOfBirth(date);
+      _dobFieldKey.currentState?.validate();
     }
   }
 
   void _showProfessionPicker(AuthProvider authProvider) {
+    _professionSearchController.clear();
+    _filteredProfessions = List.from(_professions);
+
     showModalBottomSheet(
       context: context,
       backgroundColor: AppConstants.black,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
-        return Container(
-          height: MediaQuery.of(context).size.height * 0.6,
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            children: [
-              // Handle bar
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppConstants.white.withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 20),
-              const CommonTextWidget(
-                text: 'Select Profession',
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: AppConstants.white,
-              ),
-              const SizedBox(height: 20),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: _professions.length,
-                  itemBuilder: (context, index) {
-                    final profession = _professions[index];
-                    return ListTile(
-                      title: CommonTextWidget(
-                        text: profession,
-                        fontSize: 16,
-                        color: AppConstants.white,
-                      ),
-                      onTap: () {
-                        authProvider.setProfession(profession);
-                        Navigator.pop(context);
-                      },
-                      trailing: authProvider.selectedProfession == profession
-                          ? const Icon(
-                              Icons.check,
-                              color: AppConstants.appPrimaryColor,
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Container(
+              height: MediaQuery.of(context).size.height * 0.7,
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  // Handle bar
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: AppConstants.white.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  const CommonTextWidget(
+                    text: 'Select Profession',
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: AppConstants.white,
+                  ),
+                  const SizedBox(height: 20),
+                  // Search field
+                  CommonTextField(
+                    controller: _professionSearchController,
+                    hintText: 'Search profession...',
+                    prefixIcon: const Icon(
+                      Icons.search,
+                      color: AppConstants.white,
+                    ),
+                    onChanged: (value) {
+                      setState(() {
+                        _filteredProfessions = _professions
+                            .where(
+                              (profession) => profession.toLowerCase().contains(
+                                value.toLowerCase(),
+                              ),
                             )
-                          : null,
-                    );
-                  },
-                ),
+                            .toList();
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: _filteredProfessions.length,
+                      itemBuilder: (context, index) {
+                        final profession = _filteredProfessions[index];
+                        return ListTile(
+                          title: CommonTextWidget(
+                            text: profession,
+                            fontSize: 16,
+                            color: AppConstants.white,
+                          ),
+                          onTap: () {
+                            authProvider.setProfession(profession);
+                            _professionFieldKey.currentState?.validate();
+                            Navigator.pop(context);
+                          },
+                          trailing:
+                              authProvider.selectedProfession == profession
+                              ? const Icon(
+                                  Icons.check,
+                                  color: AppConstants.appPrimaryColor,
+                                )
+                              : null,
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
   }
 
   void _showCountryPicker(AuthProvider authProvider) {
+    _countrySearchController.clear();
+    _filteredCountries = List.from(_countries);
+
     showModalBottomSheet(
       context: context,
       backgroundColor: AppConstants.black,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
-        return Container(
-          height: MediaQuery.of(context).size.height * 0.6,
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppConstants.white.withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 20),
-              const CommonTextWidget(
-                text: 'Select Country',
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: AppConstants.white,
-              ),
-              const SizedBox(height: 20),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: _countries.length,
-                  itemBuilder: (context, index) {
-                    final country = _countries[index];
-                    final countryName = country['country'] as String;
-                    return ListTile(
-                      title: CommonTextWidget(
-                        text: countryName,
-                        fontSize: 16,
-                        color: AppConstants.white,
-                      ),
-                      onTap: () {
-                        authProvider.setLocation(country: countryName);
-                        _loadStatesForCountry(country);
-                        Navigator.pop(context);
-                      },
-                      trailing: authProvider.selectedCountry == countryName
-                          ? const Icon(
-                              Icons.check,
-                              color: AppConstants.appPrimaryColor,
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Container(
+              height: MediaQuery.of(context).size.height * 0.7,
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: AppConstants.white.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  const CommonTextWidget(
+                    text: 'Select Country',
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: AppConstants.white,
+                  ),
+                  const SizedBox(height: 20),
+                  // Search field
+                  CommonTextField(
+                    controller: _countrySearchController,
+                    hintText: 'Search country...',
+                    prefixIcon: const Icon(
+                      Icons.search,
+                      color: AppConstants.white,
+                    ),
+                    onChanged: (value) {
+                      setState(() {
+                        _filteredCountries = _countries
+                            .where(
+                              (country) => (country['country'] as String)
+                                  .toLowerCase()
+                                  .contains(value.toLowerCase()),
                             )
-                          : null,
-                    );
-                  },
-                ),
+                            .toList();
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: _filteredCountries.length,
+                      itemBuilder: (context, index) {
+                        final country = _filteredCountries[index];
+                        final countryName = country['country'] as String;
+                        return ListTile(
+                          title: CommonTextWidget(
+                            text: countryName,
+                            fontSize: 16,
+                            color: AppConstants.white,
+                          ),
+                          onTap: () {
+                            authProvider.setLocation(country: countryName);
+                            _loadStatesForCountry(country);
+                            _countryFieldKey.currentState?.validate();
+                            Navigator.pop(context);
+                          },
+                          trailing: authProvider.selectedCountry == countryName
+                              ? const Icon(
+                                  Icons.check,
+                                  color: AppConstants.appPrimaryColor,
+                                )
+                              : null,
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
@@ -724,63 +937,93 @@ class _RegisterPageState extends State<RegisterPage>
   void _showStatePicker(AuthProvider authProvider) {
     if (_states.isEmpty) return;
 
+    _stateSearchController.clear();
+    _filteredStates = List.from(_states);
+
     showModalBottomSheet(
       context: context,
       backgroundColor: AppConstants.black,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
-        return Container(
-          height: MediaQuery.of(context).size.height * 0.6,
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppConstants.white.withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 20),
-              const CommonTextWidget(
-                text: 'Select State',
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: AppConstants.white,
-              ),
-              const SizedBox(height: 20),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: _states.length,
-                  itemBuilder: (context, index) {
-                    final state = _states[index];
-                    final stateName = state['state'] as String;
-                    return ListTile(
-                      title: CommonTextWidget(
-                        text: stateName,
-                        fontSize: 16,
-                        color: AppConstants.white,
-                      ),
-                      onTap: () {
-                        authProvider.setLocation(state: stateName);
-                        _loadDistrictsForState(state);
-                        Navigator.pop(context);
-                      },
-                      trailing: authProvider.selectedState == stateName
-                          ? const Icon(
-                              Icons.check,
-                              color: AppConstants.appPrimaryColor,
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Container(
+              height: MediaQuery.of(context).size.height * 0.7,
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: AppConstants.white.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  const CommonTextWidget(
+                    text: 'Select State',
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: AppConstants.white,
+                  ),
+                  const SizedBox(height: 20),
+                  // Search field
+                  CommonTextField(
+                    controller: _stateSearchController,
+                    hintText: 'Search state...',
+                    prefixIcon: const Icon(
+                      Icons.search,
+                      color: AppConstants.white,
+                    ),
+                    onChanged: (value) {
+                      setState(() {
+                        _filteredStates = _states
+                            .where(
+                              (state) => (state['state'] as String)
+                                  .toLowerCase()
+                                  .contains(value.toLowerCase()),
                             )
-                          : null,
-                    );
-                  },
-                ),
+                            .toList();
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: _filteredStates.length,
+                      itemBuilder: (context, index) {
+                        final state = _filteredStates[index];
+                        final stateName = state['state'] as String;
+                        return ListTile(
+                          title: CommonTextWidget(
+                            text: stateName,
+                            fontSize: 16,
+                            color: AppConstants.white,
+                          ),
+                          onTap: () {
+                            authProvider.setLocation(state: stateName);
+                            _loadDistrictsForState(state);
+                            _stateFieldKey.currentState?.validate();
+                            Navigator.pop(context);
+                          },
+                          trailing: authProvider.selectedState == stateName
+                              ? const Icon(
+                                  Icons.check,
+                                  color: AppConstants.appPrimaryColor,
+                                )
+                              : null,
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
@@ -789,62 +1032,92 @@ class _RegisterPageState extends State<RegisterPage>
   void _showDistrictPicker(AuthProvider authProvider) {
     if (_districts.isEmpty) return;
 
+    _districtSearchController.clear();
+    _filteredDistricts = List.from(_districts);
+
     showModalBottomSheet(
       context: context,
       backgroundColor: AppConstants.black,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
-        return Container(
-          height: MediaQuery.of(context).size.height * 0.6,
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppConstants.white.withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 20),
-              const CommonTextWidget(
-                text: 'Select District',
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: AppConstants.white,
-              ),
-              const SizedBox(height: 20),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: _districts.length,
-                  itemBuilder: (context, index) {
-                    final district = _districts[index];
-                    final districtName = district['name'] as String;
-                    return ListTile(
-                      title: CommonTextWidget(
-                        text: districtName,
-                        fontSize: 16,
-                        color: AppConstants.white,
-                      ),
-                      onTap: () {
-                        authProvider.setLocation(district: districtName);
-                        Navigator.pop(context);
-                      },
-                      trailing: authProvider.selectedDistrict == districtName
-                          ? const Icon(
-                              Icons.check,
-                              color: AppConstants.appPrimaryColor,
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Container(
+              height: MediaQuery.of(context).size.height * 0.7,
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: AppConstants.white.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  const CommonTextWidget(
+                    text: 'Select District',
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: AppConstants.white,
+                  ),
+                  const SizedBox(height: 20),
+                  // Search field
+                  CommonTextField(
+                    controller: _districtSearchController,
+                    hintText: 'Search district...',
+                    prefixIcon: const Icon(
+                      Icons.search,
+                      color: AppConstants.white,
+                    ),
+                    onChanged: (value) {
+                      setState(() {
+                        _filteredDistricts = _districts
+                            .where(
+                              (district) => (district['name'] as String)
+                                  .toLowerCase()
+                                  .contains(value.toLowerCase()),
                             )
-                          : null,
-                    );
-                  },
-                ),
+                            .toList();
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: _filteredDistricts.length,
+                      itemBuilder: (context, index) {
+                        final district = _filteredDistricts[index];
+                        final districtName = district['name'] as String;
+                        return ListTile(
+                          title: CommonTextWidget(
+                            text: districtName,
+                            fontSize: 16,
+                            color: AppConstants.white,
+                          ),
+                          onTap: () {
+                            authProvider.setLocation(district: districtName);
+                            Navigator.pop(context);
+                          },
+                          trailing:
+                              authProvider.selectedDistrict == districtName
+                              ? const Icon(
+                                  Icons.check,
+                                  color: AppConstants.appPrimaryColor,
+                                )
+                              : null,
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
@@ -855,6 +1128,8 @@ class _RegisterPageState extends State<RegisterPage>
       _states = (country['states'] as List<dynamic>)
           .cast<Map<String, dynamic>>();
       _districts.clear();
+      _filteredStates = List.from(_states);
+      _filteredDistricts.clear();
     });
   }
 
@@ -862,6 +1137,7 @@ class _RegisterPageState extends State<RegisterPage>
     setState(() {
       _districts = (state['district'] as List<dynamic>)
           .cast<Map<String, dynamic>>();
+      _filteredDistricts = List.from(_districts);
     });
   }
 

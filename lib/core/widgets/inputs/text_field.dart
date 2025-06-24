@@ -73,6 +73,7 @@ class _CommonTextFieldState extends State<CommonTextField> {
         });
       },
       child: TextFormField(
+        onTapOutside: (event) => FocusManager.instance.primaryFocus?.unfocus(),
         controller: widget.controller,
         obscureText: widget.obscureText,
         keyboardType: widget.keyboardType,

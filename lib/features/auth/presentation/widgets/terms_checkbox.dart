@@ -51,7 +51,6 @@ class _TermsCheckboxState extends State<TermsCheckbox>
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Custom Animated Checkbox
                   GestureDetector(
                     onTapDown: (_) => _animationController.forward(),
                     onTapUp: (_) => _animationController.reverse(),
@@ -93,10 +92,7 @@ class _TermsCheckboxState extends State<TermsCheckbox>
                           : null,
                     ),
                   ),
-
                   const SizedBox(width: 12),
-
-                  // Terms Text with Clickable Links
                   Expanded(
                     child: GestureDetector(
                       onTap: () => _toggleTerms(authProvider),
@@ -111,7 +107,6 @@ class _TermsCheckboxState extends State<TermsCheckbox>
                               height: 1.4,
                             ),
                             children: [
-                              // Terms of Service Link
                               WidgetSpan(
                                 child: GestureDetector(
                                   onTap: widget.onTermsPressed,
