@@ -1,5 +1,3 @@
-// lib/features/coupons/data/models/coupon_model.dart
-
 import 'dart:convert';
 
 import 'package:equatable/equatable.dart';
@@ -32,7 +30,6 @@ class GetCouponsModel extends Equatable {
             : null,
       );
     } catch (e) {
-      // Return empty model if parsing fails
       return const GetCouponsModel();
     }
   }
@@ -60,11 +57,6 @@ class GetCouponsModel extends Equatable {
 
   @override
   List<Object?> get props => [success, data, message, banners];
-
-  @override
-  String toString() {
-    return 'GetCouponsModel(success: $success, data: $data, message: $message, banners: $banners)';
-  }
 }
 
 // Banner model
@@ -113,31 +105,8 @@ class BannerModel extends Equatable {
     "__v": v,
   };
 
-  BannerModel copyWith({
-    String? id,
-    String? image,
-    String? type,
-    DateTime? createdAt,
-    DateTime? updatedAt,
-    int? v,
-  }) {
-    return BannerModel(
-      id: id ?? this.id,
-      image: image ?? this.image,
-      type: type ?? this.type,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
-      v: v ?? this.v,
-    );
-  }
-
   @override
   List<Object?> get props => [id, image, type, createdAt, updatedAt, v];
-
-  @override
-  String toString() {
-    return 'BannerModel(id: $id, image: $image, type: $type, createdAt: $createdAt, updatedAt: $updatedAt, v: $v)';
-  }
 }
 
 // Main data container
@@ -182,25 +151,8 @@ class CouponData extends Equatable {
     "apps": apps?.map((x) => x.toJson()).toList(),
   };
 
-  CouponData copyWith({
-    List<CouponReward>? couponRewards,
-    List<CategoryElement>? categories,
-    List<AppElement>? apps,
-  }) {
-    return CouponData(
-      couponRewards: couponRewards ?? this.couponRewards,
-      categories: categories ?? this.categories,
-      apps: apps ?? this.apps,
-    );
-  }
-
   @override
   List<Object?> get props => [couponRewards, categories, apps];
-
-  @override
-  String toString() {
-    return 'CouponData(couponRewards: ${couponRewards?.length}, categories: ${categories?.length}, apps: ${apps?.length})';
-  }
 }
 
 // App model
@@ -257,37 +209,6 @@ class AppElement extends Equatable {
     "__v": v,
   };
 
-  AppElement copyWith({
-    String? id,
-    String? appName,
-    String? logo,
-    String? websiteLink,
-    bool? isDelete,
-    DateTime? createdAt,
-    DateTime? updatedAt,
-    int? v,
-  }) {
-    return AppElement(
-      id: id ?? this.id,
-      appName: appName ?? this.appName,
-      logo: logo ?? this.logo,
-      websiteLink: websiteLink ?? this.websiteLink,
-      isDelete: isDelete ?? this.isDelete,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
-      v: v ?? this.v,
-    );
-  }
-
-  // Helper methods
-  bool get isActive => isDelete != true;
-
-  String get displayName => appName ?? 'Unknown App';
-
-  String get safeLogoUrl => logo ?? '';
-
-  String get safeWebsiteUrl => websiteLink ?? '';
-
   @override
   List<Object?> get props => [
     id,
@@ -299,11 +220,6 @@ class AppElement extends Equatable {
     updatedAt,
     v,
   ];
-
-  @override
-  String toString() {
-    return 'AppElement(id: $id, appName: $appName, logo: $logo, websiteLink: $websiteLink, isDelete: $isDelete)';
-  }
 }
 
 // Category model
@@ -352,36 +268,8 @@ class CategoryElement extends Equatable {
     "__v": v,
   };
 
-  CategoryElement copyWith({
-    String? id,
-    String? name,
-    bool? isDelete,
-    DateTime? createdAt,
-    DateTime? updatedAt,
-    int? v,
-  }) {
-    return CategoryElement(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      isDelete: isDelete ?? this.isDelete,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
-      v: v ?? this.v,
-    );
-  }
-
-  // Helper methods
-  bool get isActive => isDelete != true;
-
-  String get displayName => name ?? 'Unknown Category';
-
   @override
   List<Object?> get props => [id, name, isDelete, createdAt, updatedAt, v];
-
-  @override
-  String toString() {
-    return 'CategoryElement(id: $id, name: $name, isDelete: $isDelete)';
-  }
 }
 
 // Main coupon reward model
@@ -470,76 +358,6 @@ class CouponReward extends Equatable {
     "websiteLink": websiteLink,
   };
 
-  CouponReward copyWith({
-    String? id,
-    CouponRewardApp? app,
-    String? description,
-    CouponRewardCategory? category,
-    String? couponCode,
-    bool? isDelete,
-    String? websiteLink,
-    int? likes,
-    int? dislikes,
-    DateTime? createdAt,
-    DateTime? updatedAt,
-    int? v,
-    UsageByUsers? usageByUsers,
-    bool? isLiked,
-    bool? isDisliked,
-  }) {
-    return CouponReward(
-      id: id ?? this.id,
-      app: app ?? this.app,
-      description: description ?? this.description,
-      category: category ?? this.category,
-      couponCode: couponCode ?? this.couponCode,
-      isDelete: isDelete ?? this.isDelete,
-      websiteLink: websiteLink ?? this.websiteLink,
-      likes: likes ?? this.likes,
-      dislikes: dislikes ?? this.dislikes,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
-      v: v ?? this.v,
-      usageByUsers: usageByUsers ?? this.usageByUsers,
-      isLiked: isLiked ?? this.isLiked,
-      isDisliked: isDisliked ?? this.isDisliked,
-    );
-  }
-
-  // Helper methods
-  bool get isActive => isDelete != true;
-
-  String get displayDescription => description ?? 'No description available';
-
-  String get displayCouponCode => couponCode ?? '';
-
-  int get totalLikes => likes ?? 0;
-
-  int get totalDislikes => dislikes ?? 0;
-
-  int get usageCount => usageByUsers?.count ?? 0;
-
-  bool get hasBeenUsed =>
-      usageByUsers?.count != null && usageByUsers!.count! > 0;
-
-  bool get userHasLiked => isLiked ?? false;
-
-  bool get userHasDisliked => isDisliked ?? false;
-
-  String get effectiveWebsiteLink => websiteLink ?? app?.websiteLink ?? '';
-
-  // Validation methods
-  bool get isValid =>
-      id != null &&
-      id!.isNotEmpty &&
-      couponCode != null &&
-      couponCode!.isNotEmpty &&
-      isActive;
-
-  bool get hasValidApp => app != null && app!.isValid;
-
-  bool get hasValidCategory => category != null && category!.isValid;
-
   @override
   List<Object?> get props => [
     id,
@@ -558,11 +376,6 @@ class CouponReward extends Equatable {
     isLiked,
     isDisliked,
   ];
-
-  @override
-  String toString() {
-    return 'CouponReward(id: $id, description: $description, couponCode: $couponCode, likes: $likes, dislikes: $dislikes)';
-  }
 }
 
 // Coupon reward app model
@@ -594,37 +407,8 @@ class CouponRewardApp extends Equatable {
     "websiteLink": websiteLink,
   };
 
-  CouponRewardApp copyWith({
-    String? id,
-    String? appName,
-    String? logo,
-    String? websiteLink,
-  }) {
-    return CouponRewardApp(
-      id: id ?? this.id,
-      appName: appName ?? this.appName,
-      logo: logo ?? this.logo,
-      websiteLink: websiteLink ?? this.websiteLink,
-    );
-  }
-
-  // Helper methods
-  String get displayName => appName ?? 'Unknown App';
-
-  String get safeLogoUrl => logo ?? '';
-
-  String get safeWebsiteUrl => websiteLink ?? '';
-
-  bool get isValid =>
-      id != null && id!.isNotEmpty && appName != null && appName!.isNotEmpty;
-
   @override
   List<Object?> get props => [id, appName, logo, websiteLink];
-
-  @override
-  String toString() {
-    return 'CouponRewardApp(id: $id, appName: $appName, logo: $logo, websiteLink: $websiteLink)';
-  }
 }
 
 // Coupon reward category model
@@ -647,23 +431,8 @@ class CouponRewardCategory extends Equatable {
 
   Map<String, dynamic> toJson() => {"_id": id, "name": name};
 
-  CouponRewardCategory copyWith({String? id, String? name}) {
-    return CouponRewardCategory(id: id ?? this.id, name: name ?? this.name);
-  }
-
-  // Helper methods
-  String get displayName => name ?? 'Unknown Category';
-
-  bool get isValid =>
-      id != null && id!.isNotEmpty && name != null && name!.isNotEmpty;
-
   @override
   List<Object?> get props => [id, name];
-
-  @override
-  String toString() {
-    return 'CouponRewardCategory(id: $id, name: $name)';
-  }
 }
 
 // Usage by users model
@@ -691,33 +460,6 @@ class UsageByUsers extends Equatable {
     "lastUsed": lastUsed?.toIso8601String(),
   };
 
-  UsageByUsers copyWith({int? count, DateTime? lastUsed}) {
-    return UsageByUsers(
-      count: count ?? this.count,
-      lastUsed: lastUsed ?? this.lastUsed,
-    );
-  }
-
-  // Helper methods
-  int get safeCount => count ?? 0;
-
-  bool get hasBeenUsed => safeCount > 0;
-
-  String get usageText {
-    if (safeCount == 0) return 'Never used';
-    if (safeCount == 1) return 'Used once';
-    return 'Used $safeCount times';
-  }
-
   @override
   List<Object?> get props => [count, lastUsed];
-
-  @override
-  String toString() {
-    return 'UsageByUsers(count: $count, lastUsed: $lastUsed)';
-  }
 }
-
-// Export alias for backward compatibility
-typedef Banners = BannerModel;
-typedef Data = CouponData;

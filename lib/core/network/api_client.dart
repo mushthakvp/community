@@ -1,22 +1,40 @@
-// lib/core/network/api_client.dart
-
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
+import '../constants/api_constants.dart';
 import '../error/exceptions.dart';
+import '../services/storage_service.dart';
 
 class ApiClient {
-  final http.Client client;
+  late http.Client _client;
   final String baseUrl;
-  final Duration timeout;
 
-  ApiClient({
-    required this.client,
-    required this.baseUrl,
-    this.timeout = const Duration(seconds: 30),
-  });
+  ApiClient({required this.baseUrl}) {
+    _client = http.Client();
+  }
+
+  Future<Map<String, String>> _getHeaders({
+    Map<String, String>? additionalHeaders,
+  }) async {
+    final headers = <String, String>{
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+
+    // Add auth token if available
+    final token = await StorageService.getAccessToken();
+    if (token != null) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+
+    if (additionalHeaders != null) {
+      headers.addAll(additionalHeaders);
+    }
+
+    return headers;
+  }
 
   Future<http.Response> get(
     String endpoint, {
@@ -25,9 +43,11 @@ class ApiClient {
   }) async {
     try {
       final uri = _buildUri(endpoint, queryParameters);
-      final response = await client
-          .get(uri, headers: _buildHeaders(headers))
-          .timeout(timeout);
+      final requestHeaders = await _getHeaders(additionalHeaders: headers);
+
+      final response = await _client
+          .get(uri, headers: requestHeaders)
+          .timeout(Duration(seconds: ApiConstants.timeoutDuration));
 
       return _handleResponse(response);
     } on SocketException {
@@ -35,7 +55,7 @@ class ApiClient {
     } on HttpException {
       throw const NetworkException('Network error occurred');
     } catch (e) {
-      throw NetworkException('Unexpected network error: $e');
+      throw NetworkException('Unexpected error: $e');
     }
   }
 
@@ -46,13 +66,15 @@ class ApiClient {
   }) async {
     try {
       final uri = _buildUri(endpoint);
-      final response = await client
+      final requestHeaders = await _getHeaders(additionalHeaders: headers);
+
+      final response = await _client
           .post(
             uri,
-            headers: _buildHeaders(headers),
+            headers: requestHeaders,
             body: body != null ? json.encode(body) : null,
           )
-          .timeout(timeout);
+          .timeout(Duration(seconds: ApiConstants.timeoutDuration));
 
       return _handleResponse(response);
     } on SocketException {
@@ -60,20 +82,26 @@ class ApiClient {
     } on HttpException {
       throw const NetworkException('Network error occurred');
     } catch (e) {
-      throw NetworkException('Unexpected network error: $e');
+      throw NetworkException('Unexpected error: $e');
     }
   }
 
   Future<http.Response> put(
     String endpoint, {
-    String? body,
+    Map<String, dynamic>? body,
     Map<String, String>? headers,
   }) async {
     try {
       final uri = _buildUri(endpoint);
-      final response = await client
-          .put(uri, headers: _buildHeaders(headers), body: body)
-          .timeout(timeout);
+      final requestHeaders = await _getHeaders(additionalHeaders: headers);
+
+      final response = await _client
+          .put(
+            uri,
+            headers: requestHeaders,
+            body: body != null ? json.encode(body) : null,
+          )
+          .timeout(Duration(seconds: ApiConstants.timeoutDuration));
 
       return _handleResponse(response);
     } on SocketException {
@@ -81,7 +109,29 @@ class ApiClient {
     } on HttpException {
       throw const NetworkException('Network error occurred');
     } catch (e) {
-      throw NetworkException('Unexpected network error: $e');
+      throw NetworkException('Unexpected error: $e');
+    }
+  }
+
+  Future<http.Response> delete(
+    String endpoint, {
+    Map<String, String>? headers,
+  }) async {
+    try {
+      final uri = _buildUri(endpoint);
+      final requestHeaders = await _getHeaders(additionalHeaders: headers);
+
+      final response = await _client
+          .delete(uri, headers: requestHeaders)
+          .timeout(Duration(seconds: ApiConstants.timeoutDuration));
+
+      return _handleResponse(response);
+    } on SocketException {
+      throw const NetworkException('No internet connection');
+    } on HttpException {
+      throw const NetworkException('Network error occurred');
+    } catch (e) {
+      throw NetworkException('Unexpected error: $e');
     }
   }
 
@@ -93,33 +143,29 @@ class ApiClient {
     return uri;
   }
 
-  Map<String, String> _buildHeaders([Map<String, String>? additionalHeaders]) {
-    final headers = <String, String>{
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-    };
-
-    if (additionalHeaders != null) {
-      headers.addAll(additionalHeaders);
-    }
-
-    return headers;
-  }
-
   http.Response _handleResponse(http.Response response) {
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return response;
+    }
+
+    String message = 'Request failed';
+    try {
+      final data = json.decode(response.body);
+      message = data['message'] ?? message;
+    } catch (_) {}
+
+    if (response.statusCode == 401) {
+      throw const AuthException('Unauthorized access');
     } else if (response.statusCode >= 400 && response.statusCode < 500) {
-      String message = 'Client error';
-      try {
-        final data = json.decode(response.body);
-        message = data['message'] ?? message;
-      } catch (_) {}
       throw ServerException(message);
     } else if (response.statusCode >= 500) {
       throw const ServerException('Server error occurred');
-    } else {
-      throw ServerException('Unexpected status code: ${response.statusCode}');
     }
+
+    throw ServerException('Unexpected status code: ${response.statusCode}');
+  }
+
+  void dispose() {
+    _client.close();
   }
 }

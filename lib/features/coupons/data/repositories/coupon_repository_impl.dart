@@ -1,67 +1,78 @@
-// lib/features/coupons/data/repositories/coupon_repository_impl.dart
-
+import 'dart:convert';
 import 'dart:developer' as dev;
 
 import 'package:dartz/dartz.dart';
 
+import '../../../../core/constants/api_constants.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/error/failures.dart';
-import '../../../../core/network/network_info.dart';
+import '../../../../core/network/api_client.dart';
+import '../../domain/entities/coupon_entity.dart';
 import '../../domain/repositories/coupon_repository.dart';
-import '../datasources/coupon_local_datasource.dart';
-import '../datasources/coupon_remote_datasource.dart';
 import '../models/coupon_model.dart';
 
 class CouponRepositoryImpl implements CouponRepository {
-  final CouponRemoteDataSource remoteDataSource;
-  final CouponLocalDataSource localDataSource;
-  final NetworkInfo networkInfo;
+  final ApiClient _apiClient;
 
-  CouponRepositoryImpl({
-    required this.remoteDataSource,
-    required this.localDataSource,
-    required this.networkInfo,
-  });
+  CouponRepositoryImpl({required ApiClient apiClient}) : _apiClient = apiClient;
 
   @override
-  Future<Either<Failure, GetCouponsModel>> getCoupons({
+  Future<Either<Failure, List<CouponEntity>>> getCoupons({
     String? categoryId,
     String? appId,
     String? search,
   }) async {
     try {
-      if (await networkInfo.isConnected) {
-        final remoteCoupons = await remoteDataSource.getCoupons(
-          categoryId: categoryId,
-          appId: appId,
-          search: search,
-        );
+      // Build query parameters
+      final queryParams = <String, String>{};
+      if (categoryId != null && categoryId.isNotEmpty) {
+        queryParams['categoryId'] = categoryId;
+      }
+      if (appId != null && appId.isNotEmpty) {
+        queryParams['appId'] = appId;
+      }
+      if (search != null && search.isNotEmpty) {
+        queryParams['search'] = search;
+      }
 
-        // Cache the result
-        await localDataSource.cacheCoupons(remoteCoupons);
-        return Right(remoteCoupons);
-      } else {
-        // Try to get cached data when offline
-        try {
-          final cachedCoupons = await localDataSource.getCachedCoupons();
-          return Right(cachedCoupons);
-        } on CacheException {
-          return const Left(
-            NetworkFailure(
-              'No internet connection and no cached data available',
+      final response = await _apiClient.get(
+        ApiConstants.getCoupons,
+        queryParameters: queryParams,
+      );
+
+      final responseData = json.decode(response.body);
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final getCouponsModel = GetCouponsModel.fromJson(responseData);
+
+        if (getCouponsModel.success == true &&
+            getCouponsModel.data?.couponRewards != null) {
+          // Convert models to entities
+          final coupons = getCouponsModel.data!.couponRewards!
+              .map((couponModel) => _mapCouponModelToEntity(couponModel))
+              .toList();
+
+          return Right(coupons);
+        } else {
+          return Left(
+            ServerFailure(
+              message: getCouponsModel.message ?? 'Failed to load coupons',
             ),
           );
         }
+      } else {
+        return Left(
+          ServerFailure(
+            message: responseData['message'] ?? 'Failed to load coupons',
+          ),
+        );
       }
     } on ServerException catch (e) {
       dev.log('Server exception in getCoupons: ${e.message}');
-      return Left(ServerFailure(e.message));
+      return Left(ServerFailure(message: e.message));
     } on NetworkException catch (e) {
       dev.log('Network exception in getCoupons: ${e.message}');
-      return Left(NetworkFailure(e.message));
-    } on CacheException catch (e) {
-      dev.log('Cache exception in getCoupons: ${e.message}');
-      return Left(CacheFailure(e.message));
+      return Left(NetworkFailure(message: e.message));
     } catch (e, stackTrace) {
       dev.log(
         'Unexpected error in getCoupons',
@@ -69,55 +80,108 @@ class CouponRepositoryImpl implements CouponRepository {
         stackTrace: stackTrace,
       );
       return Left(
-        UnknownFailure('An unexpected error occurred: ${e.toString()}'),
+        UnknownFailure(
+          message: 'An unexpected error occurred: ${e.toString()}',
+        ),
       );
     }
   }
 
   @override
-  Future<Either<Failure, bool>> actionOnCoupon(
-    String couponId,
-    String action, [
-    String? reason,
-  ]) async {
+  Future<Either<Failure, bool>> likeCoupon(String couponId) async {
     try {
-      if (!await networkInfo.isConnected) {
-        return const Left(NetworkFailure('No internet connection'));
+      if (couponId.isEmpty) {
+        return const Left(ValidationFailure(message: 'Invalid coupon ID'));
       }
 
-      if (couponId.isEmpty || action.isEmpty) {
-        return const Left(ValidationFailure('Invalid coupon ID or action'));
-      }
+      final response = await _apiClient.put(
+        '${ApiConstants.actionOnCoupons}$couponId',
+        body: {'action': 'like'},
+      );
 
-      if (action == 'dislike' && (reason == null || reason.trim().isEmpty)) {
-        return const Left(
-          ValidationFailure('Reason is required for dislike action'),
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return const Right(true);
+      } else {
+        final responseData = json.decode(response.body);
+        return Left(
+          ServerFailure(
+            message: responseData['message'] ?? 'Failed to like coupon',
+          ),
         );
       }
-
-      final result = await remoteDataSource.actionOnCoupon(
-        couponId,
-        action,
-        reason,
-      );
-      return Right(result);
     } on ServerException catch (e) {
-      dev.log('Server exception in actionOnCoupon: ${e.message}');
-      return Left(ServerFailure(e.message));
+      dev.log('Server exception in likeCoupon: ${e.message}');
+      return Left(ServerFailure(message: e.message));
     } on NetworkException catch (e) {
-      dev.log('Network exception in actionOnCoupon: ${e.message}');
-      return Left(NetworkFailure(e.message));
+      dev.log('Network exception in likeCoupon: ${e.message}');
+      return Left(NetworkFailure(message: e.message));
     } on ValidationException catch (e) {
-      dev.log('Validation exception in actionOnCoupon: ${e.message}');
-      return Left(ValidationFailure(e.message));
+      dev.log('Validation exception in likeCoupon: ${e.message}');
+      return Left(ValidationFailure(message: e.message));
     } catch (e, stackTrace) {
       dev.log(
-        'Unexpected error in actionOnCoupon',
+        'Unexpected error in likeCoupon',
         error: e,
         stackTrace: stackTrace,
       );
       return Left(
-        UnknownFailure('An unexpected error occurred: ${e.toString()}'),
+        UnknownFailure(
+          message: 'An unexpected error occurred: ${e.toString()}',
+        ),
+      );
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> dislikeCoupon(
+    String couponId,
+    String reason,
+  ) async {
+    try {
+      if (couponId.isEmpty) {
+        return const Left(ValidationFailure(message: 'Invalid coupon ID'));
+      }
+
+      if (reason.trim().isEmpty) {
+        return const Left(
+          ValidationFailure(message: 'Reason is required for dislike'),
+        );
+      }
+
+      final response = await _apiClient.put(
+        '${ApiConstants.actionOnCoupons}$couponId',
+        body: {'action': 'dislike', 'reason': reason.trim()},
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return const Right(true);
+      } else {
+        final responseData = json.decode(response.body);
+        return Left(
+          ServerFailure(
+            message: responseData['message'] ?? 'Failed to dislike coupon',
+          ),
+        );
+      }
+    } on ServerException catch (e) {
+      dev.log('Server exception in dislikeCoupon: ${e.message}');
+      return Left(ServerFailure(message: e.message));
+    } on NetworkException catch (e) {
+      dev.log('Network exception in dislikeCoupon: ${e.message}');
+      return Left(NetworkFailure(message: e.message));
+    } on ValidationException catch (e) {
+      dev.log('Validation exception in dislikeCoupon: ${e.message}');
+      return Left(ValidationFailure(message: e.message));
+    } catch (e, stackTrace) {
+      dev.log(
+        'Unexpected error in dislikeCoupon',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      return Left(
+        UnknownFailure(
+          message: 'An unexpected error occurred: ${e.toString()}',
+        ),
       );
     }
   }
@@ -125,25 +189,33 @@ class CouponRepositoryImpl implements CouponRepository {
   @override
   Future<Either<Failure, bool>> useCoupon(String couponId) async {
     try {
-      if (!await networkInfo.isConnected) {
-        return const Left(NetworkFailure('No internet connection'));
-      }
-
       if (couponId.isEmpty) {
-        return const Left(ValidationFailure('Invalid coupon ID'));
+        return const Left(ValidationFailure(message: 'Invalid coupon ID'));
       }
 
-      final result = await remoteDataSource.useCoupon(couponId);
-      return Right(result);
+      final response = await _apiClient.put(
+        '${ApiConstants.useCoupon}$couponId',
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return const Right(true);
+      } else {
+        final responseData = json.decode(response.body);
+        return Left(
+          ServerFailure(
+            message: responseData['message'] ?? 'Failed to use coupon',
+          ),
+        );
+      }
     } on ServerException catch (e) {
       dev.log('Server exception in useCoupon: ${e.message}');
-      return Left(ServerFailure(e.message));
+      return Left(ServerFailure(message: e.message));
     } on NetworkException catch (e) {
       dev.log('Network exception in useCoupon: ${e.message}');
-      return Left(NetworkFailure(e.message));
+      return Left(NetworkFailure(message: e.message));
     } on ValidationException catch (e) {
       dev.log('Validation exception in useCoupon: ${e.message}');
-      return Left(ValidationFailure(e.message));
+      return Left(ValidationFailure(message: e.message));
     } catch (e, stackTrace) {
       dev.log(
         'Unexpected error in useCoupon',
@@ -151,8 +223,163 @@ class CouponRepositoryImpl implements CouponRepository {
         stackTrace: stackTrace,
       );
       return Left(
-        UnknownFailure('An unexpected error occurred: ${e.toString()}'),
+        UnknownFailure(
+          message: 'An unexpected error occurred: ${e.toString()}',
+        ),
       );
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<CategoryEntity>>> getCategories() async {
+    try {
+      final response = await _apiClient.get(ApiConstants.getCoupons);
+      final responseData = json.decode(response.body);
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final getCouponsModel = GetCouponsModel.fromJson(responseData);
+
+        if (getCouponsModel.success == true &&
+            getCouponsModel.data?.categories != null) {
+          final categories = getCouponsModel.data!.categories!
+              .map((categoryModel) => _mapCategoryModelToEntity(categoryModel))
+              .toList();
+
+          return Right(categories);
+        } else {
+          return Left(
+            ServerFailure(
+              message: getCouponsModel.message ?? 'Failed to load categories',
+            ),
+          );
+        }
+      } else {
+        return Left(
+          ServerFailure(
+            message: responseData['message'] ?? 'Failed to load categories',
+          ),
+        );
+      }
+    } on ServerException catch (e) {
+      dev.log('Server exception in getCategories: ${e.message}');
+      return Left(ServerFailure(message: e.message));
+    } on NetworkException catch (e) {
+      dev.log('Network exception in getCategories: ${e.message}');
+      return Left(NetworkFailure(message: e.message));
+    } catch (e, stackTrace) {
+      dev.log(
+        'Unexpected error in getCategories',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      return Left(
+        UnknownFailure(
+          message: 'An unexpected error occurred: ${e.toString()}',
+        ),
+      );
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<AppEntity>>> getApps() async {
+    try {
+      final response = await _apiClient.get(ApiConstants.getCoupons);
+      final responseData = json.decode(response.body);
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final getCouponsModel = GetCouponsModel.fromJson(responseData);
+
+        if (getCouponsModel.success == true &&
+            getCouponsModel.data?.apps != null) {
+          final apps = getCouponsModel.data!.apps!
+              .map((appModel) => _mapAppModelToEntity(appModel))
+              .toList();
+
+          return Right(apps);
+        } else {
+          return Left(
+            ServerFailure(
+              message: getCouponsModel.message ?? 'Failed to load apps',
+            ),
+          );
+        }
+      } else {
+        return Left(
+          ServerFailure(
+            message: responseData['message'] ?? 'Failed to load apps',
+          ),
+        );
+      }
+    } on ServerException catch (e) {
+      dev.log('Server exception in getApps: ${e.message}');
+      return Left(ServerFailure(message: e.message));
+    } on NetworkException catch (e) {
+      dev.log('Network exception in getApps: ${e.message}');
+      return Left(NetworkFailure(message: e.message));
+    } catch (e, stackTrace) {
+      dev.log('Unexpected error in getApps', error: e, stackTrace: stackTrace);
+      return Left(
+        UnknownFailure(
+          message: 'An unexpected error occurred: ${e.toString()}',
+        ),
+      );
+    }
+  }
+
+  // Private helper methods for mapping models to entities
+  CouponEntity _mapCouponModelToEntity(CouponReward couponModel) {
+    return CouponEntity(
+      id: couponModel.id ?? '',
+      description: couponModel.description ?? '',
+      couponCode: couponModel.couponCode ?? '',
+      websiteLink: couponModel.websiteLink,
+      app: _mapAppModelToEntity(couponModel.app ?? const CouponRewardApp()),
+      category: _mapCategoryModelToEntity(
+        couponModel.category ?? const CouponRewardCategory(),
+      ),
+      likes: couponModel.likes ?? 0,
+      dislikes: couponModel.dislikes ?? 0,
+      isLiked: couponModel.isLiked ?? false,
+      isDisliked: couponModel.isDisliked ?? false,
+      usageCount: couponModel.usageByUsers?.count ?? 0,
+      lastUsed: couponModel.usageByUsers?.lastUsed,
+      createdAt: couponModel.createdAt ?? DateTime.now(),
+    );
+  }
+
+  AppEntity _mapAppModelToEntity(dynamic appModel) {
+    if (appModel is CouponRewardApp) {
+      return AppEntity(
+        id: appModel.id ?? '',
+        name: appModel.appName ?? '',
+        logo: appModel.logo ?? '',
+        websiteLink: appModel.websiteLink,
+      );
+    } else if (appModel is AppElement) {
+      return AppEntity(
+        id: appModel.id ?? '',
+        name: appModel.appName ?? '',
+        logo: appModel.logo ?? '',
+        websiteLink: appModel.websiteLink,
+      );
+    } else {
+      return const AppEntity(id: '', name: 'Unknown App', logo: '');
+    }
+  }
+
+  CategoryEntity _mapCategoryModelToEntity(dynamic categoryModel) {
+    if (categoryModel is CouponRewardCategory) {
+      return CategoryEntity(
+        id: categoryModel.id ?? '',
+        name: categoryModel.name ?? '',
+      );
+    } else if (categoryModel is CategoryElement) {
+      return CategoryEntity(
+        id: categoryModel.id ?? '',
+        name: categoryModel.name ?? '',
+      );
+    } else {
+      return const CategoryEntity(id: '', name: 'Unknown Category');
     }
   }
 }

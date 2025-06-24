@@ -1,28 +1,25 @@
-import 'package:fittor/fittor.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'core/providers/app_provider.dart';
-import 'core/utils/secure_storage.dart';
-import 'features/coupons/presentation/pages/coupon_home_page.dart';
+import 'app/app.dart';
+import 'app/app_providers.dart';
+import 'core/services/storage_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await AppPref.init();
-  runApp(const MyApp());
+  await _initializeServices();
+  runApp(const CommunityApp());
 }
 
-class MyApp extends StatelessWidget with FittorAppMixin {
-  const MyApp({super.key});
+Future<void> _initializeServices() async {
+  await StorageService.init();
+}
+
+class CommunityApp extends StatelessWidget {
+  const CommunityApp({super.key});
 
   @override
-  Widget responsive(BuildContext context) {
-    return MultiProvider(
-      providers: providers,
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        home: CouponHomePage(),
-      ),
-    );
+  Widget build(BuildContext context) {
+    return MultiProvider(providers: AppProviders.providers, child: const App());
   }
 }

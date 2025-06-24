@@ -1,48 +1,60 @@
 // lib/features/coupons/presentation/providers/coupon_provider.dart
-
 import 'dart:async';
 import 'dart:developer' as dev;
 
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/error/failures.dart';
-import '../../data/models/coupon_model.dart';
-import '../../data/repositories/coupon_repository_impl.dart';
-import '../utils/date_formatter.dart';
-import 'coupon_state.dart';
+import '../../../../core/utils/extensions.dart';
+import '../../domain/entities/coupon_entity.dart';
+import '../../domain/repositories/coupon_repository.dart';
+
+enum CouponStatus { initial, loading, loaded, error, refreshing }
 
 class CouponProvider extends ChangeNotifier {
-  final CouponRepositoryImpl _repository;
-  final Connectivity _connectivity;
+  final CouponRepository _repository;
 
-  CouponProvider({
-    required CouponRepositoryImpl repository,
-    required Connectivity connectivity,
-  }) : _repository = repository,
-       _connectivity = connectivity;
+  CouponProvider({required CouponRepository repository})
+    : _repository = repository;
 
   // State
-  CouponState _state = CouponInitial();
-  CouponState get state => _state;
+  CouponStatus _status = CouponStatus.initial;
+  List<CouponEntity> _coupons = [];
+  List<CouponEntity> _filteredCoupons = [];
+  List<CategoryEntity> _categories = [];
+  List<AppEntity> _apps = [];
+  String? _errorMessage;
+
+  // Filters
+  String _selectedCategoryId = 'all';
+  String _selectedAppId = '';
+  String _searchQuery = '';
 
   // Controllers
-  final TextEditingController searchController = TextEditingController();
-  final TextEditingController dislikeController = TextEditingController();
-
-  // Debounce timer for search
+  final searchController = TextEditingController();
   Timer? _searchDebounce;
-  static const Duration _debounceDuration = Duration(milliseconds: 500);
 
   // Cache
-  GetCouponsModel? _cachedCoupons;
-  DateTime? _lastCacheTime;
+  DateTime? _lastLoadTime;
   static const Duration _cacheValidDuration = Duration(minutes: 5);
+
+  // Getters
+  CouponStatus get status => _status;
+  List<CouponEntity> get coupons => _filteredCoupons;
+  List<CategoryEntity> get categories => _categories;
+  List<AppEntity> get apps => _apps;
+  String? get errorMessage => _errorMessage;
+  String get selectedCategoryId => _selectedCategoryId;
+  String get selectedAppId => _selectedAppId;
+  String get searchQuery => _searchQuery;
+  bool get isLoading => _status == CouponStatus.loading;
+  bool get hasError => _status == CouponStatus.error;
+  bool get isEmpty => _filteredCoupons.isEmpty;
+  bool get hasData => _filteredCoupons.isNotEmpty;
 
   @override
   void dispose() {
     searchController.dispose();
-    dislikeController.dispose();
     _searchDebounce?.cancel();
     super.dispose();
   }
@@ -50,270 +62,285 @@ class CouponProvider extends ChangeNotifier {
   // Public Methods
   Future<void> initializeCoupons() async {
     if (_shouldUseCachedData()) {
-      _emitLoadedState(_cachedCoupons!);
+      _applyFilters();
       return;
     }
-
     await loadCoupons();
   }
 
   Future<void> loadCoupons({bool forceRefresh = false}) async {
+    if (_status == CouponStatus.loading) return;
+
+    if (forceRefresh || !_shouldUseCachedData()) {
+      _setLoading();
+      await _fetchCoupons();
+    } else {
+      _applyFilters();
+      _setLoaded();
+    }
+  }
+
+  Future<void> refreshCoupons() async {
+    _setRefreshing();
+    await _fetchCoupons();
+  }
+
+  Future<void> loadCategories() async {
     try {
-      if (!forceRefresh && _shouldUseCachedData()) {
-        _emitLoadedState(_cachedCoupons!);
-        return;
-      }
-
-      _setState(CouponLoading());
-
-      final connectivityResult = await _connectivity.checkConnectivity();
-      if (connectivityResult == ConnectivityResult.none) {
-        _setState(
-          const CouponError(
-            message: 'No internet connection. Please check your network.',
-            canRetry: true,
-          ),
-        );
-        return;
-      }
-
-      final result = await _repository.getCoupons();
-
+      final result = await _repository.getCategories();
       result.fold(
-        (failure) {
-          dev.log('Failed to load coupons: ${failure.message}');
-          _setState(
-            CouponError(
-              message: _getErrorMessage(failure),
-              canRetry: failure is! ValidationFailure,
-            ),
-          );
-        },
-        (coupons) {
-          _cachedCoupons = coupons;
-          _lastCacheTime = DateTime.now();
-          _emitLoadedState(coupons);
+        (failure) => dev.log('Failed to load categories: ${failure.message}'),
+        (categories) {
+          _categories = [
+            const CategoryEntity(id: 'all', name: 'All'),
+            ...categories,
+          ];
+          notifyListeners();
         },
       );
-    } catch (e, stackTrace) {
-      dev.log(
-        'Unexpected error in loadCoupons',
-        error: e,
-        stackTrace: stackTrace,
+    } catch (e) {
+      dev.log('Error loading categories: $e');
+    }
+  }
+
+  Future<void> loadApps() async {
+    try {
+      final result = await _repository.getApps();
+      result.fold(
+        (failure) => dev.log('Failed to load apps: ${failure.message}'),
+        (apps) {
+          _apps = apps;
+          notifyListeners();
+        },
       );
-      _setState(
-        const CouponError(
-          message: 'An unexpected error occurred. Please try again.',
-          canRetry: true,
-        ),
-      );
+    } catch (e) {
+      dev.log('Error loading apps: $e');
     }
   }
 
   void onSearchChanged(String query) {
     _searchDebounce?.cancel();
-    _searchDebounce = Timer(_debounceDuration, () {
-      _filterCoupons(query: query);
+    _searchDebounce = Timer(const Duration(milliseconds: 500), () {
+      _searchQuery = query;
+      _applyFilters();
     });
   }
 
-  void onCategorySelected(String categoryId) {
-    _filterCoupons(categoryId: categoryId);
+  void selectCategory(String categoryId) {
+    if (_selectedCategoryId != categoryId) {
+      _selectedCategoryId = categoryId;
+      _applyFilters();
+    }
   }
 
-  void onAppSelected(String appId) {
-    _filterCoupons(appId: appId);
+  void selectApp(String appId) {
+    if (_selectedAppId != appId) {
+      _selectedAppId = appId;
+      _applyFilters();
+    }
+  }
+
+  void clearFilters() {
+    _selectedCategoryId = 'all';
+    _selectedAppId = '';
+    _searchQuery = '';
+    searchController.clear();
+    _applyFilters();
   }
 
   Future<void> likeCoupon(String couponId) async {
-    await _performCouponAction(couponId, 'like');
+    try {
+      final result = await _repository.likeCoupon(couponId);
+      result.fold((failure) => _showError(failure.message), (success) {
+        if (success) {
+          _updateCouponInList(
+            couponId,
+            (coupon) => coupon.copyWith(
+              isLiked: true,
+              isDisliked: false,
+              likes: coupon.likes + 1,
+            ),
+          );
+        }
+      });
+    } catch (e) {
+      dev.log('Error liking coupon: $e');
+      _showError('Failed to like coupon. Please try again.');
+    }
   }
 
   Future<void> dislikeCoupon(String couponId, String reason) async {
-    await _performCouponAction(couponId, 'dislike', reason: reason);
+    try {
+      final result = await _repository.dislikeCoupon(couponId, reason);
+      result.fold((failure) => _showError(failure.message), (success) {
+        if (success) {
+          _updateCouponInList(
+            couponId,
+            (coupon) => coupon.copyWith(
+              isDisliked: true,
+              isLiked: false,
+              dislikes: coupon.dislikes + 1,
+            ),
+          );
+        }
+      });
+    } catch (e) {
+      dev.log('Error disliking coupon: $e');
+      _showError('Failed to dislike coupon. Please try again.');
+    }
   }
 
   Future<void> useCoupon(String couponId) async {
     try {
       final result = await _repository.useCoupon(couponId);
-
-      result.fold(
-        (failure) {
-          _setState(CouponActionError(message: _getErrorMessage(failure)));
-        },
-        (success) {
-          // Refresh coupons to update usage count
-          loadCoupons(forceRefresh: true);
-        },
-      );
+      result.fold((failure) => _showError(failure.message), (success) {
+        if (success) {
+          _updateCouponInList(
+            couponId,
+            (coupon) => coupon.copyWith(
+              usageCount: coupon.usageCount + 1,
+              lastUsed: DateTime.now(),
+            ),
+          );
+        }
+      });
     } catch (e) {
-      dev.log('Error using coupon', error: e);
-      _setState(
-        const CouponActionError(
-          message: 'Failed to use coupon. Please try again.',
-        ),
-      );
+      dev.log('Error using coupon: $e');
+      _showError('Failed to use coupon. Please try again.');
     }
   }
 
   String formatLastUsedTime(DateTime? lastUsed) {
-    return DateFormatter.formatLastUsedTime(lastUsed);
+    if (lastUsed == null) return "Never used";
+    return lastUsed.timeAgo();
   }
 
   // Private Methods
-  void _setState(CouponState newState) {
-    _state = newState;
+  Future<void> _fetchCoupons() async {
+    try {
+      final result = await _repository.getCoupons(
+        categoryId: _selectedCategoryId != 'all' ? _selectedCategoryId : null,
+        appId: _selectedAppId.isNotEmpty ? _selectedAppId : null,
+        search: _searchQuery.isNotEmpty ? _searchQuery : null,
+      );
+
+      result.fold((failure) => _setError(_getErrorMessage(failure)), (coupons) {
+        _coupons = coupons;
+        _lastLoadTime = DateTime.now();
+        _applyFilters();
+        _setLoaded();
+      });
+    } catch (e) {
+      dev.log('Error fetching coupons: $e');
+      _setError('Failed to load coupons. Please try again.');
+    }
+  }
+
+  void _setLoading() {
+    _status = CouponStatus.loading;
+    _errorMessage = null;
     notifyListeners();
   }
 
-  bool _shouldUseCachedData() {
-    return _cachedCoupons != null &&
-        _lastCacheTime != null &&
-        DateTime.now().difference(_lastCacheTime!) < _cacheValidDuration;
+  void _setRefreshing() {
+    _status = CouponStatus.refreshing;
+    _errorMessage = null;
+    notifyListeners();
   }
 
-  void _emitLoadedState(GetCouponsModel coupons) {
-    final categories = _buildCategoriesWithAll(coupons.data?.categories ?? []);
-    final currentState = _state;
-
-    String selectedCategoryId = 'all';
-    String selectedAppId = '';
-    String searchQuery = '';
-
-    if (currentState is CouponLoaded) {
-      selectedCategoryId = currentState.selectedCategoryId;
-      selectedAppId = currentState.selectedAppId;
-      searchQuery = currentState.searchQuery;
-    }
-
-    final filteredCoupons = _filterCouponsList(
-      coupons.data?.couponRewards ?? [],
-      categoryId: selectedCategoryId,
-      appId: selectedAppId,
-      query: searchQuery,
-    );
-
-    _setState(
-      CouponLoaded(
-        coupons: coupons,
-        filteredCoupons: filteredCoupons,
-        categories: categories,
-        apps: coupons.data?.apps ?? [],
-        selectedCategoryId: selectedCategoryId,
-        selectedAppId: selectedAppId,
-        searchQuery: searchQuery,
-      ),
-    );
+  void _setLoaded() {
+    _status = CouponStatus.loaded;
+    _errorMessage = null;
+    notifyListeners();
   }
 
-  void _filterCoupons({String? categoryId, String? appId, String? query}) {
-    final currentState = _state;
-    if (currentState is! CouponLoaded) return;
-
-    final newCategoryId = categoryId ?? currentState.selectedCategoryId;
-    final newAppId = appId ?? currentState.selectedAppId;
-    final newQuery = query ?? currentState.searchQuery;
-
-    final filteredCoupons = _filterCouponsList(
-      currentState.coupons.data?.couponRewards ?? [],
-      categoryId: newCategoryId,
-      appId: newAppId,
-      query: newQuery,
-    );
-
-    _setState(
-      currentState.copyWith(
-        filteredCoupons: filteredCoupons,
-        selectedCategoryId: newCategoryId,
-        selectedAppId: newAppId,
-        searchQuery: newQuery,
-      ),
-    );
+  void _setError(String message) {
+    _status = CouponStatus.error;
+    _errorMessage = message;
+    dev.log('Coupon provider error: $message');
+    notifyListeners();
   }
 
-  List<CouponReward> _filterCouponsList(
-    List<CouponReward> coupons, {
-    required String categoryId,
-    required String appId,
-    required String query,
-  }) {
-    return coupons.where((coupon) {
+  void _showError(String message) {
+    _errorMessage = message;
+    notifyListeners();
+
+    // Clear error after some time
+    Timer(const Duration(seconds: 3), () {
+      if (_errorMessage == message) {
+        _errorMessage = null;
+        notifyListeners();
+      }
+    });
+  }
+
+  void _applyFilters() {
+    _filteredCoupons = _coupons.where((coupon) {
       // Category filter
-      if (categoryId != 'all' && coupon.category?.id != categoryId) {
+      if (_selectedCategoryId != 'all' &&
+          coupon.category.id != _selectedCategoryId) {
         return false;
       }
 
       // App filter
-      if (appId.isNotEmpty && coupon.app?.id != appId) {
+      if (_selectedAppId.isNotEmpty && coupon.app.id != _selectedAppId) {
         return false;
       }
 
       // Search filter
-      if (query.isNotEmpty) {
-        final searchLower = query.toLowerCase();
-        final description = coupon.description?.toLowerCase() ?? '';
-        final appName = coupon.app?.appName?.toLowerCase() ?? '';
-        final categoryName = coupon.category?.name?.toLowerCase() ?? '';
+      if (_searchQuery.isNotEmpty) {
+        final searchLower = _searchQuery.toLowerCase();
+        final description = coupon.description.toLowerCase();
+        final appName = coupon.app.name.toLowerCase();
+        final categoryName = coupon.category.name.toLowerCase();
+        final couponCode = coupon.couponCode.toLowerCase();
 
         if (!description.contains(searchLower) &&
             !appName.contains(searchLower) &&
-            !categoryName.contains(searchLower)) {
+            !categoryName.contains(searchLower) &&
+            !couponCode.contains(searchLower)) {
           return false;
         }
       }
 
       return true;
     }).toList();
+
+    // Sort coupons (newest first, then by likes)
+    _filteredCoupons.sort((a, b) {
+      final dateComparison = b.createdAt.compareTo(a.createdAt);
+      if (dateComparison != 0) return dateComparison;
+      return b.likes.compareTo(a.likes);
+    });
+
+    notifyListeners();
   }
 
-  List<CategoryElement> _buildCategoriesWithAll(
-    List<CategoryElement> categories,
-  ) {
-    return [CategoryElement(id: 'all', name: 'All'), ...categories];
-  }
-
-  Future<void> _performCouponAction(
+  void _updateCouponInList(
     String couponId,
-    String action, {
-    String? reason,
-  }) async {
-    try {
-      _setState(CouponActionLoading(couponId: couponId, action: action));
-
-      final result = await _repository.actionOnCoupon(couponId, action, reason);
-
-      result.fold(
-        (failure) {
-          _setState(CouponActionError(message: _getErrorMessage(failure)));
-        },
-        (success) {
-          _setState(
-            CouponActionSuccess(message: 'Action completed successfully'),
-          );
-          // Clear dislike reason if it was a dislike action
-          if (action == 'dislike') {
-            dislikeController.clear();
-          }
-          // Refresh coupons to update like/dislike counts
-          loadCoupons(forceRefresh: true);
-        },
-      );
-    } catch (e) {
-      dev.log('Error performing coupon action', error: e);
-      _setState(
-        CouponActionError(
-          message: 'Failed to perform action. Please try again.',
-        ),
-      );
+    CouponEntity Function(CouponEntity) updater,
+  ) {
+    final index = _coupons.indexWhere((coupon) => coupon.id == couponId);
+    if (index != -1) {
+      _coupons[index] = updater(_coupons[index]);
+      _applyFilters();
     }
+  }
+
+  bool _shouldUseCachedData() {
+    return _coupons.isNotEmpty &&
+        _lastLoadTime != null &&
+        DateTime.now().difference(_lastLoadTime!) < _cacheValidDuration;
   }
 
   String _getErrorMessage(Failure failure) {
     switch (failure.runtimeType) {
       case NetworkFailure:
-        return 'Network error. Please check your connection.';
+        return 'No internet connection. Please check your network.';
       case ServerFailure:
-        return 'Server error. Please try again later.';
+        return failure.message.isNotEmpty
+            ? failure.message
+            : 'Server error. Please try again later.';
       case ValidationFailure:
         return failure.message;
       case CacheFailure:
@@ -321,5 +348,14 @@ class CouponProvider extends ChangeNotifier {
       default:
         return 'Something went wrong. Please try again.';
     }
+  }
+
+  // Debug methods (for development)
+  void debugPrintCoupons() {
+    dev.log('Total coupons: ${_coupons.length}');
+    dev.log('Filtered coupons: ${_filteredCoupons.length}');
+    dev.log('Selected category: $_selectedCategoryId');
+    dev.log('Selected app: $_selectedAppId');
+    dev.log('Search query: $_searchQuery');
   }
 }
