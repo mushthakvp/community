@@ -9,7 +9,6 @@ import '../../../../core/widgets/common/app_bar.dart';
 import '../../../../core/widgets/common/text_widget.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../widgets/profile_header.dart';
-import '../widgets/profile_menu.dart';
 import '../widgets/settings_tile.dart';
 
 class ProfilePage extends StatefulWidget {

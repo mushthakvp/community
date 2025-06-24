@@ -8,7 +8,14 @@ import '../../../../core/utils/extensions.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
 
-enum AuthStatus { initial, loading, authenticated, unauthenticated, error }
+enum AuthStatus {
+  initial,
+  loading,
+  authenticated,
+  unauthenticated,
+  error,
+  otpRequired,
+}
 
 class AuthProvider extends ChangeNotifier {
   final AuthRepository _repository;
@@ -26,6 +33,8 @@ class AuthProvider extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   bool get isAuthenticated => _status == AuthStatus.authenticated;
   bool get isLoading => _status == AuthStatus.loading;
+  bool get isOtpRequired => _status == AuthStatus.otpRequired;
+  bool get hasError => _status == AuthStatus.error && _errorMessage != null;
 
   // Controllers
   final emailController = TextEditingController();
@@ -34,6 +43,7 @@ class AuthProvider extends ChangeNotifier {
   final phoneController = TextEditingController();
   final confirmPasswordController = TextEditingController();
   final otpController = TextEditingController();
+  final referralCodeController = TextEditingController();
 
   // Form state
   bool _isPasswordVisible = false;
@@ -69,6 +79,7 @@ class AuthProvider extends ChangeNotifier {
     phoneController.dispose();
     confirmPasswordController.dispose();
     otpController.dispose();
+    referralCodeController.dispose();
     super.dispose();
   }
 
@@ -122,6 +133,9 @@ class AuthProvider extends ChangeNotifier {
 
   void clearError() {
     _errorMessage = null;
+    if (_status == AuthStatus.error) {
+      _status = AuthStatus.initial;
+    }
     notifyListeners();
   }
 
@@ -135,10 +149,15 @@ class AuthProvider extends ChangeNotifier {
       password: passwordController.text.trim(),
     );
 
-    result.fold(
-      (failure) => _setError(failure.message),
-      (user) => _setAuthenticated(user),
-    );
+    result.fold((failure) {
+      // Check if it's an OTP verification required case
+      if (failure.message.toLowerCase().contains('otp') ||
+          failure.message.toLowerCase().contains('verification')) {
+        _setOtpRequired();
+      } else {
+        _setError(failure.message);
+      }
+    }, (user) => _setAuthenticated(user));
   }
 
   Future<void> register() async {
@@ -163,13 +182,12 @@ class AuthProvider extends ChangeNotifier {
 
     result.fold((failure) => _setError(failure.message), (success) {
       if (success) {
-        _setStatus(AuthStatus.unauthenticated);
-        // Navigate to OTP verification
+        _setOtpRequired();
       }
     });
   }
 
-  Future<void> verifyOtp() async {
+  Future<void> verifyOtp({bool isLogin = false}) async {
     if (otpController.text.trim().length != 6) {
       _setError('Please enter a valid 6-digit OTP');
       return;
@@ -188,6 +206,36 @@ class AuthProvider extends ChangeNotifier {
     result.fold((failure) => _setError(failure.message), (success) {
       if (success) {
         checkAuthStatus();
+      }
+    });
+  }
+
+  Future<void> resendOtp() async {
+    _setLoading();
+
+    final result = await _repository.resendOtp(
+      email: emailController.text.trim(),
+      phone: phoneController.text.trim(),
+      dialCode: '+91',
+      method: _verificationMethod,
+    );
+
+    result.fold((failure) => _setError(failure.message), (success) {
+      if (success) {
+        _setStatus(AuthStatus.otpRequired);
+      }
+    });
+  }
+
+  Future<void> forgotPassword(String email) async {
+    _setLoading();
+
+    final result = await _repository.forgotPassword(email: email);
+
+    result.fold((failure) => _setError(failure.message), (success) {
+      if (success) {
+        _setStatus(AuthStatus.initial);
+        // You might want to show a success message here
       }
     });
   }
@@ -234,6 +282,12 @@ class AuthProvider extends ChangeNotifier {
   void _setError(String message) {
     _status = AuthStatus.error;
     _errorMessage = message;
+    notifyListeners();
+  }
+
+  void _setOtpRequired() {
+    _status = AuthStatus.otpRequired;
+    _errorMessage = null;
     notifyListeners();
   }
 
@@ -329,6 +383,7 @@ class AuthProvider extends ChangeNotifier {
     phoneController.clear();
     confirmPasswordController.clear();
     otpController.clear();
+    referralCodeController.clear();
     _selectedGender = '';
     _selectedDateOfBirth = null;
     _selectedProfession = '';

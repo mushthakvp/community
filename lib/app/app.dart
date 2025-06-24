@@ -33,17 +33,12 @@ class _AppState extends State<App> {
 
   ThemeData _buildTheme() {
     return ThemeData(
-      useMaterial3: true,
-      brightness: Brightness.dark,
+      brightness: Brightness.light,
       scaffoldBackgroundColor: AppConstants.black,
       fontFamily: AppConstants.fontFamily,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: AppConstants.appPrimaryColor,
-        brightness: Brightness.dark,
-      ),
       appBarTheme: const AppBarTheme(
         backgroundColor: AppConstants.black,
-        foregroundColor: AppConstants.white,
+        foregroundColor: AppConstants.black,
         elevation: 0,
         centerTitle: true,
       ),

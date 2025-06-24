@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../../core/widgets/common/text_widget.dart';
 import '../providers/coupon_provider.dart';
 import 'coupon_card_optimized.dart';
 import 'empty_coupons_widget.dart';

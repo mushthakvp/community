@@ -14,6 +14,7 @@ import '../../../../core/widgets/common/text_widget.dart';
 import '../../../../core/widgets/inputs/text_field.dart';
 import '../../../../core/widgets/loading/loading_widget.dart';
 import '../providers/auth_provider.dart';
+import '../widgets/forgot_password_dialog.dart';
 import '../widgets/password_field.dart';
 import '../widgets/social_login_buttons.dart';
 

@@ -60,7 +60,10 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
             if (authProvider.isAuthenticated) {
               context.go(RouteConstants.home);
             } else if (authProvider.hasError) {
-              ErrorHandler.showError(context, authProvider.errorMessage!);
+              ErrorHandler.showError(
+                context,
+                ServerFailure(message: authProvider.errorMessage ?? ""),
+              );
             }
           });
 

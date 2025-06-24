@@ -73,7 +73,10 @@ class _RegisterPageState extends State<RegisterPage> {
                 '${RouteConstants.otpVerification}?email=${authProvider.emailController.text}&isLogin=false',
               );
             } else if (authProvider.hasError) {
-              ErrorHandler.showError(context, authProvider.errorMessage!);
+              ErrorHandler.showError(
+                context,
+                ServerFailure(message: authProvider.errorMessage ?? ""),
+              );
             }
           });
 
