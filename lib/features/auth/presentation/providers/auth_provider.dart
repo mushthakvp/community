@@ -110,8 +110,21 @@ class AuthProvider extends ChangeNotifier {
   }
 
   void setLocation({String? country, String? state, String? district}) {
-    if (country != null) _selectedCountry = country;
-    if (state != null) _selectedState = state;
+    if (country != null) {
+      _selectedCountry = country;
+      // Clear state and district when country changes
+      if (_selectedCountry != country) {
+        _selectedState = '';
+        _selectedDistrict = '';
+      }
+    }
+    if (state != null) {
+      _selectedState = state;
+      // Clear district when state changes
+      if (_selectedState != state) {
+        _selectedDistrict = '';
+      }
+    }
     if (district != null) _selectedDistrict = district;
     notifyListeners();
   }
@@ -178,6 +191,10 @@ class AuthProvider extends ChangeNotifier {
       state: _selectedState,
       district: _selectedDistrict.isNotEmpty ? _selectedDistrict : null,
       verificationMethod: _verificationMethod,
+      profileImage: _profileImage?.path,
+      referralCode: referralCodeController.text.trim().isNotEmpty
+          ? referralCodeController.text.trim()
+          : null,
     );
 
     result.fold((failure) => _setError(failure.message), (success) {
@@ -235,7 +252,6 @@ class AuthProvider extends ChangeNotifier {
     result.fold((failure) => _setError(failure.message), (success) {
       if (success) {
         _setStatus(AuthStatus.initial);
-        // You might want to show a success message here
       }
     });
   }
@@ -316,14 +332,24 @@ class AuthProvider extends ChangeNotifier {
   }
 
   bool _validateRegisterForm() {
+    // Required field validations
     if (nameController.text.trim().isEmpty) {
-      _setError('Please enter your name');
+      _setError('Please enter your full name');
       return false;
     }
 
-    if (emailController.text.trim().isEmpty ||
-        !emailController.text.trim().isValidEmail()) {
-      _setError('Please enter a valid email');
+    if (nameController.text.trim().length < 2) {
+      _setError('Name must be at least 2 characters long');
+      return false;
+    }
+
+    if (emailController.text.trim().isEmpty) {
+      _setError('Please enter your email address');
+      return false;
+    }
+
+    if (!emailController.text.trim().isValidEmail()) {
+      _setError('Please enter a valid email address');
       return false;
     }
 
@@ -332,14 +358,8 @@ class AuthProvider extends ChangeNotifier {
       return false;
     }
 
-    if (passwordController.text.trim().length < 6) {
-      _setError('Password must be at least 6 characters');
-      return false;
-    }
-
-    if (passwordController.text.trim() !=
-        confirmPasswordController.text.trim()) {
-      _setError('Passwords do not match');
+    if (phoneController.text.trim().length < 10) {
+      _setError('Please enter a valid phone number');
       return false;
     }
 
@@ -350,6 +370,13 @@ class AuthProvider extends ChangeNotifier {
 
     if (_selectedDateOfBirth == null) {
       _setError('Please select your date of birth');
+      return false;
+    }
+
+    // Check age (must be at least 13)
+    final age = DateTime.now().difference(_selectedDateOfBirth!).inDays / 365;
+    if (age < 13) {
+      _setError('You must be at least 13 years old to register');
       return false;
     }
 
@@ -368,12 +395,41 @@ class AuthProvider extends ChangeNotifier {
       return false;
     }
 
+    if (passwordController.text.trim().length < 8) {
+      _setError('Password must be at least 8 characters long');
+      return false;
+    }
+
+    // Password strength validation
+    final password = passwordController.text.trim();
+    if (!_isPasswordStrong(password)) {
+      _setError(
+        'Password must contain at least one uppercase letter, one lowercase letter, and one number',
+      );
+      return false;
+    }
+
+    if (passwordController.text.trim() !=
+        confirmPasswordController.text.trim()) {
+      _setError('Passwords do not match');
+      return false;
+    }
+
     if (!_agreeToTerms) {
-      _setError('Please agree to terms and conditions');
+      _setError('Please agree to the Terms of Service and Privacy Policy');
       return false;
     }
 
     return true;
+  }
+
+  bool _isPasswordStrong(String password) {
+    // Check for at least one uppercase letter, one lowercase letter, and one number
+    final hasUppercase = password.contains(RegExp(r'[A-Z]'));
+    final hasLowercase = password.contains(RegExp(r'[a-z]'));
+    final hasNumber = password.contains(RegExp(r'[0-9]'));
+
+    return hasUppercase && hasLowercase && hasNumber;
   }
 
   void _clearControllers() {

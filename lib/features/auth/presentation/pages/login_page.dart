@@ -27,8 +27,10 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   late AnimationController _fadeAnimationController;
   late AnimationController _slideAnimationController;
+  late AnimationController _scrollAnimationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
+  late Animation<double> _scrollAnimation;
 
   @override
   void initState() {
@@ -42,6 +44,11 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
     _slideAnimationController = AnimationController(
       duration: const Duration(milliseconds: 1200),
+      vsync: this,
+    );
+
+    _scrollAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 3000),
       vsync: this,
     );
 
@@ -60,9 +67,17 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
           ),
         );
 
+    _scrollAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _scrollAnimationController,
+        curve: Curves.easeInOut,
+      ),
+    );
+
     // Start animations
     _fadeAnimationController.forward();
     _slideAnimationController.forward();
+    _scrollAnimationController.repeat(reverse: true);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AuthProvider>().clearError();
@@ -73,6 +88,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   void dispose() {
     _fadeAnimationController.dispose();
     _slideAnimationController.dispose();
+    _scrollAnimationController.dispose();
     super.dispose();
   }
 
@@ -112,21 +128,86 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
   Widget _buildLoginForm(AuthProvider authProvider) {
     return SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 20),
-              _buildAnimatedHeader(),
-              const SizedBox(height: 40),
-              _buildAnimatedForm(authProvider),
-            ],
+      child: Stack(
+        children: [
+          // Skip/Guest Mode Button
+          Positioned(top: 16, right: 16, child: _buildSkipButton()),
+          // Main Content
+          SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 60), // Space for skip button
+                  _buildAnimatedHeader(),
+                  const SizedBox(height: 40),
+                  _buildAnimatedForm(authProvider),
+                ],
+              ),
+            ),
           ),
-        ),
+        ],
       ),
+    );
+  }
+
+  Widget _buildSkipButton() {
+    return TweenAnimationBuilder<double>(
+      duration: const Duration(milliseconds: 2000),
+      tween: Tween(begin: 0.0, end: 1.0),
+      curve: Curves.elasticOut,
+      builder: (context, value, child) {
+        return Transform.scale(
+          scale: value,
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppConstants.white.withOpacity(0.1),
+                  AppConstants.white.withOpacity(0.05),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(25),
+              border: Border.all(
+                color: AppConstants.white.withOpacity(0.3),
+                width: 1,
+              ),
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(25),
+                onTap: () => _handleGuestMode(),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.person_outline,
+                        color: AppConstants.white.withOpacity(0.8),
+                        size: 18,
+                      ),
+                      const SizedBox(width: 8),
+                      CommonTextWidget(
+                        text: 'Guest Mode',
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: AppConstants.white.withOpacity(0.8),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -207,17 +288,34 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
         ),
         const SizedBox(height: 24),
 
-        ShaderMask(
-          shaderCallback: (bounds) => const LinearGradient(
-            colors: [AppConstants.appPrimaryColor, Color(0xFF00D4AA)],
-          ).createShader(bounds),
-          child: const CommonTextWidget(
-            text: 'Welcome to Vivera Community',
-            fontSize: 26,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-            align: TextAlign.center,
-          ),
+        // Animated scrolling text with gradient
+        AnimatedBuilder(
+          animation: _scrollAnimation,
+          builder: (context, child) {
+            return ShaderMask(
+              shaderCallback: (bounds) {
+                return LinearGradient(
+                  colors: [
+                    AppConstants.appPrimaryColor,
+                    Color.lerp(
+                      AppConstants.appPrimaryColor,
+                      const Color(0xFF00D4AA),
+                      _scrollAnimation.value,
+                    )!,
+                    const Color(0xFF00D4AA),
+                  ],
+                  stops: [0.0, _scrollAnimation.value, 1.0],
+                ).createShader(bounds);
+              },
+              child: const CommonTextWidget(
+                text: 'Welcome to Vivera Community',
+                fontSize: 26,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                align: TextAlign.center,
+              ),
+            );
+          },
         ),
         const SizedBox(height: 8),
 
@@ -378,6 +476,51 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     if (_formKey.currentState!.validate()) {
       authProvider.login();
     }
+  }
+
+  void _handleGuestMode() {
+    // Show confirmation dialog
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppConstants.black,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const CommonTextWidget(
+          text: 'Continue as Guest?',
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: AppConstants.white,
+        ),
+        content: CommonTextWidget(
+          text:
+              'You\'ll have limited access to features. You can create an account anytime.',
+          fontSize: 14,
+          color: AppConstants.white.withOpacity(0.8),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: CommonTextWidget(
+              text: 'Cancel',
+              fontSize: 14,
+              color: AppConstants.white.withOpacity(0.6),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              context.go(RouteConstants.home);
+            },
+            child: const CommonTextWidget(
+              text: 'Continue',
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppConstants.appPrimaryColor,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showForgotPasswordDialog() {
