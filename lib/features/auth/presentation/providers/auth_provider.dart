@@ -1,3 +1,4 @@
+// lib/features/auth/presentation/providers/auth_provider.dart - Improved
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -26,6 +27,10 @@ class AuthProvider extends ChangeNotifier {
   UserEntity? _user;
   String? _errorMessage;
   String? _firebaseToken;
+
+  // Navigation state
+  bool _hasNavigatedToOtp = false;
+  bool _hasNavigatedToHome = false;
 
   // Getters
   AuthStatus get status => _status;
@@ -83,6 +88,23 @@ class AuthProvider extends ChangeNotifier {
     otpController.dispose();
     referralCodeController.dispose();
     super.dispose();
+  }
+
+  // Navigation state management
+  void resetNavigationFlags() {
+    _hasNavigatedToOtp = false;
+    _hasNavigatedToHome = false;
+  }
+
+  bool get canNavigateToOtp => !_hasNavigatedToOtp;
+  bool get canNavigateToHome => !_hasNavigatedToHome;
+
+  void markOtpNavigated() {
+    _hasNavigatedToOtp = true;
+  }
+
+  void markHomeNavigated() {
+    _hasNavigatedToHome = true;
   }
 
   // Methods
@@ -166,11 +188,14 @@ class AuthProvider extends ChangeNotifier {
   Future<void> login() async {
     if (!_validateLoginForm()) return;
     _setLoading();
+    resetNavigationFlags();
+
     final result = await _repository.login(
       email: emailController.text.trim(),
       password: passwordController.text.trim(),
       firebaseId: _firebaseToken ?? "empty token",
     );
+
     result.fold((failure) {
       if (failure.message.toLowerCase().contains('otp') ||
           failure.message.toLowerCase().contains('verification')) {
@@ -184,6 +209,8 @@ class AuthProvider extends ChangeNotifier {
   Future<void> register() async {
     if (!_validateRegisterForm()) return;
     _setLoading();
+    resetNavigationFlags();
+
     final result = await _repository.register(
       name: nameController.text.trim(),
       email: emailController.text.trim(),
@@ -204,6 +231,7 @@ class AuthProvider extends ChangeNotifier {
           : null,
       firebaseId: _firebaseToken ?? "empty token",
     );
+
     result.fold(
       (failure) {
         _setError(failure.message);
@@ -221,7 +249,10 @@ class AuthProvider extends ChangeNotifier {
       _setError('Please enter a valid 6-digit OTP');
       return;
     }
+
     _setLoading();
+    resetNavigationFlags();
+
     final result = await _repository.verifyOtp(
       otp: otpController.text.trim(),
       email: emailController.text.trim(),
@@ -230,6 +261,7 @@ class AuthProvider extends ChangeNotifier {
       method: _verificationMethod,
       firebaseId: _firebaseToken ?? "empty token",
     );
+
     result.fold((failure) => _setError(failure.message), (success) {
       if (success) {
         checkAuthStatus();
@@ -239,12 +271,14 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> resendOtp() async {
     _setLoading();
+
     final result = await _repository.resendOtp(
       email: emailController.text.trim(),
       phone: phoneController.text.trim(),
       dialCode: '+91',
       method: _verificationMethod,
     );
+
     result.fold((failure) => _setError(failure.message), (success) {
       if (success) {
         _setStatus(AuthStatus.otpRequired);
@@ -266,6 +300,7 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> logout() async {
     _setLoading();
+    resetNavigationFlags();
 
     final result = await _repository.logout();
 
@@ -278,6 +313,8 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<void> checkAuthStatus() async {
+    resetNavigationFlags();
+
     if (StorageService.isLoggedIn()) {
       final result = await _repository.getCurrentUser();
       result.fold(

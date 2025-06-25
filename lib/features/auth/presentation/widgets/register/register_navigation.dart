@@ -1,3 +1,4 @@
+// lib/features/auth/presentation/widgets/register/register_navigation.dart - Fixed
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -11,7 +12,7 @@ class RegisterNavigation extends StatelessWidget {
   final PageController pageController;
   final Function(int) onPageChanged;
   final VoidCallback? onRegisterPressed;
-  final bool isLoading; // Add explicit loading parameter
+  final bool isLoading;
 
   const RegisterNavigation({
     super.key,
@@ -54,19 +55,24 @@ class RegisterNavigation extends StatelessWidget {
   }
 
   Widget _buildBackButton(AuthProvider authProvider) {
+    final isDisabled = isLoading || authProvider.isLoading;
+
     return Container(
       height: 56,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppConstants.appPrimaryColor, width: 2),
+        border: Border.all(
+          color: isDisabled
+              ? AppConstants.appPrimaryColor.withOpacity(0.3)
+              : AppConstants.appPrimaryColor,
+          width: 2,
+        ),
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
-          onTap: isLoading
-              ? null
-              : _previousPage, // Disable when explicitly loading
+          onTap: isDisabled ? null : _previousPage,
           child: Container(
             alignment: Alignment.center,
             child: Row(
@@ -74,7 +80,7 @@ class RegisterNavigation extends StatelessWidget {
               children: [
                 Icon(
                   Icons.arrow_back_ios,
-                  color: isLoading
+                  color: isDisabled
                       ? AppConstants.appPrimaryColor.withOpacity(0.5)
                       : AppConstants.appPrimaryColor,
                   size: 16,
@@ -84,7 +90,7 @@ class RegisterNavigation extends StatelessWidget {
                   text: 'Back',
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: isLoading
+                  color: isDisabled
                       ? AppConstants.appPrimaryColor.withOpacity(0.5)
                       : AppConstants.appPrimaryColor,
                 ),
@@ -98,34 +104,44 @@ class RegisterNavigation extends StatelessWidget {
 
   Widget _buildNextButton(BuildContext context, AuthProvider authProvider) {
     final isLastPage = currentPage == 2;
+    final isDisabled = isLoading || authProvider.isLoading;
 
     return Container(
       height: 56,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
-        gradient: const LinearGradient(
-          colors: [AppConstants.appPrimaryColor, Color(0xFF00D4AA)],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppConstants.appPrimaryColor.withOpacity(0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
+        gradient: isDisabled
+            ? LinearGradient(
+                colors: [
+                  AppConstants.appPrimaryColor.withOpacity(0.3),
+                  const Color(0xFF00D4AA).withOpacity(0.3),
+                ],
+              )
+            : const LinearGradient(
+                colors: [AppConstants.appPrimaryColor, Color(0xFF00D4AA)],
+              ),
+        boxShadow: isDisabled
+            ? null
+            : [
+                BoxShadow(
+                  color: AppConstants.appPrimaryColor.withOpacity(0.3),
+                  blurRadius: 15,
+                  offset: const Offset(0, 5),
+                ),
+              ],
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
-          onTap: isLoading
+          onTap: isDisabled
               ? null
               : () => isLastPage
                     ? _handleRegister(context, authProvider)
                     : _nextPage(context, authProvider),
           child: Container(
             alignment: Alignment.center,
-            child: isLoading && isLastPage
+            child: (isLoading || authProvider.isLoading) && isLastPage
                 ? const SizedBox(
                     width: 24,
                     height: 24,

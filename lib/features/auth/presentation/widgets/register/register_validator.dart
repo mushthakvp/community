@@ -1,3 +1,4 @@
+// lib/features/auth/presentation/widgets/register/register_validator.dart - Fixed
 import 'package:flutter/material.dart';
 
 import '../../../../../core/constants/app_constants.dart';
@@ -89,6 +90,7 @@ class RegisterValidator {
   }
 
   static void _showError(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: CommonTextWidget(
@@ -100,6 +102,7 @@ class RegisterValidator {
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.all(16),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        duration: const Duration(seconds: 3),
       ),
     );
   }

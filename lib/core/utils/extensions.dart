@@ -1,4 +1,4 @@
-// lib/core/utils/extensions.dart
+// lib/core/utils/extensions.dart - Enhanced with SnackBar management
 import 'package:flutter/material.dart';
 
 extension StringExtensions on String? {
@@ -63,13 +63,86 @@ extension ContextExtensions on BuildContext {
 
   bool get isDarkMode => Theme.of(this).brightness == Brightness.dark;
 
+  // Enhanced SnackBar methods with automatic clearing
   void showSnackBar(String message, {bool isError = false}) {
+    // Clear existing snackbars first
+    ScaffoldMessenger.of(this).clearSnackBars();
+
     ScaffoldMessenger.of(this).showSnackBar(
       SnackBar(
         content: Text(message),
         backgroundColor: isError ? Colors.red : Colors.green,
         behavior: SnackBarBehavior.floating,
+        duration: Duration(seconds: isError ? 4 : 3),
       ),
     );
+  }
+
+  void showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(this).clearSnackBars();
+
+    ScaffoldMessenger.of(this).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 4),
+        action: SnackBarAction(
+          label: 'Dismiss',
+          textColor: Colors.white,
+          onPressed: () {
+            ScaffoldMessenger.of(this).hideCurrentSnackBar();
+          },
+        ),
+      ),
+    );
+  }
+
+  void showSuccessSnackBar(String message) {
+    ScaffoldMessenger.of(this).clearSnackBars();
+
+    ScaffoldMessenger.of(this).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.green,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  void showInfoSnackBar(String message) {
+    ScaffoldMessenger.of(this).clearSnackBars();
+
+    ScaffoldMessenger.of(this).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.blue,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  void showWarningSnackBar(String message) {
+    ScaffoldMessenger.of(this).clearSnackBars();
+    ScaffoldMessenger.of(this).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.orange,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  // Clear all snackbars
+  void clearSnackBars() {
+    ScaffoldMessenger.of(this).clearSnackBars();
+  }
+
+  // Hide current snackbar
+  void hideSnackBar() {
+    ScaffoldMessenger.of(this).hideCurrentSnackBar();
   }
 }

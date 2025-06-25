@@ -1,4 +1,4 @@
-// lib/features/auth/presentation/pages/otp_verification_page.dart
+// lib/features/auth/presentation/pages/otp_verification_page.dart - Fixed
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pinput/pinput.dart';
@@ -31,6 +31,7 @@ class OtpVerificationPage extends StatefulWidget {
 class _OtpVerificationPageState extends State<OtpVerificationPage> {
   final TextEditingController _otpController = TextEditingController();
   bool _isResending = false;
+  bool _hasNavigated = false; // Prevent multiple navigations
 
   @override
   void initState() {
@@ -57,13 +58,16 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
         builder: (context, authProvider, child) {
           // Handle state changes
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (authProvider.isAuthenticated) {
-              context.go(RouteConstants.home);
-            } else if (authProvider.hasError) {
-              ErrorHandler.showError(
-                context,
-                ServerFailure(message: authProvider.errorMessage ?? ""),
-              );
+            if (!_hasNavigated) {
+              if (authProvider.isAuthenticated) {
+                _hasNavigated = true;
+                context.go(RouteConstants.home);
+              } else if (authProvider.hasError) {
+                ErrorHandler.showError(
+                  context,
+                  ServerFailure(message: authProvider.errorMessage ?? ""),
+                );
+              }
             }
           });
 
