@@ -12,6 +12,16 @@ class StorageConstants {
   static const String themeMode = 'theme_mode';
   static const String cacheTimestamp = 'cache_timestamp';
 
+  // User Data Keys
+  static const String userName = 'user_name';
+  static const String userPhone = 'user_phone';
+  static const String communityId = 'community_id';
+  static const String userTier = 'user_tier';
+  static const String loyaltyPoints = 'loyalty_points';
+  static const String walletAmount = 'wallet_amount';
+  static const String currencyCode = 'currency_code';
+  static const String joinedDate = 'joined_date';
+
   // Cache Keys
   static const String couponsCache = 'coupons_cache';
   static const String categoriesCache = 'categories_cache';

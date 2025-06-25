@@ -11,6 +11,7 @@ class RegisterNavigation extends StatelessWidget {
   final PageController pageController;
   final Function(int) onPageChanged;
   final VoidCallback? onRegisterPressed;
+  final bool isLoading; // Add explicit loading parameter
 
   const RegisterNavigation({
     super.key,
@@ -18,6 +19,7 @@ class RegisterNavigation extends StatelessWidget {
     required this.pageController,
     required this.onPageChanged,
     this.onRegisterPressed,
+    this.isLoading = false,
   });
 
   @override
@@ -62,9 +64,9 @@ class RegisterNavigation extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
-          onTap: authProvider.isLoading
+          onTap: isLoading
               ? null
-              : _previousPage, // Disable when loading
+              : _previousPage, // Disable when explicitly loading
           child: Container(
             alignment: Alignment.center,
             child: Row(
@@ -72,7 +74,7 @@ class RegisterNavigation extends StatelessWidget {
               children: [
                 Icon(
                   Icons.arrow_back_ios,
-                  color: authProvider.isLoading
+                  color: isLoading
                       ? AppConstants.appPrimaryColor.withOpacity(0.5)
                       : AppConstants.appPrimaryColor,
                   size: 16,
@@ -82,7 +84,7 @@ class RegisterNavigation extends StatelessWidget {
                   text: 'Back',
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: authProvider.isLoading
+                  color: isLoading
                       ? AppConstants.appPrimaryColor.withOpacity(0.5)
                       : AppConstants.appPrimaryColor,
                 ),
@@ -116,14 +118,14 @@ class RegisterNavigation extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
-          onTap: authProvider.isLoading
+          onTap: isLoading
               ? null
               : () => isLastPage
                     ? _handleRegister(context, authProvider)
                     : _nextPage(context, authProvider),
           child: Container(
             alignment: Alignment.center,
-            child: authProvider.isLoading && isLastPage
+            child: isLoading && isLastPage
                 ? const SizedBox(
                     width: 24,
                     height: 24,

@@ -67,7 +67,8 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
             }
           });
 
-          if (authProvider.isLoading) {
+          // Show loading only when verifying OTP, not when resending
+          if (authProvider.isLoading && !_isResending) {
             return const Center(
               child: LoadingWidget(message: 'Verifying OTP...'),
             );
@@ -103,20 +104,8 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
   Widget _buildHeader() {
     return Column(
       children: [
-        Container(
-          width: 80,
-          height: 80,
-          decoration: BoxDecoration(
-            color: AppConstants.appPrimaryColor.withOpacity(0.2),
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(
-            Icons.security,
-            size: 40,
-            color: AppConstants.appPrimaryColor,
-          ),
-        ),
-        const SizedBox(height: 24),
+        _buildLogo(),
+        const SizedBox(height: 20),
         const CommonTextWidget(
           text: 'Verify Your Account',
           fontSize: 28,
@@ -192,7 +181,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
     return PrimaryButton(
       text: 'Verify OTP',
       onPressed: () => _handleVerifyOtp(authProvider),
-      isLoading: authProvider.isLoading,
+      isLoading: authProvider.isLoading && !_isResending,
       height: 56,
     );
   }
@@ -244,8 +233,46 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
     }
   }
 
+  Widget _buildLogo() {
+    return Container(
+      width: 100,
+      height: 100,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: AppConstants.appPrimaryColor.withOpacity(0.1),
+        border: Border.all(
+          color: AppConstants.appPrimaryColor.withOpacity(0.3),
+          width: 2,
+        ),
+      ),
+      child: ClipOval(
+        child: Image.asset(
+          'assets/animation/vivera-animation.gif',
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              decoration: BoxDecoration(
+                color: AppConstants.appPrimaryColor.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.account_circle,
+                size: 60,
+                color: AppConstants.appPrimaryColor,
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
   Future<void> _handleResendOtp(AuthProvider authProvider) async {
     setState(() => _isResending = true);
+
+    // Clear OTP field when resending
+    authProvider.otpController.clear();
+
     await authProvider.resendOtp();
     setState(() => _isResending = false);
 

@@ -25,7 +25,8 @@ class _RegisterPageState extends State<RegisterPage>
     with TickerProviderStateMixin {
   final PageController _pageController = PageController();
   int _currentPage = 0;
-  bool _isNavigating = false; // Add this flag
+  bool _isNavigating = false;
+  bool _hasRegistrationError = false; // Track registration errors
 
   late AnimationController _slideController;
   late AnimationController _scaleController;
@@ -89,6 +90,7 @@ class _RegisterPageState extends State<RegisterPage>
                 pageController: _pageController,
                 onPageChanged: (page) => _handlePageChanged(page),
                 onRegisterPressed: () => _handleRegister(authProvider),
+                isLoading: authProvider.isLoading && _isNavigating,
               ),
             ],
           );
@@ -101,11 +103,18 @@ class _RegisterPageState extends State<RegisterPage>
     if (mounted) {
       setState(() {
         _currentPage = page;
+        _hasRegistrationError = false; // Reset error flag when changing pages
       });
     }
   }
 
   void _handleRegister(AuthProvider authProvider) {
+    // Don't start registration if there was a previous error
+    // and user is still on the same page
+    if (_hasRegistrationError && _currentPage == 2) {
+      _hasRegistrationError = false; // Reset the flag
+    }
+
     setState(() {
       _isNavigating = true;
     });
@@ -117,6 +126,7 @@ class _RegisterPageState extends State<RegisterPage>
       if (authProvider.isOtpRequired) {
         setState(() {
           _isNavigating = false;
+          _hasRegistrationError = false;
         });
         context.go(
           '${RouteConstants.otpVerification}?email=${authProvider.emailController.text}&isLogin=false',
@@ -124,12 +134,14 @@ class _RegisterPageState extends State<RegisterPage>
       } else if (authProvider.hasError) {
         setState(() {
           _isNavigating = false;
+          _hasRegistrationError = true; // Mark that there was an error
         });
         ErrorHandler.showError(
           context,
           ServerFailure(message: authProvider.errorMessage ?? ""),
         );
-        // Don't reset the page here - keep user on current page
+        // Don't navigate to first page automatically
+        // User can stay on current page and fix the issue
       }
     });
   }

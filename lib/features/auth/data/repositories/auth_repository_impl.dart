@@ -110,7 +110,7 @@ class AuthRepositoryImpl implements AuthRepository {
         ApiConstants.register,
         body: requestData.toJson(),
       );
-      debugPrint("Repsonse: $response");
+      debugPrint("Response: $response");
       final responseData = json.decode(response.body);
       final success = responseData['success'] ?? false;
       if (success) {
@@ -157,16 +157,40 @@ class AuthRepositoryImpl implements AuthRepository {
       );
 
       final responseData = json.decode(response.body);
-      log("Response: $responseData");
+      log("OTP Verification Response: $responseData");
       final success = responseData['status'] ?? false;
       if (success) {
+        // Store token
         if (responseData['token'] != null) {
           await StorageService.setSecureString(
             'access_token',
             responseData['token'],
           );
-          await StorageService.setLoggedIn(true);
         }
+
+        // Store additional user data from the response
+        if (responseData['userDetails'] != null) {
+          final userDetails = responseData['userDetails'];
+
+          await StorageService.saveUserData(
+            name: userDetails['name'] ?? '',
+            email: userDetails['email'] ?? email,
+            phone: userDetails['phone'] ?? '',
+            communityId: userDetails['communityId'] ?? '',
+            tier: userDetails['tier'] ?? '',
+            loyaltyPoints: userDetails['loyalityPoints'] ?? 0,
+            walletAmount: (userDetails['walletAmount'] ?? 0).toDouble(),
+            currencyCode: userDetails['currencyCode'] ?? 'INR',
+            joinedDate: userDetails['joined'],
+          );
+
+          // Store user ID
+          if (userDetails['id'] != null) {
+            await StorageService.saveUserId(userDetails['id']);
+          }
+        }
+
+        await StorageService.setLoggedIn(true);
         return const Right(true);
       } else {
         return Left(
@@ -291,7 +315,6 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Either<Failure, void>> logout() async {
     try {
-      await apiClient.post(ApiConstants.logout);
       await StorageService.clearAuthTokens();
       await StorageService.setLoggedIn(false);
       return const Right(null);
@@ -304,7 +327,6 @@ class AuthRepositoryImpl implements AuthRepository {
       await StorageService.setLoggedIn(false);
       return Left(NetworkFailure(message: e.message));
     } catch (e) {
-      // Even if unknown error, clear local data
       await StorageService.clearAuthTokens();
       await StorageService.setLoggedIn(false);
       return Left(UnknownFailure(message: e.toString()));
