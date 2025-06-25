@@ -133,7 +133,7 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Either<Failure, bool>> verifyOtp({
+  Future<Either<Failure, UserEntity>> verifyOtp({
     required String otp,
     required String email,
     String? phone,
@@ -154,7 +154,6 @@ class AuthRepositoryImpl implements AuthRepository {
         ApiConstants.verifyOtp,
         body: requestData.toJson(),
       );
-
       final responseData = json.decode(response.body);
       final success = responseData['status'] ?? false;
       if (success) {
@@ -164,6 +163,7 @@ class AuthRepositoryImpl implements AuthRepository {
             responseData['token'],
           );
         }
+        UserEntity? user;
         if (responseData['userDetails'] != null) {
           final userDetails = responseData['userDetails'];
           await StorageService.saveUserData(
@@ -178,9 +178,20 @@ class AuthRepositoryImpl implements AuthRepository {
             joinedDate: userDetails['joined'],
           );
           await StorageService.saveUserId(userDetails['id']);
+          user = UserEntity(
+            name: userDetails['name'] ?? '',
+            id: userDetails['id'] ?? '',
+            email: userDetails['email'] ?? '',
+            phone: userDetails['phone'] ?? '',
+            country: userDetails['country'] ?? '',
+            state: userDetails['state'] ?? '',
+            tier: userDetails['tier'] ?? '',
+            loyaltyPoints: userDetails['loyalityPoints'] ?? 0,
+            walletAmount: (userDetails['walletAmount'] ?? 0).toDouble(),
+          );
         }
         await StorageService.setLoggedIn(true);
-        return const Right(true);
+        return Right(user!);
       } else {
         return Left(
           AuthFailure(

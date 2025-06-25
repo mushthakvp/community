@@ -1,4 +1,4 @@
-// lib/features/auth/presentation/pages/otp_verification_page.dart - Fixed
+// lib/features/auth/presentation/pages/otp_verification_page.dart - FIXED
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pinput/pinput.dart';
@@ -53,7 +53,22 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppConstants.black,
-      appBar: const CommonAppBar(title: 'Verify OTP', showBackButton: true),
+      appBar: CommonAppBar(
+        title: 'Verify OTP',
+        showBackButton: true,
+        // Custom back button handling to prevent "nothing to pop" error
+        leading: IconButton(
+          onPressed: () {
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            } else {
+              // If nothing to pop, navigate to login
+              context.go(RouteConstants.login);
+            }
+          },
+          icon: const Icon(Icons.arrow_back_ios, color: AppConstants.white),
+        ),
+      ),
       body: Consumer<AuthProvider>(
         builder: (context, authProvider, child) {
           // Handle state changes
@@ -61,6 +76,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
             if (!_hasNavigated) {
               if (authProvider.isAuthenticated) {
                 _hasNavigated = true;
+                // Clear all previous routes and go to home
                 context.go(RouteConstants.home);
               } else if (authProvider.hasError) {
                 ErrorHandler.showError(

@@ -29,7 +29,7 @@ abstract class AuthRepository {
     String? firebaseId,
   });
 
-  Future<Either<Failure, bool>> verifyOtp({
+  Future<Either<Failure, UserEntity>> verifyOtp({
     required String otp,
     required String email,
     String? phone,

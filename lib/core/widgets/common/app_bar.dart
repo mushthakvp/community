@@ -1,3 +1,4 @@
+// lib/core/widgets/common/app_bar.dart - FIXED
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -42,10 +43,24 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
           leading ??
           (showBackButton
               ? IconButton(
-                  onPressed: () => title == "Create Account"
-                      ? context.go(RouteConstants.login)
-                      : context.pop(),
-                  icon: const Icon(Icons.arrow_back_ios),
+                  onPressed: () {
+                    // FIXED: Handle back button properly
+                    if (title == "Create Account") {
+                      context.go(RouteConstants.login);
+                    } else if (Navigator.canPop(context)) {
+                      context.pop();
+                    } else {
+                      if (title == "Verify OTP") {
+                        context.go(RouteConstants.login);
+                      } else {
+                        context.go(RouteConstants.home);
+                      }
+                    }
+                  },
+                  icon: const Icon(
+                    Icons.arrow_back_ios,
+                    color: AppConstants.white,
+                  ),
                 )
               : null),
       actions: actions,

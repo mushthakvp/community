@@ -262,11 +262,10 @@ class AuthProvider extends ChangeNotifier {
       firebaseId: _firebaseToken ?? "empty token",
     );
 
-    result.fold((failure) => _setError(failure.message), (success) {
-      if (success) {
-        checkAuthStatus();
-      }
-    });
+    result.fold(
+      (failure) => _setError(failure.message),
+      (user) => _setAuthenticated(user),
+    );
   }
 
   Future<void> resendOtp() async {
