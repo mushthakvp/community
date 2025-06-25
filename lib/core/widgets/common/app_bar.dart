@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../constants/app_constants.dart';
+import '../../constants/route_constants.dart';
 import 'text_widget.dart';
 
 class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -41,7 +42,9 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
           leading ??
           (showBackButton
               ? IconButton(
-                  onPressed: () => context.pop(),
+                  onPressed: () => title == "Create Account"
+                      ? context.go(RouteConstants.login)
+                      : context.pop(),
                   icon: const Icon(Icons.arrow_back_ios),
                 )
               : null),

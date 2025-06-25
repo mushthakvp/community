@@ -163,7 +163,6 @@ class AuthProvider extends ChangeNotifier {
     );
 
     result.fold((failure) {
-      // Check if it's an OTP verification required case
       if (failure.message.toLowerCase().contains('otp') ||
           failure.message.toLowerCase().contains('verification')) {
         _setOtpRequired();

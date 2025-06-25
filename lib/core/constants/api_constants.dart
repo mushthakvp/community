@@ -1,6 +1,11 @@
 class ApiConstants {
-  static const String baseUrl = 'https://api.app.liveraapp.com/';
-  static const int timeoutDuration = 30; // seconds
+  String baseUrlPro = 'https://api.app.liveraapp.com/';
+  String baseUrlDev = 'http://192.168.3.115:3553/';
+
+  // Base URL for API requests
+  static String baseUrl = 'http://192.168.3.115:3553/';
+
+  static const int timeoutDuration = 30;
 
   // Auth Endpoints
   static const String login = 'auth/login';

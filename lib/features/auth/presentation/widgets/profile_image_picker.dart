@@ -22,7 +22,6 @@ class ProfileImagePicker extends StatelessWidget {
         return Center(
           child: Stack(
             children: [
-              // Profile Image Container
               AnimatedContainer(
                 duration: const Duration(milliseconds: 300),
                 width: 120,
@@ -63,8 +62,6 @@ class ProfileImagePicker extends StatelessWidget {
                         color: AppConstants.white.withOpacity(0.7),
                       ),
               ),
-
-              // Camera Button
               Positioned(
                 bottom: 0,
                 right: 0,
@@ -141,7 +138,6 @@ class ProfileImagePicker extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Handle bar
               Container(
                 width: 40,
                 height: 4,
@@ -151,7 +147,6 @@ class ProfileImagePicker extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 20),
-
               const CommonTextWidget(
                 text: 'Select Profile Picture',
                 fontSize: 18,
@@ -160,8 +155,6 @@ class ProfileImagePicker extends StatelessWidget {
                 align: TextAlign.center,
               ),
               const SizedBox(height: 20),
-
-              // Camera Option
               _buildImageOption(
                 context: context,
                 icon: Icons.camera_alt,
@@ -169,10 +162,7 @@ class ProfileImagePicker extends StatelessWidget {
                 subtitle: 'Use camera to take a new photo',
                 onTap: () => _pickImageFromCamera(context, authProvider),
               ),
-
               const SizedBox(height: 16),
-
-              // Gallery Option
               _buildImageOption(
                 context: context,
                 icon: Icons.photo_library,
@@ -180,10 +170,7 @@ class ProfileImagePicker extends StatelessWidget {
                 subtitle: 'Select from your photo library',
                 onTap: () => _pickImageFromGallery(context, authProvider),
               ),
-
               const SizedBox(height: 20),
-
-              // Cancel Button
               SizedBox(
                 width: double.infinity,
                 child: TextButton(
@@ -277,10 +264,7 @@ class ProfileImagePicker extends StatelessWidget {
     AuthProvider authProvider,
   ) async {
     Navigator.pop(context);
-
-    // Request camera permission
     final cameraPermission = await Permission.camera.request();
-
     if (cameraPermission.isGranted) {
       try {
         final ImagePicker picker = ImagePicker();
@@ -309,19 +293,7 @@ class ProfileImagePicker extends StatelessWidget {
     AuthProvider authProvider,
   ) async {
     Navigator.pop(context);
-
-    // Request storage permission
-    PermissionStatus permission;
-    if (Platform.isAndroid) {
-      if (await _getAndroidVersion() >= 33) {
-        permission = await Permission.photos.request();
-      } else {
-        permission = await Permission.storage.request();
-      }
-    } else {
-      permission = await Permission.photos.request();
-    }
-
+    PermissionStatus permission = await Permission.photos.request();
     if (permission.isGranted) {
       try {
         final ImagePicker picker = ImagePicker();
@@ -341,7 +313,7 @@ class ProfileImagePicker extends StatelessWidget {
         _showErrorSnackBar(context, 'Failed to pick image: $e');
       }
     } else {
-      _showPermissionDialog(context, 'Storage');
+      _showPermissionDialog(context, 'Photo Library');
     }
   }
 
@@ -402,11 +374,5 @@ class ProfileImagePicker extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  Future<int> _getAndroidVersion() async {
-    // This is a simplified version. You might want to use a package like device_info_plus
-    // for more accurate Android version detection
-    return 30; // Default to Android 11+ for safety
   }
 }

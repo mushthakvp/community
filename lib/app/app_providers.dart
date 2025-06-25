@@ -13,11 +13,13 @@ class AppProviders {
   static List<SingleChildWidget> providers = [
     // Auth Provider
     ChangeNotifierProvider<AuthProvider>(
-      create: (context) => AuthProvider(
-        repository: AuthRepositoryImpl(
-          apiClient: ApiClient(baseUrl: ApiConstants.baseUrl),
-        ),
-      ),
+      create: (context) {
+        return AuthProvider(
+          repository: AuthRepositoryImpl(
+            apiClient: ApiClient(baseUrl: ApiConstants.baseUrl),
+          ),
+        );
+      },
     ),
 
     // Coupon Provider

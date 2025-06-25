@@ -23,7 +23,6 @@ class AppRouter {
     initialLocation: RouteConstants.home,
     redirect: _redirect,
     routes: [
-      // Auth Routes
       GoRoute(
         path: RouteConstants.login,
         builder: (context, state) => const LoginPage(),
