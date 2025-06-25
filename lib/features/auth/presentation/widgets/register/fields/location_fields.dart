@@ -100,7 +100,10 @@ class _LocationFieldsState extends State<LocationFields> {
       searchController: searchController,
       onSelected: (country) {
         final countryName = country['country'] as String;
-        authProvider.setLocation(country: countryName);
+        authProvider.setLocation(
+          country: countryName,
+          countryCode: country['countryCode'] as String,
+        );
         _loadStatesForCountry(country);
       },
       selectedValue: authProvider.selectedCountry,

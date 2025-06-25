@@ -72,7 +72,7 @@ class RegisterNavigation extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
-          onTap: isDisabled ? null : _previousPage,
+          onTap: isDisabled ? null : _safePreviousPage,
           child: Container(
             alignment: Alignment.center,
             child: Row(
@@ -138,7 +138,7 @@ class RegisterNavigation extends StatelessWidget {
               ? null
               : () => isLastPage
                     ? _handleRegister(context, authProvider)
-                    : _nextPage(context, authProvider),
+                    : _safeNextPage(context, authProvider),
           child: Container(
             alignment: Alignment.center,
             child: (isLoading || authProvider.isLoading) && isLastPage
@@ -175,24 +175,42 @@ class RegisterNavigation extends StatelessWidget {
     );
   }
 
-  void _nextPage(BuildContext context, AuthProvider authProvider) {
+  void _safeNextPage(BuildContext context, AuthProvider authProvider) {
     if (RegisterValidator.validateCurrentPage(
       context,
       currentPage,
       authProvider,
     )) {
-      pageController.nextPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
+      _safePageNavigation(() {
+        pageController.nextPage(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      });
     }
   }
 
-  void _previousPage() {
-    pageController.previousPage(
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    );
+  void _safePreviousPage() {
+    _safePageNavigation(() {
+      pageController.previousPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    });
+  }
+
+  void _safePageNavigation(VoidCallback navigationAction) {
+    // Check if PageController is attached before navigation
+    if (pageController.hasClients) {
+      try {
+        navigationAction();
+      } catch (e) {
+        debugPrint('Navigation error: $e');
+        // Handle navigation error gracefully
+      }
+    } else {
+      debugPrint('PageController is not attached to PageView');
+    }
   }
 
   void _handleRegister(BuildContext context, AuthProvider authProvider) {

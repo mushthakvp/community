@@ -89,25 +89,17 @@ class StorageService {
   }
 
   // Auth specific methods
-  static Future<void> saveAuthTokens({
-    required String accessToken,
-    required String refreshToken,
-  }) async {
-    await setSecureString(StorageConstants.accessToken, accessToken);
-    await setSecureString(StorageConstants.refreshToken, refreshToken);
-  }
 
-  static Future<String?> getAccessToken() async {
+  static Future<String?> getToken() async {
     return await getSecureString(StorageConstants.accessToken);
   }
 
-  static Future<String?> getRefreshToken() async {
-    return await getSecureString(StorageConstants.refreshToken);
+  static Future<void> saveToken(String token) async {
+    await setSecureString(StorageConstants.accessToken, token);
   }
 
   static Future<void> clearAuthTokens() async {
     await deleteSecureString(StorageConstants.accessToken);
-    await deleteSecureString(StorageConstants.refreshToken);
   }
 
   // User specific methods

@@ -2,6 +2,7 @@
     {
         "country": "United Arab Emirates",
         "code": "UAE",
+        "countryCode" : "971",
         "states": [
             {
                 "state": "Abu Dhabi",
@@ -43,6 +44,7 @@
     {
         "country": "India",
         "code": "IN",
+        "countryCode" : "91",
         "states": [
             {
                 "state": "Andhra Pradesh",

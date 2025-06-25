@@ -27,6 +27,7 @@ class _RegisterPageState extends State<RegisterPage>
   final PageController _pageController = PageController();
   int _currentPage = 0;
   bool _isNavigating = false;
+  bool _isPageControllerReady = false;
 
   late AnimationController _slideController;
   late AnimationController _scaleController;
@@ -35,8 +36,15 @@ class _RegisterPageState extends State<RegisterPage>
   void initState() {
     super.initState();
     _initAnimations();
+
+    // Mark PageController as ready after the widget is built
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<AuthProvider>().clearError();
+      if (mounted) {
+        setState(() {
+          _isPageControllerReady = true;
+        });
+        context.read<AuthProvider>().clearError();
+      }
     });
   }
 
@@ -116,6 +124,8 @@ class _RegisterPageState extends State<RegisterPage>
 
   void _handleAuthStateChanges(AuthProvider authProvider) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
       if (authProvider.isOtpRequired) {
         setState(() {
           _isNavigating = false;
@@ -128,27 +138,41 @@ class _RegisterPageState extends State<RegisterPage>
           _isNavigating = false;
         });
 
-        // Navigate to first page when there's an error
-        _navigateToFirstPage();
-
+        // Show error message
         ErrorHandler.showError(
           context,
           ServerFailure(message: authProvider.errorMessage ?? ""),
         );
+
+        // Navigate to first page only if PageController is ready and attached
+        _safeNavigateToFirstPage();
       }
     });
   }
 
-  void _navigateToFirstPage() {
-    if (_currentPage != 0) {
-      _pageController.animateToPage(
-        0,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
-      setState(() {
-        _currentPage = 0;
-      });
+  void _safeNavigateToFirstPage() {
+    // Only navigate if PageController is ready, mounted, and not already on first page
+    if (_isPageControllerReady &&
+        mounted &&
+        _pageController.hasClients &&
+        _currentPage != 0) {
+      try {
+        _pageController.animateToPage(
+          0,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+        setState(() {
+          _currentPage = 0;
+        });
+      } catch (e) {
+        debugPrint('Failed to animate to first page: $e');
+        if (mounted) {
+          setState(() {
+            _currentPage = 0;
+          });
+        }
+      }
     }
   }
 }

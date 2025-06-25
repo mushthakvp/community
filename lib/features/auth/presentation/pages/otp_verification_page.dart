@@ -29,9 +29,7 @@ class OtpVerificationPage extends StatefulWidget {
 }
 
 class _OtpVerificationPageState extends State<OtpVerificationPage> {
-  final TextEditingController _otpController = TextEditingController();
   bool _isResending = false;
-  bool _hasNavigated = false; // Prevent multiple navigations
 
   @override
   void initState() {
@@ -40,13 +38,9 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
       final authProvider = context.read<AuthProvider>();
       authProvider.clearError();
       authProvider.otpController.text = '';
+      // Reset navigation flags when entering OTP page
+      authProvider.resetNavigationFlags();
     });
-  }
-
-  @override
-  void dispose() {
-    _otpController.dispose();
-    super.dispose();
   }
 
   @override
@@ -56,13 +50,11 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
       appBar: CommonAppBar(
         title: 'Verify OTP',
         showBackButton: true,
-        // Custom back button handling to prevent "nothing to pop" error
         leading: IconButton(
           onPressed: () {
             if (Navigator.canPop(context)) {
               Navigator.pop(context);
             } else {
-              // If nothing to pop, navigate to login
               context.go(RouteConstants.login);
             }
           },
@@ -73,17 +65,16 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
         builder: (context, authProvider, child) {
           // Handle state changes
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (!_hasNavigated) {
-              if (authProvider.isAuthenticated) {
-                _hasNavigated = true;
-                // Clear all previous routes and go to home
-                context.go(RouteConstants.home);
-              } else if (authProvider.hasError) {
-                ErrorHandler.showError(
-                  context,
-                  ServerFailure(message: authProvider.errorMessage ?? ""),
-                );
-              }
+            if (authProvider.isAuthenticated &&
+                authProvider.canNavigateToHome) {
+              authProvider.markHomeNavigated();
+              // Use pushReplacement to prevent going back to OTP page
+              context.go(RouteConstants.home);
+            } else if (authProvider.hasError) {
+              ErrorHandler.showError(
+                context,
+                ServerFailure(message: authProvider.errorMessage ?? ""),
+              );
             }
           });
 
@@ -240,6 +231,8 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
 
   void _handleOtpComplete(AuthProvider authProvider, String pin) {
     authProvider.otpController.text = pin;
+    // Auto-verify when OTP is complete
+    _handleVerifyOtp(authProvider);
   }
 
   void _handleVerifyOtp(AuthProvider authProvider) {

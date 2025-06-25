@@ -58,6 +58,7 @@ class AuthProvider extends ChangeNotifier {
   DateTime? _selectedDateOfBirth;
   String _selectedProfession = '';
   String _selectedCountry = '';
+  String _selectedCountryCode = '';
   String _selectedState = '';
   String _selectedStateCode = '';
   String _selectedDistrict = '';
@@ -143,9 +144,11 @@ class AuthProvider extends ChangeNotifier {
     String? state,
     String? district,
     String? stateCode,
+    String? countryCode,
   }) {
     if (country != null) {
       _selectedCountry = country;
+      _selectedCountryCode = countryCode ?? '';
       if (_selectedCountry != country) {
         _selectedState = '';
         _selectedDistrict = '';
@@ -210,13 +213,12 @@ class AuthProvider extends ChangeNotifier {
     if (!_validateRegisterForm()) return;
     _setLoading();
     resetNavigationFlags();
-
     final result = await _repository.register(
       name: nameController.text.trim(),
       email: emailController.text.trim(),
       phone: phoneController.text.trim(),
       password: passwordController.text.trim(),
-      dialCode: '+91',
+      dialCode: _selectedCountryCode,
       gender: _selectedGender.toLowerCase(),
       dateOfBirth: _selectedDateOfBirth!.toIso8601String(),
       profession: _selectedProfession,
@@ -231,9 +233,9 @@ class AuthProvider extends ChangeNotifier {
           : null,
       firebaseId: _firebaseToken ?? "empty token",
     );
-
     result.fold(
       (failure) {
+        debugPrint('failure: ${failure.message}');
         _setError(failure.message);
       },
       (success) {
@@ -257,27 +259,30 @@ class AuthProvider extends ChangeNotifier {
       otp: otpController.text.trim(),
       email: emailController.text.trim(),
       phone: phoneController.text.trim(),
-      dialCode: '+91',
+      dialCode: _selectedCountryCode,
       method: _verificationMethod,
       firebaseId: _firebaseToken ?? "empty token",
     );
 
     result.fold(
-      (failure) => _setError(failure.message),
-      (user) => _setAuthenticated(user),
+      (failure) {
+        _setError(failure.message);
+      },
+      (user) {
+        otpController.clear();
+        _setAuthenticated(user);
+      },
     );
   }
 
   Future<void> resendOtp() async {
     _setLoading();
-
     final result = await _repository.resendOtp(
       email: emailController.text.trim(),
       phone: phoneController.text.trim(),
-      dialCode: '+91',
+      dialCode: _selectedCountryCode,
       method: _verificationMethod,
     );
-
     result.fold((failure) => _setError(failure.message), (success) {
       if (success) {
         _setStatus(AuthStatus.otpRequired);

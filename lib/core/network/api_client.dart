@@ -24,12 +24,12 @@ class ApiClient {
     };
 
     // Add auth token if available
-    final token = await StorageService.getAccessToken();
+    final token = await StorageService.getToken();
     if (token != null) {
       headers['Authorization'] = 'Bearer $token';
     }
 
-    String? countryName = await StorageService.getCountryName();
+    String? countryName = StorageService.getCountryName();
 
     if (countryName != null) {
       headers['country'] = countryName;

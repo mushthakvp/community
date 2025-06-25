@@ -39,10 +39,7 @@ class AuthRepositoryImpl implements AuthRepository {
       final loginResponse = LoginResponseModel.fromJson(responseData);
       if (loginResponse.success) {
         if (loginResponse.token != null) {
-          await StorageService.setSecureString(
-            'access_token',
-            loginResponse.token!,
-          );
+          await StorageService.saveToken(loginResponse.token ?? "");
         }
         if (loginResponse.user != null) {
           await StorageService.setLoggedIn(true);
