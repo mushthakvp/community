@@ -1,7 +1,8 @@
-// lib/features/coupons/presentation/widgets/coupon_card_optimized.dart
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/widgets/buttons/primary_button.dart';
@@ -282,28 +283,45 @@ class _CouponCardOptimizedState extends State<CouponCardOptimized>
   Widget _buildActionButtons() {
     return Row(
       children: [
-        PrimaryButton(
-          text: 'Shop Now',
-          onPressed: _openWebsite,
-          backgroundColor: Colors.transparent,
-          borderColor: AppConstants.appPrimaryColor,
-          textColor: AppConstants.appPrimaryColor,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          fontSize: 12,
+        // Shop Now Button
+        Expanded(
+          child: SizedBox(
+            height: 40,
+            child: PrimaryButton(
+              text: 'Shop Now',
+              onPressed: _openWebsite,
+              backgroundColor: Colors.transparent,
+              borderColor: AppConstants.appPrimaryColor,
+              textColor: AppConstants.appPrimaryColor,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              prefix: const Icon(
+                Icons.open_in_browser,
+                color: AppConstants.appPrimaryColor,
+                size: 16,
+              ),
+            ),
+          ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 12),
+        // Share Button
         GestureDetector(
           onTap: _share,
           child: Container(
-            padding: const EdgeInsets.all(8),
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
-              border: Border.all(color: AppConstants.appPrimaryColor),
+              border: Border.all(
+                color: AppConstants.appPrimaryColor,
+                width: 1.5,
+              ),
               borderRadius: BorderRadius.circular(8),
+              color: Colors.transparent,
             ),
             child: const Icon(
               Icons.share,
               color: AppConstants.appPrimaryColor,
-              size: 16,
+              size: 18,
             ),
           ),
         ),
@@ -316,9 +334,14 @@ class _CouponCardOptimizedState extends State<CouponCardOptimized>
       await Clipboard.setData(ClipboardData(text: widget.coupon.couponCode));
       widget.onUse();
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Coupon code copied!')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${widget.coupon.couponCode} copied to clipboard!'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 2),
+          ),
+        );
       }
     });
   }
@@ -330,14 +353,123 @@ class _CouponCardOptimizedState extends State<CouponCardOptimized>
     );
   }
 
-  void _openWebsite() {
-    widget.onUse();
-    // Implement URL launcher
+  Future<void> _openWebsite() async {
+    try {
+      // Use coupon first
+      widget.onUse();
+
+      // Get the website URL
+      String? websiteUrl = widget.coupon.websiteLink;
+
+      // If coupon doesn't have website link, use app's website link
+      if (websiteUrl == null || websiteUrl.isEmpty) {
+        websiteUrl = widget.coupon.app.websiteLink;
+      }
+
+      if (websiteUrl != null && websiteUrl.isNotEmpty) {
+        // Ensure URL has proper scheme
+        if (!websiteUrl.startsWith('http://') &&
+            !websiteUrl.startsWith('https://')) {
+          websiteUrl = 'https://$websiteUrl';
+        }
+
+        final uri = Uri.parse(websiteUrl);
+
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Could not open website'),
+                backgroundColor: Colors.red,
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          }
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Website link not available'),
+              backgroundColor: Colors.orange,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error opening website: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
-  void _share() {
-    widget.onUse();
-    // Implement share functionality
+  Future<void> _share() async {
+    try {
+      widget.onUse();
+
+      final shareText =
+          '''🎉 Great Deal Alert! 🎉
+
+${widget.coupon.description}
+
+💰 Coupon Code: ${widget.coupon.couponCode}
+🏪 Store: ${widget.coupon.app.name}
+
+Copy the code and start saving!''';
+
+      // Use share_plus package for native sharing
+      await Share.share(
+        shareText,
+        subject:
+            '${widget.coupon.app.name} Coupon - ${widget.coupon.couponCode}',
+      );
+    } catch (e) {
+      // Fallback to clipboard if sharing fails
+      try {
+        await Clipboard.setData(
+          ClipboardData(
+            text:
+                '''🎉 Great Deal Alert! 🎉
+
+${widget.coupon.description}
+
+💰 Coupon Code: ${widget.coupon.couponCode}
+🏪 Store: ${widget.coupon.app.name}
+
+Copy the code and start saving!''',
+          ),
+        );
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Coupon details copied to clipboard!'),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      } catch (clipboardError) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Error sharing coupon'),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+    }
   }
 
   Future<void> _animatePress(Future<void> Function() action) async {

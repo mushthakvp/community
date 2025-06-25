@@ -37,12 +37,29 @@ class AuthRepositoryImpl implements AuthRepository {
       );
       final responseData = json.decode(response.body);
       final loginResponse = LoginResponseModel.fromJson(responseData);
+
       if (loginResponse.success) {
         if (loginResponse.token != null) {
-          await StorageService.saveToken(loginResponse.token ?? "");
+          await StorageService.saveToken(loginResponse.token!);
         }
         if (loginResponse.user != null) {
           await StorageService.setLoggedIn(true);
+          await StorageService.saveUserId(loginResponse.user!.id);
+          await StorageService.saveUserEmail(loginResponse.user!.email);
+
+          // Save complete user data
+          await StorageService.saveUserData(
+            name: loginResponse.user!.name,
+            email: loginResponse.user!.email,
+            phone: loginResponse.user!.phone,
+            communityId: loginResponse.user!.id,
+            tier: loginResponse.user!.tier ?? 'Moon',
+            loyaltyPoints: loginResponse.user!.loyaltyPoints,
+            walletAmount: loginResponse.user!.walletAmount,
+            currencyCode: 'INR',
+            joinedDate: DateTime.now().toIso8601String(),
+          );
+
           return Right(loginResponse.user!);
         } else {
           return const Left(AuthFailure(message: 'User data not found'));
@@ -175,6 +192,7 @@ class AuthRepositoryImpl implements AuthRepository {
             joinedDate: userDetails['joined'],
           );
           await StorageService.saveUserId(userDetails['id']);
+          await StorageService.saveUserEmail(userDetails['email'] ?? email);
           user = UserEntity(
             name: userDetails['name'] ?? '',
             id: userDetails['id'] ?? '',
@@ -326,18 +344,92 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Either<Failure, UserEntity>> getCurrentUser() async {
     try {
+      // First check if we have stored user data
+      final isLoggedIn = StorageService.isLoggedIn();
+      if (!isLoggedIn) {
+        return const Left(AuthFailure(message: 'User not logged in'));
+      }
+
+      // Try to get user from stored data first
+      final userData = await StorageService.getUserData();
+      final userId = await StorageService.getUserId();
+      final userEmail = await StorageService.getUserEmail();
+
+      if (userData['name'].isNotEmpty && userId != null && userEmail != null) {
+        final user = UserEntity(
+          id: userId,
+          name: userData['name'],
+          email: userEmail,
+          phone: userData['phone'],
+          tier: userData['tier'],
+          loyaltyPoints: userData['loyaltyPoints'],
+          walletAmount: userData['walletAmount'],
+        );
+        return Right(user);
+      }
+
+      // If no stored data, try to fetch from API
       final response = await apiClient.get(ApiConstants.profile);
       final responseData = json.decode(response.body);
 
       if (responseData['status'] == true && responseData['user'] != null) {
         final user = UserModel.fromJson(responseData['user']);
+
+        // Save the user data for next time
+        await StorageService.saveUserData(
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+          communityId: user.id,
+          tier: user.tier ?? 'Moon',
+          loyaltyPoints: user.loyaltyPoints,
+          walletAmount: user.walletAmount,
+          currencyCode: 'INR',
+        );
+
         return Right(user);
       } else {
         return const Left(AuthFailure(message: 'User not found'));
       }
     } on ServerException catch (e) {
+      // If API fails but we have stored data, use that
+      final userData = await StorageService.getUserData();
+      final userId = await StorageService.getUserId();
+      final userEmail = await StorageService.getUserEmail();
+
+      if (userData['name'].isNotEmpty && userId != null && userEmail != null) {
+        final user = UserEntity(
+          id: userId,
+          name: userData['name'],
+          email: userEmail,
+          phone: userData['phone'],
+          tier: userData['tier'],
+          loyaltyPoints: userData['loyaltyPoints'],
+          walletAmount: userData['walletAmount'],
+        );
+        return Right(user);
+      }
+
       return Left(ServerFailure(message: e.message));
     } on NetworkException catch (e) {
+      // If network fails but we have stored data, use that
+      final userData = await StorageService.getUserData();
+      final userId = await StorageService.getUserId();
+      final userEmail = await StorageService.getUserEmail();
+
+      if (userData['name'].isNotEmpty && userId != null && userEmail != null) {
+        final user = UserEntity(
+          id: userId,
+          name: userData['name'],
+          email: userEmail,
+          phone: userData['phone'],
+          tier: userData['tier'],
+          loyaltyPoints: userData['loyaltyPoints'],
+          walletAmount: userData['walletAmount'],
+        );
+        return Right(user);
+      }
+
       return Left(NetworkFailure(message: e.message));
     } on AuthException catch (e) {
       return Left(AuthFailure(message: e.message));

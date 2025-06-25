@@ -18,7 +18,7 @@ class ApiConstants {
   static const String refreshToken = 'user/refresh-token';
 
   // User Endpoints
-  static const String profile = 'user/profile';
+  static const String profile = 'user/getProfile';
   static const String updateProfile = 'user/update-profile';
   static const String uploadImage = 'user/upload-image';
 

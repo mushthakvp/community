@@ -25,7 +25,7 @@ class CouponList extends StatelessWidget {
         }
 
         return SliverPadding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(horizontal: 14),
           sliver: SliverList(
             delegate: SliverChildBuilderDelegate((context, index) {
               final coupon = provider.coupons[index];

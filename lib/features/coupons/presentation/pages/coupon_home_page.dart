@@ -60,7 +60,6 @@ class _CouponHomePageState extends State<CouponHomePage> {
                       const CategoryFilterChips(),
                       const SizedBox(height: 16),
                       const AppFilterList(),
-                      const SizedBox(height: 16),
                     ]),
                   ),
                 ),
