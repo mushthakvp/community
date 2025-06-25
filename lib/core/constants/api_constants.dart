@@ -11,11 +11,11 @@ class ApiConstants {
   static const String login = 'user/login';
   static const String register = 'user/signup';
   static const String logout = 'auth/logout';
-  static const String verifyOtp = 'auth/verify-otp';
-  static const String resendOtp = 'auth/resend-otp';
-  static const String forgotPassword = 'auth/forgot-password';
-  static const String resetPassword = 'auth/reset-password';
-  static const String refreshToken = 'auth/refresh-token';
+  static const String verifyOtp = 'user/verifyOtp';
+  static const String resendOtp = 'user/resentOtp';
+  static const String forgotPassword = 'user/forgotPassword';
+  static const String resetPassword = 'user/changePassword';
+  static const String refreshToken = 'user/refresh-token';
 
   // User Endpoints
   static const String profile = 'user/profile';

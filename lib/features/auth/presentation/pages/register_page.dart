@@ -25,6 +25,7 @@ class _RegisterPageState extends State<RegisterPage>
     with TickerProviderStateMixin {
   final PageController _pageController = PageController();
   int _currentPage = 0;
+  bool _isNavigating = false; // Add this flag
 
   late AnimationController _slideController;
   late AnimationController _scaleController;
@@ -61,12 +62,12 @@ class _RegisterPageState extends State<RegisterPage>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppConstants.black,
-      appBar: CommonAppBar(title: 'Create Account', showBackButton: true),
+      appBar: const CommonAppBar(title: 'Create Account', showBackButton: true),
       body: Consumer<AuthProvider>(
         builder: (context, authProvider, child) {
           _handleAuthStateChanges(authProvider);
 
-          if (authProvider.isLoading) {
+          if (authProvider.isLoading && _isNavigating) {
             return const Center(
               child: LoadingWidget(message: 'Creating your account...'),
             );
@@ -79,15 +80,15 @@ class _RegisterPageState extends State<RegisterPage>
                 child: RegisterDataLoader(
                   child: RegisterFormPages(
                     pageController: _pageController,
-                    onPageChanged: (page) =>
-                        setState(() => _currentPage = page),
+                    onPageChanged: (page) => _handlePageChanged(page),
                   ),
                 ),
               ),
               RegisterNavigation(
                 currentPage: _currentPage,
                 pageController: _pageController,
-                onPageChanged: (page) => setState(() => _currentPage = page),
+                onPageChanged: (page) => _handlePageChanged(page),
+                onRegisterPressed: () => _handleRegister(authProvider),
               ),
             ],
           );
@@ -96,17 +97,39 @@ class _RegisterPageState extends State<RegisterPage>
     );
   }
 
+  void _handlePageChanged(int page) {
+    if (mounted) {
+      setState(() {
+        _currentPage = page;
+      });
+    }
+  }
+
+  void _handleRegister(AuthProvider authProvider) {
+    setState(() {
+      _isNavigating = true;
+    });
+    authProvider.register();
+  }
+
   void _handleAuthStateChanges(AuthProvider authProvider) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (authProvider.isOtpRequired) {
+        setState(() {
+          _isNavigating = false;
+        });
         context.go(
           '${RouteConstants.otpVerification}?email=${authProvider.emailController.text}&isLogin=false',
         );
       } else if (authProvider.hasError) {
+        setState(() {
+          _isNavigating = false;
+        });
         ErrorHandler.showError(
           context,
           ServerFailure(message: authProvider.errorMessage ?? ""),
         );
+        // Don't reset the page here - keep user on current page
       }
     });
   }

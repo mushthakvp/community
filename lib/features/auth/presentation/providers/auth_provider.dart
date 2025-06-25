@@ -25,13 +25,13 @@ class AuthProvider extends ChangeNotifier {
   AuthStatus _status = AuthStatus.initial;
   UserEntity? _user;
   String? _errorMessage;
-  String? _firebaseToken; // Add Firebase token
+  String? _firebaseToken;
 
   // Getters
   AuthStatus get status => _status;
   UserEntity? get user => _user;
   String? get errorMessage => _errorMessage;
-  String? get firebaseToken => _firebaseToken; // Add getter
+  String? get firebaseToken => _firebaseToken;
   bool get isAuthenticated => _status == AuthStatus.authenticated;
   bool get isLoading => _status == AuthStatus.loading;
   bool get isOtpRequired => _status == AuthStatus.otpRequired;
@@ -159,8 +159,8 @@ class AuthProvider extends ChangeNotifier {
     _errorMessage = null;
     if (_status == AuthStatus.error) {
       _status = AuthStatus.initial;
+      notifyListeners();
     }
-    notifyListeners();
   }
 
   Future<void> login() async {
@@ -183,16 +183,14 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> register() async {
     if (!_validateRegisterForm()) return;
-
     _setLoading();
-
     final result = await _repository.register(
       name: nameController.text.trim(),
       email: emailController.text.trim(),
       phone: phoneController.text.trim(),
       password: passwordController.text.trim(),
       dialCode: '+91',
-      gender: _selectedGender,
+      gender: _selectedGender.toLowerCase(),
       dateOfBirth: _selectedDateOfBirth!.toIso8601String(),
       profession: _selectedProfession,
       country: _selectedCountry,
@@ -206,14 +204,16 @@ class AuthProvider extends ChangeNotifier {
           : null,
       firebaseId: _firebaseToken ?? "empty token",
     );
-
-    debugPrint('Result: $result');
-
-    result.fold((failure) => _setError(failure.message), (success) {
-      if (success) {
-        _setOtpRequired();
-      }
-    });
+    result.fold(
+      (failure) {
+        _setError(failure.message);
+      },
+      (success) {
+        if (success) {
+          _setOtpRequired();
+        }
+      },
+    );
   }
 
   Future<void> verifyOtp({bool isLogin = false}) async {
@@ -230,8 +230,7 @@ class AuthProvider extends ChangeNotifier {
       phone: phoneController.text.trim(),
       dialCode: '+91',
       method: _verificationMethod,
-      firebaseId:
-          _firebaseToken ?? "empty token", // Add Firebase token here too
+      firebaseId: _firebaseToken ?? "empty token",
     );
 
     result.fold((failure) => _setError(failure.message), (success) {
@@ -277,7 +276,7 @@ class AuthProvider extends ChangeNotifier {
 
     result.fold((failure) => _setError(failure.message), (_) {
       _user = null;
-      _firebaseToken = null; // Clear Firebase token on logout
+      _firebaseToken = null;
       _setStatus(AuthStatus.unauthenticated);
       _clearControllers();
     });
@@ -347,7 +346,6 @@ class AuthProvider extends ChangeNotifier {
   }
 
   bool _validateRegisterForm() {
-    // Required field validations
     if (nameController.text.trim().isEmpty) {
       _setError('Please enter your full name');
       return false;
@@ -388,7 +386,6 @@ class AuthProvider extends ChangeNotifier {
       return false;
     }
 
-    // Check age (must be at least 13)
     final age = DateTime.now().difference(_selectedDateOfBirth!).inDays / 365;
     if (age < 13) {
       _setError('You must be at least 13 years old to register');
@@ -415,7 +412,6 @@ class AuthProvider extends ChangeNotifier {
       return false;
     }
 
-    // Password strength validation
     final password = passwordController.text.trim();
     if (!_isPasswordStrong(password)) {
       _setError(
@@ -439,11 +435,9 @@ class AuthProvider extends ChangeNotifier {
   }
 
   bool _isPasswordStrong(String password) {
-    // Check for at least one uppercase letter, one lowercase letter, and one number
     final hasUppercase = password.contains(RegExp(r'[A-Z]'));
     final hasLowercase = password.contains(RegExp(r'[a-z]'));
     final hasNumber = password.contains(RegExp(r'[0-9]'));
-
     return hasUppercase && hasLowercase && hasNumber;
   }
 

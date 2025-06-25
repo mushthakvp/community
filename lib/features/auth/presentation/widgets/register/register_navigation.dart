@@ -10,12 +10,14 @@ class RegisterNavigation extends StatelessWidget {
   final int currentPage;
   final PageController pageController;
   final Function(int) onPageChanged;
+  final VoidCallback? onRegisterPressed;
 
   const RegisterNavigation({
     super.key,
     required this.currentPage,
     required this.pageController,
     required this.onPageChanged,
+    this.onRegisterPressed,
   });
 
   @override
@@ -34,7 +36,7 @@ class RegisterNavigation extends StatelessWidget {
             return Row(
               children: [
                 if (currentPage > 0) ...[
-                  Expanded(flex: 2, child: _buildBackButton()),
+                  Expanded(flex: 2, child: _buildBackButton(authProvider)),
                   const SizedBox(width: 16),
                 ],
                 Expanded(
@@ -49,7 +51,7 @@ class RegisterNavigation extends StatelessWidget {
     );
   }
 
-  Widget _buildBackButton() {
+  Widget _buildBackButton(AuthProvider authProvider) {
     return Container(
       height: 56,
       decoration: BoxDecoration(
@@ -60,7 +62,9 @@ class RegisterNavigation extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
-          onTap: _previousPage,
+          onTap: authProvider.isLoading
+              ? null
+              : _previousPage, // Disable when loading
           child: Container(
             alignment: Alignment.center,
             child: Row(
@@ -68,15 +72,19 @@ class RegisterNavigation extends StatelessWidget {
               children: [
                 Icon(
                   Icons.arrow_back_ios,
-                  color: AppConstants.appPrimaryColor,
+                  color: authProvider.isLoading
+                      ? AppConstants.appPrimaryColor.withOpacity(0.5)
+                      : AppConstants.appPrimaryColor,
                   size: 16,
                 ),
                 const SizedBox(width: 8),
-                const CommonTextWidget(
+                CommonTextWidget(
                   text: 'Back',
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: AppConstants.appPrimaryColor,
+                  color: authProvider.isLoading
+                      ? AppConstants.appPrimaryColor.withOpacity(0.5)
+                      : AppConstants.appPrimaryColor,
                 ),
               ],
             ),
@@ -87,6 +95,8 @@ class RegisterNavigation extends StatelessWidget {
   }
 
   Widget _buildNextButton(BuildContext context, AuthProvider authProvider) {
+    final isLastPage = currentPage == 2;
+
     return Container(
       height: 56,
       decoration: BoxDecoration(
@@ -108,12 +118,12 @@ class RegisterNavigation extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           onTap: authProvider.isLoading
               ? null
-              : () => currentPage == 2
+              : () => isLastPage
                     ? _handleRegister(context, authProvider)
                     : _nextPage(context, authProvider),
           child: Container(
             alignment: Alignment.center,
-            child: authProvider.isLoading
+            child: authProvider.isLoading && isLastPage
                 ? const SizedBox(
                     width: 24,
                     height: 24,
@@ -126,12 +136,12 @@ class RegisterNavigation extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       CommonTextWidget(
-                        text: currentPage == 2 ? 'Create Account' : 'Next',
+                        text: isLastPage ? 'Create Account' : 'Next',
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                         color: AppConstants.black,
                       ),
-                      if (currentPage != 2) ...[
+                      if (!isLastPage) ...[
                         const SizedBox(width: 8),
                         const Icon(
                           Icons.arrow_forward_ios,
@@ -173,7 +183,7 @@ class RegisterNavigation extends StatelessWidget {
       currentPage,
       authProvider,
     )) {
-      authProvider.register();
+      onRegisterPressed?.call();
     }
   }
 }

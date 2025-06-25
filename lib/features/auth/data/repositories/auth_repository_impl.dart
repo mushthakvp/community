@@ -1,5 +1,6 @@
 // lib/features/auth/data/repositories/auth_repository_impl.dart
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:dartz/dartz.dart';
 import 'package:flutter/widgets.dart';
@@ -157,10 +158,9 @@ class AuthRepositoryImpl implements AuthRepository {
       );
 
       final responseData = json.decode(response.body);
+      log("Response: $responseData");
       final success = responseData['status'] ?? false;
-
       if (success) {
-        // Save token if provided
         if (responseData['token'] != null) {
           await StorageService.setSecureString(
             'access_token',
