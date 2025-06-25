@@ -93,7 +93,7 @@ class _CouponCardOptimizedState extends State<CouponCardOptimized>
       ),
       child: Row(
         children: [
-          Expanded(
+          Flexible(
             child: CommonTextWidget(
               text: widget.coupon.couponCode,
               color: AppConstants.black,
@@ -101,6 +101,7 @@ class _CouponCardOptimizedState extends State<CouponCardOptimized>
               fontSize: 16,
             ),
           ),
+          const SizedBox(width: 8),
           GestureDetector(
             onTap: _copyToClipboard,
             child: Container(
@@ -129,7 +130,7 @@ class _CouponCardOptimizedState extends State<CouponCardOptimized>
         children: [
           _buildAppLogo(),
           const SizedBox(width: 16),
-          Expanded(child: _buildCouponInfo()),
+          Flexible(child: _buildCouponInfo()),
         ],
       ),
     );
@@ -184,7 +185,9 @@ class _CouponCardOptimizedState extends State<CouponCardOptimized>
   }
 
   Widget _buildUsageInfo() {
-    return Row(
+    return Wrap(
+      spacing: 8,
+      runSpacing: 4,
       children: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -199,13 +202,10 @@ class _CouponCardOptimizedState extends State<CouponCardOptimized>
             fontWeight: FontWeight.w500,
           ),
         ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: CommonTextWidget(
-            text: widget.formatTime(widget.coupon.lastUsed),
-            color: AppConstants.white.withOpacity(0.6),
-            fontSize: 10,
-          ),
+        CommonTextWidget(
+          text: widget.formatTime(widget.coupon.lastUsed),
+          color: AppConstants.white.withOpacity(0.6),
+          fontSize: 10,
         ),
       ],
     );
@@ -221,35 +221,33 @@ class _CouponCardOptimizedState extends State<CouponCardOptimized>
           bottomRight: Radius.circular(AppConstants.defaultBorderRadius),
         ),
       ),
-      child: Row(
+      child: Column(
         children: [
-          _buildLikeDislikeSection(),
-          const Spacer(),
+          // Like/Dislike section on its own row
+          Row(
+            children: [
+              _buildActionButton(
+                icon: Icons.thumb_up_outlined,
+                count: widget.coupon.likes,
+                isActive: widget.coupon.isLiked,
+                onTap: widget.coupon.isLiked ? null : widget.onLike,
+                activeColor: AppConstants.appPrimaryColor,
+              ),
+              const SizedBox(width: 16),
+              _buildActionButton(
+                icon: Icons.thumb_down_outlined,
+                count: widget.coupon.dislikes,
+                isActive: widget.coupon.isDisliked,
+                onTap: widget.coupon.isDisliked ? null : _showDislikeDialog,
+                activeColor: Colors.red,
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // Action buttons on separate row
           _buildActionButtons(),
         ],
       ),
-    );
-  }
-
-  Widget _buildLikeDislikeSection() {
-    return Row(
-      children: [
-        _buildActionButton(
-          icon: Icons.thumb_up_outlined,
-          count: widget.coupon.likes,
-          isActive: widget.coupon.isLiked,
-          onTap: widget.coupon.isLiked ? null : widget.onLike,
-          activeColor: AppConstants.appPrimaryColor,
-        ),
-        const SizedBox(width: 16),
-        _buildActionButton(
-          icon: Icons.thumb_down_outlined,
-          count: widget.coupon.dislikes,
-          isActive: widget.coupon.isDisliked,
-          onTap: widget.coupon.isDisliked ? null : _showDislikeDialog,
-          activeColor: Colors.red,
-        ),
-      ],
     );
   }
 
@@ -263,6 +261,7 @@ class _CouponCardOptimizedState extends State<CouponCardOptimized>
     return GestureDetector(
       onTap: onTap,
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
             icon,
@@ -284,9 +283,11 @@ class _CouponCardOptimizedState extends State<CouponCardOptimized>
     return Row(
       children: [
         // Shop Now Button
-        Expanded(
+        Flexible(
+          flex: 3,
           child: SizedBox(
             height: 40,
+            width: double.infinity,
             child: PrimaryButton(
               text: 'Shop Now',
               onPressed: _openWebsite,
@@ -304,24 +305,26 @@ class _CouponCardOptimizedState extends State<CouponCardOptimized>
           ),
         ),
         const SizedBox(width: 12),
-        // Share Button
-        GestureDetector(
-          onTap: _share,
-          child: Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: AppConstants.appPrimaryColor,
-                width: 1.5,
+        // Share Button - Fixed width
+        SizedBox(
+          width: 40,
+          height: 40,
+          child: GestureDetector(
+            onTap: _share,
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: AppConstants.appPrimaryColor,
+                  width: 1.5,
+                ),
+                borderRadius: BorderRadius.circular(8),
+                color: Colors.transparent,
               ),
-              borderRadius: BorderRadius.circular(8),
-              color: Colors.transparent,
-            ),
-            child: const Icon(
-              Icons.share,
-              color: AppConstants.appPrimaryColor,
-              size: 18,
+              child: const Icon(
+                Icons.share,
+                color: AppConstants.appPrimaryColor,
+                size: 18,
+              ),
             ),
           ),
         ),
