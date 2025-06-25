@@ -1,6 +1,5 @@
 // lib/features/auth/data/repositories/auth_repository_impl.dart
 import 'dart:convert';
-import 'dart:developer';
 
 import 'package:dartz/dartz.dart';
 import 'package:flutter/widgets.dart';
@@ -157,21 +156,16 @@ class AuthRepositoryImpl implements AuthRepository {
       );
 
       final responseData = json.decode(response.body);
-      log("OTP Verification Response: $responseData");
       final success = responseData['status'] ?? false;
       if (success) {
-        // Store token
         if (responseData['token'] != null) {
           await StorageService.setSecureString(
             'access_token',
             responseData['token'],
           );
         }
-
-        // Store additional user data from the response
         if (responseData['userDetails'] != null) {
           final userDetails = responseData['userDetails'];
-
           await StorageService.saveUserData(
             name: userDetails['name'] ?? '',
             email: userDetails['email'] ?? email,
@@ -183,13 +177,8 @@ class AuthRepositoryImpl implements AuthRepository {
             currencyCode: userDetails['currencyCode'] ?? 'INR',
             joinedDate: userDetails['joined'],
           );
-
-          // Store user ID
-          if (userDetails['id'] != null) {
-            await StorageService.saveUserId(userDetails['id']);
-          }
+          await StorageService.saveUserId(userDetails['id']);
         }
-
         await StorageService.setLoggedIn(true);
         return const Right(true);
       } else {
@@ -224,15 +213,12 @@ class AuthRepositoryImpl implements AuthRepository {
         'dialCode': dialCode,
         'method': method,
       };
-
       final response = await apiClient.post(
         ApiConstants.resendOtp,
         body: requestData,
       );
-
       final responseData = json.decode(response.body);
       final success = responseData['status'] ?? false;
-
       if (success) {
         return const Right(true);
       } else {
@@ -258,10 +244,8 @@ class AuthRepositoryImpl implements AuthRepository {
         ApiConstants.forgotPassword,
         body: {'email': email},
       );
-
       final responseData = json.decode(response.body);
       final success = responseData['status'] ?? false;
-
       if (success) {
         return const Right(true);
       } else {
@@ -290,10 +274,8 @@ class AuthRepositoryImpl implements AuthRepository {
         ApiConstants.resetPassword,
         body: {'email': email, 'password': password},
       );
-
       final responseData = json.decode(response.body);
       final success = responseData['status'] ?? false;
-
       if (success) {
         return const Right(true);
       } else {

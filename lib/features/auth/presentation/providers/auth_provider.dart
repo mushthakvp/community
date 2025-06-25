@@ -221,9 +221,7 @@ class AuthProvider extends ChangeNotifier {
       _setError('Please enter a valid 6-digit OTP');
       return;
     }
-
     _setLoading();
-
     final result = await _repository.verifyOtp(
       otp: otpController.text.trim(),
       email: emailController.text.trim(),
@@ -232,7 +230,6 @@ class AuthProvider extends ChangeNotifier {
       method: _verificationMethod,
       firebaseId: _firebaseToken ?? "empty token",
     );
-
     result.fold((failure) => _setError(failure.message), (success) {
       if (success) {
         checkAuthStatus();
@@ -242,14 +239,12 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> resendOtp() async {
     _setLoading();
-
     final result = await _repository.resendOtp(
       email: emailController.text.trim(),
       phone: phoneController.text.trim(),
       dialCode: '+91',
       method: _verificationMethod,
     );
-
     result.fold((failure) => _setError(failure.message), (success) {
       if (success) {
         _setStatus(AuthStatus.otpRequired);

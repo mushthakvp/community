@@ -22,6 +22,7 @@ class AppRouter {
     navigatorKey: _rootNavigatorKey,
     initialLocation: RouteConstants.home,
     redirect: _redirect,
+
     routes: [
       GoRoute(
         path: RouteConstants.login,
@@ -39,7 +40,6 @@ class AppRouter {
         ),
       ),
 
-      // Main App Shell
       ShellRoute(
         navigatorKey: _shellNavigatorKey,
         builder: (context, state, child) =>
