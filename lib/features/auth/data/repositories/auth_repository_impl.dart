@@ -151,7 +151,6 @@ class AuthRepositoryImpl implements AuthRepository {
         method: method,
         firebaseId: firebaseId ?? "empty token",
       );
-
       final response = await apiClient.post(
         ApiConstants.verifyOtp,
         body: requestData.toJson(),
