@@ -29,6 +29,12 @@ class ApiClient {
       headers['Authorization'] = 'Bearer $token';
     }
 
+    String? countryName = await StorageService.getCountryName();
+
+    if (countryName != null) {
+      headers['country'] = countryName;
+    }
+
     if (additionalHeaders != null) {
       headers.addAll(additionalHeaders);
     }
@@ -55,7 +61,7 @@ class ApiClient {
     } on HttpException {
       throw const NetworkException('Network error occurred');
     } catch (e) {
-      throw NetworkException('Unexpected error: $e');
+      throw NetworkException(' $e');
     }
   }
 
@@ -82,7 +88,7 @@ class ApiClient {
     } on HttpException {
       throw const NetworkException('Network error occurred');
     } catch (e) {
-      throw NetworkException('Unexpected error: $e');
+      throw NetworkException('$e');
     }
   }
 
@@ -109,7 +115,7 @@ class ApiClient {
     } on HttpException {
       throw const NetworkException('Network error occurred');
     } catch (e) {
-      throw NetworkException('Unexpected error: $e');
+      throw NetworkException('$e');
     }
   }
 
@@ -131,7 +137,7 @@ class ApiClient {
     } on HttpException {
       throw const NetworkException('Network error occurred');
     } catch (e) {
-      throw NetworkException('Unexpected error: $e');
+      throw NetworkException('$e');
     }
   }
 
@@ -146,23 +152,11 @@ class ApiClient {
   http.Response _handleResponse(http.Response response) {
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return response;
-    }
-
-    String message = 'Request failed';
-    try {
+    } else {
       final data = json.decode(response.body);
-      message = data['message'] ?? message;
-    } catch (_) {}
-
-    if (response.statusCode == 401) {
-      throw const AuthException('Unauthorized access');
-    } else if (response.statusCode >= 400 && response.statusCode < 500) {
+      String message = data['message'] ?? "Request failed";
       throw ServerException(message);
-    } else if (response.statusCode >= 500) {
-      throw const ServerException('Server error occurred');
     }
-
-    throw ServerException('Unexpected status code: ${response.statusCode}');
   }
 
   void dispose() {

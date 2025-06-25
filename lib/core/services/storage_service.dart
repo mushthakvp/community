@@ -156,4 +156,22 @@ class StorageService {
 
     return cacheData['data'] as Map<String, dynamic>?;
   }
+
+  // Add Counntry Code and Name
+
+  static Future<void> setCountryCode(String countryCode) async {
+    await setString(StorageConstants.countryCode, countryCode);
+  }
+
+  static Future<String?> getCountryCode() async {
+    return getString(StorageConstants.countryCode);
+  }
+
+  static Future<void> setCountryName(String countryName) async {
+    await setString(StorageConstants.countryName, countryName);
+  }
+
+  static Future<String?> getCountryName() async {
+    return getString(StorageConstants.countryName);
+  }
 }

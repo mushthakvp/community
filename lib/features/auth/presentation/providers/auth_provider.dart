@@ -1,4 +1,3 @@
-// lib/features/auth/presentation/providers/auth_provider.dart
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -26,11 +25,13 @@ class AuthProvider extends ChangeNotifier {
   AuthStatus _status = AuthStatus.initial;
   UserEntity? _user;
   String? _errorMessage;
+  String? _firebaseToken; // Add Firebase token
 
   // Getters
   AuthStatus get status => _status;
   UserEntity? get user => _user;
   String? get errorMessage => _errorMessage;
+  String? get firebaseToken => _firebaseToken; // Add getter
   bool get isAuthenticated => _status == AuthStatus.authenticated;
   bool get isLoading => _status == AuthStatus.loading;
   bool get isOtpRequired => _status == AuthStatus.otpRequired;
@@ -53,6 +54,7 @@ class AuthProvider extends ChangeNotifier {
   String _selectedProfession = '';
   String _selectedCountry = '';
   String _selectedState = '';
+  String _selectedStateCode = '';
   String _selectedDistrict = '';
   String _verificationMethod = 'email';
   File? _profileImage;
@@ -84,6 +86,11 @@ class AuthProvider extends ChangeNotifier {
   }
 
   // Methods
+  void setFirebaseToken(String? token) {
+    _firebaseToken = token;
+    notifyListeners();
+  }
+
   void togglePasswordVisibility() {
     _isPasswordVisible = !_isPasswordVisible;
     notifyListeners();
@@ -109,18 +116,22 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setLocation({String? country, String? state, String? district}) {
+  void setLocation({
+    String? country,
+    String? state,
+    String? district,
+    String? stateCode,
+  }) {
     if (country != null) {
       _selectedCountry = country;
-      // Clear state and district when country changes
       if (_selectedCountry != country) {
         _selectedState = '';
         _selectedDistrict = '';
       }
     }
     if (state != null) {
+      _selectedStateCode = stateCode ?? '';
       _selectedState = state;
-      // Clear district when state changes
       if (_selectedState != state) {
         _selectedDistrict = '';
       }
@@ -154,14 +165,12 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> login() async {
     if (!_validateLoginForm()) return;
-
     _setLoading();
-
     final result = await _repository.login(
       email: emailController.text.trim(),
       password: passwordController.text.trim(),
+      firebaseId: _firebaseToken ?? "empty token",
     );
-
     result.fold((failure) {
       if (failure.message.toLowerCase().contains('otp') ||
           failure.message.toLowerCase().contains('verification')) {
@@ -182,19 +191,23 @@ class AuthProvider extends ChangeNotifier {
       email: emailController.text.trim(),
       phone: phoneController.text.trim(),
       password: passwordController.text.trim(),
-      dialCode: '+91', // You can make this dynamic
+      dialCode: '+91',
       gender: _selectedGender,
       dateOfBirth: _selectedDateOfBirth!.toIso8601String(),
       profession: _selectedProfession,
       country: _selectedCountry,
       state: _selectedState,
+      stateCode: _selectedStateCode,
       district: _selectedDistrict.isNotEmpty ? _selectedDistrict : null,
       verificationMethod: _verificationMethod,
       profileImage: _profileImage?.path,
       referralCode: referralCodeController.text.trim().isNotEmpty
           ? referralCodeController.text.trim()
           : null,
+      firebaseId: _firebaseToken ?? "empty token",
     );
+
+    debugPrint('Result: $result');
 
     result.fold((failure) => _setError(failure.message), (success) {
       if (success) {
@@ -217,6 +230,8 @@ class AuthProvider extends ChangeNotifier {
       phone: phoneController.text.trim(),
       dialCode: '+91',
       method: _verificationMethod,
+      firebaseId:
+          _firebaseToken ?? "empty token", // Add Firebase token here too
     );
 
     result.fold((failure) => _setError(failure.message), (success) {
@@ -262,6 +277,7 @@ class AuthProvider extends ChangeNotifier {
 
     result.fold((failure) => _setError(failure.message), (_) {
       _user = null;
+      _firebaseToken = null; // Clear Firebase token on logout
       _setStatus(AuthStatus.unauthenticated);
       _clearControllers();
     });

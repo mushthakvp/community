@@ -1,23 +1,18 @@
-// lib/features/auth/data/models/auth_models.dart
 import 'user_model.dart';
 
 class LoginRequestModel {
   final String email;
   final String password;
-  final String? firebaseId;
+  final String firebaseId;
 
   const LoginRequestModel({
     required this.email,
     required this.password,
-    this.firebaseId,
+    required this.firebaseId,
   });
 
   Map<String, dynamic> toJson() {
-    return {
-      'email': email,
-      'password': password,
-      'firebaseId': firebaseId ?? 'null',
-    };
+    return {'email': email, 'password': password, 'firebaseId': firebaseId};
   }
 }
 
@@ -63,11 +58,12 @@ class RegisterRequestModel {
   final String profession;
   final String country;
   final String state;
+  final String stateCode;
   final String? district;
   final String verificationMethod;
   final String? profileImage;
   final String? referralCode;
-  final String? firebaseId;
+  final String firebaseId;
 
   const RegisterRequestModel({
     required this.name,
@@ -84,7 +80,8 @@ class RegisterRequestModel {
     required this.verificationMethod,
     this.profileImage,
     this.referralCode,
-    this.firebaseId,
+    required this.firebaseId,
+    required this.stateCode,
   });
 
   Map<String, dynamic> toJson() {
@@ -99,10 +96,11 @@ class RegisterRequestModel {
       'occupation': profession,
       'country': country,
       'state': state,
+      'stateCode': stateCode,
       'method': verificationMethod,
       'tier': 'Moon',
       'isHandicaped': false,
-      'firebaseId': firebaseId ?? 'null',
+      'firebaseId': firebaseId,
     };
 
     if (district != null) data['district'] = district!;
@@ -119,7 +117,7 @@ class OtpRequestModel {
   final String? phone;
   final String? dialCode;
   final String method;
-  final String? firebaseId;
+  final String firebaseId;
 
   const OtpRequestModel({
     required this.otp,
@@ -127,7 +125,7 @@ class OtpRequestModel {
     this.phone,
     this.dialCode,
     required this.method,
-    this.firebaseId,
+    required this.firebaseId,
   });
 
   Map<String, dynamic> toJson() {
@@ -137,7 +135,7 @@ class OtpRequestModel {
       'phone': phone,
       'dialCode': dialCode,
       'method': method,
-      'firebaseId': firebaseId ?? 'null',
+      'firebaseId': firebaseId,
     };
   }
 }

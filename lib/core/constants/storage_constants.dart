@@ -21,4 +21,8 @@ class StorageConstants {
   static const int defaultCacheDuration = 24;
   static const int shortCacheDuration = 1;
   static const int longCacheDuration = 168;
+
+  // Country Codes
+  static const String countryCode = 'country_code';
+  static const String countryName = 'country_name';
 }

@@ -79,11 +79,7 @@ class CouponRepositoryImpl implements CouponRepository {
         error: e,
         stackTrace: stackTrace,
       );
-      return Left(
-        UnknownFailure(
-          message: 'An unexpected error occurred: ${e.toString()}',
-        ),
-      );
+      return Left(UnknownFailure(message: ' ${e.toString()}'));
     }
   }
 
@@ -124,11 +120,7 @@ class CouponRepositoryImpl implements CouponRepository {
         error: e,
         stackTrace: stackTrace,
       );
-      return Left(
-        UnknownFailure(
-          message: 'An unexpected error occurred: ${e.toString()}',
-        ),
-      );
+      return Left(UnknownFailure(message: e.toString()));
     }
   }
 
@@ -272,11 +264,7 @@ class CouponRepositoryImpl implements CouponRepository {
         error: e,
         stackTrace: stackTrace,
       );
-      return Left(
-        UnknownFailure(
-          message: 'An unexpected error occurred: ${e.toString()}',
-        ),
-      );
+      return Left(UnknownFailure(message: e.toString()));
     }
   }
 
@@ -318,11 +306,7 @@ class CouponRepositoryImpl implements CouponRepository {
       return Left(NetworkFailure(message: e.message));
     } catch (e, stackTrace) {
       dev.log('Unexpected error in getApps', error: e, stackTrace: stackTrace);
-      return Left(
-        UnknownFailure(
-          message: 'An unexpected error occurred: ${e.toString()}',
-        ),
-      );
+      return Left(UnknownFailure(message: e.toString()));
     }
   }
 

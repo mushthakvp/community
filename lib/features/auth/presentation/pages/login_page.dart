@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/constants/app_constants.dart';
@@ -28,7 +29,14 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     _initAnimations();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        debugPrint('Requesting permission...');
+        await Permission.photos.request();
+      } catch (e) {
+        debugPrint('Error requesting permission: $e');
+      }
       context.read<AuthProvider>().clearError();
     });
   }

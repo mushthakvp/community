@@ -8,8 +8,8 @@ class ApiConstants {
   static const int timeoutDuration = 30;
 
   // Auth Endpoints
-  static const String login = 'auth/login';
-  static const String register = 'auth/register';
+  static const String login = 'user/login';
+  static const String register = 'user/signup';
   static const String logout = 'auth/logout';
   static const String verifyOtp = 'auth/verify-otp';
   static const String resendOtp = 'auth/resend-otp';

@@ -121,7 +121,8 @@ class _LocationFieldsState extends State<LocationFields> {
       searchController: searchController,
       onSelected: (state) {
         final stateName = state['state'] as String;
-        authProvider.setLocation(state: stateName);
+        final stateCode = state['code'] as String;
+        authProvider.setLocation(state: stateName, stateCode: stateCode);
         _loadDistrictsForState(state);
       },
       selectedValue: authProvider.selectedState,

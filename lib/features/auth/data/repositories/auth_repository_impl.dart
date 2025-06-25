@@ -2,6 +2,7 @@
 import 'dart:convert';
 
 import 'package:dartz/dartz.dart';
+import 'package:flutter/widgets.dart';
 
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/error/exceptions.dart';
@@ -28,27 +29,21 @@ class AuthRepositoryImpl implements AuthRepository {
       final requestData = LoginRequestModel(
         email: email,
         password: password,
-        firebaseId: firebaseId,
+        firebaseId: firebaseId ?? "empty token",
       );
-
       final response = await apiClient.post(
         ApiConstants.login,
         body: requestData.toJson(),
       );
-
       final responseData = json.decode(response.body);
       final loginResponse = LoginResponseModel.fromJson(responseData);
-
       if (loginResponse.success) {
-        // Save token if available
         if (loginResponse.token != null) {
           await StorageService.setSecureString(
             'access_token',
             loginResponse.token!,
           );
         }
-
-        // Save user data
         if (loginResponse.user != null) {
           await StorageService.setLoggedIn(true);
           return Right(loginResponse.user!);
@@ -83,6 +78,7 @@ class AuthRepositoryImpl implements AuthRepository {
     required String profession,
     required String country,
     required String state,
+    required String stateCode,
     String? district,
     required String verificationMethod,
     String? profileImage,
@@ -90,6 +86,7 @@ class AuthRepositoryImpl implements AuthRepository {
     String? firebaseId,
   }) async {
     try {
+      await StorageService.setCountryName(country);
       final requestData = RegisterRequestModel(
         name: name,
         email: email,
@@ -101,21 +98,20 @@ class AuthRepositoryImpl implements AuthRepository {
         profession: profession,
         country: country,
         state: state,
+        stateCode: stateCode,
         district: district,
         verificationMethod: verificationMethod,
         profileImage: profileImage,
         referralCode: referralCode,
-        firebaseId: firebaseId,
+        firebaseId: firebaseId ?? "empty token",
       );
-
       final response = await apiClient.post(
         ApiConstants.register,
         body: requestData.toJson(),
       );
-
+      debugPrint("Repsonse: $response");
       final responseData = json.decode(response.body);
-      final success = responseData['status'] ?? false;
-
+      final success = responseData['success'] ?? false;
       if (success) {
         return const Right(true);
       } else {
@@ -152,7 +148,7 @@ class AuthRepositoryImpl implements AuthRepository {
         phone: phone,
         dialCode: dialCode,
         method: method,
-        firebaseId: firebaseId,
+        firebaseId: firebaseId ?? "empty token",
       );
 
       final response = await apiClient.post(
@@ -296,21 +292,15 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Either<Failure, void>> logout() async {
     try {
-      // Call logout API
       await apiClient.post(ApiConstants.logout);
-
-      // Clear local storage
       await StorageService.clearAuthTokens();
       await StorageService.setLoggedIn(false);
-
       return const Right(null);
     } on ServerException catch (e) {
-      // Even if server call fails, clear local data
       await StorageService.clearAuthTokens();
       await StorageService.setLoggedIn(false);
       return Left(ServerFailure(message: e.message));
     } on NetworkException catch (e) {
-      // Even if network fails, clear local data
       await StorageService.clearAuthTokens();
       await StorageService.setLoggedIn(false);
       return Left(NetworkFailure(message: e.message));

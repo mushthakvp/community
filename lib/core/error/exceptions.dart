@@ -3,7 +3,7 @@ abstract class AppException implements Exception {
   const AppException(this.message);
 
   @override
-  String toString() => 'AppException: $message';
+  String toString() => message;
 }
 
 class ServerException extends AppException {

@@ -21,6 +21,7 @@ abstract class AuthRepository {
     required String profession,
     required String country,
     required String state,
+    required String stateCode,
     String? district,
     required String verificationMethod,
     String? profileImage,
