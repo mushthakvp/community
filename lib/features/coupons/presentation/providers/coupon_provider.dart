@@ -334,20 +334,7 @@ class CouponProvider extends ChangeNotifier {
   }
 
   String _getErrorMessage(Failure failure) {
-    switch (failure.runtimeType) {
-      case NetworkFailure:
-        return 'No internet connection. Please check your network.';
-      case ServerFailure:
-        return failure.message.isNotEmpty
-            ? failure.message
-            : 'Server error. Please try again later.';
-      case ValidationFailure:
-        return failure.message;
-      case CacheFailure:
-        return 'Cache error. Please refresh the app.';
-      default:
-        return 'Something went wrong. Please try again.';
-    }
+    return failure.userFriendlyMessage;
   }
 
   // Debug methods (for development)

@@ -208,18 +208,7 @@ class PromosProvider extends ChangeNotifier {
   }
 
   String _getErrorMessage(Failure failure) {
-    switch (failure.runtimeType) {
-      case NetworkFailure:
-        return 'No internet connection. Please check your network.';
-      case ServerFailure:
-        return failure.message.isNotEmpty
-            ? failure.message
-            : 'Server error. Please try again later.';
-      case ValidationFailure:
-        return failure.message;
-      default:
-        return 'Something went wrong. Please try again.';
-    }
+    return failure.userFriendlyMessage;
   }
 
   void _showMessage(

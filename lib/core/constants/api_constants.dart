@@ -3,7 +3,7 @@ class ApiConstants {
   String baseUrlDev = 'http://192.168.3.242:3553/';
 
   // Base URL for API requests
-  static String baseUrl = 'http://172.20.10.4:3553/';
+  static String baseUrl = 'http://192.168.3.115:3553/';
 
   static const int timeoutDuration = 30;
 
@@ -27,4 +27,11 @@ class ApiConstants {
   // Promos Endpoints
   static const String promosScreen = 'user/rewardsScreen';
   static const String addRewardPointsFromPromos = 'user/addRewardPoints';
+
+  // Notifications Endpoints
+  static const String getNotifications = 'user/getNotification';
+
+  // Home Endpoints
+
+  static const String getHome = 'user/getHome';
 }

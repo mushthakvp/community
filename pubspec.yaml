@@ -37,6 +37,8 @@ dependencies:
   video_player: ^2.10.0
   youtube_player_iframe: ^5.2.1
   chewie: ^1.11.3
+  carousel_slider: ^5.1.1
+  marquee: ^2.3.0
 
 dev_dependencies:
   flutter_test:
@@ -50,3 +52,4 @@ flutter:
     - assets/animation/
     - assets/data/
     - assets/images/
+    - assets/videos/

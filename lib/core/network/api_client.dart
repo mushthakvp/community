@@ -1,3 +1,4 @@
+// lib/core/network/api_client.dart - Updated to work with new NetworkInfo
 import 'dart:convert';
 import 'dart:io';
 
@@ -6,12 +7,14 @@ import 'package:http/http.dart' as http;
 import '../constants/api_constants.dart';
 import '../error/exceptions.dart';
 import '../services/storage_service.dart';
+import 'network_info.dart';
 
 class ApiClient {
   late http.Client _client;
   final String baseUrl;
+  final NetworkInfo? networkInfo;
 
-  ApiClient({required this.baseUrl}) {
+  ApiClient({required this.baseUrl, this.networkInfo}) {
     _client = http.Client();
   }
 
@@ -29,8 +32,8 @@ class ApiClient {
       headers['Authorization'] = 'Bearer $token';
     }
 
+    // Add country header if available
     String? countryName = StorageService.getCountryName();
-
     if (countryName != null) {
       headers['country'] = countryName;
     }
@@ -42,12 +45,24 @@ class ApiClient {
     return headers;
   }
 
+  // Check network connectivity before making requests
+  Future<void> _checkConnectivity() async {
+    if (networkInfo != null) {
+      final isConnected = await networkInfo!.isConnected;
+      if (!isConnected) {
+        throw const NetworkException('No internet connection available');
+      }
+    }
+  }
+
   Future<http.Response> get(
     String endpoint, {
     Map<String, String>? queryParameters,
     Map<String, String>? headers,
   }) async {
     try {
+      await _checkConnectivity();
+
       final uri = _buildUri(endpoint, queryParameters);
       final requestHeaders = await _getHeaders(additionalHeaders: headers);
 
@@ -61,7 +76,8 @@ class ApiClient {
     } on HttpException {
       throw const NetworkException('Network error occurred');
     } catch (e) {
-      throw NetworkException(' $e');
+      if (e is NetworkException) rethrow;
+      throw NetworkException('Request failed: $e');
     }
   }
 
@@ -71,8 +87,11 @@ class ApiClient {
     Map<String, String>? headers,
   }) async {
     try {
+      await _checkConnectivity();
+
       final uri = _buildUri(endpoint);
       final requestHeaders = await _getHeaders(additionalHeaders: headers);
+
       final response = await _client
           .post(
             uri,
@@ -80,13 +99,15 @@ class ApiClient {
             body: body != null ? json.encode(body) : null,
           )
           .timeout(Duration(seconds: ApiConstants.timeoutDuration));
+
       return _handleResponse(response);
     } on SocketException {
       throw const NetworkException('No internet connection');
     } on HttpException {
       throw const NetworkException('Network error occurred');
     } catch (e) {
-      throw NetworkException('$e');
+      if (e is NetworkException) rethrow;
+      throw NetworkException('Request failed: $e');
     }
   }
 
@@ -96,8 +117,11 @@ class ApiClient {
     Map<String, String>? headers,
   }) async {
     try {
+      await _checkConnectivity();
+
       final uri = _buildUri(endpoint);
       final requestHeaders = await _getHeaders(additionalHeaders: headers);
+
       final response = await _client
           .put(
             uri,
@@ -105,13 +129,15 @@ class ApiClient {
             body: body != null ? json.encode(body) : null,
           )
           .timeout(Duration(seconds: ApiConstants.timeoutDuration));
+
       return _handleResponse(response);
     } on SocketException {
       throw const NetworkException('No internet connection');
     } on HttpException {
       throw const NetworkException('Network error occurred');
     } catch (e) {
-      throw NetworkException('$e');
+      if (e is NetworkException) rethrow;
+      throw NetworkException('Request failed: $e');
     }
   }
 
@@ -120,19 +146,23 @@ class ApiClient {
     Map<String, String>? headers,
   }) async {
     try {
+      await _checkConnectivity();
+
       final uri = _buildUri(endpoint);
       final requestHeaders = await _getHeaders(additionalHeaders: headers);
 
       final response = await _client
           .delete(uri, headers: requestHeaders)
           .timeout(Duration(seconds: ApiConstants.timeoutDuration));
+
       return _handleResponse(response);
     } on SocketException {
       throw const NetworkException('No internet connection');
     } on HttpException {
       throw const NetworkException('Network error occurred');
     } catch (e) {
-      throw NetworkException('$e');
+      if (e is NetworkException) rethrow;
+      throw NetworkException('Request failed: $e');
     }
   }
 
@@ -148,9 +178,16 @@ class ApiClient {
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return response;
     } else {
-      final data = json.decode(response.body);
-      String message = data['message'] ?? "Request failed";
-      throw ServerException(message);
+      try {
+        final data = json.decode(response.body);
+        String message = data['message'] ?? "Request failed";
+        throw ServerException(message);
+      } catch (e) {
+        if (e is ServerException) rethrow;
+        throw ServerException(
+          "Request failed with status ${response.statusCode}",
+        );
+      }
     }
   }
 
