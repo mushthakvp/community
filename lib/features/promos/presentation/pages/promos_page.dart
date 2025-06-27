@@ -1,11 +1,7 @@
-// lib/features/promos/presentation/pages/promos_page.dart - FIXED
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/constants/app_constants.dart';
-import '../../../../core/constants/route_constants.dart';
-import '../../../../core/widgets/common/app_bar.dart';
 import '../../../../core/widgets/common/text_widget.dart';
 import '../../../../core/widgets/loading/loading_widget.dart';
 import '../../path/animated_promos_background.dart';
@@ -51,35 +47,20 @@ class _PromosPageState extends State<PromosPage> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        // Handle back button press - navigate to home
-        context.go(RouteConstants.home);
-        return false; // Prevent default back behavior
-      },
-      child: Scaffold(
-        backgroundColor: AppConstants.black,
-        appBar: CommonAppBar(
-          title: 'Rewards',
-          showBackButton: true,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios, color: AppConstants.white),
-            onPressed: () => context.go(RouteConstants.home),
-          ),
-        ),
-        body: AnimatedPromosBackground(
-          child: RefreshIndicator(
-            onRefresh: () => context.read<PromosProvider>().retry(),
-            color: AppConstants.appPrimaryColor,
-            backgroundColor: AppConstants.black,
-            child: Consumer<PromosProvider>(
-              builder: (context, provider, child) {
-                return FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: _buildContent(provider),
-                );
-              },
-            ),
+    return Scaffold(
+      backgroundColor: AppConstants.black,
+      body: AnimatedPromosBackground(
+        child: RefreshIndicator(
+          onRefresh: () => context.read<PromosProvider>().retry(),
+          color: AppConstants.appPrimaryColor,
+          backgroundColor: AppConstants.black,
+          child: Consumer<PromosProvider>(
+            builder: (context, provider, child) {
+              return FadeTransition(
+                opacity: _fadeAnimation,
+                child: SafeArea(child: _buildContent(provider)),
+              );
+            },
           ),
         ),
       ),
