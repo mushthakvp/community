@@ -14,17 +14,7 @@ class RouteConstants {
 
   // Feature Routes
   static const String coupons = '/coupons';
-  static const String couponDetail = '/coupon-detail';
-  static const String myCoupons = '/my-coupons';
 
-  // Location Routes
-  static const String selectCountry = '/select-country';
-  static const String selectState = '/select-state';
-  static const String selectDistrict = '/select-district';
-  static const String selectProfession = '/select-profession';
-
-  // Utility Routes
-  static const String webView = '/web-view';
-  static const String imagePreview = '/image-preview';
-  static const String notifications = '/notifications';
+  // Promos Routes
+  static const String promos = '/promos';
 }

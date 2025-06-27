@@ -77,9 +77,6 @@ class PromosProvider extends ChangeNotifier {
       ) {
         _promosData = promosData;
         _setStatus(PromosStatus.loaded);
-        log(
-          'Promos loaded successfully: ${promosData.videos.length} videos, ${promosData.promos.length} promos',
-        );
       });
     } catch (e) {
       log('Unexpected error loading promos: $e');
@@ -111,7 +108,7 @@ class PromosProvider extends ChangeNotifier {
           if (success) {
             _showMessage(
               context,
-              'Reward points added successfully!',
+              'Reward points added successfully! +$points points',
               isError: false,
             );
             log('Reward points added: $points for action: $action');
@@ -130,24 +127,55 @@ class PromosProvider extends ChangeNotifier {
   }
 
   /// Launch URL (social media links, websites, etc.)
-  Future<void> launchUrl(String url) async {
+  Future<bool> launchUrl(String url) async {
     try {
       final result = await _launchUrlUseCase(url);
 
-      result.fold(
+      return result.fold(
         (failure) {
           log('Failed to launch URL: ${failure.message}');
+          throw Exception(failure.message);
         },
         (success) {
           if (success) {
             log('URL launched successfully: $url');
+            return true;
           } else {
             log('Failed to launch URL: $url');
+            throw Exception('Failed to launch URL');
           }
         },
       );
     } catch (e) {
       log('Unexpected error launching URL: $e');
+      throw Exception('Failed to launch URL: $e');
+    }
+  }
+
+  /// Launch social media with app fallback
+  Future<bool> launchSocialMedia({
+    required String appUrl,
+    required String webUrl,
+  }) async {
+    try {
+      final result = await _launchUrlUseCase.launchSocialMedia(
+        appUrl: appUrl,
+        webUrl: webUrl,
+      );
+
+      return result.fold(
+        (failure) {
+          log('Failed to launch social media: ${failure.message}');
+          throw Exception(failure.message);
+        },
+        (success) {
+          log('Social media launched successfully');
+          return true;
+        },
+      );
+    } catch (e) {
+      log('Unexpected error launching social media: $e');
+      throw Exception('Failed to launch social media: $e');
     }
   }
 
@@ -202,10 +230,20 @@ class PromosProvider extends ChangeNotifier {
     if (context != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(message),
+          content: Row(
+            children: [
+              Icon(
+                isError ? Icons.error_outline : Icons.check_circle,
+                color: Colors.white,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Expanded(child: Text(message)),
+            ],
+          ),
           backgroundColor: isError ? Colors.red : Colors.green,
           behavior: SnackBarBehavior.floating,
-          duration: Duration(seconds: isError ? 4 : 2),
+          duration: Duration(seconds: isError ? 4 : 3),
         ),
       );
     }

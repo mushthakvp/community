@@ -9,6 +9,7 @@ import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/coupons/presentation/pages/coupon_home_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
+import '../../features/promos/presentation/pages/promos_page.dart';
 import '../constants/route_constants.dart';
 import '../widgets/navigation/bottom_navigation.dart';
 
@@ -37,6 +38,10 @@ class AppRouter {
           email: state.uri.queryParameters['email'] ?? '',
           isLogin: state.uri.queryParameters['isLogin'] == 'true',
         ),
+      ),
+      GoRoute(
+        path: RouteConstants.promos,
+        builder: (context, state) => const PromosPage(),
       ),
       ShellRoute(
         navigatorKey: _shellNavigatorKey,
@@ -78,6 +83,7 @@ class AppRouter {
       RouteConstants.home,
       RouteConstants.coupons,
       RouteConstants.profile,
+      RouteConstants.promos,
     ];
     return protectedRoutes.any((route) => location.startsWith(route));
   }
