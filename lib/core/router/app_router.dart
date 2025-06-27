@@ -22,7 +22,6 @@ class AppRouter {
     navigatorKey: _rootNavigatorKey,
     initialLocation: RouteConstants.home,
     redirect: _redirect,
-
     routes: [
       GoRoute(
         path: RouteConstants.login,
@@ -39,7 +38,6 @@ class AppRouter {
           isLogin: state.uri.queryParameters['isLogin'] == 'true',
         ),
       ),
-
       ShellRoute(
         navigatorKey: _shellNavigatorKey,
         builder: (context, state, child) =>
@@ -59,31 +57,20 @@ class AppRouter {
           ),
         ],
       ),
-
-      // Standalone Routes
-      // GoRoute(
-      //   path: '${RouteConstants.couponDetail}/:id',
-      //   builder: (context, state) =>
-      //       CouponDetailPage(couponId: state.pathParameters['id']!),
-      // ),
     ],
   );
 
   static String? _redirect(BuildContext context, GoRouterState state) {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final location = state.uri.toString();
-
-    // If user is not authenticated and trying to access protected routes
     if (!authProvider.isAuthenticated && _isProtectedRoute(location)) {
       return RouteConstants.login;
     }
-
-    // If user is authenticated and trying to access auth routes
     if (authProvider.isAuthenticated && _isAuthRoute(location)) {
       return RouteConstants.home;
     }
 
-    return null; // No redirect needed
+    return null;
   }
 
   static bool _isProtectedRoute(String location) {

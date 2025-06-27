@@ -8,6 +8,12 @@ import '../features/auth/data/repositories/auth_repository_impl.dart';
 import '../features/auth/presentation/providers/auth_provider.dart';
 import '../features/coupons/data/repositories/coupon_repository_impl.dart';
 import '../features/coupons/presentation/providers/coupon_provider.dart';
+import '../features/promos/data/datasources/promos_remote_datasource.dart';
+import '../features/promos/data/repositories/promos_repository_impl.dart';
+import '../features/promos/domain/usecases/add_reward_points_usecase.dart';
+import '../features/promos/domain/usecases/get_promos_usecase.dart';
+import '../features/promos/domain/usecases/launch_url_usecase.dart';
+import '../features/promos/presentation/providers/promos_provider.dart';
 
 class AppProviders {
   static List<SingleChildWidget> providers = [
@@ -31,6 +37,24 @@ class AppProviders {
       ),
     ),
 
-    // Add more providers as needed
+    // Promos Provider
+    ChangeNotifierProvider<PromosProvider>(
+      create: (context) {
+        final remoteDataSource = PromosRemoteDataSourceImpl(
+          client: ApiClient(baseUrl: ApiConstants.baseUrl),
+        );
+        final repository = PromosRepositoryImpl(
+          remoteDataSource: remoteDataSource,
+        );
+        final getPromosUseCase = GetPromosUseCase(repository);
+        final addRewardPointsUseCase = AddRewardPointsUseCase(repository);
+        final launchUrlUseCase = LaunchUrlUseCase();
+        return PromosProvider(
+          getPromosUseCase: getPromosUseCase,
+          addRewardPointsUseCase: addRewardPointsUseCase,
+          launchUrlUseCase: launchUrlUseCase,
+        );
+      },
+    ),
   ];
 }

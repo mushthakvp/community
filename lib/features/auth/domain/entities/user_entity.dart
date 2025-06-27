@@ -14,6 +14,7 @@ class UserEntity extends Equatable {
   final String? state;
   final String? district;
   final String? tier;
+  final String? currencyCode;
   final int loyaltyPoints;
   final double walletAmount;
   final bool isOtpVerified;
@@ -29,6 +30,7 @@ class UserEntity extends Equatable {
     this.dateOfBirth,
     this.profession,
     this.country,
+    this.currencyCode,
     this.state,
     this.district,
     this.tier,
@@ -49,6 +51,7 @@ class UserEntity extends Equatable {
     dateOfBirth,
     profession,
     country,
+    currencyCode,
     state,
     district,
     tier,

@@ -73,7 +73,6 @@ class ApiClient {
     try {
       final uri = _buildUri(endpoint);
       final requestHeaders = await _getHeaders(additionalHeaders: headers);
-
       final response = await _client
           .post(
             uri,
@@ -81,7 +80,6 @@ class ApiClient {
             body: body != null ? json.encode(body) : null,
           )
           .timeout(Duration(seconds: ApiConstants.timeoutDuration));
-
       return _handleResponse(response);
     } on SocketException {
       throw const NetworkException('No internet connection');
@@ -100,7 +98,6 @@ class ApiClient {
     try {
       final uri = _buildUri(endpoint);
       final requestHeaders = await _getHeaders(additionalHeaders: headers);
-
       final response = await _client
           .put(
             uri,
@@ -108,7 +105,6 @@ class ApiClient {
             body: body != null ? json.encode(body) : null,
           )
           .timeout(Duration(seconds: ApiConstants.timeoutDuration));
-
       return _handleResponse(response);
     } on SocketException {
       throw const NetworkException('No internet connection');
@@ -130,7 +126,6 @@ class ApiClient {
       final response = await _client
           .delete(uri, headers: requestHeaders)
           .timeout(Duration(seconds: ApiConstants.timeoutDuration));
-
       return _handleResponse(response);
     } on SocketException {
       throw const NetworkException('No internet connection');

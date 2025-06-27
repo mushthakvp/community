@@ -1,4 +1,6 @@
 // lib/core/error/error_handler.dart - Updated with SnackBar management
+import 'dart:developer';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -52,6 +54,7 @@ class ErrorHandler {
   }
 
   static String getErrorMessage(Failure failure) {
+    log("Error message:---- ${failure.message}");
     return switch (failure) {
       NetworkFailure() => 'No internet connection. Please check your network.',
       ServerFailure(message: final msg) =>
@@ -92,8 +95,7 @@ class ErrorHandler {
   }
 
   static void showWarning(BuildContext context, String message) {
-    _clearSnackBars(context); // Clear existing snackbars first
-
+    _clearSnackBars(context);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
@@ -108,6 +110,7 @@ class ErrorHandler {
 // Alternative approach using if-else for older Dart versions
 class ErrorHandlerCompat {
   static String getErrorMessage(Failure failure) {
+    log("Failure type: ${failure.message}");
     if (failure is NetworkFailure) {
       return 'No internet connection. Please check your network.';
     } else if (failure is ServerFailure) {

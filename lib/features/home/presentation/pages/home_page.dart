@@ -5,6 +5,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/widgets/common/text_widget.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../widgets/dashboard_stats.dart';
+import '../widgets/promos_action.dart';
 import '../widgets/quick_actions.dart';
 import '../widgets/recent_activity.dart';
 
@@ -24,9 +25,7 @@ class _HomePageState extends State<HomePage> {
       body: Consumer<AuthProvider>(
         builder: (context, authProvider, child) {
           return RefreshIndicator(
-            onRefresh: () async {
-              // Implement refresh logic
-            },
+            onRefresh: () async {},
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.all(16),
@@ -39,8 +38,10 @@ class _HomePageState extends State<HomePage> {
                   const SizedBox(height: 24),
                   const QuickActions(),
                   const SizedBox(height: 24),
+                  PromosActions(),
+                  const SizedBox(height: 24),
                   const RecentActivity(),
-                  const SizedBox(height: 100), // Bottom padding for navigation
+                  const SizedBox(height: 100),
                 ],
               ),
             ),
