@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/widgets/common/text_widget.dart';
 import '../../../../core/widgets/loading/loading_widget.dart';
-import '../../path/animated_promos_background.dart';
+import '../animation/animated_promos_background.dart';
 import '../providers/promos_provider.dart';
 import '../widgets/loading/promos_shimmer.dart';
 import '../widgets/promos_content.dart';

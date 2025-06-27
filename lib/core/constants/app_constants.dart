@@ -20,8 +20,6 @@ class AppConstants {
   // Assets
   static const String viveraLogo = 'assets/images/vivera_logo.png';
   static const String userNotLoginedImg = 'assets/images/user_not_logined.png';
-  static const String commonBlackBg = 'assets/images/common_black_bg.png';
-  static const String promoseBg = 'assets/images/promos_bg.png';
   static const String viveraAnim = 'assets/animation/vivera-animation.gif';
 
   static const profileImg =
