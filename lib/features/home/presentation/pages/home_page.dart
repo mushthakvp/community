@@ -6,10 +6,10 @@ import '../providers/home_provider.dart';
 import '../widgets/animated_background.dart';
 import '../widgets/banner_carousel.dart';
 import '../widgets/essentials_grid.dart';
-import '../widgets/home_app_bar.dart';
 import '../widgets/home_shimmer.dart';
 import '../widgets/loyalty_card.dart';
 import '../widgets/marquee_text.dart';
+import '../widgets/sticky_home_appbar.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -22,12 +22,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
 
+  final ScrollController _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
 
     _fadeController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 1200),
       vsync: this,
     );
 
@@ -44,6 +46,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   @override
   void dispose() {
     _fadeController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -56,47 +59,54 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           // Animated Background
           const AnimatedBackground(),
 
-          // Main Content
-          Consumer<HomeProvider>(
-            builder: (context, provider, child) {
-              if (provider.isLoading) {
-                return const HomeShimmer();
-              }
+          // Main Content with sticky app bar
+          Column(
+            children: [
+              // Sticky App Bar
+              const StickyHomeAppBar(),
 
-              if (provider.hasError) {
-                return _buildErrorState(provider);
-              }
+              // Scrollable Content
+              Expanded(
+                child: Consumer<HomeProvider>(
+                  builder: (context, provider, child) {
+                    if (provider.isLoading) {
+                      return const HomeShimmer();
+                    }
 
-              return FadeTransition(
-                opacity: _fadeAnimation,
-                child: RefreshIndicator(
-                  onRefresh: () => provider.loadUserDetails(forceRefresh: true),
-                  color: AppConstants.appPrimaryColor,
-                  backgroundColor: const Color(0xFF1A1A2E),
-                  child: CustomScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    slivers: [
-                      SliverToBoxAdapter(
-                        child: Column(
-                          children: [
-                            const HomeAppBar(),
-                            const SizedBox(height: 24),
-                            const EnhancedLoyaltyCard(),
-                            const SizedBox(height: 20),
-                            const MarqueeText(),
-                            const SizedBox(height: 24),
-                            const EnhancedBannerCarousel(),
-                            const SizedBox(height: 32),
-                            _buildEssentialsSection(),
-                            const SizedBox(height: 60),
-                          ],
+                    if (provider.hasError) {
+                      return _buildErrorState(provider);
+                    }
+
+                    return FadeTransition(
+                      opacity: _fadeAnimation,
+                      child: RefreshIndicator(
+                        onRefresh: () =>
+                            provider.loadUserDetails(forceRefresh: true),
+                        color: AppConstants.appPrimaryColor,
+                        backgroundColor: const Color(0xFF1A1A2E),
+                        child: SingleChildScrollView(
+                          controller: _scrollController,
+                          physics: const BouncingScrollPhysics(),
+                          child: Column(
+                            children: [
+                              const SizedBox(height: 16),
+                              const EnhancedLoyaltyCard(),
+                              const SizedBox(height: 24),
+                              const MarqueeText(),
+                              const SizedBox(height: 24),
+                              const EnhancedBannerCarousel(),
+                              const SizedBox(height: 32),
+                              _buildEssentialsSection(),
+                              const SizedBox(height: 60),
+                            ],
+                          ),
                         ),
                       ),
-                    ],
-                  ),
+                    );
+                  },
                 ),
-              );
-            },
+              ),
+            ],
           ),
         ],
       ),

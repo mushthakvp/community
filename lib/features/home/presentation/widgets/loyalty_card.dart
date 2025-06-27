@@ -16,11 +16,11 @@ class EnhancedLoyaltyCard extends StatefulWidget {
 class _EnhancedLoyaltyCardState extends State<EnhancedLoyaltyCard>
     with TickerProviderStateMixin {
   late AnimationController _shimmerController;
-  late AnimationController _pulseController;
+  late AnimationController _floatController;
   late AnimationController _slideController;
 
   late Animation<double> _shimmerAnimation;
-  late Animation<double> _pulseAnimation;
+  late Animation<double> _floatAnimation;
   late Animation<Offset> _slideAnimation;
 
   @override
@@ -32,8 +32,8 @@ class _EnhancedLoyaltyCardState extends State<EnhancedLoyaltyCard>
       vsync: this,
     );
 
-    _pulseController = AnimationController(
-      duration: const Duration(seconds: 2),
+    _floatController = AnimationController(
+      duration: const Duration(seconds: 4),
       vsync: this,
     );
 
@@ -46,8 +46,8 @@ class _EnhancedLoyaltyCardState extends State<EnhancedLoyaltyCard>
       CurvedAnimation(parent: _shimmerController, curve: Curves.easeInOut),
     );
 
-    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.05).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    _floatAnimation = Tween<double>(begin: 0.0, end: 10.0).animate(
+      CurvedAnimation(parent: _floatController, curve: Curves.easeInOut),
     );
 
     _slideAnimation = Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
@@ -57,14 +57,14 @@ class _EnhancedLoyaltyCardState extends State<EnhancedLoyaltyCard>
 
     // Start animations
     _shimmerController.repeat();
-    _pulseController.repeat(reverse: true);
+    _floatController.repeat(reverse: true);
     _slideController.forward();
   }
 
   @override
   void dispose() {
     _shimmerController.dispose();
-    _pulseController.dispose();
+    _floatController.dispose();
     _slideController.dispose();
     super.dispose();
   }
@@ -76,22 +76,26 @@ class _EnhancedLoyaltyCardState extends State<EnhancedLoyaltyCard>
         if (provider.userDetails == null) {
           return const SizedBox.shrink();
         }
-
         return SlideTransition(
           position: _slideAnimation,
-          child: ScaleTransition(
-            scale: _pulseAnimation,
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16),
-              height: 220,
-              child: Stack(
-                children: [
-                  _buildMainCard(provider),
-                  _buildShimmerOverlay(),
-                  _buildCardContent(provider),
-                ],
-              ),
-            ),
+          child: AnimatedBuilder(
+            animation: _floatAnimation,
+            builder: (context, child) {
+              return Transform.translate(
+                offset: Offset(0, _floatAnimation.value),
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 16),
+                  height: 220,
+                  child: Stack(
+                    children: [
+                      _buildMainCard(provider),
+                      _buildShimmerOverlay(),
+                      _buildCardContent(provider),
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
         );
       },
@@ -162,13 +166,13 @@ class _EnhancedLoyaltyCardState extends State<EnhancedLoyaltyCard>
 
   Widget _buildCardContent(HomeProvider provider) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       child: Column(
         children: [
           _buildCardHeader(provider),
-          const SizedBox(height: 16),
+          const SizedBox(height: 15),
           _buildAnimatedDivider(),
-          const SizedBox(height: 16),
+          const SizedBox(height: 15),
           Expanded(child: _buildStatsSection(provider)),
         ],
       ),
@@ -271,6 +275,17 @@ class _EnhancedLoyaltyCardState extends State<EnhancedLoyaltyCard>
                   ),
                 ],
               ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'C-ID: ${provider.userDetails?.communityId} ',
+              style: TextStyle(
+                color: _getTierColor(provider.userDetails?.tier),
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),
@@ -404,41 +419,28 @@ class _EnhancedLoyaltyCardState extends State<EnhancedLoyaltyCard>
 
   Widget _buildStatsSection(HomeProvider provider) {
     final userDetails = provider.userDetails!;
-    return Row(
+    return Column(
       children: [
-        Expanded(
-          child: Column(
-            children: [
-              _buildStatCard(
+        Row(
+          children: [
+            Expanded(
+              child: _buildStatCard(
                 'Loyalty Points',
                 '${userDetails.loyaltyPoints}',
                 Icons.stars,
                 AppConstants.appPrimaryColor,
               ),
-              const SizedBox(height: 12),
-              _buildStatCard(
-                'Community ID',
-                userDetails.communityId.isNotEmpty
-                    ? userDetails.communityId
-                    : 'N/A',
-                Icons.group,
-                Colors.blue.shade400,
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            children: [
-              _buildStatCard(
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildStatCard(
                 'Wallet Balance',
                 '${userDetails.currencyCode} ${userDetails.walletAmount.toStringAsFixed(2)}',
                 Icons.account_balance_wallet,
                 Colors.green.shade400,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ],
     );
@@ -448,9 +450,11 @@ class _EnhancedLoyaltyCardState extends State<EnhancedLoyaltyCard>
     String label,
     String value,
     IconData icon,
-    Color color,
-  ) {
+    Color color, {
+    bool isFullWidth = false,
+  }) {
     return Container(
+      width: isFullWidth ? double.infinity : null,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
@@ -464,34 +468,75 @@ class _EnhancedLoyaltyCardState extends State<EnhancedLoyaltyCard>
           ),
         ],
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: color, size: 20),
-          const SizedBox(height: 6),
-          Text(
-            label,
-            style: TextStyle(
-              color: AppConstants.white.withOpacity(0.7),
-              fontSize: 10,
-              fontWeight: FontWeight.w500,
+      child: isFullWidth
+          ? Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, color: color, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        label,
+                        style: TextStyle(
+                          color: AppConstants.white.withOpacity(0.7),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        value,
+                        style: TextStyle(
+                          color: color,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            )
+          : Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, color: color, size: 20),
+                const SizedBox(height: 6),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: AppConstants.white.withOpacity(0.7),
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: TextStyle(
-              color: color,
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-            ),
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
     );
   }
 
