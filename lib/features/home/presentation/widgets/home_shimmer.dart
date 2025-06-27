@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:skeleton_text/skeleton_text.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import 'animated_background.dart';
 
 class HomeShimmer extends StatelessWidget {
   const HomeShimmer({super.key});
@@ -10,73 +11,89 @@ class HomeShimmer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppConstants.black,
-      body: Container(
-        height: MediaQuery.of(context).size.height,
-        width: MediaQuery.of(context).size.width,
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage("assets/videos/moon.gif"),
-            fit: BoxFit.cover,
-          ),
-        ),
-        child: Column(
-          children: [
-            _buildTopBarShimmer(context),
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    const SizedBox(height: 16),
-                    _buildLoyaltyCardShimmer(context),
-                    const SizedBox(height: 20),
-                    _buildMarqueeShimmer(context),
-                    const SizedBox(height: 20),
-                    _buildBannerShimmer(context),
-                    const SizedBox(height: 30),
-                    _buildEssentialsShimmer(context),
-                    const SizedBox(height: 50),
-                  ],
+      backgroundColor: const Color(0xFF0A0A0A),
+      body: Stack(
+        children: [
+          // Use the same animated background as the actual home page
+          const AnimatedBackground(),
+
+          // Main Content with sticky app bar (matching home page structure)
+          Column(
+            children: [
+              // Sticky App Bar Shimmer
+              _buildStickyAppBarShimmer(),
+
+              // Scrollable Content
+              Expanded(
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 16),
+                      _buildLoyaltyCardShimmer(context),
+                      const SizedBox(height: 24),
+                      _buildMarqueeShimmer(context),
+                      const SizedBox(height: 24),
+                      _buildBannerShimmer(context),
+                      const SizedBox(height: 32),
+                      _buildEssentialsShimmer(context),
+                      const SizedBox(height: 60),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildTopBarShimmer(BuildContext context) {
-    return SafeArea(
-      child: Container(
-        height: 80,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                _buildShimmerContainer(28, 28, isCircle: false),
-                const SizedBox(width: 16),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _buildShimmerContainer(100, 16),
-                    const SizedBox(height: 4),
-                    _buildShimmerContainer(80, 12),
-                  ],
-                ),
-              ],
-            ),
-            Row(
-              children: [
-                _buildShimmerContainer(24, 24, isCircle: false),
-                const SizedBox(width: 16),
-                _buildShimmerContainer(24, 24, isCircle: false),
-              ],
-            ),
+  Widget _buildStickyAppBarShimmer() {
+    return Container(
+      height: 120,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            const Color(0xFF0A0A0A),
+            const Color(0xFF1A1A2E).withOpacity(0.9),
+            Colors.transparent,
           ],
+          stops: const [0.0, 0.7, 1.0],
+        ),
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  _buildShimmerContainer(48, 48, borderRadius: 12),
+                  const SizedBox(width: 12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _buildShimmerContainer(80, 18),
+                      const SizedBox(height: 4),
+                      _buildShimmerContainer(120, 13),
+                    ],
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  _buildShimmerContainer(40, 40, borderRadius: 12),
+                  const SizedBox(width: 8),
+                  _buildShimmerContainer(40, 40, borderRadius: 12),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -84,115 +101,260 @@ class HomeShimmer extends StatelessWidget {
 
   Widget _buildLoyaltyCardShimmer(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12),
-      height: MediaQuery.of(context).size.height * 0.24,
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      height: 220,
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.3),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppConstants.white.withOpacity(0.1)),
+        borderRadius: BorderRadius.circular(24),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color(0xFF1A1A2E),
+            const Color(0xFF16213E),
+            const Color(0xFF0F0F23),
+          ],
+        ),
+        border: Border.all(
+          color: AppConstants.appPrimaryColor.withOpacity(0.3),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppConstants.appPrimaryColor.withOpacity(0.2),
+            blurRadius: 20,
+            spreadRadius: 0,
+            offset: const Offset(0, 8),
+          ),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 15,
+            spreadRadius: 2,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        child: Column(
           children: [
-            // Profile image shimmer
-            _buildShimmerContainer(70, 70, isCircle: true),
-            const SizedBox(width: 16),
-
-            // Center content shimmer
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Title shimmer
-                  _buildShimmerContainer(200, 20),
-                  const SizedBox(height: 8),
-
-                  // Divider (using actual SVG if available)
-                  Container(
-                    height: 4,
-                    width: 60,
-                    decoration: BoxDecoration(
-                      color: AppConstants.white.withOpacity(0.3),
-                      borderRadius: BorderRadius.circular(2),
+            // Header section
+            Row(
+              children: [
+                // Profile section
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(3),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          colors: [
+                            AppConstants.appPrimaryColor.withOpacity(0.8),
+                            AppConstants.appPrimaryColor.withOpacity(0.3),
+                          ],
+                        ),
+                      ),
+                      child: _buildShimmerContainer(64, 64, isCircle: true),
                     ),
-                  ),
-                  const SizedBox(height: 16),
+                    const SizedBox(width: 12),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildShimmerContainer(100, 16),
+                        const SizedBox(height: 4),
+                        _buildShimmerContainer(80, 12, borderRadius: 12),
+                        const SizedBox(height: 6),
+                        _buildShimmerContainer(90, 13),
+                      ],
+                    ),
+                  ],
+                ),
+                const Spacer(),
+                // Title section
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    _buildShimmerContainer(48, 48, isCircle: true),
+                    const SizedBox(height: 8),
+                    _buildShimmerContainer(80, 12, borderRadius: 8),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 15),
 
-                  // First row of info fields
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _buildShimmerFieldGroup(),
-                      const SizedBox(width: 20),
-                      _buildShimmerFieldGroup(),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
+            // Animated divider
+            _buildShimmerDivider(),
+            const SizedBox(height: 15),
 
-                  // Second row of info fields
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _buildShimmerFieldGroup(),
-                      const SizedBox(width: 20),
-                      _buildShimmerFieldGroup(),
-                    ],
-                  ),
+            // Stats section
+            Expanded(
+              child: Row(
+                children: [
+                  Expanded(child: _buildStatCardShimmer()),
+                  const SizedBox(width: 12),
+                  Expanded(child: _buildStatCardShimmer()),
                 ],
               ),
             ),
-
-            // Logo shimmer
-            _buildShimmerContainer(60, 60, isCircle: true),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildShimmerFieldGroup() {
-    return Column(
+  Widget _buildShimmerDivider() {
+    return Row(
       children: [
-        _buildShimmerContainer(40, 8),
-        const SizedBox(height: 4),
-        _buildShimmerContainer(60, 12),
+        Expanded(
+          child: Container(
+            height: 1,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.transparent,
+                  AppConstants.appPrimaryColor.withOpacity(0.3),
+                ],
+              ),
+            ),
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: List.generate(3, (index) {
+              return Container(
+                margin: const EdgeInsets.symmetric(horizontal: 2),
+                width: 4,
+                height: 4,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppConstants.appPrimaryColor.withOpacity(0.3),
+                ),
+              );
+            }),
+          ),
+        ),
+        Expanded(
+          child: Container(
+            height: 1,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppConstants.appPrimaryColor.withOpacity(0.3),
+                  Colors.transparent,
+                ],
+              ),
+            ),
+          ),
+        ),
       ],
+    );
+  }
+
+  Widget _buildStatCardShimmer() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppConstants.appPrimaryColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppConstants.appPrimaryColor.withOpacity(0.3),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppConstants.appPrimaryColor.withOpacity(0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildShimmerContainer(20, 20, isCircle: true),
+          const SizedBox(height: 6),
+          _buildShimmerContainer(60, 10),
+          const SizedBox(height: 4),
+          _buildShimmerContainer(40, 12),
+        ],
+      ),
     );
   }
 
   Widget _buildMarqueeShimmer(BuildContext context) {
     return Container(
-      width: double.infinity,
-      height: 45,
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      height: 56,
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.3),
-        border: Border.all(color: AppConstants.white.withOpacity(0.1)),
+        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppConstants.appPrimaryColor.withOpacity(0.9),
+            AppConstants.appPrimaryColor.withOpacity(0.7),
+            AppConstants.appPrimaryColor.withOpacity(0.9),
+          ],
+          stops: const [0.0, 0.5, 1.0],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppConstants.appPrimaryColor.withOpacity(0.3),
+            blurRadius: 15,
+            spreadRadius: 0,
+            offset: const Offset(0, 4),
+          ),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         children: [
-          // Left icon shimmer
+          // Left icon section
           Container(
-            width: 50,
-            height: 45,
-            color: Colors.black.withOpacity(0.2),
-            child: const Icon(
-              Icons.campaign_outlined,
-              color: Colors.grey,
-              size: 20,
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: AppConstants.black.withOpacity(0.1),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(16),
+                bottomLeft: Radius.circular(16),
+              ),
+              border: Border(
+                right: BorderSide(
+                  color: AppConstants.black.withOpacity(0.1),
+                  width: 1,
+                ),
+              ),
+            ),
+            child: Center(
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppConstants.black.withOpacity(0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.campaign_rounded,
+                  color: AppConstants.black,
+                  size: 20,
+                ),
+              ),
             ),
           ),
 
           // Center text shimmer
-          Expanded(child: Center(child: _buildShimmerContainer(250, 14))),
-
-          // Right icon shimmer
-          Container(
-            width: 50,
-            height: 45,
-            color: Colors.black.withOpacity(0.2),
-            child: const Icon(Icons.info_outline, color: Colors.grey, size: 20),
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Center(child: _buildShimmerContainer(200, 16)),
+            ),
           ),
         ],
       ),
@@ -202,18 +364,67 @@ class HomeShimmer extends StatelessWidget {
   Widget _buildBannerShimmer(BuildContext context) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
-      height: 200,
-      child: Row(
+      child: Column(
         children: [
-          const SizedBox(width: 5),
-          Expanded(
-            child: _buildShimmerContainer(
-              double.infinity,
-              200,
-              borderRadius: 20,
+          // Main banner shimmer
+          Container(
+            height: 200,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              color: const Color(0xFF1A1A2E),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.3),
+                  blurRadius: 15,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  _buildShimmerContainer(
+                    double.infinity,
+                    200,
+                    borderRadius: 16,
+                  ),
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withOpacity(0.6),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-          const SizedBox(width: 5),
+          const SizedBox(height: 12),
+
+          // Indicators shimmer
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(3, (index) {
+              return Container(
+                margin: const EdgeInsets.symmetric(horizontal: 3),
+                width: index == 0 ? 20 : 6,
+                height: 6,
+                decoration: BoxDecoration(
+                  color: index == 0
+                      ? AppConstants.appPrimaryColor
+                      : AppConstants.white.withOpacity(0.4),
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              );
+            }),
+          ),
         ],
       ),
     );
@@ -225,57 +436,98 @@ class HomeShimmer extends StatelessWidget {
       children: [
         // Section title shimmer
         Padding(
-          padding: const EdgeInsets.only(left: 25),
-          child: _buildShimmerContainer(100, 18),
+          padding: const EdgeInsets.only(left: 24),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppConstants.appPrimaryColor.withOpacity(0.2),
+                  Colors.transparent,
+                ],
+              ),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: _buildShimmerContainer(100, 22),
+          ),
         ),
         const SizedBox(height: 16),
 
         // Grid shimmer
         Container(
-          margin: const EdgeInsets.symmetric(horizontal: 15),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           child: GridView.builder(
             physics: const NeverScrollableScrollPhysics(),
             shrinkWrap: true,
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
+              crossAxisCount: 2,
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
-              childAspectRatio: 0.85,
+              childAspectRatio: 1.3,
             ),
-            itemCount: 6,
+            itemCount: 4, // Match the actual number of items
             itemBuilder: (context, index) {
               return Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.3),
+                  gradient: LinearGradient(
+                    colors: [
+                      const Color(0xFF1A1A1A),
+                      const Color(0xFF2A2A2A).withOpacity(0.8),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
                     color: AppConstants.white.withOpacity(0.1),
+                    width: 1,
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppConstants.black.withOpacity(0.5),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
                 child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // App icon shimmer
+                    // Image shimmer
                     Expanded(
                       flex: 3,
-                      child: _buildShimmerContainer(
-                        double.infinity,
-                        double.infinity,
-                        borderRadius: 12,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppConstants.appPrimaryColor.withOpacity(
+                                0.2,
+                              ),
+                              blurRadius: 8,
+                              spreadRadius: 1,
+                            ),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: _buildShimmerContainer(
+                            double.infinity,
+                            double.infinity,
+                            borderRadius: 12,
+                          ),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 8),
 
-                    // App name shimmer
+                    // Text shimmer
                     Expanded(
                       flex: 1,
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          _buildShimmerContainer(60, 12),
-                          const SizedBox(height: 4),
-                          _buildShimmerContainer(80, 8),
-                        ],
+                        children: [_buildShimmerContainer(80, 12)],
                       ),
                     ),
                   ],

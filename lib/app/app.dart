@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../core/constants/app_constants.dart';
@@ -36,7 +37,12 @@ class _AppState extends State<App> {
       brightness: Brightness.light,
       scaffoldBackgroundColor: AppConstants.black,
       fontFamily: AppConstants.fontFamily,
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
+        systemOverlayStyle: SystemUiOverlayStyle(
+          statusBarColor: AppConstants.black,
+          statusBarIconBrightness: Brightness.light,
+          statusBarBrightness: Brightness.light,
+        ),
         surfaceTintColor: AppConstants.black,
         backgroundColor: AppConstants.black,
         foregroundColor: AppConstants.black,

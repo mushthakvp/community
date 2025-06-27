@@ -39,14 +39,16 @@ class AppRouter {
           isLogin: state.uri.queryParameters['isLogin'] == 'true',
         ),
       ),
+
       GoRoute(
         path: RouteConstants.promos,
         builder: (context, state) => const PromosPage(),
       ),
+
+      // Routes with enhanced bottom navigation
       ShellRoute(
         navigatorKey: _shellNavigatorKey,
-        builder: (context, state, child) =>
-            BottomNavigationScaffold(child: child),
+        builder: (context, state, child) => BottomNavigation(child: child),
         routes: [
           GoRoute(
             path: RouteConstants.home,
@@ -59,6 +61,10 @@ class AppRouter {
           GoRoute(
             path: RouteConstants.profile,
             builder: (context, state) => const ProfilePage(),
+          ),
+          GoRoute(
+            path: '/settings',
+            builder: (context, state) => const SettingsPage(),
           ),
         ],
       ),
@@ -74,7 +80,6 @@ class AppRouter {
     if (authProvider.isAuthenticated && _isAuthRoute(location)) {
       return RouteConstants.home;
     }
-
     return null;
   }
 
@@ -84,6 +89,7 @@ class AppRouter {
       RouteConstants.coupons,
       RouteConstants.profile,
       RouteConstants.promos,
+      '/settings',
     ];
     return protectedRoutes.any((route) => location.startsWith(route));
   }
@@ -95,5 +101,27 @@ class AppRouter {
       RouteConstants.otpVerification,
     ];
     return authRoutes.any((route) => location.startsWith(route));
+  }
+}
+
+// Placeholder for settings page
+class SettingsPage extends StatelessWidget {
+  const SettingsPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Settings'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
+      body: const Center(
+        child: Text(
+          'Settings Page',
+          style: TextStyle(fontSize: 24, color: Colors.white),
+        ),
+      ),
+    );
   }
 }
