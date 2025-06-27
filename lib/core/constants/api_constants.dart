@@ -32,6 +32,14 @@ class ApiConstants {
   static const String getNotifications = 'user/getNotification';
 
   // Home Endpoints
-
   static const String getHome = 'user/getHome';
+
+  // Redemption Endpoints
+  static const String getWalletTransactions =
+      'user/getWalletTransactions?filter=';
+
+  // Payment Endpoints
+  static const String initiatePayment = 'user/initiatePayment';
+  static const String initiateTierUpgrade = 'user/paymentRegistration';
+  static const String verifyPayment = 'user/verifyPayment';
 }

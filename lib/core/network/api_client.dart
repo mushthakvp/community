@@ -1,4 +1,3 @@
-// lib/core/network/api_client.dart - Updated to work with new NetworkInfo
 import 'dart:convert';
 import 'dart:io';
 

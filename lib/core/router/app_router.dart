@@ -1,4 +1,3 @@
-// lib/core/router/app_router.dart - FIXED
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -11,6 +10,8 @@ import '../../features/coupons/presentation/pages/coupon_home_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/promos/presentation/pages/promos_page.dart';
+import '../../features/redemption/presentation/pages/redemption_page.dart';
+import '../../features/redemption/presentation/pages/wallet_recharge_page.dart';
 import '../constants/route_constants.dart';
 import '../widgets/navigation/bottom_navigation.dart';
 
@@ -47,6 +48,12 @@ class AppRouter {
         path: RouteConstants.coupons,
         builder: (context, state) => const CouponHomePage(),
       ),
+      
+      // Redemption standalone pages
+      GoRoute(
+        path: RouteConstants.walletRecharge,
+        builder: (context, state) => const WalletRechargePage(),
+      ),
 
       // Main app with bottom navigation
       ShellRoute(
@@ -60,6 +67,10 @@ class AppRouter {
           GoRoute(
             path: RouteConstants.promos,
             builder: (context, state) => const PromosPage(),
+          ),
+          GoRoute(
+            path: RouteConstants.redemption,
+            builder: (context, state) => const RedemptionPage(),
           ),
           GoRoute(
             path: RouteConstants.profile,
@@ -95,6 +106,8 @@ class AppRouter {
     const protectedRoutes = [
       RouteConstants.home,
       RouteConstants.promos,
+      RouteConstants.redemption,
+      RouteConstants.walletRecharge,
       RouteConstants.profile,
       RouteConstants.coupons,
       '/settings',

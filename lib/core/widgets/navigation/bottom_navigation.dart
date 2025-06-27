@@ -1,4 +1,4 @@
-// lib/core/widgets/navigation/bottom_navigation.dart - FIXED
+
 import 'package:animated_bottom_navigation_bar/animated_bottom_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../features/home/presentation/pages/home_page.dart';
 import '../../../features/profile/presentation/pages/profile_page.dart';
 import '../../../features/promos/presentation/pages/promos_page.dart';
+import '../../../features/redemption/presentation/pages/redemption_page.dart';
 import '../../constants/app_constants.dart';
 import '../../constants/route_constants.dart';
 import '../common/text_widget.dart';
@@ -26,7 +27,7 @@ class _BottomNavigationState extends State<BottomNavigation>
   late Animation<double> _fabAnimation;
   late CurvedAnimation _fabCurve;
 
-  int _currentIndex = 0; // Track current index internally
+  int _currentIndex = 0; 
 
   @override
   void initState() {
@@ -52,7 +53,6 @@ class _BottomNavigationState extends State<BottomNavigation>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Set initial index based on current location after the widget tree is built
     _updateIndexFromLocation();
   }
 
@@ -66,7 +66,6 @@ class _BottomNavigationState extends State<BottomNavigation>
         });
       }
     } catch (e) {
-      // Fallback to home index if there's an error getting the route
       if (_currentIndex != 0) {
         setState(() {
           _currentIndex = 0;
@@ -90,7 +89,7 @@ class _BottomNavigationState extends State<BottomNavigation>
         children: const [
           HomePage(),
           PromosPage(),
-          ProfilePage(),
+          RedemptionPage(), 
           ProfilePage(),
         ],
       ),
@@ -237,15 +236,15 @@ class _BottomNavigationState extends State<BottomNavigation>
         'route': RouteConstants.promos,
       },
       {
+        'icon': Icons.account_balance_wallet_outlined,
+        'activeIcon': Icons.account_balance_wallet,
+        'label': 'Redemption', 
+        'route': RouteConstants.redemption, 
+      },
+      {
         'icon': Icons.person_outline,
         'activeIcon': Icons.person,
         'label': 'Profile',
-        'route': RouteConstants.profile,
-      },
-      {
-        'icon': Icons.more_horiz,
-        'activeIcon': Icons.menu,
-        'label': 'More',
         'route': RouteConstants.profile,
       },
     ];

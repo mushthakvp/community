@@ -1,3 +1,4 @@
+// lib/core/constants/route_constants.dart
 class RouteConstants {
   // Auth Routes
   static const String splash = '/';
@@ -17,4 +18,8 @@ class RouteConstants {
 
   // Promos Routes
   static const String promos = '/promos';
+
+  // Redemption Routes
+  static const String redemption = '/redemption';
+  static const String walletRecharge = '/redemption/recharge';
 }
