@@ -22,6 +22,7 @@ class AppConstants {
   static const String userNotLoginedImg = 'assets/images/user_not_logined.png';
   static const String commonBlackBg = 'assets/images/common_black_bg.png';
   static const String promoseBg = 'assets/images/promos_bg.png';
+  static const String viveraAnim = 'assets/animation/vivera-animation.gif';
 
   static const profileImg =
       '''<svg width="13" height="19" viewBox="0 0 13 19" fill="none" xmlns="http://www.w3.org/2000/svg">
