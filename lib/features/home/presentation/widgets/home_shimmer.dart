@@ -1,9 +1,8 @@
-// features/home/presentation/widgets/home_shimmer.dart
 import 'package:flutter/material.dart';
 import 'package:skeleton_text/skeleton_text.dart';
 
 import '../../../../core/constants/app_constants.dart';
-import 'animated_background.dart';
+import '../../../promos/presentation/animation/animated_promos_background.dart';
 
 class HomeShimmer extends StatelessWidget {
   const HomeShimmer({super.key});
@@ -14,10 +13,7 @@ class HomeShimmer extends StatelessWidget {
       backgroundColor: const Color(0xFF0A0A0A),
       body: Stack(
         children: [
-          // Use the same animated background as the actual home page
-          const AnimatedBackground(),
-
-          // Main Content with sticky app bar (matching home page structure)
+          const AnimatedPromosBackground(child: SizedBox()),
           Column(
             children: [
               // Sticky App Bar Shimmer

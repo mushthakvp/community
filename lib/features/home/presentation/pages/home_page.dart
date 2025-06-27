@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../promos/presentation/animation/animated_promos_background.dart';
 import '../providers/home_provider.dart';
-import '../widgets/animated_background.dart';
 import '../widgets/banner_carousel.dart';
 import '../widgets/essentials_grid.dart';
 import '../widgets/home_shimmer.dart';
@@ -57,7 +57,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       body: Stack(
         children: [
           // Animated Background
-          const AnimatedBackground(),
+          const AnimatedPromosBackground(child: SizedBox()),
 
           // Main Content with sticky app bar
           Column(
