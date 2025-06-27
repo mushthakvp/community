@@ -1,9 +1,11 @@
 // features/home/presentation/widgets/essentials_grid.dart
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/constants/route_constants.dart';
 import '../../../../core/widgets/common/text_widget.dart';
 
 class EssentialsGrid extends StatelessWidget {
@@ -49,23 +51,6 @@ class EssentialsGrid extends StatelessWidget {
         description: "Business and startup support",
         isExternal: false,
       ),
-      // EssentialItem(
-      //   image: "assets/icons/vcook.gif",
-      //   name: "V - Cook",
-      //   route: 'vcook://',
-      //   description: "Cooking recipes and tutorials",
-      //   isExternal: true,
-      //   appPackageName: 'com.vivera.cooking',
-      //   appStoreId: '6744088577',
-      // ),
-      EssentialItem(
-        image:
-            "https://res.cloudinary.com/fouvtycloud/image/upload/v1751012824/Vivera-New/v-one_rkshfo.gif",
-        name: "V - One",
-        route: '/coupons',
-        description: "Exclusive coupons and offers",
-        isExternal: false,
-      ),
       EssentialItem(
         image:
             "https://res.cloudinary.com/fouvtycloud/image/upload/v1751012835/Vivera-New/vjob_ukw0w9.gif",
@@ -74,13 +59,15 @@ class EssentialsGrid extends StatelessWidget {
         description: "Find your dream job",
         isExternal: false,
       ),
-      // EssentialItem(
-      //   image: "assets/icons/vcash.gif",
-      //   name: "V - Cash",
-      //   route: '/wallet',
-      //   description: "Digital wallet and payments",
-      //   isExternal: false,
-      // ),
+      EssentialItem(
+        image:
+            "https://res.cloudinary.com/fouvtycloud/image/upload/v1751012824/Vivera-New/v-one_rkshfo.gif",
+        name: "V - One",
+        route: RouteConstants.coupons,
+        description: "Exclusive coupons and offers",
+        isExternal: false,
+        isNavigationRoute: true,
+      ),
     ];
   }
 
@@ -221,13 +208,16 @@ class EssentialsGrid extends StatelessWidget {
   void _handleItemTap(BuildContext context, EssentialItem item) {
     if (item.isExternal) {
       _launchExternalApp(context, item);
+    } else if (item.isNavigationRoute) {
+      // Navigate to the specified route (for V-One -> Coupons)
+      context.go(item.route);
     } else {
       _navigateToRoute(context, item.route);
     }
   }
 
   void _navigateToRoute(BuildContext context, String route) {
-    // Handle internal navigation
+    // Handle internal navigation for other items
     switch (route) {
       case '/v-cart':
         // Navigate to ecommerce section
@@ -236,10 +226,6 @@ class EssentialsGrid extends StatelessWidget {
       case '/v-hub':
         // Navigate to business hub
         _showComingSoon(context, "V-Hub");
-        break;
-      case '/coupons':
-        // Navigate to coupons section
-        _showComingSoon(context, "V-One Coupons");
         break;
       case '/v-job':
         // Navigate to job portal
@@ -339,6 +325,7 @@ class EssentialItem {
   final String route;
   final String description;
   final bool isExternal;
+  final bool isNavigationRoute; // New field to indicate navigation routes
   final String? appPackageName;
   final String? appStoreId;
 
@@ -348,6 +335,7 @@ class EssentialItem {
     required this.route,
     this.description = '',
     this.isExternal = false,
+    this.isNavigationRoute = false,
     this.appPackageName,
     this.appStoreId,
   });

@@ -195,10 +195,10 @@ class _BottomNavigationState extends State<BottomNavigation>
         'route': RouteConstants.home,
       },
       {
-        'icon': Icons.local_offer_outlined,
-        'activeIcon': Icons.local_offer,
-        'label': 'Coupons',
-        'route': RouteConstants.coupons,
+        'icon': Icons.card_giftcard_outlined, // Promo related icon
+        'activeIcon': Icons.card_giftcard, // Active promo icon
+        'label': 'Promos', // Changed from 'Coupons' to 'Promos'
+        'route': RouteConstants.promos, // Changed route to promos
       },
       {
         'icon': Icons.person_outline,
@@ -233,6 +233,7 @@ class _BottomNavigationState extends State<BottomNavigation>
   }
 
   void _onSpecialTap(BuildContext context) {
-    context.go(RouteConstants.promos);
+    // Keep the current functionality - can be used for other features
+    context.go(RouteConstants.home);
   }
 }
