@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/widgets/common/text_widget.dart';
 import '../../../../core/widgets/loading/loading_widget.dart';
+import '../../path/animated_promos_background.dart';
 import '../providers/promos_provider.dart';
 import '../widgets/loading/promos_shimmer.dart';
 import '../widgets/promos_content.dart';
@@ -16,38 +17,49 @@ class PromosPage extends StatefulWidget {
   State<PromosPage> createState() => _PromosPageState();
 }
 
-class _PromosPageState extends State<PromosPage> {
+class _PromosPageState extends State<PromosPage> with TickerProviderStateMixin {
+  late AnimationController _fadeController;
+  late Animation<double> _fadeAnimation;
+
   @override
   void initState() {
     super.initState();
+
+    _fadeController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _fadeController, curve: Curves.easeInOut),
+    );
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<PromosProvider>().loadPromos();
+      _fadeController.forward();
     });
+  }
+
+  @override
+  void dispose() {
+    _fadeController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        height: MediaQuery.of(context).size.height,
-        width: MediaQuery.of(context).size.width,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xffF0B90A), Color(0xffA52EA1), AppConstants.black],
-            begin: Alignment.topLeft,
-            end: AlignmentDirectional.bottomCenter,
-          ),
-          image: DecorationImage(
-            fit: BoxFit.fill,
-            image: AssetImage(AppConstants.promoseBg),
-          ),
-        ),
+      body: AnimatedPromosBackground(
         child: SafeArea(
           child: RefreshIndicator(
             onRefresh: () => context.read<PromosProvider>().retry(),
+            color: AppConstants.appPrimaryColor,
+            backgroundColor: AppConstants.black,
             child: Consumer<PromosProvider>(
               builder: (context, provider, child) {
-                return _buildContent(provider);
+                return FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: _buildContent(provider),
+                );
               },
             ),
           ),
