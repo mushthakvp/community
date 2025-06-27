@@ -1,7 +1,11 @@
+// lib/core/widgets/navigation/bottom_navigation.dart - FIXED
 import 'package:animated_bottom_navigation_bar/animated_bottom_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../features/home/presentation/pages/home_page.dart';
+import '../../../features/profile/presentation/pages/profile_page.dart';
+import '../../../features/promos/presentation/pages/promos_page.dart';
 import '../../constants/app_constants.dart';
 import '../../constants/route_constants.dart';
 import '../common/text_widget.dart';
@@ -21,6 +25,8 @@ class _BottomNavigationState extends State<BottomNavigation>
   late AnimationController _borderRadiusAnimationController;
   late Animation<double> _fabAnimation;
   late CurvedAnimation _fabCurve;
+
+  int _currentIndex = 0; // Track current index internally
 
   @override
   void initState() {
@@ -44,6 +50,32 @@ class _BottomNavigationState extends State<BottomNavigation>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Set initial index based on current location after the widget tree is built
+    _updateIndexFromLocation();
+  }
+
+  void _updateIndexFromLocation() {
+    try {
+      final currentLocation = GoRouterState.of(context).uri.toString();
+      final newIndex = _getSelectedIndex(currentLocation);
+      if (_currentIndex != newIndex) {
+        setState(() {
+          _currentIndex = newIndex;
+        });
+      }
+    } catch (e) {
+      // Fallback to home index if there's an error getting the route
+      if (_currentIndex != 0) {
+        setState(() {
+          _currentIndex = 0;
+        });
+      }
+    }
+  }
+
+  @override
   void dispose() {
     _fabAnimationController.dispose();
     _borderRadiusAnimationController.dispose();
@@ -53,7 +85,15 @@ class _BottomNavigationState extends State<BottomNavigation>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: widget.child,
+      body: IndexedStack(
+        index: _currentIndex,
+        children: const [
+          HomePage(),
+          PromosPage(),
+          ProfilePage(),
+          ProfilePage(),
+        ],
+      ),
       floatingActionButton: _buildFloatingActionButton(),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: _buildBottomNavigationBar(context),
@@ -107,13 +147,11 @@ class _BottomNavigationState extends State<BottomNavigation>
   }
 
   Widget _buildBottomNavigationBar(BuildContext context) {
-    final currentLocation = GoRouterState.of(context).uri.toString();
-    final currentIndex = _getSelectedIndex(currentLocation);
-
     return AnimatedBottomNavigationBar.builder(
       itemCount: _getBottomNavItems().length,
-      tabBuilder: (index, isActive) => _buildTabItem(index, isActive),
-      activeIndex: currentIndex,
+      tabBuilder: (index, isActive) =>
+          _buildTabItem(index, _currentIndex == index),
+      activeIndex: _currentIndex,
       gapLocation: GapLocation.center,
       notchSmoothness: NotchSmoothness.sharpEdge,
       onTap: (index) => _onItemTapped(context, index),
@@ -136,7 +174,6 @@ class _BottomNavigationState extends State<BottomNavigation>
 
   Widget _buildTabItem(int index, bool isActive) {
     final item = _getBottomNavItems()[index];
-
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Column(
@@ -169,7 +206,6 @@ class _BottomNavigationState extends State<BottomNavigation>
             ),
           ),
           const SizedBox(height: 4),
-          // Animated label
           AnimatedDefaultTextStyle(
             duration: const Duration(milliseconds: 200),
             style: TextStyle(
@@ -195,10 +231,10 @@ class _BottomNavigationState extends State<BottomNavigation>
         'route': RouteConstants.home,
       },
       {
-        'icon': Icons.card_giftcard_outlined, // Promo related icon
-        'activeIcon': Icons.card_giftcard, // Active promo icon
-        'label': 'Promos', // Changed from 'Coupons' to 'Promos'
-        'route': RouteConstants.promos, // Changed route to promos
+        'icon': Icons.card_giftcard_outlined,
+        'activeIcon': Icons.card_giftcard,
+        'label': 'Promos',
+        'route': RouteConstants.promos,
       },
       {
         'icon': Icons.person_outline,
@@ -226,6 +262,9 @@ class _BottomNavigationState extends State<BottomNavigation>
   }
 
   void _onItemTapped(BuildContext context, int index) {
+    setState(() {
+      _currentIndex = index;
+    });
     final items = _getBottomNavItems();
     if (index < items.length) {
       context.go(items[index]['route']);
@@ -233,7 +272,9 @@ class _BottomNavigationState extends State<BottomNavigation>
   }
 
   void _onSpecialTap(BuildContext context) {
-    // Keep the current functionality - can be used for other features
+    setState(() {
+      _currentIndex = 0;
+    });
     context.go(RouteConstants.home);
   }
 }

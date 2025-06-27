@@ -1,3 +1,4 @@
+// lib/core/router/app_router.dart - FIXED
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -24,6 +25,7 @@ class AppRouter {
     initialLocation: RouteConstants.home,
     redirect: _redirect,
     routes: [
+      // Auth routes (without bottom navigation)
       GoRoute(
         path: RouteConstants.login,
         builder: (context, state) => const LoginPage(),
@@ -40,12 +42,13 @@ class AppRouter {
         ),
       ),
 
+      // Standalone pages (without bottom navigation)
       GoRoute(
-        path: RouteConstants.promos,
-        builder: (context, state) => const PromosPage(),
+        path: RouteConstants.coupons,
+        builder: (context, state) => const CouponHomePage(),
       ),
 
-      // Routes with enhanced bottom navigation
+      // Main app with bottom navigation
       ShellRoute(
         navigatorKey: _shellNavigatorKey,
         builder: (context, state, child) => BottomNavigation(child: child),
@@ -55,8 +58,8 @@ class AppRouter {
             builder: (context, state) => const HomePage(),
           ),
           GoRoute(
-            path: RouteConstants.coupons,
-            builder: (context, state) => const CouponHomePage(),
+            path: RouteConstants.promos,
+            builder: (context, state) => const PromosPage(),
           ),
           GoRoute(
             path: RouteConstants.profile,
@@ -74,21 +77,26 @@ class AppRouter {
   static String? _redirect(BuildContext context, GoRouterState state) {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final location = state.uri.toString();
+
+    // Allow access to auth routes when not authenticated
     if (!authProvider.isAuthenticated && _isProtectedRoute(location)) {
       return RouteConstants.login;
     }
+
+    // Redirect to home if authenticated user tries to access auth routes
     if (authProvider.isAuthenticated && _isAuthRoute(location)) {
       return RouteConstants.home;
     }
+
     return null;
   }
 
   static bool _isProtectedRoute(String location) {
     const protectedRoutes = [
       RouteConstants.home,
-      RouteConstants.coupons,
-      RouteConstants.profile,
       RouteConstants.promos,
+      RouteConstants.profile,
+      RouteConstants.coupons,
       '/settings',
     ];
     return protectedRoutes.any((route) => location.startsWith(route));
@@ -115,6 +123,10 @@ class SettingsPage extends StatelessWidget {
         title: const Text('Settings'),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios),
+          onPressed: () => context.go(RouteConstants.profile),
+        ),
       ),
       body: const Center(
         child: Text(
