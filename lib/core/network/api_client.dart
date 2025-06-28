@@ -44,7 +44,6 @@ class ApiClient {
     return headers;
   }
 
-  // Check network connectivity before making requests
   Future<void> _checkConnectivity() async {
     if (networkInfo != null) {
       final isConnected = await networkInfo!.isConnected;
