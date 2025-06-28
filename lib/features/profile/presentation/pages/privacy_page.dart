@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/widgets/common/app_bar.dart';
@@ -18,25 +19,63 @@ class PrivacyPage extends StatelessWidget {
           children: [
             const SizedBox(height: 20),
             IOSSettingsSection(
-              title: 'Data Collection',
+              title: 'Privacy Policies',
               items: [
                 IOSSettingsItem(
-                  icon: Icons.analytics_outlined,
-                  title: 'Analytics Data',
-                  subtitle: 'Help improve the app with usage data',
-                  onTap: () {},
+                  icon: Icons.policy_outlined,
+                  title: 'Vizzle',
+                  subtitle: 'Vizzle privacy policy',
+                  onTap: () =>
+                      _launchURL('https://www.liveraapp.com/vizzle-policy'),
                 ),
                 IOSSettingsItem(
-                  icon: Icons.location_on_outlined,
-                  title: 'Location Services',
-                  subtitle: 'Use location for personalized offers',
-                  onTap: () {},
+                  icon: Icons.policy_outlined,
+                  title: 'VHub',
+                  subtitle: 'VHub privacy policy',
+                  onTap: () =>
+                      _launchURL('https://www.liveraapp.com/vhub-policy'),
                 ),
                 IOSSettingsItem(
-                  icon: Icons.cookie_outlined,
-                  title: 'Cookies & Tracking',
-                  subtitle: 'Manage tracking preferences',
-                  onTap: () {},
+                  icon: Icons.policy_outlined,
+                  title: 'VCart',
+                  subtitle: 'VCart privacy policy',
+                  onTap: () =>
+                      _launchURL('https://www.liveraapp.com/vcart-policy'),
+                ),
+                IOSSettingsItem(
+                  icon: Icons.policy_outlined,
+                  title: 'VCash',
+                  subtitle: 'VCash privacy policy',
+                  onTap: () =>
+                      _launchURL('https://www.liveraapp.com/vcash-policy'),
+                ),
+                IOSSettingsItem(
+                  icon: Icons.policy_outlined,
+                  title: 'VCook',
+                  subtitle: 'VCook privacy policy',
+                  onTap: () =>
+                      _launchURL('https://www.liveraapp.com/vcook-policy'),
+                ),
+                IOSSettingsItem(
+                  icon: Icons.policy_outlined,
+                  title: 'VChat',
+                  subtitle: 'VChat privacy policy',
+                  onTap: () =>
+                      _launchURL('https://www.liveraapp.com/vchat-policy'),
+                ),
+                IOSSettingsItem(
+                  icon: Icons.policy_outlined,
+                  title: 'VOne',
+                  subtitle: 'VOne privacy policy',
+                  onTap: () =>
+                      _launchURL('https://www.liveraapp.com/vone-policy'),
+                ),
+                IOSSettingsItem(
+                  icon: Icons.policy_outlined,
+                  title: 'VCare',
+                  subtitle: 'VCare privacy policy',
+                  onTap: () =>
+                      _launchURL('https://www.liveraapp.com/vcare-policy'),
                 ),
               ],
             ),
@@ -45,18 +84,13 @@ class PrivacyPage extends StatelessWidget {
               title: 'Account Data',
               items: [
                 IOSSettingsItem(
-                  icon: Icons.download_outlined,
-                  title: 'Download My Data',
-                  subtitle: 'Get a copy of your account data',
-                  onTap: () {},
-                ),
-                IOSSettingsItem(
                   icon: Icons.delete_outline,
                   title: 'Delete Account',
                   subtitle: 'Permanently delete your account',
                   iconColor: Colors.red,
                   titleColor: Colors.red,
-                  onTap: () {},
+                  onTap: () =>
+                      _launchURL('https://www.liveraapp.com/delete-account'),
                 ),
               ],
             ),
@@ -65,5 +99,12 @@ class PrivacyPage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _launchURL(String url) async {
+    final Uri uri = Uri.parse(url);
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      throw Exception('Could not launch $url');
+    }
   }
 }
