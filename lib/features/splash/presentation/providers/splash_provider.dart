@@ -14,16 +14,11 @@ class SplashProvider extends ChangeNotifier {
 
   Future<void> initializeApp() async {
     try {
-      // Play launch sound
       await AudioService.playAppLaunchSound();
-
-      // Animation phases
       await _runAnimationSequence();
-
-      // Check authentication
       await _checkAuthStatus();
     } catch (e) {
-      print('Initialization error: $e');
+      debugPrint('Initialization error: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
