@@ -144,9 +144,10 @@ class RedemptionProvider extends ChangeNotifier {
 
           _totalRecords = data.totalRecords;
 
-          _transactionDetailsVisible = List.filled(
+          // FIXED: Create new growable list instead of clearing fixed-length list
+          _transactionDetailsVisible = List.generate(
             _allTransactions.length,
-            false,
+            (index) => false,
           );
 
           _error = null;
@@ -248,13 +249,15 @@ class RedemptionProvider extends ChangeNotifier {
     ]);
   }
 
-  // FIXED: Method to refresh after wallet recharge
+  // FIXED: Method to refresh after wallet recharge - safe list clearing
   Future<void> refreshAfterWalletRecharge() async {
     debugPrint('FIXED: Refreshing after wallet recharge');
     _clearLocalData();
     _userDetails = null;
-    _allTransactions.clear();
-    _transactionDetailsVisible.clear();
+
+    // FIXED: Safely clear lists by creating new instances
+    _allTransactions = <TransactionEntity>[];
+    _transactionDetailsVisible = <bool>[];
 
     notifyListeners();
     await Future.wait([
