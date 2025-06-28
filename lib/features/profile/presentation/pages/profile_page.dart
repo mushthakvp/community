@@ -83,23 +83,15 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
 
                 const SizedBox(height: 20),
-
-                // Preferences Section
                 IOSSettingsSection(
                   title: 'Preferences',
                   items: [
-                    IOSSettingsItem(
-                      icon: Icons.settings_outlined,
-                      title: 'Settings',
-                      subtitle: 'App preferences and configuration',
-                      onTap: () => context.push(RouteConstants.settings),
-                    ),
-                    IOSSettingsItem(
-                      icon: Icons.notifications_outlined,
-                      title: 'Notifications',
-                      subtitle: 'Manage notification preferences',
-                      onTap: () => context.push(RouteConstants.notifications),
-                    ),
+                    // IOSSettingsItem(
+                    //   icon: Icons.notifications_outlined,
+                    //   title: 'Notifications',
+                    //   subtitle: 'Manage notification preferences',
+                    //   onTap: () => context.push(RouteConstants.notifications),
+                    // ),
                     IOSSettingsItem(
                       icon: Icons.privacy_tip_outlined,
                       title: 'Privacy',

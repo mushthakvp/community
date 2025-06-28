@@ -18,7 +18,7 @@ class IOSSettingsSection extends StatelessWidget {
         children: [
           if (title != null) ...[
             Padding(
-              padding: const EdgeInsets.only(left: 16, bottom: 8),
+              padding: const EdgeInsets.only(bottom: 8),
               child: CommonTextWidget(
                 text: title!.toUpperCase(),
                 fontSize: 13,
