@@ -36,15 +36,20 @@ class SplashProvider extends ChangeNotifier {
     notifyListeners();
     await Future.delayed(const Duration(milliseconds: 1000));
 
-    // Kudumbashree text animation
+    // Livera text animation
     _animationPhase = 'text_animation';
+    notifyListeners();
+    await Future.delayed(const Duration(milliseconds: 1200));
+
+    // Popper effects
+    _animationPhase = 'poppers';
     notifyListeners();
     await Future.delayed(const Duration(milliseconds: 1500));
 
-    // Particle effects
-    _animationPhase = 'particles';
+    // Women walking animation
+    _animationPhase = 'women_walking';
     notifyListeners();
-    await Future.delayed(const Duration(milliseconds: 1000));
+    await Future.delayed(const Duration(milliseconds: 2000));
 
     // Final glow effect
     _animationPhase = 'final_glow';

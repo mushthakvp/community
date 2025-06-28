@@ -39,9 +39,13 @@ import '../features/redemption/domain/usecases/initiate_wallet_recharge_usecase.
 import '../features/redemption/domain/usecases/verify_payment_usecase.dart';
 import '../features/redemption/presentation/providers/redemption_provider.dart';
 import '../features/redemption/presentation/providers/wallet_recharge_provider.dart';
+import '../features/splash/presentation/providers/splash_provider.dart'; // Add this import
 
 class AppProviders {
   static List<SingleChildWidget> providers = [
+    // Splash Provider - Add this at the beginning
+    ChangeNotifierProvider<SplashProvider>(create: (_) => SplashProvider()),
+
     // Connectivity Provider
     Provider<Connectivity>(create: (_) => Connectivity()),
 
