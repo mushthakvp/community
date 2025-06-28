@@ -187,15 +187,6 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void clearError() {
-    _errorMessage = null;
-    _successMessage = null; // Clear success message too
-    if (_status == AuthStatus.error || _status == AuthStatus.success) {
-      _status = AuthStatus.initial;
-      notifyListeners();
-    }
-  }
-
   Future<void> login() async {
     if (!_validateLoginForm()) return;
     _setLoading();
@@ -259,7 +250,6 @@ class AuthProvider extends ChangeNotifier {
       _setError('Please enter a valid 6-digit OTP');
       return;
     }
-
     _setLoading();
     resetNavigationFlags();
 
@@ -271,19 +261,57 @@ class AuthProvider extends ChangeNotifier {
       method: _verificationMethod,
       firebaseId: _firebaseToken ?? "empty token",
     );
-
     result.fold(
       (failure) {
+        debugPrint('OTP Verification Failed: ${failure.message}');
         _setError(failure.message);
       },
-      (user) {
+      (user) async {
+        debugPrint('OTP Verification Successful');
         otpController.clear();
-        _setAuthenticated(user);
-        // Set success message for OTP verification
-        _setSuccess('OTP verified successfully!');
+        _errorMessage = null;
+        _successMessage = 'OTP verified successfully!';
+        _user = user;
+        _status = AuthStatus.authenticated;
+        await StorageService.setLoggedIn(true);
+        notifyListeners();
       },
     );
   }
+
+  void _setAuthenticated(UserEntity user) {
+    _user = user;
+    _status = AuthStatus.authenticated;
+    _errorMessage = null;
+    _successMessage = 'Authentication successful!';
+    StorageService.setLoggedIn(true);
+    notifyListeners();
+  }
+
+  void _setError(String message) {
+    _status = AuthStatus.error;
+    _errorMessage = message;
+    _successMessage = null;
+    debugPrint('AuthProvider Error: $message');
+    notifyListeners();
+  }
+
+  void clearError() {
+    _errorMessage = null;
+    _successMessage = null;
+    if (_status == AuthStatus.error || _status == AuthStatus.success) {
+      _status = _status == AuthStatus.authenticated
+          ? AuthStatus.authenticated
+          : AuthStatus.initial;
+    }
+    notifyListeners();
+  }
+
+  bool get shouldShowError =>
+      _status == AuthStatus.error && _errorMessage != null;
+
+  bool get shouldShowSuccess =>
+      _successMessage != null && _status == AuthStatus.authenticated;
 
   Future<void> resendOtp() async {
     _setLoading();
@@ -302,9 +330,7 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> forgotPassword(String email) async {
     _setLoading();
-
     final result = await _repository.forgotPassword(email: email);
-
     result.fold((failure) => _setError(failure.message), (success) {
       if (success) {
         _setStatus(AuthStatus.initial);
@@ -315,9 +341,7 @@ class AuthProvider extends ChangeNotifier {
   Future<void> logout() async {
     _setLoading();
     resetNavigationFlags();
-
     final result = await _repository.logout();
-
     result.fold((failure) => _setError(failure.message), (_) {
       _user = null;
       _firebaseToken = null;
@@ -328,7 +352,6 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> checkAuthStatus() async {
     resetNavigationFlags();
-
     if (StorageService.isLoggedIn()) {
       final result = await _repository.getCurrentUser();
       result.fold(
@@ -345,27 +368,6 @@ class AuthProvider extends ChangeNotifier {
     _status = AuthStatus.loading;
     _errorMessage = null;
     _successMessage = null;
-    notifyListeners();
-  }
-
-  void _setAuthenticated(UserEntity user) {
-    _user = user;
-    _status = AuthStatus.authenticated;
-    _errorMessage = null;
-    StorageService.setLoggedIn(true);
-    notifyListeners();
-  }
-
-  void _setError(String message) {
-    _status = AuthStatus.error;
-    _errorMessage = message;
-    _successMessage = null;
-    notifyListeners();
-  }
-
-  void _setSuccess(String message) {
-    _successMessage = message;
-    // Don't change status here if already authenticated
     notifyListeners();
   }
 

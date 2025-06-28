@@ -29,7 +29,7 @@ class OtpVerificationPage extends StatefulWidget {
 
 class _OtpVerificationPageState extends State<OtpVerificationPage> {
   bool _isResending = false;
-  bool _hasNavigated = false; // Add this flag to prevent multiple navigations
+  bool _hasNavigated = false;
 
   @override
   void initState() {
@@ -38,7 +38,6 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
       final authProvider = context.read<AuthProvider>();
       authProvider.clearError();
       authProvider.otpController.text = '';
-      // Reset navigation flags when entering OTP page
       authProvider.resetNavigationFlags();
     });
   }
@@ -63,29 +62,17 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
       ),
       body: Consumer<AuthProvider>(
         builder: (context, authProvider, child) {
-          // Handle state changes
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (!mounted) return;
-
-            // Check if user is authenticated and we haven't navigated yet
-            if (authProvider.isAuthenticated && !_hasNavigated) {
-              _hasNavigated = true; // Set flag to prevent multiple navigations
-
-              // Show success message if available
+            if (!mounted || _hasNavigated) return;
+            if (authProvider.isAuthenticated) {
+              _hasNavigated = true;
               if (authProvider.successMessage != null) {
                 ErrorHandler.showSuccess(context, authProvider.successMessage!);
               } else {
                 ErrorHandler.showSuccess(context, 'OTP verified successfully!');
               }
-
-              // Navigate to home with a small delay to show the success message
-              Future.delayed(const Duration(milliseconds: 800), () {
-                if (mounted) {
-                  context.go(RouteConstants.home);
-                }
-              });
+              context.go(RouteConstants.home);
             } else if (authProvider.hasError && !authProvider.isAuthenticated) {
-              // Only show error if not authenticated (real error)
               ErrorHandler.showError(
                 context,
                 ServerFailure(
@@ -95,14 +82,11 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
               );
             }
           });
-
-          // Show loading only when verifying OTP, not when resending
           if (authProvider.isLoading && !_isResending) {
             return const Center(
               child: LoadingWidget(message: 'Verifying OTP...'),
             );
           }
-
           return _buildOtpForm(authProvider);
         },
       ),
@@ -301,13 +285,9 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
 
   Future<void> _handleResendOtp(AuthProvider authProvider) async {
     setState(() => _isResending = true);
-
-    // Clear OTP field when resending
     authProvider.otpController.clear();
-
     await authProvider.resendOtp();
     setState(() => _isResending = false);
-
     if (mounted && !authProvider.hasError) {
       ErrorHandler.showSuccess(context, 'OTP sent successfully');
     }
