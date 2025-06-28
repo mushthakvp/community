@@ -296,21 +296,17 @@ class EnhancedMoonPainter extends CustomPainter {
         center.dx + math.cos(angle) * 30,
         center.dy + math.sin(angle) * 30,
       );
-      final rayEnd = Offset(
-        center.dx + math.cos(angle) * (45 + (brightness * 10)),
-        center.dy + math.sin(angle) * (45 + (brightness * 10)),
-      );
 
       // Vary ray lengths for natural look
       final lengthMultiplier = 0.7 + (math.sin(i * 1.7) * 0.3);
-      final adjustedEnd = Offset(
+      final rayEnd = Offset(
         center.dx +
             math.cos(angle) * (45 + (brightness * 10)) * lengthMultiplier,
         center.dy +
             math.sin(angle) * (45 + (brightness * 10)) * lengthMultiplier,
       );
 
-      canvas.drawLine(rayStart, adjustedEnd, rayPaint);
+      canvas.drawLine(rayStart, rayEnd, rayPaint);
     }
   }
 
