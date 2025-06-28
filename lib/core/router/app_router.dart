@@ -1,3 +1,4 @@
+// lib/core/router/app_router.dart - Updated with Profile routes
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -8,6 +9,9 @@ import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/coupons/presentation/pages/coupon_home_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
+import '../../features/profile/presentation/pages/change_password_page.dart';
+import '../../features/profile/presentation/pages/edit_profile_page.dart';
+import '../../features/profile/presentation/pages/loyalty_points_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/promos/presentation/pages/promos_page.dart';
 import '../../features/redemption/presentation/pages/redemption_page.dart';
@@ -48,11 +52,33 @@ class AppRouter {
         path: RouteConstants.coupons,
         builder: (context, state) => const CouponHomePage(),
       ),
-      
+
       // Redemption standalone pages
       GoRoute(
         path: RouteConstants.walletRecharge,
         builder: (context, state) => const WalletRechargePage(),
+      ),
+
+      // Profile standalone pages (without bottom navigation)
+      GoRoute(
+        path: '/profile/edit',
+        builder: (context, state) => const EditProfilePage(),
+      ),
+      GoRoute(
+        path: '/profile/loyalty-points',
+        builder: (context, state) => const LoyaltyPointsPage(),
+      ),
+      GoRoute(
+        path: '/profile/change-password',
+        builder: (context, state) => const ChangePasswordPage(),
+      ),
+      GoRoute(
+        path: '/profile/help-support',
+        builder: (context, state) => const HelpSupportPage(),
+      ),
+      GoRoute(
+        path: '/profile/contact-us',
+        builder: (context, state) => const ContactUsPage(),
       ),
 
       // Main app with bottom navigation
@@ -111,6 +137,7 @@ class AppRouter {
       RouteConstants.profile,
       RouteConstants.coupons,
       '/settings',
+      '/profile/',
     ];
     return protectedRoutes.any((route) => location.startsWith(route));
   }
@@ -125,7 +152,52 @@ class AppRouter {
   }
 }
 
-// Placeholder for settings page
+// Placeholder pages for Help & Support and Contact Us
+class HelpSupportPage extends StatelessWidget {
+  const HelpSupportPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Help & Support'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
+      body: const Center(
+        child: Text(
+          'Help & Support Page\nComing Soon!',
+          style: TextStyle(fontSize: 24, color: Colors.white),
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+  }
+}
+
+class ContactUsPage extends StatelessWidget {
+  const ContactUsPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Contact Us'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
+      body: const Center(
+        child: Text(
+          'Contact Us Page\nComing Soon!',
+          style: TextStyle(fontSize: 24, color: Colors.white),
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+  }
+}
+
+// Settings page placeholder
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
@@ -143,8 +215,9 @@ class SettingsPage extends StatelessWidget {
       ),
       body: const Center(
         child: Text(
-          'Settings Page',
+          'Settings Page\nComing Soon!',
           style: TextStyle(fontSize: 24, color: Colors.white),
+          textAlign: TextAlign.center,
         ),
       ),
     );

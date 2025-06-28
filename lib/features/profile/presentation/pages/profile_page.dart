@@ -4,12 +4,11 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/route_constants.dart';
-import '../../../../core/widgets/buttons/primary_button.dart';
 import '../../../../core/widgets/common/app_bar.dart';
 import '../../../../core/widgets/common/text_widget.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
+import '../providers/profile_provider.dart';
 import '../widgets/profile_header.dart';
-import '../widgets/settings_tile.dart';
+import '../widgets/profile_menu_item.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -20,29 +19,29 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ProfileProvider>().getProfile();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppConstants.black,
       appBar: const CommonAppBar(title: 'Profile', showBackButton: false),
-      body: Consumer<AuthProvider>(
-        builder: (context, authProvider, child) {
-          final user = authProvider.user;
-
+      body: Consumer<ProfileProvider>(
+        builder: (context, provider, child) {
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ProfileHeader(user: user),
+                ProfileHeader(profile: provider.profile),
                 const SizedBox(height: 32),
-                _buildAccountSection(),
-                const SizedBox(height: 24),
-                _buildPreferencesSection(),
-                const SizedBox(height: 24),
-                _buildSupportSection(),
-                const SizedBox(height: 32),
-                _buildLogoutButton(authProvider),
-                const SizedBox(height: 100), // Bottom padding
+                _buildMenuSection(context),
+                const SizedBox(height: 100), // Bottom padding for navigation
               ],
             ),
           );
@@ -51,13 +50,13 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildAccountSection() {
+  Widget _buildMenuSection(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const CommonTextWidget(
-          text: 'Account',
-          fontSize: 18,
+          text: 'Menu',
+          fontSize: 20,
           fontWeight: FontWeight.w600,
           color: AppConstants.white,
         ),
@@ -65,136 +64,46 @@ class _ProfilePageState extends State<ProfilePage> {
         Container(
           decoration: BoxDecoration(
             color: const Color(0xFF1A1A1A),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppConstants.white.withOpacity(0.1)),
           ),
           child: Column(
             children: [
-              SettingsTile(
-                icon: Icons.person_outline,
+              ProfileMenuItem(
+                icon: Icons.edit_outlined,
                 title: 'Edit Profile',
                 subtitle: 'Update your personal information',
-                onTap: () {
-                  // Navigate to edit profile
-                },
+                onTap: () => _navigateToEditProfile(context),
               ),
-              SettingsTile(
-                icon: Icons.security_outlined,
-                title: 'Security',
-                subtitle: 'Password, PIN & biometric settings',
-                onTap: () {
-                  // Navigate to security settings
-                },
+              ProfileMenuItem(
+                icon: Icons.card_giftcard_outlined,
+                title: 'Loyalty Points',
+                subtitle: 'View and manage your loyalty points',
+                onTap: () => _navigateToLoyaltyPoints(context),
               ),
-              SettingsTile(
-                icon: Icons.wallet_outlined,
-                title: 'Wallet',
-                subtitle: 'Manage your wallet and transactions',
-                onTap: () {
-                  // Navigate to wallet
-                },
-                showDivider: false,
+              ProfileMenuItem(
+                icon: Icons.lock_outline,
+                title: 'Change Password',
+                subtitle: 'Update your account password',
+                onTap: () => _navigateToChangePassword(context),
               ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPreferencesSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const CommonTextWidget(
-          text: 'Preferences',
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-          color: AppConstants.white,
-        ),
-        const SizedBox(height: 16),
-        Container(
-          decoration: BoxDecoration(
-            color: const Color(0xFF1A1A1A),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppConstants.white.withOpacity(0.1)),
-          ),
-          child: Column(
-            children: [
-              SettingsTile(
-                icon: Icons.notifications_outlined,
-                title: 'Notifications',
-                subtitle: 'Manage notification preferences',
-                onTap: () {
-                  // Navigate to notifications settings
-                },
-              ),
-              SettingsTile(
-                icon: Icons.language_outlined,
-                title: 'Language',
-                subtitle: 'English',
-                onTap: () {
-                  // Show language picker
-                },
-              ),
-              SettingsTile(
-                icon: Icons.dark_mode_outlined,
-                title: 'Theme',
-                subtitle: 'Dark mode',
-                onTap: () {
-                  // Show theme picker
-                },
-                showDivider: false,
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSupportSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const CommonTextWidget(
-          text: 'Support',
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-          color: AppConstants.white,
-        ),
-        const SizedBox(height: 16),
-        Container(
-          decoration: BoxDecoration(
-            color: const Color(0xFF1A1A1A),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppConstants.white.withOpacity(0.1)),
-          ),
-          child: Column(
-            children: [
-              SettingsTile(
+              ProfileMenuItem(
                 icon: Icons.help_outline,
-                title: 'Help Center',
-                subtitle: 'Get help and find answers',
-                onTap: () {
-                  // Navigate to help center
-                },
+                title: 'Help & Support',
+                subtitle: 'Get help and contact support',
+                onTap: () => _navigateToHelpSupport(context),
               ),
-              SettingsTile(
-                icon: Icons.feedback_outlined,
-                title: 'Send Feedback',
-                subtitle: 'Share your thoughts with us',
-                onTap: () {
-                  // Open feedback form
-                },
+              ProfileMenuItem(
+                icon: Icons.contact_mail_outlined,
+                title: 'Contact Us',
+                subtitle: 'Reach out to our team',
+                onTap: () => _navigateToContactUs(context),
               ),
-              SettingsTile(
-                icon: Icons.info_outline,
-                title: 'About',
-                subtitle: 'App version and information',
-                onTap: () {
-                  // Show about dialog
-                },
+              ProfileMenuItem(
+                icon: Icons.logout_outlined,
+                title: 'Sign Out',
+                subtitle: 'Sign out of your account',
+                onTap: () => _showSignOutDialog(context),
                 showDivider: false,
               ),
             ],
@@ -204,19 +113,27 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildLogoutButton(AuthProvider authProvider) {
-    return PrimaryButton(
-      text: 'Sign Out',
-      onPressed: () => _showLogoutDialog(authProvider),
-      backgroundColor: Colors.transparent,
-      borderColor: Colors.red,
-      textColor: Colors.red,
-      height: 56,
-      prefix: const Icon(Icons.logout, color: Colors.red, size: 20),
-    );
+  void _navigateToEditProfile(BuildContext context) {
+    context.push('/profile/edit');
   }
 
-  void _showLogoutDialog(AuthProvider authProvider) {
+  void _navigateToLoyaltyPoints(BuildContext context) {
+    context.push('/profile/loyalty-points');
+  }
+
+  void _navigateToChangePassword(BuildContext context) {
+    context.push('/profile/change-password');
+  }
+
+  void _navigateToHelpSupport(BuildContext context) {
+    context.push('/profile/help-support');
+  }
+
+  void _navigateToContactUs(BuildContext context) {
+    context.push('/profile/contact-us');
+  }
+
+  void _showSignOutDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -246,9 +163,7 @@ class _ProfilePageState extends State<ProfilePage> {
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
-              authProvider.logout().then((_) {
-                context.go(RouteConstants.login);
-              });
+              context.go(RouteConstants.login);
             },
             child: const CommonTextWidget(
               text: 'Sign Out',

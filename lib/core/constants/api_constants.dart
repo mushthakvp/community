@@ -41,4 +41,13 @@ class ApiConstants {
   static const String initiatePayment = 'user/initiatePayment';
   static const String initiateTierUpgrade = 'user/paymentRegistration';
   static const String verifyPayment = 'user/verifyPayment';
+
+  // Profile Endpoints
+  static const String getProfile = 'user/getHome';
+  static const String updateProfile = 'user/updateProfile';
+  static const String changePassword = 'user/changePassword';
+  static const String getLoyaltyCard = 'user/getLoyalityCard';
+  static const String claimLoyaltyPoints = 'user/claimLoyalityPoints';
+  static const String loyaltyPointHistory = 'user/loyalityPointHistory';
+  static const String optOut = 'user/addOptItOut';
 }
