@@ -1,4 +1,3 @@
-
 import 'package:animated_bottom_navigation_bar/animated_bottom_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -27,7 +26,7 @@ class _BottomNavigationState extends State<BottomNavigation>
   late Animation<double> _fabAnimation;
   late CurvedAnimation _fabCurve;
 
-  int _currentIndex = 0; 
+  int _currentIndex = 0;
 
   @override
   void initState() {
@@ -89,7 +88,7 @@ class _BottomNavigationState extends State<BottomNavigation>
         children: const [
           HomePage(),
           PromosPage(),
-          RedemptionPage(), 
+          RedemptionPage(),
           ProfilePage(),
         ],
       ),
@@ -238,8 +237,8 @@ class _BottomNavigationState extends State<BottomNavigation>
       {
         'icon': Icons.account_balance_wallet_outlined,
         'activeIcon': Icons.account_balance_wallet,
-        'label': 'Redemption', 
-        'route': RouteConstants.redemption, 
+        'label': 'Redemption',
+        'route': RouteConstants.redemption,
       },
       {
         'icon': Icons.person_outline,

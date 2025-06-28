@@ -17,9 +17,7 @@ class TransactionListWidget extends StatelessWidget {
         final transactions = provider.redemptionData?.transactions;
 
         if (transactions == null || transactions.isEmpty) {
-          return SliverToBoxAdapter(
-            child: _buildEmptyState(),
-          );
+          return SliverToBoxAdapter(child: _buildEmptyState());
         }
 
         return SliverList(
@@ -75,7 +73,8 @@ class TransactionListWidget extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           CommonTextWidget(
-            text: 'Your transaction history will appear here once you make your first transaction.',
+            text:
+                'Your transaction history will appear here once you make your first transaction.',
             fontSize: 14,
             color: AppConstants.white.withOpacity(0.5),
             align: TextAlign.center,

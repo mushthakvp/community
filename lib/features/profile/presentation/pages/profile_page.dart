@@ -9,7 +9,6 @@ import '../../../../core/widgets/common/text_widget.dart';
 import '../providers/profile_provider.dart';
 import '../widgets/ios_settings_item.dart';
 import '../widgets/ios_settings_section.dart';
-import '../widgets/profile_header.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -31,16 +30,17 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppConstants.black,
-      appBar: const CommonAppBar(title: 'Profile', showBackButton: false),
+      appBar: const CommonAppBar(
+        title: 'Profile',
+        showBackButton: false,
+        centerTitle: false,
+      ),
       body: Consumer<ProfileProvider>(
         builder: (context, provider, child) {
           return SingleChildScrollView(
             child: Column(
               children: [
                 const SizedBox(height: 20),
-                ProfileHeader(profile: provider.profile),
-                const SizedBox(height: 30),
-                // Account Settings Section
                 IOSSettingsSection(
                   title: 'Account',
                   items: [

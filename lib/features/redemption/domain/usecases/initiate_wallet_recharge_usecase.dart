@@ -7,9 +7,7 @@ class InitiateWalletRechargeUseCase {
 
   InitiateWalletRechargeUseCase(this.repository);
 
-  Future<Result<WalletRechargeEntity>> call({
-    required double amount,
-  }) async {
+  Future<Result<WalletRechargeEntity>> call({required double amount}) async {
     return await repository.initiateWalletRecharge(amount: amount);
   }
 }

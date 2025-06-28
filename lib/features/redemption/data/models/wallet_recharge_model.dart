@@ -24,7 +24,9 @@ class WalletRechargeModel extends WalletRechargeEntity {
       "success": success,
       "order": order != null ? (order as OrderModel).toJson() : null,
       "currency": currency,
-      "options": options != null ? (options as PaymentOptionsModel).toJson() : null,
+      "options": options != null
+          ? (options as PaymentOptionsModel).toJson()
+          : null,
     };
   }
 

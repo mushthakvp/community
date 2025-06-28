@@ -1,4 +1,3 @@
-
 import 'package:equatable/equatable.dart';
 
 /// A utility class for handling results that can either be success or failure

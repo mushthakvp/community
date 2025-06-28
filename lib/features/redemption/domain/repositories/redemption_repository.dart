@@ -1,4 +1,3 @@
-
 import '../../../../core/utils/result.dart';
 import '../entities/redemption_entity.dart';
 import '../entities/user_details_entity.dart';

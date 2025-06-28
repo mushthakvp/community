@@ -23,8 +23,8 @@ class TransactionItemWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<RedemptionProvider>(
       builder: (context, provider, child) {
-        final isExpanded = provider.transactionDetailsVisible.length > index 
-            ? provider.transactionDetailsVisible[index] 
+        final isExpanded = provider.transactionDetailsVisible.length > index
+            ? provider.transactionDetailsVisible[index]
             : false;
 
         return AnimatedContainer(
@@ -40,7 +40,7 @@ class TransactionItemWidget extends StatelessWidget {
             ),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: isExpanded 
+              color: isExpanded
                   ? AppConstants.appPrimaryColor.withOpacity(0.3)
                   : AppConstants.white.withOpacity(0.1),
               width: 1,
@@ -68,9 +68,9 @@ class TransactionItemWidget extends StatelessWidget {
         children: [
           // Transaction Icon/Image
           _buildTransactionIcon(),
-          
+
           AppSpacing.horizontalMD,
-          
+
           // Transaction Type
           Expanded(
             flex: 2,
@@ -81,7 +81,7 @@ class TransactionItemWidget extends StatelessWidget {
               color: AppConstants.white,
             ),
           ),
-          
+
           // Transaction Date
           Expanded(
             flex: 2,
@@ -93,7 +93,7 @@ class TransactionItemWidget extends StatelessWidget {
               align: TextAlign.center,
             ),
           ),
-          
+
           // Transaction Amount
           Expanded(
             flex: 2,
@@ -105,9 +105,9 @@ class TransactionItemWidget extends StatelessWidget {
               align: TextAlign.end,
             ),
           ),
-          
+
           AppSpacing.horizontalSM,
-          
+
           // Expand Button
           IconButton(
             onPressed: () => provider.toggleTransactionDetails(index),
@@ -127,8 +127,8 @@ class TransactionItemWidget extends StatelessWidget {
   }
 
   Widget _buildTransactionIcon() {
-    if (transaction.through == "Purchase" && 
-        transaction.productImage != null && 
+    if (transaction.through == "Purchase" &&
+        transaction.productImage != null &&
         transaction.productImage!.isNotEmpty) {
       return CommonImageWidget(
         imageUrl: transaction.productImage,
@@ -163,11 +163,7 @@ class TransactionItemWidget extends StatelessWidget {
         color: iconColor.withOpacity(0.2),
         borderRadius: BorderRadius.circular(24),
       ),
-      child: Icon(
-        iconData,
-        color: iconColor,
-        size: 24,
-      ),
+      child: Icon(iconData, color: iconColor, size: 24),
     );
   }
 
@@ -184,11 +180,7 @@ class TransactionItemWidget extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildDetailRow(
-            '',
-            _getTransactionDescription(),
-            isFullWidth: true,
-          ),
+          _buildDetailRow('', _getTransactionDescription(), isFullWidth: true),
           AppSpacing.verticalSM,
           _buildDetailRow('Status:', 'Success', valueColor: AppConstants.green),
           _buildDetailRow('Date:', _formatDate(transaction.createdAt)),

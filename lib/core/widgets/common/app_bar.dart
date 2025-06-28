@@ -14,6 +14,7 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
   final Color? backgroundColor;
   final Color? foregroundColor;
   final double? elevation;
+  final bool? centerTitle;
 
   const CommonAppBar({
     super.key,
@@ -24,6 +25,7 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.backgroundColor,
     this.foregroundColor,
     this.elevation,
+    this.centerTitle,
   });
 
   @override
@@ -38,7 +40,7 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
       backgroundColor: backgroundColor ?? AppConstants.black,
       foregroundColor: foregroundColor ?? AppConstants.white,
       elevation: elevation ?? 0,
-      centerTitle: true,
+      centerTitle: centerTitle ?? true,
       leading:
           leading ??
           (showBackButton
