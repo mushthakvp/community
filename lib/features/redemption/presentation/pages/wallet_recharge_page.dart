@@ -65,17 +65,38 @@ class _WalletRechargePageState extends State<WalletRechargePage>
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
 
-    // Initialize provider after build
+    // FIXED: Safe initialization - use addPostFrameCallback
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final provider = context.read<WalletRechargeProvider>();
-      provider.initializeRazorpay();
+      _initializeProvider();
+      _startAnimations();
+    });
+  }
+
+  void _initializeProvider() {
+    try {
+      final provider = Provider.of<WalletRechargeProvider>(
+        context,
+        listen: false,
+      );
+
+      // FIXED: Only initialize if not already initialized
+      if (!provider.isInitialized) {
+        provider.initializeRazorpay();
+      }
+
+      // FIXED: Reset state safely after initialization
       provider.resetState();
 
-      // Start animations
-      _fadeController.forward();
-      _slideController.forward();
-      _pulseController.repeat(reverse: true);
-    });
+      debugPrint('FIXED: WalletRechargeProvider initialized successfully');
+    } catch (e) {
+      debugPrint('FIXED: Error initializing WalletRechargeProvider: $e');
+    }
+  }
+
+  void _startAnimations() {
+    _fadeController.forward();
+    _slideController.forward();
+    _pulseController.repeat(reverse: true);
   }
 
   @override
@@ -98,7 +119,7 @@ class _WalletRechargePageState extends State<WalletRechargePage>
               opacity: _fadeAnimation,
               child: Column(
                 children: [
-                  CommonAppBar(
+                  const CommonAppBar(
                     title: 'Recharge Wallet',
                     showBackButton: true,
                     backgroundColor: Colors.transparent,
@@ -111,6 +132,8 @@ class _WalletRechargePageState extends State<WalletRechargePage>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           AppSpacing.verticalLG,
+
+                          // FIXED: Enhanced wallet card with pulse animation
                           AnimatedBuilder(
                             animation: _pulseAnimation,
                             builder: (context, child) {
@@ -120,19 +143,47 @@ class _WalletRechargePageState extends State<WalletRechargePage>
                               );
                             },
                           ),
+
                           AppSpacing.verticalXL,
+
                           _buildAnimatedSection(
                             delay: 200,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const CommonTextWidget(
-                                  text: 'Enter Amount',
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppConstants.white,
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            AppConstants.appPrimaryColor
+                                                .withOpacity(0.3),
+                                            AppConstants.appPrimaryColor
+                                                .withOpacity(0.1),
+                                          ],
+                                        ),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: const Icon(
+                                        Icons.account_balance_wallet,
+                                        color: AppConstants.appPrimaryColor,
+                                        size: 20,
+                                      ),
+                                    ),
+                                    AppSpacing.horizontalSM,
+                                    const CommonTextWidget(
+                                      text: 'Enter Amount',
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppConstants.white,
+                                    ),
+                                  ],
                                 ),
-                                AppSpacing.verticalSM,
+
+                                AppSpacing.verticalMD,
+
                                 Consumer<WalletRechargeProvider>(
                                   builder: (context, provider, child) {
                                     return AnimatedContainer(
@@ -154,7 +205,10 @@ class _WalletRechargePageState extends State<WalletRechargePage>
                                         controller:
                                             provider.rechargeAmountController,
                                         hintText: 'Enter recharge amount',
-                                        keyboardType: TextInputType.number,
+                                        keyboardType:
+                                            const TextInputType.numberWithOptions(
+                                              decimal: true,
+                                            ),
                                         borderRadius: 16,
                                         prefixIcon: Container(
                                           padding: const EdgeInsets.all(12),
@@ -171,24 +225,17 @@ class _WalletRechargePageState extends State<WalletRechargePage>
                               ],
                             ),
                           ),
+
                           AppSpacing.verticalXL,
+
                           _buildAnimatedSection(
                             delay: 400,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const CommonTextWidget(
-                                  text: 'Quick Select',
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppConstants.white,
-                                ),
-                                AppSpacing.verticalMD,
-                                const AnimatedAmountSelector(),
-                              ],
-                            ),
+                            child: const AnimatedAmountSelector(),
                           ),
+
                           AppSpacing.verticalXXL,
+
+                          // Error display
                           Consumer<WalletRechargeProvider>(
                             builder: (context, provider, child) {
                               if (provider.error != null) {
@@ -197,6 +244,8 @@ class _WalletRechargePageState extends State<WalletRechargePage>
                               return const SizedBox.shrink();
                             },
                           ),
+
+                          // Recharge button
                           _buildAnimatedSection(
                             delay: 600,
                             child: Consumer<WalletRechargeProvider>(
@@ -222,7 +271,7 @@ class _WalletRechargePageState extends State<WalletRechargePage>
                                     ),
                                     child: PrimaryButton(
                                       text: provider.isProcessingPayment
-                                          ? 'Processing...'
+                                          ? 'Processing Payment...'
                                           : 'Recharge Wallet',
                                       isLoading: provider.isProcessingPayment,
                                       onPressed: provider.isProcessingPayment
@@ -233,6 +282,13 @@ class _WalletRechargePageState extends State<WalletRechargePage>
                                       fontSize: 18,
                                       fontWeight: FontWeight.w700,
                                       borderRadius: 16,
+                                      prefix: provider.isProcessingPayment
+                                          ? null
+                                          : const Icon(
+                                              Icons.payment,
+                                              color: AppConstants.black,
+                                              size: 20,
+                                            ),
                                     ),
                                   ),
                                 );
@@ -323,10 +379,41 @@ class _WalletRechargePageState extends State<WalletRechargePage>
   }
 
   void _initiateRecharge(WalletRechargeProvider provider) {
+    // Validate amount
+    final amountText = provider.rechargeAmountController.text.trim();
+    if (amountText.isEmpty) {
+      context.showErrorSnackBar('Please enter an amount');
+      return;
+    }
+
+    final amount = double.tryParse(amountText);
+    if (amount == null || amount <= 0) {
+      context.showErrorSnackBar('Please enter a valid amount');
+      return;
+    }
+
+    if (amount < 10) {
+      context.showErrorSnackBar('Minimum recharge amount is ₹10');
+      return;
+    }
+
+    if (amount > 100000) {
+      context.showErrorSnackBar('Maximum recharge amount is ₹1,00,000');
+      return;
+    }
+
+    // Initiate payment
     provider.initiatePayment(
       onSuccess: () {
         context.showSuccessSnackBar('Wallet recharged successfully!');
-        context.read<RedemptionProvider>().refresh();
+
+        // FIXED: Refresh redemption data after successful recharge
+        final redemptionProvider = Provider.of<RedemptionProvider>(
+          context,
+          listen: false,
+        );
+        redemptionProvider.refreshAfterWalletRecharge();
+
         context.pop();
       },
     );

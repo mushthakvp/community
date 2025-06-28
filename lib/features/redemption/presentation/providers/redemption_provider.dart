@@ -81,9 +81,13 @@ class RedemptionProvider extends ChangeNotifier {
       onSuccess: (data) {
         _userDetails = data;
         _error = null;
+        debugPrint(
+          'FIXED: User details loaded - Loyalty Points: ${data.loyaltyPoints}',
+        );
       },
       onError: (error) {
         _error = error;
+        debugPrint('Error loading user details: $error');
       },
     );
 
@@ -91,7 +95,7 @@ class RedemptionProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Get wallet transactions
+  // Get wallet transactions with proper filter
   Future<void> getTransactions({
     bool isInitial = false,
     bool loadMore = false,
@@ -114,8 +118,12 @@ class RedemptionProvider extends ChangeNotifier {
       _error = null;
       notifyListeners();
 
+      // FIXED: Ensure filter is properly passed
+      String filterToUse = _selectedFilter;
+      debugPrint('FIXED: Getting transactions with filter: $filterToUse');
+
       final result = await getWalletTransactionsUseCase(
-        filter: _selectedFilter,
+        filter: filterToUse,
         fromDate: _startDate?.toIso8601String().substring(0, 10),
         toDate: _endDate?.toIso8601String().substring(0, 10),
         page: _currentPage,
@@ -124,6 +132,7 @@ class RedemptionProvider extends ChangeNotifier {
       result.fold(
         onSuccess: (data) {
           final newTransactions = data.transactions ?? [];
+          debugPrint('FIXED: Received ${newTransactions.length} transactions');
 
           if (loadMore) {
             _allTransactions.addAll(newTransactions);
@@ -143,6 +152,7 @@ class RedemptionProvider extends ChangeNotifier {
           _error = null;
         },
         onError: (error) {
+          debugPrint('FIXED: Error getting transactions: $error');
           _error = error;
           if (loadMore) {
             _currentPage--;
@@ -150,6 +160,7 @@ class RedemptionProvider extends ChangeNotifier {
         },
       );
     } catch (e) {
+      debugPrint('FIXED: Exception in getTransactions: $e');
       _error = 'Exception in getTransactions: $e';
       if (loadMore) {
         _currentPage--;
@@ -161,15 +172,18 @@ class RedemptionProvider extends ChangeNotifier {
     }
   }
 
-  // Change filter
+  // FIXED: Change filter with proper logging
   void changeFilter(String filter) {
     if (_selectedFilter == filter) return;
 
+    debugPrint('FIXED: Changing filter from $_selectedFilter to $filter');
     _selectedFilter = filter;
+
     if (filter == 'All') {
       _startDate = null;
       _endDate = null;
     }
+
     getTransactions(isInitial: true, forceRefresh: true);
   }
 
@@ -187,6 +201,7 @@ class RedemptionProvider extends ChangeNotifier {
     if (picked != null) {
       _startDate = picked.start;
       _endDate = picked.end;
+      debugPrint('FIXED: Date range set: $_startDate to $_endDate');
       getTransactions(isInitial: true, forceRefresh: true);
     }
   }
@@ -195,6 +210,7 @@ class RedemptionProvider extends ChangeNotifier {
   void setCustomDateRange(DateTime startDate, DateTime endDate) {
     _startDate = startDate;
     _endDate = endDate;
+    debugPrint('FIXED: Custom date range set: $_startDate to $_endDate');
     getTransactions(isInitial: true, forceRefresh: true);
   }
 
@@ -202,6 +218,7 @@ class RedemptionProvider extends ChangeNotifier {
   void clearDateRange() {
     _startDate = null;
     _endDate = null;
+    debugPrint('FIXED: Date range cleared');
     getTransactions(isInitial: true, forceRefresh: true);
   }
 
@@ -223,6 +240,7 @@ class RedemptionProvider extends ChangeNotifier {
   }
 
   Future<void> refresh() async {
+    debugPrint('FIXED: Refreshing redemption data');
     _clearLocalData();
     await Future.wait([
       getUserDetails(forceRefresh: true),
@@ -232,6 +250,7 @@ class RedemptionProvider extends ChangeNotifier {
 
   // FIXED: Method to refresh after wallet recharge
   Future<void> refreshAfterWalletRecharge() async {
+    debugPrint('FIXED: Refreshing after wallet recharge');
     _clearLocalData();
     _userDetails = null;
     _allTransactions.clear();

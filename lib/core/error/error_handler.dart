@@ -27,14 +27,13 @@ class ErrorHandler {
     };
   }
 
-  // Clear all existing snackbars before showing new one
   static void _clearSnackBars(BuildContext context) {
     ScaffoldMessenger.of(context).clearSnackBars();
   }
 
   static void showError(BuildContext context, Failure failure) {
     final message = getErrorMessage(failure);
-    _clearSnackBars(context); // Clear existing snackbars first
+    _clearSnackBars(context);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(

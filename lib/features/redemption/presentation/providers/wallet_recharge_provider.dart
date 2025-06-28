@@ -34,7 +34,7 @@ class WalletRechargeProvider extends ChangeNotifier {
   // Payment success callback
   Function()? _onPaymentSuccess;
 
-  // Default amounts for quick selection
+  // Default amounts for quick selection - FIXED: Added all 6 amounts
   final List<String> defaultAmounts = [
     "100",
     "250",
@@ -42,7 +42,6 @@ class WalletRechargeProvider extends ChangeNotifier {
     "1000",
     "2000",
     "5000",
-    "10000",
   ];
 
   // Getters
@@ -52,32 +51,40 @@ class WalletRechargeProvider extends ChangeNotifier {
   WalletRechargeEntity? get paymentData => _paymentData;
   bool get isInitialized => _isInitialized;
 
-  // FIXED: Initialize Razorpay safely
+  // FIXED: Initialize Razorpay safely without calling resetState in constructor
   void initializeRazorpay() {
     if (!_isInitialized) {
-      _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
-      _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
-      _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
-      _isInitialized = true;
+      try {
+        _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
+        _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
+        _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
+        _isInitialized = true;
+      } catch (e) {
+        log('Error initializing Razorpay: $e');
+      }
     }
   }
 
-  // FIXED: Add resetState method that can be called safely
+  // FIXED: Safe reset that doesn't trigger during provider creation
   void resetState() {
+    _isProcessingPayment = false;
+    _isStripePayment = false;
+    _error = null;
+    _paymentData = null;
+    _onPaymentSuccess = null;
+    rechargeAmountController.clear();
+
+    // Only notify listeners if we're initialized and not during provider creation
     if (_isInitialized) {
-      _isProcessingPayment = false;
-      _isStripePayment = false;
-      _error = null;
-      _paymentData = null;
-      _onPaymentSuccess = null;
-      rechargeAmountController.clear();
-      // Don't call notifyListeners here to avoid setState during build
+      notifyListeners();
     }
   }
 
   @override
   void dispose() {
-    _razorpay.clear();
+    if (_isInitialized) {
+      _razorpay.clear();
+    }
     rechargeAmountController.dispose();
     super.dispose();
   }

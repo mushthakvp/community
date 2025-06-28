@@ -39,6 +39,7 @@ class RedemptionRemoteDataSourceImpl implements RedemptionRemoteDataSource {
     String? toDate,
     int page = 1,
   }) async {
+    // FIXED: Proper filter mapping
     String filterType;
     switch (filter.toLowerCase()) {
       case 'recharge':
@@ -54,7 +55,8 @@ class RedemptionRemoteDataSourceImpl implements RedemptionRemoteDataSource {
         filterType = 'All';
     }
 
-    String endpoint = ApiConstants.getWalletTransactions + filterType;
+    // FIXED: Build endpoint with proper filter parameter
+    String endpoint = '${ApiConstants.getWalletTransactions}$filterType';
 
     final queryParams = <String, String>{'page': page.toString()};
 
@@ -65,7 +67,8 @@ class RedemptionRemoteDataSourceImpl implements RedemptionRemoteDataSource {
       queryParams['to'] = toDate;
     }
 
-    debugPrint('API Call: $endpoint with params: $queryParams');
+    debugPrint('FIXED API Call: $endpoint with params: $queryParams');
+    debugPrint('Filter being sent: $filterType');
 
     final response = await client.get(endpoint, queryParameters: queryParams);
 

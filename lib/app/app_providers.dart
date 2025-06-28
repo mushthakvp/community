@@ -180,7 +180,7 @@ class AppProviders {
               ),
     ),
 
-    // FIXED: Wallet Recharge Provider - Removed resetState from create
+    // FIXED: Wallet Recharge Provider - Safe initialization
     ChangeNotifierProxyProvider3<
       InitiateWalletRechargeUseCase,
       InitiateTierUpgradeUseCase,
@@ -195,7 +195,6 @@ class AppProviders {
               .read<InitiateTierUpgradeUseCase>(),
           verifyPaymentUseCase: context.read<VerifyPaymentUseCase>(),
         );
-        // Initialize Razorpay safely without calling resetState
         provider.initializeRazorpay();
         return provider;
       },
