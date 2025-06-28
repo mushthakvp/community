@@ -1,7 +1,9 @@
+// lib/features/redemption/presentation/providers/redemption_provider.dart
 import 'package:flutter/material.dart';
 
 import '../../../../core/utils/result.dart';
 import '../../domain/entities/redemption_entity.dart';
+import '../../domain/entities/transaction_entity.dart';
 import '../../domain/entities/user_details_entity.dart';
 import '../../domain/usecases/get_user_redemption_details_usecase.dart';
 import '../../domain/usecases/get_wallet_transactions_usecase.dart';
@@ -21,8 +23,8 @@ class RedemptionProvider extends ChangeNotifier {
   bool _isLoadingMore = false;
 
   // Data states
-  RedemptionEntity? _redemptionData;
   UserDetailsEntity? _userDetails;
+  List<TransactionEntity> _allTransactions = [];
   List<bool> _transactionDetailsVisible = [];
 
   // Filter states
@@ -34,6 +36,7 @@ class RedemptionProvider extends ChangeNotifier {
   // Pagination
   int _currentPage = 1;
   bool _hasMoreData = true;
+  int? _totalRecords;
 
   // Error states
   String? _error;
@@ -42,8 +45,8 @@ class RedemptionProvider extends ChangeNotifier {
   bool get isLoadingTransactions => _isLoadingTransactions;
   bool get isLoadingUserDetails => _isLoadingUserDetails;
   bool get isLoadingMore => _isLoadingMore;
-  RedemptionEntity? get redemptionData => _redemptionData;
   UserDetailsEntity? get userDetails => _userDetails;
+  List<TransactionEntity> get allTransactions => _allTransactions;
   List<bool> get transactionDetailsVisible => _transactionDetailsVisible;
   String get selectedFilter => _selectedFilter;
   DateTime? get startDate => _startDate;
@@ -51,6 +54,15 @@ class RedemptionProvider extends ChangeNotifier {
   bool get isShowingCommunityId => _isShowingCommunityId;
   bool get hasMoreData => _hasMoreData;
   String? get error => _error;
+  int? get totalRecords => _totalRecords;
+
+  // For compatibility with the UI widgets
+  RedemptionEntity? get redemptionData => RedemptionEntity(
+    success: true,
+    message: 'Success',
+    totalRecords: _totalRecords,
+    transactions: _allTransactions,
+  );
 
   // Initialize data
   Future<void> initialize() async {
@@ -85,58 +97,68 @@ class RedemptionProvider extends ChangeNotifier {
     bool isInitial = false,
     bool loadMore = false,
   }) async {
-    if (loadMore) {
-      if (!_hasMoreData || _isLoadingMore) return;
-      _isLoadingMore = true;
-      _currentPage++;
-    } else {
-      _isLoadingTransactions = true;
-      _currentPage = 1;
-      _hasMoreData = true;
-    }
+    try {
+      if (loadMore) {
+        if (!_hasMoreData || _isLoadingMore) return;
+        _isLoadingMore = true;
+        _currentPage++;
+      } else {
+        _isLoadingTransactions = true;
+        _currentPage = 1;
+        _hasMoreData = true;
+        if (isInitial) {
+          _allTransactions.clear();
+        }
+      }
 
-    _error = null;
-    notifyListeners();
+      _error = null;
+      notifyListeners();
 
-    final result = await getWalletTransactionsUseCase(
-      filter: _selectedFilter,
-      fromDate: _startDate?.toIso8601String().substring(0, 10),
-      toDate: _endDate?.toIso8601String().substring(0, 10),
-      page: _currentPage,
-    );
+      final result = await getWalletTransactionsUseCase(
+        filter: _selectedFilter,
+        fromDate: _startDate?.toIso8601String().substring(0, 10),
+        toDate: _endDate?.toIso8601String().substring(0, 10),
+        page: _currentPage,
+      );
 
-    result.fold(
-      onSuccess: (data) {
-        if (loadMore) {
-          final currentTransactions = _redemptionData?.transactions ?? [];
+      result.fold(
+        onSuccess: (data) {
           final newTransactions = data.transactions ?? [];
-          _redemptionData = RedemptionEntity(
-            success: data.success,
-            message: data.message,
-            totalRecords: data.totalRecords,
-            transactions: [...currentTransactions, ...newTransactions],
-          );
-          _hasMoreData = newTransactions.isNotEmpty;
-        } else {
-          _redemptionData = data;
+
+          if (loadMore) {
+            _allTransactions.addAll(newTransactions);
+            _hasMoreData = newTransactions.isNotEmpty;
+          } else {
+            _allTransactions = List<TransactionEntity>.from(newTransactions);
+            _hasMoreData = newTransactions.isNotEmpty;
+          }
+
+          _totalRecords = data.totalRecords;
+
           _transactionDetailsVisible = List.filled(
-            data.transactions?.length ?? 0,
+            _allTransactions.length,
             false,
           );
-        }
-        _error = null;
-      },
-      onError: (error) {
-        _error = error;
-        if (loadMore) {
-          _currentPage--;
-        }
-      },
-    );
 
-    _isLoadingTransactions = false;
-    _isLoadingMore = false;
-    notifyListeners();
+          _error = null;
+        },
+        onError: (error) {
+          _error = error;
+          if (loadMore) {
+            _currentPage--;
+          }
+        },
+      );
+    } catch (e) {
+      _error = 'Exception in getTransactions: $e';
+      if (loadMore) {
+        _currentPage--;
+      }
+    } finally {
+      _isLoadingTransactions = false;
+      _isLoadingMore = false;
+      notifyListeners();
+    }
   }
 
   // Change filter
@@ -168,6 +190,23 @@ class RedemptionProvider extends ChangeNotifier {
       getTransactions(isInitial: true);
     }
   }
+
+  // Set custom date range
+  void setCustomDateRange(DateTime startDate, DateTime endDate) {
+    _startDate = startDate;
+    _endDate = endDate;
+    getTransactions(isInitial: true);
+  }
+
+  // Clear date range filter
+  void clearDateRange() {
+    _startDate = null;
+    _endDate = null;
+    getTransactions(isInitial: true);
+  }
+
+  // Check if date range is set
+  bool get hasDateRange => _startDate != null && _endDate != null;
 
   // Toggle community ID visibility
   void toggleCommunityIdVisibility() {

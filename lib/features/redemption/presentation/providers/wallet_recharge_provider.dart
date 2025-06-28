@@ -76,21 +76,31 @@ class WalletRechargeProvider extends ChangeNotifier {
     String purpose = 'Recharge',
     Function()? onSuccess,
   }) async {
+    if (_isProcessingPayment) return;
+    if (!isTierUpgrade) {
+      final amount = double.tryParse(rechargeAmountController.text.trim());
+      if (amount == null || amount <= 0) {
+        _error = 'Please enter a valid amount';
+        notifyListeners();
+        return;
+      }
+    }
+
     _isProcessingPayment = true;
     _error = null;
     _onPaymentSuccess = onSuccess;
     notifyListeners();
+
     try {
       Result<WalletRechargeEntity> result;
+
       if (isTierUpgrade) {
         result = await initiateTierUpgradeUseCase();
       } else {
-        final amount = double.tryParse(rechargeAmountController.text.trim());
-        if (amount == null || amount <= 0) {
-          throw Exception('Please enter a valid amount');
-        }
+        final amount = double.parse(rechargeAmountController.text.trim());
         result = await initiateWalletRechargeUseCase(amount: amount);
       }
+
       result.fold(
         onSuccess: (data) {
           _paymentData = data;
@@ -103,7 +113,7 @@ class WalletRechargeProvider extends ChangeNotifier {
         },
       );
     } catch (e) {
-      _error = e.toString();
+      _error = 'Error initiating payment: ${e.toString()}';
       _isProcessingPayment = false;
       notifyListeners();
     }
@@ -115,14 +125,11 @@ class WalletRechargeProvider extends ChangeNotifier {
     bool isTierUpgrade,
     String purpose,
   ) {
-    // Check if it's a Stripe payment (has URL)
-    if (data.options?.description?.contains('stripe') == true) {
+    if (data.options?.description?.toLowerCase().contains('stripe') == true) {
       _isStripePayment = true;
-      // Handle Stripe payment
       _handleStripePayment(data);
     } else {
       _isStripePayment = false;
-      // Handle Razorpay payment
       _handleRazorpayPayment(data);
     }
   }
@@ -136,31 +143,35 @@ class WalletRechargeProvider extends ChangeNotifier {
       return;
     }
 
-    final options = {
-      "key": data.options!.key ?? '',
-      "amount": data.options?.amount ?? 0,
-      "order_id": data.order?.id ?? '',
-      "name": data.options?.name ?? 'Community',
-      "description": data.options?.description ?? '',
-      "prefill": {
-        "contact": data.options?.contact ?? '',
-        "email": data.options?.email ?? '',
-      },
-    };
-    _razorpay.open(options);
+    try {
+      final options = {
+        "key": data.options!.key ?? '',
+        "amount": data.options?.amount ?? 0,
+        "order_id": data.order?.id ?? '',
+        "name": data.options?.name ?? 'Community App',
+        "description": data.options?.description ?? 'Wallet Recharge',
+        "prefill": {
+          "contact": data.options?.contact ?? '',
+          "email": data.options?.email ?? '',
+        },
+      };
+      _razorpay.open(options);
+    } catch (e) {
+      _error = 'Error opening Razorpay: ${e.toString()}';
+      _isProcessingPayment = false;
+      notifyListeners();
+    }
   }
 
   // Handle Stripe payment
   void _handleStripePayment(WalletRechargeEntity data) {
-    log('Handling Stripe payment: ${data.toString()}');
+    _error = 'Stripe payment not implemented yet';
     _isProcessingPayment = false;
     notifyListeners();
   }
 
   // Razorpay success handler
   void _handlePaymentSuccess(PaymentSuccessResponse response) async {
-    log('Payment successful: ${response.paymentId}');
-
     try {
       final paymentDetails = {
         "amount": rechargeAmountController.text.trim(),
@@ -170,9 +181,7 @@ class WalletRechargeProvider extends ChangeNotifier {
         "currency": "INR",
         "purpose": 'Recharge',
       };
-
       final result = await verifyPaymentUseCase(paymentDetails: paymentDetails);
-
       result.fold(
         onSuccess: (data) {
           _onPaymentSuccess?.call();
@@ -186,15 +195,13 @@ class WalletRechargeProvider extends ChangeNotifier {
     } catch (e) {
       _error = 'Error verifying payment: ${e.toString()}';
     }
-
     _isProcessingPayment = false;
     notifyListeners();
   }
 
   // Razorpay error handler
   void _handlePaymentError(PaymentFailureResponse response) {
-    log('Payment failed: ${response.message}');
-    _error = 'Payment failed: ${response.message}';
+    _error = 'Payment failed: ${response.message ?? 'Unknown error'}';
     _isProcessingPayment = false;
     notifyListeners();
   }
@@ -211,7 +218,6 @@ class WalletRechargeProvider extends ChangeNotifier {
   }
 }
 
-// Stripe response model (if needed)
 class StripeResponseModel {
   final bool? success;
   final String? currency;

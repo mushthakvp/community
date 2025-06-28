@@ -13,13 +13,37 @@ class App extends StatefulWidget {
   State<App> createState() => _AppState();
 }
 
-class _AppState extends State<App> {
+class _AppState extends State<App> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<AuthProvider>().checkAuthStatus();
+      _initializeApp();
     });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {}
+  }
+
+  Future<void> _initializeApp() async {
+    try {
+      // Check auth status
+      final authProvider = context.read<AuthProvider>();
+      await authProvider.checkAuthStatus();
+    } catch (e) {
+      debugPrint('Error initializing app: $e');
+    }
   }
 
   @override
@@ -48,6 +72,23 @@ class _AppState extends State<App> {
         foregroundColor: AppConstants.black,
         elevation: 0,
         centerTitle: true,
+      ),
+      datePickerTheme: DatePickerThemeData(
+        backgroundColor: Colors.white,
+        headerBackgroundColor: AppConstants.appPrimaryColor,
+        headerForegroundColor: AppConstants.black,
+        dayForegroundColor: MaterialStateProperty.resolveWith((states) {
+          if (states.contains(MaterialState.selected)) {
+            return AppConstants.black;
+          }
+          return AppConstants.black;
+        }),
+        dayBackgroundColor: MaterialStateProperty.resolveWith((states) {
+          if (states.contains(MaterialState.selected)) {
+            return AppConstants.appPrimaryColor;
+          }
+          return null;
+        }),
       ),
     );
   }

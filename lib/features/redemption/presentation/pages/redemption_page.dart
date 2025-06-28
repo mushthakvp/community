@@ -27,7 +27,8 @@ class _RedemptionPageState extends State<RedemptionPage> {
 
     // Initialize data
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<RedemptionProvider>().initialize();
+      final provider = context.read<RedemptionProvider>();
+      provider.initialize();
     });
   }
 
@@ -42,7 +43,10 @@ class _RedemptionPageState extends State<RedemptionPage> {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
       // Load more when near bottom
-      context.read<RedemptionProvider>().getTransactions(loadMore: true);
+      final provider = context.read<RedemptionProvider>();
+      if (provider.hasMoreData && !provider.isLoadingMore) {
+        provider.getTransactions(loadMore: true);
+      }
     }
   }
 
@@ -116,7 +120,7 @@ class _RedemptionPageState extends State<RedemptionPage> {
                     }
 
                     if (provider.isLoadingTransactions &&
-                        provider.redemptionData == null) {
+                        provider.allTransactions.isEmpty) {
                       return const SliverToBoxAdapter(
                         child: LoadingWidget(
                           message: 'Loading transactions...',

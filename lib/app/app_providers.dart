@@ -111,76 +111,103 @@ class AppProviders {
 
     // Redemption Data Sources
     ProxyProvider<ApiClient, RedemptionRemoteDataSource>(
-      update: (_, apiClient, __) => RedemptionRemoteDataSourceImpl(
-        client: apiClient,
-      ),
+      update: (_, apiClient, __) =>
+          RedemptionRemoteDataSourceImpl(client: apiClient),
     ),
-    
+
     Provider<RedemptionLocalDataSource>(
       create: (_) => RedemptionLocalDataSourceImpl(),
     ),
 
     // Redemption Repository
-    ProxyProvider2<RedemptionRemoteDataSource, RedemptionLocalDataSource,
-        RedemptionRepositoryImpl>(
+    ProxyProvider2<
+      RedemptionRemoteDataSource,
+      RedemptionLocalDataSource,
+      RedemptionRepositoryImpl
+    >(
       update: (_, remoteDataSource, localDataSource, __) =>
           RedemptionRepositoryImpl(
-        remoteDataSource: remoteDataSource,
-        localDataSource: localDataSource,
-      ),
+            remoteDataSource: remoteDataSource,
+            localDataSource: localDataSource,
+          ),
     ),
 
     // Redemption Use Cases
     ProxyProvider<RedemptionRepositoryImpl, GetWalletTransactionsUseCase>(
       update: (_, repository, __) => GetWalletTransactionsUseCase(repository),
     ),
-    
+
     ProxyProvider<RedemptionRepositoryImpl, GetUserRedemptionDetailsUseCase>(
-      update: (_, repository, __) => GetUserRedemptionDetailsUseCase(repository),
+      update: (_, repository, __) =>
+          GetUserRedemptionDetailsUseCase(repository),
     ),
-    
+
     ProxyProvider<RedemptionRepositoryImpl, InitiateWalletRechargeUseCase>(
       update: (_, repository, __) => InitiateWalletRechargeUseCase(repository),
     ),
-    
+
     ProxyProvider<RedemptionRepositoryImpl, InitiateTierUpgradeUseCase>(
       update: (_, repository, __) => InitiateTierUpgradeUseCase(repository),
     ),
-    
+
     ProxyProvider<RedemptionRepositoryImpl, VerifyPaymentUseCase>(
       update: (_, repository, __) => VerifyPaymentUseCase(repository),
     ),
 
     // Redemption Provider
-    ChangeNotifierProxyProvider2<GetWalletTransactionsUseCase,
-        GetUserRedemptionDetailsUseCase, RedemptionProvider>(
+    ChangeNotifierProxyProvider2<
+      GetWalletTransactionsUseCase,
+      GetUserRedemptionDetailsUseCase,
+      RedemptionProvider
+    >(
       create: (context) => RedemptionProvider(
-        getWalletTransactionsUseCase: context.read<GetWalletTransactionsUseCase>(),
-        getUserRedemptionDetailsUseCase: context.read<GetUserRedemptionDetailsUseCase>(),
+        getWalletTransactionsUseCase: context
+            .read<GetWalletTransactionsUseCase>(),
+        getUserRedemptionDetailsUseCase: context
+            .read<GetUserRedemptionDetailsUseCase>(),
       ),
-      update: (_, getWalletTransactionsUseCase, getUserRedemptionDetailsUseCase, previous) =>
-          previous ??
-          RedemptionProvider(
-            getWalletTransactionsUseCase: getWalletTransactionsUseCase,
-            getUserRedemptionDetailsUseCase: getUserRedemptionDetailsUseCase,
-          ),
+      update:
+          (
+            _,
+            getWalletTransactionsUseCase,
+            getUserRedemptionDetailsUseCase,
+            previous,
+          ) =>
+              previous ??
+              RedemptionProvider(
+                getWalletTransactionsUseCase: getWalletTransactionsUseCase,
+                getUserRedemptionDetailsUseCase:
+                    getUserRedemptionDetailsUseCase,
+              ),
     ),
 
     // Wallet Recharge Provider
-    ChangeNotifierProxyProvider3<InitiateWalletRechargeUseCase,
-        InitiateTierUpgradeUseCase, VerifyPaymentUseCase, WalletRechargeProvider>(
+    ChangeNotifierProxyProvider3<
+      InitiateWalletRechargeUseCase,
+      InitiateTierUpgradeUseCase,
+      VerifyPaymentUseCase,
+      WalletRechargeProvider
+    >(
       create: (context) => WalletRechargeProvider(
-        initiateWalletRechargeUseCase: context.read<InitiateWalletRechargeUseCase>(),
+        initiateWalletRechargeUseCase: context
+            .read<InitiateWalletRechargeUseCase>(),
         initiateTierUpgradeUseCase: context.read<InitiateTierUpgradeUseCase>(),
         verifyPaymentUseCase: context.read<VerifyPaymentUseCase>(),
       ),
-      update: (_, initiateWalletRechargeUseCase, initiateTierUpgradeUseCase, verifyPaymentUseCase, previous) =>
-          previous ??
-          WalletRechargeProvider(
-            initiateWalletRechargeUseCase: initiateWalletRechargeUseCase,
-            initiateTierUpgradeUseCase: initiateTierUpgradeUseCase,
-            verifyPaymentUseCase: verifyPaymentUseCase,
-          ),
+      update:
+          (
+            _,
+            initiateWalletRechargeUseCase,
+            initiateTierUpgradeUseCase,
+            verifyPaymentUseCase,
+            previous,
+          ) =>
+              previous ??
+              WalletRechargeProvider(
+                initiateWalletRechargeUseCase: initiateWalletRechargeUseCase,
+                initiateTierUpgradeUseCase: initiateTierUpgradeUseCase,
+                verifyPaymentUseCase: verifyPaymentUseCase,
+              ),
     ),
   ];
 }

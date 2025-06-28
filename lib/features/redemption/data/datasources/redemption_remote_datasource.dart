@@ -1,4 +1,3 @@
-// lib/features/redemption/data/datasources/redemption_remote_datasource.dart
 import 'dart:convert';
 
 import '../../../../core/constants/api_constants.dart';
@@ -38,28 +37,35 @@ class RedemptionRemoteDataSourceImpl implements RedemptionRemoteDataSource {
     String? toDate,
     int page = 1,
   }) async {
+    // Use the exact endpoint structure from the original code
     final filterType = filter == "Recharge" ? "Recharge" : filter;
     final from = fromDate ?? '';
     final to = toDate ?? '';
+
+    // Build the URL like the original: getWalletTransactions?filter=All&from=&to=&page=1
+    String endpoint = '${ApiConstants.getWalletTransactions}$filterType';
+
     final queryParams = <String, String>{
-      'type': filterType,
       if (from.isNotEmpty) 'from': from,
       if (to.isNotEmpty) 'to': to,
       'page': page.toString(),
     };
-    final response = await client.get(
-      ApiConstants.getWalletTransactions,
-      queryParameters: queryParams,
-    );
-    final data = json.decode(response.body);
 
+    final response = await client.get(endpoint, queryParameters: queryParams);
+
+    final data = json.decode(response.body);
     return RedemptionModel.fromJson(data);
   }
 
   @override
   Future<UserDetailsModel> getUserRedemptionDetails() async {
-    final response = await client.get(ApiConstants.profile);
+    // Use the same endpoint as the original code
+    final response = await client.get(
+      'user/getHome',
+    ); // This matches the original endpoint
     final data = json.decode(response.body);
+
+    // Extract userDetails from the response like in the original
     final userDetails = data['userDetails'] ?? data;
     return UserDetailsModel.fromJson(userDetails);
   }
@@ -80,7 +86,6 @@ class RedemptionRemoteDataSourceImpl implements RedemptionRemoteDataSource {
   Future<WalletRechargeModel> initiateTierUpgrade() async {
     final response = await client.get(ApiConstants.initiateTierUpgrade);
     final data = json.decode(response.body);
-
     return WalletRechargeModel.fromJson(data);
   }
 

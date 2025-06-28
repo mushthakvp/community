@@ -37,10 +37,7 @@ class _WalletRechargePageState extends State<WalletRechargePage> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              AppConstants.black,
-              Color(0xFF1A1A1A),
-            ],
+            colors: [AppConstants.black, Color(0xFF1A1A1A)],
           ),
         ),
         child: SafeArea(
@@ -81,19 +78,14 @@ class _WalletRechargePageState extends State<WalletRechargePage> {
                     );
                   },
                 ),
-
                 AppSpacing.verticalLG,
-
-                // Quick Amount Selection
                 const CommonTextWidget(
                   text: 'Quick Select',
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
                   color: AppConstants.white,
                 ),
-
                 AppSpacing.verticalSM,
-
                 Consumer<WalletRechargeProvider>(
                   builder: (context, provider, child) {
                     return SizedBox(
@@ -110,10 +102,7 @@ class _WalletRechargePageState extends State<WalletRechargePage> {
                     );
                   },
                 ),
-
                 const Spacer(),
-
-                // Error Display
                 Consumer<WalletRechargeProvider>(
                   builder: (context, provider, child) {
                     if (provider.error != null) {
@@ -123,7 +112,9 @@ class _WalletRechargePageState extends State<WalletRechargePage> {
                         decoration: BoxDecoration(
                           color: Colors.red.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.red.withOpacity(0.3)),
+                          border: Border.all(
+                            color: Colors.red.withOpacity(0.3),
+                          ),
                         ),
                         child: Row(
                           children: [
@@ -147,15 +138,13 @@ class _WalletRechargePageState extends State<WalletRechargePage> {
                     return const SizedBox.shrink();
                   },
                 ),
-
-                // Recharge Button
                 Consumer<WalletRechargeProvider>(
                   builder: (context, provider, child) {
                     return PrimaryButton(
                       text: 'Recharge Wallet',
                       isLoading: provider.isProcessingPayment,
-                      onPressed: provider.isProcessingPayment 
-                          ? null 
+                      onPressed: provider.isProcessingPayment
+                          ? null
                           : () => _initiateRecharge(provider),
                       width: double.infinity,
                     );
@@ -180,9 +169,7 @@ class _WalletRechargePageState extends State<WalletRechargePage> {
         decoration: BoxDecoration(
           color: const Color(0xFF2A2A2A),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: AppConstants.white.withOpacity(0.1),
-          ),
+          border: Border.all(color: AppConstants.white.withOpacity(0.1)),
         ),
         child: CommonTextWidget(
           text: '₹$amount',
