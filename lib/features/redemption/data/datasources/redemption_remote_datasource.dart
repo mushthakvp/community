@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
+
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/network/api_client.dart';
 import '../models/redemption_model.dart';
@@ -37,19 +39,33 @@ class RedemptionRemoteDataSourceImpl implements RedemptionRemoteDataSource {
     String? toDate,
     int page = 1,
   }) async {
-    // Use the exact endpoint structure from the original code
-    final filterType = filter == "Recharge" ? "Recharge" : filter;
-    final from = fromDate ?? '';
-    final to = toDate ?? '';
+    String filterType;
+    switch (filter.toLowerCase()) {
+      case 'recharge':
+        filterType = 'Recharge';
+        break;
+      case 'claimed':
+        filterType = 'Claimed';
+        break;
+      case 'purchase':
+        filterType = 'Purchase';
+        break;
+      default:
+        filterType = 'All';
+    }
 
-    // Build the URL like the original: getWalletTransactions?filter=All&from=&to=&page=1
-    String endpoint = '${ApiConstants.getWalletTransactions}$filterType';
+    String endpoint = ApiConstants.getWalletTransactions + filterType;
 
-    final queryParams = <String, String>{
-      if (from.isNotEmpty) 'from': from,
-      if (to.isNotEmpty) 'to': to,
-      'page': page.toString(),
-    };
+    final queryParams = <String, String>{'page': page.toString()};
+
+    if (fromDate != null && fromDate.isNotEmpty) {
+      queryParams['from'] = fromDate;
+    }
+    if (toDate != null && toDate.isNotEmpty) {
+      queryParams['to'] = toDate;
+    }
+
+    debugPrint('API Call: $endpoint with params: $queryParams');
 
     final response = await client.get(endpoint, queryParameters: queryParams);
 
@@ -59,13 +75,10 @@ class RedemptionRemoteDataSourceImpl implements RedemptionRemoteDataSource {
 
   @override
   Future<UserDetailsModel> getUserRedemptionDetails() async {
-    // Use the same endpoint as the original code
-    final response = await client.get(
-      'user/getHome',
-    ); // This matches the original endpoint
+    final response = await client.get('user/getHome');
     final data = json.decode(response.body);
 
-    // Extract userDetails from the response like in the original
+    // Extract userDetails from the response
     final userDetails = data['userDetails'] ?? data;
     return UserDetailsModel.fromJson(userDetails);
   }

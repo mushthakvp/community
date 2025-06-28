@@ -24,21 +24,27 @@ class RedemptionRepositoryImpl implements RedemptionRepository {
     int page = 1,
   }) async {
     try {
-      if (page == 1 && filter == 'All' && fromDate == null && toDate == null) {
+      bool shouldUseCache =
+          page == 1 && filter == 'All' && fromDate == null && toDate == null;
+
+      if (shouldUseCache) {
         final cachedData = await localDataSource.getCachedWalletTransactions();
         if (cachedData != null) {
           return Success(cachedData.toEntity());
         }
       }
+
       final remoteData = await remoteDataSource.getWalletTransactions(
         filter: filter,
         fromDate: fromDate,
         toDate: toDate,
         page: page,
       );
-      if (page == 1 && filter == 'All' && fromDate == null && toDate == null) {
+
+      if (shouldUseCache) {
         await localDataSource.cacheWalletTransactions(remoteData);
       }
+
       return Success(remoteData.toEntity());
     } catch (e) {
       final failure = ErrorHandler.handleException(e as Exception);
@@ -49,14 +55,19 @@ class RedemptionRepositoryImpl implements RedemptionRepository {
   @override
   Future<Result<UserDetailsEntity>> getUserRedemptionDetails() async {
     try {
-      final cachedData = await localDataSource.getCachedUserDetails();
-      if (cachedData != null) {
-        return Success(cachedData.toEntity());
-      }
       final remoteData = await remoteDataSource.getUserRedemptionDetails();
       await localDataSource.cacheUserDetails(remoteData);
       return Success(remoteData.toEntity());
     } catch (e) {
+      try {
+        final cachedData = await localDataSource.getCachedUserDetails();
+        if (cachedData != null) {
+          return Success(cachedData.toEntity());
+        }
+      } catch (cacheError) {
+        final failure = ErrorHandler.handleException(cacheError as Exception);
+        return Error(message: failure.message);
+      }
       final failure = ErrorHandler.handleException(e as Exception);
       return Error(message: failure.message);
     }

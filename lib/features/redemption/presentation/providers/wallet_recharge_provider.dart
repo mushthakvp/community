@@ -29,6 +29,7 @@ class WalletRechargeProvider extends ChangeNotifier {
   bool _isStripePayment = false;
   String? _error;
   WalletRechargeEntity? _paymentData;
+  bool _isInitialized = false;
 
   // Payment success callback
   Function()? _onPaymentSuccess;
@@ -49,6 +50,30 @@ class WalletRechargeProvider extends ChangeNotifier {
   bool get isStripePayment => _isStripePayment;
   String? get error => _error;
   WalletRechargeEntity? get paymentData => _paymentData;
+  bool get isInitialized => _isInitialized;
+
+  // FIXED: Initialize Razorpay safely
+  void initializeRazorpay() {
+    if (!_isInitialized) {
+      _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
+      _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
+      _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
+      _isInitialized = true;
+    }
+  }
+
+  // FIXED: Add resetState method that can be called safely
+  void resetState() {
+    if (_isInitialized) {
+      _isProcessingPayment = false;
+      _isStripePayment = false;
+      _error = null;
+      _paymentData = null;
+      _onPaymentSuccess = null;
+      rechargeAmountController.clear();
+      // Don't call notifyListeners here to avoid setState during build
+    }
+  }
 
   @override
   void dispose() {
@@ -57,14 +82,7 @@ class WalletRechargeProvider extends ChangeNotifier {
     super.dispose();
   }
 
-  // Initialize Razorpay listeners
-  void initializeRazorpay() {
-    _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
-    _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
-    _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
-  }
-
-  // Select predefined amount
+  // Select predefined amount with animation
   void selectAmount(String amount) {
     rechargeAmountController.text = amount;
     notifyListeners();
@@ -77,6 +95,7 @@ class WalletRechargeProvider extends ChangeNotifier {
     Function()? onSuccess,
   }) async {
     if (_isProcessingPayment) return;
+
     if (!isTierUpgrade) {
       final amount = double.tryParse(rechargeAmountController.text.trim());
       if (amount == null || amount <= 0) {
@@ -181,7 +200,9 @@ class WalletRechargeProvider extends ChangeNotifier {
         "currency": "INR",
         "purpose": 'Recharge',
       };
+
       final result = await verifyPaymentUseCase(paymentDetails: paymentDetails);
+
       result.fold(
         onSuccess: (data) {
           _onPaymentSuccess?.call();
@@ -195,6 +216,7 @@ class WalletRechargeProvider extends ChangeNotifier {
     } catch (e) {
       _error = 'Error verifying payment: ${e.toString()}';
     }
+
     _isProcessingPayment = false;
     notifyListeners();
   }
@@ -215,31 +237,5 @@ class WalletRechargeProvider extends ChangeNotifier {
   void clearError() {
     _error = null;
     notifyListeners();
-  }
-}
-
-class StripeResponseModel {
-  final bool? success;
-  final String? currency;
-  final String? url;
-  final String? successUrl;
-  final String? cancelUrl;
-
-  StripeResponseModel({
-    this.success,
-    this.currency,
-    this.url,
-    this.successUrl,
-    this.cancelUrl,
-  });
-
-  factory StripeResponseModel.fromJson(Map<String, dynamic> json) {
-    return StripeResponseModel(
-      success: json['success'],
-      currency: json['currency'],
-      url: json['url'],
-      successUrl: json['successUrl'],
-      cancelUrl: json['cancelUrl'],
-    );
   }
 }

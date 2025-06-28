@@ -1,4 +1,3 @@
-// lib/features/redemption/presentation/providers/redemption_provider.dart
 import 'package:flutter/material.dart';
 
 import '../../../../core/utils/result.dart';
@@ -71,7 +70,7 @@ class RedemptionProvider extends ChangeNotifier {
   }
 
   // Get user details for redemption card
-  Future<void> getUserDetails() async {
+  Future<void> getUserDetails({bool forceRefresh = false}) async {
     _isLoadingUserDetails = true;
     _error = null;
     notifyListeners();
@@ -96,6 +95,7 @@ class RedemptionProvider extends ChangeNotifier {
   Future<void> getTransactions({
     bool isInitial = false,
     bool loadMore = false,
+    bool forceRefresh = false,
   }) async {
     try {
       if (loadMore) {
@@ -106,7 +106,7 @@ class RedemptionProvider extends ChangeNotifier {
         _isLoadingTransactions = true;
         _currentPage = 1;
         _hasMoreData = true;
-        if (isInitial) {
+        if (isInitial || forceRefresh) {
           _allTransactions.clear();
         }
       }
@@ -170,7 +170,7 @@ class RedemptionProvider extends ChangeNotifier {
       _startDate = null;
       _endDate = null;
     }
-    getTransactions(isInitial: true);
+    getTransactions(isInitial: true, forceRefresh: true);
   }
 
   // Set date range filter
@@ -187,7 +187,7 @@ class RedemptionProvider extends ChangeNotifier {
     if (picked != null) {
       _startDate = picked.start;
       _endDate = picked.end;
-      getTransactions(isInitial: true);
+      getTransactions(isInitial: true, forceRefresh: true);
     }
   }
 
@@ -195,14 +195,14 @@ class RedemptionProvider extends ChangeNotifier {
   void setCustomDateRange(DateTime startDate, DateTime endDate) {
     _startDate = startDate;
     _endDate = endDate;
-    getTransactions(isInitial: true);
+    getTransactions(isInitial: true, forceRefresh: true);
   }
 
   // Clear date range filter
   void clearDateRange() {
     _startDate = null;
     _endDate = null;
-    getTransactions(isInitial: true);
+    getTransactions(isInitial: true, forceRefresh: true);
   }
 
   // Check if date range is set
@@ -222,9 +222,32 @@ class RedemptionProvider extends ChangeNotifier {
     }
   }
 
-  // Refresh data
   Future<void> refresh() async {
-    await Future.wait([getUserDetails(), getTransactions(isInitial: true)]);
+    _clearLocalData();
+    await Future.wait([
+      getUserDetails(forceRefresh: true),
+      getTransactions(isInitial: true, forceRefresh: true),
+    ]);
+  }
+
+  // FIXED: Method to refresh after wallet recharge
+  Future<void> refreshAfterWalletRecharge() async {
+    _clearLocalData();
+    _userDetails = null;
+    _allTransactions.clear();
+    _transactionDetailsVisible.clear();
+
+    notifyListeners();
+    await Future.wait([
+      getUserDetails(forceRefresh: true),
+      getTransactions(isInitial: true, forceRefresh: true),
+    ]);
+  }
+
+  void _clearLocalData() {
+    _currentPage = 1;
+    _hasMoreData = true;
+    _totalRecords = null;
   }
 
   // Clear error

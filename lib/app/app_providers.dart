@@ -1,4 +1,3 @@
-// lib/app/app_providers.dart - Updated with Redemption Providers
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
@@ -181,19 +180,25 @@ class AppProviders {
               ),
     ),
 
-    // Wallet Recharge Provider
+    // FIXED: Wallet Recharge Provider - Removed resetState from create
     ChangeNotifierProxyProvider3<
       InitiateWalletRechargeUseCase,
       InitiateTierUpgradeUseCase,
       VerifyPaymentUseCase,
       WalletRechargeProvider
     >(
-      create: (context) => WalletRechargeProvider(
-        initiateWalletRechargeUseCase: context
-            .read<InitiateWalletRechargeUseCase>(),
-        initiateTierUpgradeUseCase: context.read<InitiateTierUpgradeUseCase>(),
-        verifyPaymentUseCase: context.read<VerifyPaymentUseCase>(),
-      ),
+      create: (context) {
+        final provider = WalletRechargeProvider(
+          initiateWalletRechargeUseCase: context
+              .read<InitiateWalletRechargeUseCase>(),
+          initiateTierUpgradeUseCase: context
+              .read<InitiateTierUpgradeUseCase>(),
+          verifyPaymentUseCase: context.read<VerifyPaymentUseCase>(),
+        );
+        // Initialize Razorpay safely without calling resetState
+        provider.initializeRazorpay();
+        return provider;
+      },
       update:
           (
             _,

@@ -8,6 +8,8 @@ abstract class RedemptionLocalDataSource {
   Future<void> cacheUserDetails(UserDetailsModel userDetails);
   Future<UserDetailsModel?> getCachedUserDetails();
   Future<void> clearCache();
+  Future<void> clearTransactionsCache();
+  Future<void> clearUserDetailsCache();
 }
 
 class RedemptionLocalDataSourceImpl implements RedemptionLocalDataSource {
@@ -19,7 +21,7 @@ class RedemptionLocalDataSourceImpl implements RedemptionLocalDataSource {
     await StorageService.setCacheWithExpiry(
       _walletTransactionsKey,
       transactions.toJson(),
-      expiry: const Duration(minutes: 15),
+      expiry: const Duration(minutes: 5),
     );
   }
 
@@ -37,7 +39,7 @@ class RedemptionLocalDataSourceImpl implements RedemptionLocalDataSource {
     await StorageService.setCacheWithExpiry(
       _userDetailsKey,
       userDetails.toJson(),
-      expiry: const Duration(hours: 1),
+      expiry: const Duration(minutes: 10),
     );
   }
 
@@ -52,7 +54,19 @@ class RedemptionLocalDataSourceImpl implements RedemptionLocalDataSource {
 
   @override
   Future<void> clearCache() async {
+    await Future.wait([
+      StorageService.remove(_walletTransactionsKey),
+      StorageService.remove(_userDetailsKey),
+    ]);
+  }
+
+  @override
+  Future<void> clearTransactionsCache() async {
     await StorageService.remove(_walletTransactionsKey);
+  }
+
+  @override
+  Future<void> clearUserDetailsCache() async {
     await StorageService.remove(_userDetailsKey);
   }
 }

@@ -48,6 +48,10 @@ class _PrimaryButtonState extends State<PrimaryButton>
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
 
+  // FIXED: Add debounce mechanism to prevent double taps
+  DateTime? _lastTapTime;
+  static const Duration _debounceDuration = Duration(milliseconds: 500);
+
   @override
   void initState() {
     super.initState();
@@ -64,6 +68,20 @@ class _PrimaryButtonState extends State<PrimaryButton>
   void dispose() {
     _animationController.dispose();
     super.dispose();
+  }
+
+  // FIXED: Enhanced tap handler with debounce
+  void _handleTap() {
+    final now = DateTime.now();
+
+    // Check if enough time has passed since last tap
+    if (_lastTapTime != null &&
+        now.difference(_lastTapTime!) < _debounceDuration) {
+      return; // Ignore rapid taps
+    }
+
+    _lastTapTime = now;
+    widget.onPressed?.call();
   }
 
   @override
@@ -86,7 +104,7 @@ class _PrimaryButtonState extends State<PrimaryButton>
       onTapDown: (_) => _animationController.forward(),
       onTapUp: (_) => _animationController.reverse(),
       onTapCancel: () => _animationController.reverse(),
-      onTap: isDisabled ? null : widget.onPressed,
+      onTap: isDisabled ? null : _handleTap, // FIXED: Use enhanced tap handler
       child: Container(
         width: widget.width,
         height: widget.height ?? 50,
@@ -94,7 +112,10 @@ class _PrimaryButtonState extends State<PrimaryButton>
             widget.padding ??
             const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         decoration: BoxDecoration(
-          color: widget.backgroundColor ?? AppConstants.appPrimaryColor,
+          color: isDisabled
+              ? (widget.backgroundColor ?? AppConstants.appPrimaryColor)
+                    .withOpacity(0.6)
+              : (widget.backgroundColor ?? AppConstants.appPrimaryColor),
           borderRadius: BorderRadius.circular(
             widget.borderRadius ?? AppConstants.defaultBorderRadius,
           ),
