@@ -138,6 +138,7 @@ class StorageService {
     required double walletAmount,
     required String currencyCode,
     String? joinedDate,
+    String? countryName,
   }) async {
     await setString(StorageConstants.userName, name);
     await setSecureString(StorageConstants.userEmail, email);
@@ -147,6 +148,9 @@ class StorageService {
     await setInt(StorageConstants.loyaltyPoints, loyaltyPoints);
     await setDouble(StorageConstants.walletAmount, walletAmount);
     await setString(StorageConstants.currencyCode, currencyCode);
+    if (countryName != null) {
+      await setString(StorageConstants.countryName, joinedDate ?? '');
+    }
     if (joinedDate != null) {
       await setString(StorageConstants.joinedDate, joinedDate);
     }

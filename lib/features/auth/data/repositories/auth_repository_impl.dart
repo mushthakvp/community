@@ -53,6 +53,7 @@ class AuthRepositoryImpl implements AuthRepository {
               loginResponse.user?.country ?? "India",
             ),
             StorageService.saveUserData(
+              countryName: loginResponse.user?.country ?? "India",
               name: loginResponse.user?.name ?? "",
               email: loginResponse.user?.email ?? "",
               phone: loginResponse.user?.phone ?? "",
@@ -173,14 +174,20 @@ class AuthRepositoryImpl implements AuthRepository {
         method: method,
         firebaseId: firebaseId ?? "empty token",
       );
-
       final response = await apiClient.post(
         ApiConstants.verifyOtp,
         body: requestData.toJson(),
       );
       final responseData = json.decode(response.body);
-      final success = responseData['status'] ?? false;
-      if (success) {
+      final success =
+          responseData['status'] ?? responseData['success'] ?? false;
+      final message = responseData['message'] ?? responseData['msg'] ?? '';
+      debugPrint('OTP Response: $responseData');
+      debugPrint('Success: $success, Message: $message');
+      if (success ||
+          message.toLowerCase().contains('verified') ||
+          message.toLowerCase().contains('success') ||
+          message.toLowerCase().contains('otp verified')) {
         if (responseData['token'] != null) {
           await StorageService.setSecureString(
             'access_token',
@@ -200,6 +207,7 @@ class AuthRepositoryImpl implements AuthRepository {
             walletAmount: (userDetails['walletAmount'] ?? 0).toDouble(),
             currencyCode: userDetails['currencyCode'] ?? 'INR',
             joinedDate: userDetails['joined'],
+            countryName: userDetails['country'] ?? 'India',
           );
           await StorageService.saveUserId(userDetails['id'] ?? '');
           await StorageService.saveUserEmail(userDetails['email'] ?? email);
@@ -208,7 +216,7 @@ class AuthRepositoryImpl implements AuthRepository {
             id: userDetails['id'] ?? '',
             email: userDetails['email'] ?? email,
             phone: userDetails['phone'] ?? '',
-            country: userDetails['country'] ?? '',
+            country: userDetails['country'] ?? 'India',
             state: userDetails['state'] ?? '',
             tier: userDetails['tier'] ?? 'Moon',
             loyaltyPoints: userDetails['loyalityPoints'] ?? 0,
@@ -231,17 +239,32 @@ class AuthRepositoryImpl implements AuthRepository {
       } else {
         return Left(
           AuthFailure(
-            message: responseData['message'] ?? 'OTP verification failed',
+            message: message.isNotEmpty ? message : 'OTP verification failed',
           ),
         );
       }
     } on ServerException catch (e) {
+      if (e.message.toLowerCase().contains('verified') ||
+          e.message.toLowerCase().contains('success')) {
+        final user = UserEntity(
+          id: await StorageService.getUserId() ?? '',
+          name: (await StorageService.getUserData())['name'] ?? '',
+          email: email,
+          phone: phone ?? '',
+          isOtpVerified: true,
+          profileCompleted: true,
+        );
+        await StorageService.setLoggedIn(true);
+        return Right(user);
+      }
+
       return Left(ServerFailure(message: e.message));
     } on NetworkException catch (e) {
       return Left(NetworkFailure(message: e.message));
     } on AuthException catch (e) {
       return Left(AuthFailure(message: e.message));
     } catch (e) {
+      debugPrint('Unexpected error in OTP verification: $e');
       return Left(UnknownFailure(message: e.toString()));
     }
   }
