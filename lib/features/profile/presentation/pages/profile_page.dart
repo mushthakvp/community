@@ -7,8 +7,9 @@ import '../../../../core/constants/route_constants.dart';
 import '../../../../core/widgets/common/app_bar.dart';
 import '../../../../core/widgets/common/text_widget.dart';
 import '../providers/profile_provider.dart';
+import '../widgets/ios_settings_item.dart';
+import '../widgets/ios_settings_section.dart';
 import '../widgets/profile_header.dart';
-import '../widgets/profile_menu_item.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -34,13 +35,125 @@ class _ProfilePageState extends State<ProfilePage> {
       body: Consumer<ProfileProvider>(
         builder: (context, provider, child) {
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                const SizedBox(height: 20),
                 ProfileHeader(profile: provider.profile),
-                const SizedBox(height: 32),
-                _buildMenuSection(context),
+                const SizedBox(height: 30),
+                // Account Settings Section
+                IOSSettingsSection(
+                  title: 'Account',
+                  items: [
+                    IOSSettingsItem(
+                      icon: Icons.person_outline,
+                      title: 'Edit Profile',
+                      subtitle: 'Update your personal information',
+                      onTap: () => context.push(RouteConstants.editProfile),
+                    ),
+                    IOSSettingsItem(
+                      icon: Icons.lock_outline,
+                      title: 'Change Password',
+                      subtitle: 'Update your account password',
+                      onTap: () => context.push(RouteConstants.changePassword),
+                    ),
+                    IOSSettingsItem(
+                      icon: Icons.card_giftcard_outlined,
+                      title: 'Loyalty Points',
+                      subtitle: 'View and manage your rewards',
+                      trailing: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppConstants.appPrimaryColor.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: CommonTextWidget(
+                          text: '${provider.profile?.loyaltyPoints ?? 0}',
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppConstants.appPrimaryColor,
+                        ),
+                      ),
+                      onTap: () => context.push(RouteConstants.loyaltyPoints),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 20),
+
+                // Preferences Section
+                IOSSettingsSection(
+                  title: 'Preferences',
+                  items: [
+                    IOSSettingsItem(
+                      icon: Icons.settings_outlined,
+                      title: 'Settings',
+                      subtitle: 'App preferences and configuration',
+                      onTap: () => context.push(RouteConstants.settings),
+                    ),
+                    IOSSettingsItem(
+                      icon: Icons.notifications_outlined,
+                      title: 'Notifications',
+                      subtitle: 'Manage notification preferences',
+                      onTap: () => context.push(RouteConstants.notifications),
+                    ),
+                    IOSSettingsItem(
+                      icon: Icons.privacy_tip_outlined,
+                      title: 'Privacy',
+                      subtitle: 'Privacy and data settings',
+                      onTap: () => context.push(RouteConstants.privacy),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                IOSSettingsSection(
+                  title: 'Support',
+                  items: [
+                    IOSSettingsItem(
+                      icon: Icons.help_outline,
+                      title: 'Help & Support',
+                      subtitle: 'Get help and contact support',
+                      onTap: () => context.push(RouteConstants.helpSupport),
+                    ),
+                    IOSSettingsItem(
+                      icon: Icons.contact_mail_outlined,
+                      title: 'Contact Us',
+                      subtitle: 'Reach out to our team',
+                      onTap: () => context.push(RouteConstants.contactUs),
+                    ),
+                    IOSSettingsItem(
+                      icon: Icons.description_outlined,
+                      title: 'Terms & Conditions',
+                      subtitle: 'Read our terms of service',
+                      onTap: () => context.push(RouteConstants.termsConditions),
+                    ),
+                    IOSSettingsItem(
+                      icon: Icons.info_outline,
+                      title: 'About',
+                      subtitle: 'App version and information',
+                      onTap: () => context.push(RouteConstants.aboutApp),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 20),
+
+                // Sign Out Section
+                IOSSettingsSection(
+                  items: [
+                    IOSSettingsItem(
+                      icon: Icons.logout_outlined,
+                      title: 'Sign Out',
+                      subtitle: 'Sign out of your account',
+                      iconColor: Colors.red,
+                      titleColor: Colors.red,
+                      onTap: () => _showSignOutDialog(context),
+                    ),
+                  ],
+                ),
+
                 const SizedBox(height: 100), // Bottom padding for navigation
               ],
             ),
@@ -48,89 +161,6 @@ class _ProfilePageState extends State<ProfilePage> {
         },
       ),
     );
-  }
-
-  Widget _buildMenuSection(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const CommonTextWidget(
-          text: 'Menu',
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-          color: AppConstants.white,
-        ),
-        const SizedBox(height: 16),
-        Container(
-          decoration: BoxDecoration(
-            color: const Color(0xFF1A1A1A),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppConstants.white.withOpacity(0.1)),
-          ),
-          child: Column(
-            children: [
-              ProfileMenuItem(
-                icon: Icons.edit_outlined,
-                title: 'Edit Profile',
-                subtitle: 'Update your personal information',
-                onTap: () => _navigateToEditProfile(context),
-              ),
-              ProfileMenuItem(
-                icon: Icons.card_giftcard_outlined,
-                title: 'Loyalty Points',
-                subtitle: 'View and manage your loyalty points',
-                onTap: () => _navigateToLoyaltyPoints(context),
-              ),
-              ProfileMenuItem(
-                icon: Icons.lock_outline,
-                title: 'Change Password',
-                subtitle: 'Update your account password',
-                onTap: () => _navigateToChangePassword(context),
-              ),
-              ProfileMenuItem(
-                icon: Icons.help_outline,
-                title: 'Help & Support',
-                subtitle: 'Get help and contact support',
-                onTap: () => _navigateToHelpSupport(context),
-              ),
-              ProfileMenuItem(
-                icon: Icons.contact_mail_outlined,
-                title: 'Contact Us',
-                subtitle: 'Reach out to our team',
-                onTap: () => _navigateToContactUs(context),
-              ),
-              ProfileMenuItem(
-                icon: Icons.logout_outlined,
-                title: 'Sign Out',
-                subtitle: 'Sign out of your account',
-                onTap: () => _showSignOutDialog(context),
-                showDivider: false,
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  void _navigateToEditProfile(BuildContext context) {
-    context.push('/profile/edit');
-  }
-
-  void _navigateToLoyaltyPoints(BuildContext context) {
-    context.push('/profile/loyalty-points');
-  }
-
-  void _navigateToChangePassword(BuildContext context) {
-    context.push('/profile/change-password');
-  }
-
-  void _navigateToHelpSupport(BuildContext context) {
-    context.push('/profile/help-support');
-  }
-
-  void _navigateToContactUs(BuildContext context) {
-    context.push('/profile/contact-us');
   }
 
   void _showSignOutDialog(BuildContext context) {

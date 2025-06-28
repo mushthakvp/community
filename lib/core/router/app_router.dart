@@ -1,4 +1,3 @@
-// lib/core/router/app_router.dart - Updated with Profile routes
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -9,10 +8,16 @@ import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/coupons/presentation/pages/coupon_home_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
+import '../../features/profile/presentation/pages/about_app_page.dart';
 import '../../features/profile/presentation/pages/change_password_page.dart';
+import '../../features/profile/presentation/pages/contact_us_page.dart';
 import '../../features/profile/presentation/pages/edit_profile_page.dart';
+import '../../features/profile/presentation/pages/help_support_page.dart';
 import '../../features/profile/presentation/pages/loyalty_points_page.dart';
+import '../../features/profile/presentation/pages/notifications_page.dart';
+import '../../features/profile/presentation/pages/privacy_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
+import '../../features/profile/presentation/pages/terms_conditions_page.dart';
 import '../../features/promos/presentation/pages/promos_page.dart';
 import '../../features/redemption/presentation/pages/redemption_page.dart';
 import '../../features/redemption/presentation/pages/wallet_recharge_page.dart';
@@ -61,23 +66,40 @@ class AppRouter {
 
       // Profile standalone pages (without bottom navigation)
       GoRoute(
-        path: '/profile/edit',
+        path: RouteConstants.editProfile,
         builder: (context, state) => const EditProfilePage(),
       ),
       GoRoute(
-        path: '/profile/loyalty-points',
+        path: RouteConstants.loyaltyPoints,
         builder: (context, state) => const LoyaltyPointsPage(),
       ),
       GoRoute(
-        path: '/profile/change-password',
+        path: RouteConstants.changePassword,
         builder: (context, state) => const ChangePasswordPage(),
       ),
+
       GoRoute(
-        path: '/profile/help-support',
+        path: RouteConstants.notifications,
+        builder: (context, state) => const NotificationsPage(),
+      ),
+      GoRoute(
+        path: RouteConstants.privacy,
+        builder: (context, state) => const PrivacyPage(),
+      ),
+      GoRoute(
+        path: RouteConstants.termsConditions,
+        builder: (context, state) => const TermsConditionsPage(),
+      ),
+      GoRoute(
+        path: RouteConstants.aboutApp,
+        builder: (context, state) => const AboutAppPage(),
+      ),
+      GoRoute(
+        path: RouteConstants.helpSupport,
         builder: (context, state) => const HelpSupportPage(),
       ),
       GoRoute(
-        path: '/profile/contact-us',
+        path: RouteConstants.contactUs,
         builder: (context, state) => const ContactUsPage(),
       ),
 
@@ -101,10 +123,6 @@ class AppRouter {
           GoRoute(
             path: RouteConstants.profile,
             builder: (context, state) => const ProfilePage(),
-          ),
-          GoRoute(
-            path: '/settings',
-            builder: (context, state) => const SettingsPage(),
           ),
         ],
       ),
@@ -136,7 +154,6 @@ class AppRouter {
       RouteConstants.walletRecharge,
       RouteConstants.profile,
       RouteConstants.coupons,
-      '/settings',
       '/profile/',
     ];
     return protectedRoutes.any((route) => location.startsWith(route));
@@ -149,77 +166,5 @@ class AppRouter {
       RouteConstants.otpVerification,
     ];
     return authRoutes.any((route) => location.startsWith(route));
-  }
-}
-
-// Placeholder pages for Help & Support and Contact Us
-class HelpSupportPage extends StatelessWidget {
-  const HelpSupportPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Help & Support'),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
-      body: const Center(
-        child: Text(
-          'Help & Support Page\nComing Soon!',
-          style: TextStyle(fontSize: 24, color: Colors.white),
-          textAlign: TextAlign.center,
-        ),
-      ),
-    );
-  }
-}
-
-class ContactUsPage extends StatelessWidget {
-  const ContactUsPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Contact Us'),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
-      body: const Center(
-        child: Text(
-          'Contact Us Page\nComing Soon!',
-          style: TextStyle(fontSize: 24, color: Colors.white),
-          textAlign: TextAlign.center,
-        ),
-      ),
-    );
-  }
-}
-
-// Settings page placeholder
-class SettingsPage extends StatelessWidget {
-  const SettingsPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios),
-          onPressed: () => context.go(RouteConstants.profile),
-        ),
-      ),
-      body: const Center(
-        child: Text(
-          'Settings Page\nComing Soon!',
-          style: TextStyle(fontSize: 24, color: Colors.white),
-          textAlign: TextAlign.center,
-        ),
-      ),
-    );
   }
 }

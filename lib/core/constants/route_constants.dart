@@ -1,4 +1,3 @@
-// lib/core/constants/route_constants.dart
 class RouteConstants {
   // Auth Routes
   static const String splash = '/';
@@ -11,7 +10,6 @@ class RouteConstants {
   // Main Routes
   static const String home = '/home';
   static const String profile = '/profile';
-  static const String settings = '/settings';
 
   // Feature Routes
   static const String coupons = '/coupons';
@@ -22,4 +20,16 @@ class RouteConstants {
   // Redemption Routes
   static const String redemption = '/redemption';
   static const String walletRecharge = '/redemption/recharge';
+
+  // Profile Routes
+  static const String editProfile = '/profile/edit';
+  static const String loyaltyPoints = '/profile/loyalty-points';
+  static const String changePassword = '/profile/change-password';
+  static const String helpSupport = '/profile/help-support';
+  static const String contactUs = '/profile/contact-us';
+  static const String settings = '/profile/settings';
+  static const String notifications = '/profile/notifications';
+  static const String privacy = '/profile/privacy';
+  static const String termsConditions = '/profile/terms-conditions';
+  static const String aboutApp = '/profile/about';
 }
