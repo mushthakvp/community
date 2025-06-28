@@ -1,8 +1,9 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/route_constants.dart';
 import '../../../../core/widgets/common/text_widget.dart';
 import '../providers/splash_provider.dart';
@@ -42,7 +43,9 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
     );
 
     _moonController = AnimationController(
-      duration: const Duration(seconds: 3),
+      duration: const Duration(
+        seconds: 4,
+      ), // Slower for more realistic moon phases
       vsync: this,
     );
 
@@ -106,7 +109,7 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppConstants.black,
+      backgroundColor: Colors.black,
       body: Consumer<SplashProvider>(
         builder: (context, provider, child) {
           // Start text animation when appropriate
@@ -116,33 +119,33 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
 
           return Stack(
             children: [
-              // Background gradient
+              // Night sky gradient background
               Container(
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   gradient: RadialGradient(
-                    center: Alignment.center,
-                    radius: 1.5,
+                    center: Alignment.topCenter,
+                    radius: 2.0,
                     colors: [
-                      AppConstants.appPrimaryColor.withOpacity(0.15),
-                      const Color(0xFF1a1a2e),
-                      AppConstants.black,
+                      Color(0xFF1a1a2e), // Deep navy
+                      Color(0xFF16213e), // Darker navy
+                      Colors.black, // Pure black
                     ],
-                    stops: const [0.0, 0.5, 1.0],
+                    stops: [0.0, 0.4, 1.0],
                   ),
                 ),
               ),
 
-              // Animated background pattern
+              // Animated starfield background
               AnimatedOpacity(
                 opacity: _fadeAnimation.value,
                 duration: const Duration(milliseconds: 500),
                 child: CustomPaint(
-                  painter: BackgroundPatternPainter(),
+                  painter: StarfieldPatternPainter(_moonAnimation.value),
                   size: MediaQuery.of(context).size,
                 ),
               ),
 
-              // Moon Animation (top)
+              // Enhanced Moon Animation (top right)
               Positioned(
                 top: 50,
                 right: 30,
@@ -180,7 +183,7 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // GIF Animation Logo
+                      // GIF Animation Logo with gold glow
                       Container(
                         width: 180,
                         height: 180,
@@ -188,11 +191,16 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: AppConstants.appPrimaryColor.withOpacity(
-                                0.3,
-                              ),
+                              color: const Color(
+                                0xFFFFD700,
+                              ).withOpacity(0.4), // Gold glow
                               blurRadius: 30,
                               spreadRadius: 10,
+                            ),
+                            BoxShadow(
+                              color: Colors.amber.withOpacity(0.3),
+                              blurRadius: 50,
+                              spreadRadius: 15,
                             ),
                           ],
                         ),
@@ -212,10 +220,9 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
                               : Container(
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(20),
-                                    gradient: RadialGradient(
+                                    gradient: const RadialGradient(
                                       colors: [
-                                        AppConstants.appPrimaryColor
-                                            .withOpacity(0.5),
+                                        Color(0xFFFFD700), // Gold center
                                         Colors.transparent,
                                       ],
                                     ),
@@ -226,24 +233,23 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
 
                       const SizedBox(height: 40),
 
-                      // App title with animation
+                      // App title with gold animation
                       SlideTransition(
                         position: _textSlide,
                         child: FadeTransition(
                           opacity: _textOpacity,
                           child: Column(
                             children: [
-                              // Livera Brand
+                              // Livera Brand with gold gradient
                               ShaderMask(
-                                shaderCallback: (bounds) => LinearGradient(
-                                  colors: [
-                                    AppConstants.appPrimaryColor,
-                                    AppConstants.appPrimaryColor.withOpacity(
-                                      0.8,
-                                    ),
-                                    const Color(0xFFFFD700),
-                                  ],
-                                ).createShader(bounds),
+                                shaderCallback: (bounds) =>
+                                    const LinearGradient(
+                                      colors: [
+                                        Color(0xFFFFD700), // Bright gold
+                                        Color(0xFFFFA500), // Orange gold
+                                        Color(0xFFB8860B), // Dark gold
+                                      ],
+                                    ).createShader(bounds),
                                 child: const CommonTextWidget(
                                   text: 'LIVERA',
                                   fontSize: 42,
@@ -253,15 +259,15 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
                                 ),
                               ),
                               const SizedBox(height: 8),
-                              CommonTextWidget(
+                              const CommonTextWidget(
                                 text: 'Community Empowerment Platform',
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
-                                color: AppConstants.white.withOpacity(0.9),
+                                color: Color(0xFFFFD700), // Gold color
                                 letterSpacing: 1.2,
                               ),
                               const SizedBox(height: 12),
-                              // Kudumbashree tagline
+                              // Kudumbashree tagline with gold border
                               Container(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 16,
@@ -271,23 +277,22 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
                                   borderRadius: BorderRadius.circular(20),
                                   gradient: LinearGradient(
                                     colors: [
-                                      AppConstants.appPrimaryColor.withOpacity(
-                                        0.2,
-                                      ),
+                                      const Color(0xFFFFD700).withOpacity(0.2),
                                       Colors.transparent,
                                     ],
                                   ),
                                   border: Border.all(
-                                    color: AppConstants.appPrimaryColor
-                                        .withOpacity(0.3),
+                                    color: const Color(
+                                      0xFFFFD700,
+                                    ).withOpacity(0.5),
                                     width: 1,
                                   ),
                                 ),
-                                child: CommonTextWidget(
+                                child: const CommonTextWidget(
                                   text: 'കുടുംബശ്രീ • സമുദായം • ശാക്തീകരണം',
                                   fontSize: 14,
                                   fontWeight: FontWeight.w400,
-                                  color: AppConstants.white.withOpacity(0.8),
+                                  color: Color(0xFFFFD700),
                                 ),
                               ),
                             ],
@@ -297,21 +302,19 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
 
                       const SizedBox(height: 60),
 
-                      // Loading indicator
+                      // Loading indicator with gold theme
                       if (provider.isLoading)
                         Column(
                           children: [
                             Container(
                               width: 40,
                               height: 40,
-                              decoration: BoxDecoration(
+                              decoration: const BoxDecoration(
                                 shape: BoxShape.circle,
                                 gradient: LinearGradient(
                                   colors: [
-                                    AppConstants.appPrimaryColor,
-                                    AppConstants.appPrimaryColor.withOpacity(
-                                      0.6,
-                                    ),
+                                    Color(0xFFFFD700), // Gold
+                                    Color(0xFFFFA500), // Orange gold
                                   ],
                                 ),
                               ),
@@ -320,16 +323,16 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
                                   valueColor: AlwaysStoppedAnimation<Color>(
-                                    Colors.white,
+                                    Colors.black,
                                   ),
                                 ),
                               ),
                             ),
                             const SizedBox(height: 16),
-                            CommonTextWidget(
+                            const CommonTextWidget(
                               text: 'Initializing Platform...',
                               fontSize: 12,
-                              color: AppConstants.white.withOpacity(0.7),
+                              color: Color(0xFFFFD700),
                               letterSpacing: 1.0,
                             ),
                           ],
@@ -339,7 +342,7 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
                 ),
               ),
 
-              // Bottom branding
+              // Bottom branding with gold theme
               Positioned(
                 bottom: 60,
                 left: 0,
@@ -348,19 +351,19 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
                   opacity: _textOpacity,
                   child: Column(
                     children: [
-                      CommonTextWidget(
+                      const CommonTextWidget(
                         text: 'Powered by',
                         fontSize: 12,
-                        color: AppConstants.white.withOpacity(0.5),
+                        color: Color(0xFFB8860B), // Dark gold
                         align: TextAlign.center,
                         letterSpacing: 1.0,
                       ),
                       const SizedBox(height: 6),
                       ShaderMask(
-                        shaderCallback: (bounds) => LinearGradient(
+                        shaderCallback: (bounds) => const LinearGradient(
                           colors: [
-                            AppConstants.appPrimaryColor,
-                            const Color(0xFFFFD700),
+                            Color(0xFFFFD700), // Bright gold
+                            Color(0xFFFFA500), // Orange gold
                           ],
                         ).createShader(bounds),
                         child: const CommonTextWidget(
@@ -373,10 +376,10 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      CommonTextWidget(
+                      const CommonTextWidget(
                         text: 'Technology • Innovation • Empowerment',
                         fontSize: 10,
-                        color: AppConstants.white.withOpacity(0.6),
+                        color: Color(0xFFB8860B), // Dark gold
                         align: TextAlign.center,
                         letterSpacing: 1.0,
                       ),
@@ -392,49 +395,69 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
   }
 }
 
-class BackgroundPatternPainter extends CustomPainter {
+class StarfieldPatternPainter extends CustomPainter {
+  final double animationValue;
+
+  StarfieldPatternPainter(this.animationValue);
+
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = AppConstants.appPrimaryColor.withOpacity(0.05)
+    final starPaint = Paint()..style = PaintingStyle.fill;
+
+    final random = Random(42);
+
+    for (int i = 0; i < 100; i++) {
+      final x = random.nextDouble() * size.width;
+      final y = random.nextDouble() * size.height;
+      final twinkle = sin(animationValue * 2 * pi + i) * 0.5 + 0.5;
+      final brightness = random.nextDouble() * 0.8 + 0.2;
+      Color starColor;
+      if (i % 10 == 0) {
+        starColor = const Color(0xFFFFD700).withOpacity(brightness * twinkle);
+      } else if (i % 15 == 0) {
+        starColor = const Color(
+          0xFF87CEEB,
+        ).withOpacity(brightness * twinkle * 0.7);
+      } else {
+        starColor = Colors.white.withOpacity(brightness * twinkle * 0.8);
+      }
+
+      starPaint.color = starColor;
+
+      final starSize = random.nextDouble() * 1.5 + 0.5;
+      canvas.drawCircle(Offset(x, y), starSize * twinkle, starPaint);
+    }
+
+    final constellationPaint = Paint()
+      ..color = const Color(0xFFFFD700).withOpacity(0.3 * animationValue)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
 
-    // Create a geometric pattern
-    final spacing = 40.0;
+    for (int i = 0; i < 5; i++) {
+      final startX = random.nextDouble() * size.width;
+      final startY = random.nextDouble() * size.height * 0.6;
+      final endX = startX + (random.nextDouble() - 0.5) * 100;
+      final endY = startY + (random.nextDouble() - 0.5) * 50;
 
-    // Draw diagonal lines
-    for (double x = -size.height; x < size.width + size.height; x += spacing) {
       canvas.drawLine(
-        Offset(x, 0),
-        Offset(x + size.height, size.height),
-        paint,
+        Offset(startX, startY),
+        Offset(endX, endY),
+        constellationPaint,
       );
     }
 
-    // Draw reverse diagonal lines
-    for (double x = 0; x < size.width + size.height; x += spacing * 2) {
-      canvas.drawLine(
-        Offset(x, 0),
-        Offset(x - size.height, size.height),
-        paint..color = AppConstants.appPrimaryColor.withOpacity(0.03),
-      );
-    }
+    // Add subtle nebula clouds
+    final nebulaPaint = Paint()
+      ..color = const Color(0xFFFFD700).withOpacity(0.05 * animationValue)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 20);
 
-    // Draw dots at intersections
-    final dotPaint = Paint()
-      ..color = AppConstants.appPrimaryColor.withOpacity(0.08)
-      ..style = PaintingStyle.fill;
-
-    for (double x = spacing; x < size.width; x += spacing) {
-      for (double y = spacing; y < size.height; y += spacing) {
-        if ((x / spacing + y / spacing) % 2 == 0) {
-          canvas.drawCircle(Offset(x, y), 1, dotPaint);
-        }
-      }
+    for (int i = 0; i < 3; i++) {
+      final x = random.nextDouble() * size.width;
+      final y = random.nextDouble() * size.height;
+      canvas.drawCircle(Offset(x, y), 80, nebulaPaint);
     }
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
