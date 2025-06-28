@@ -1,4 +1,3 @@
-// lib/features/auth/presentation/pages/otp_verification_page.dart - FIXED
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pinput/pinput.dart';
@@ -30,6 +29,7 @@ class OtpVerificationPage extends StatefulWidget {
 
 class _OtpVerificationPageState extends State<OtpVerificationPage> {
   bool _isResending = false;
+  bool _hasNavigated = false; // Add this flag to prevent multiple navigations
 
   @override
   void initState() {
@@ -65,15 +65,33 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
         builder: (context, authProvider, child) {
           // Handle state changes
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (authProvider.isAuthenticated &&
-                authProvider.canNavigateToHome) {
-              authProvider.markHomeNavigated();
-              // Use pushReplacement to prevent going back to OTP page
-              context.go(RouteConstants.home);
-            } else if (authProvider.hasError) {
+            if (!mounted) return;
+
+            // Check if user is authenticated and we haven't navigated yet
+            if (authProvider.isAuthenticated && !_hasNavigated) {
+              _hasNavigated = true; // Set flag to prevent multiple navigations
+
+              // Show success message if available
+              if (authProvider.successMessage != null) {
+                ErrorHandler.showSuccess(context, authProvider.successMessage!);
+              } else {
+                ErrorHandler.showSuccess(context, 'OTP verified successfully!');
+              }
+
+              // Navigate to home with a small delay to show the success message
+              Future.delayed(const Duration(milliseconds: 800), () {
+                if (mounted) {
+                  context.go(RouteConstants.home);
+                }
+              });
+            } else if (authProvider.hasError && !authProvider.isAuthenticated) {
+              // Only show error if not authenticated (real error)
               ErrorHandler.showError(
                 context,
-                ServerFailure(message: authProvider.errorMessage ?? ""),
+                ServerFailure(
+                  message:
+                      authProvider.errorMessage ?? "Unknown error occurred",
+                ),
               );
             }
           });
@@ -237,6 +255,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
 
   void _handleVerifyOtp(AuthProvider authProvider) {
     if (authProvider.otpController.text.length == 6) {
+      _hasNavigated = false; // Reset flag before verification
       authProvider.verifyOtp(isLogin: widget.isLogin);
     } else {
       ErrorHandler.showError(

@@ -1,4 +1,5 @@
-// lib/features/auth/presentation/providers/auth_provider.dart - Improved
+// lib/features/auth/presentation/providers/auth_provider.dart - Fixed Success/Error Handling
+
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -15,6 +16,7 @@ enum AuthStatus {
   unauthenticated,
   error,
   otpRequired,
+  success, // Add success status
 }
 
 class AuthProvider extends ChangeNotifier {
@@ -26,6 +28,7 @@ class AuthProvider extends ChangeNotifier {
   AuthStatus _status = AuthStatus.initial;
   UserEntity? _user;
   String? _errorMessage;
+  String? _successMessage; // Add success message
   String? _firebaseToken;
 
   // Navigation state
@@ -36,11 +39,15 @@ class AuthProvider extends ChangeNotifier {
   AuthStatus get status => _status;
   UserEntity? get user => _user;
   String? get errorMessage => _errorMessage;
+  String? get successMessage => _successMessage; // Add success message getter
   String? get firebaseToken => _firebaseToken;
   bool get isAuthenticated => _status == AuthStatus.authenticated;
   bool get isLoading => _status == AuthStatus.loading;
   bool get isOtpRequired => _status == AuthStatus.otpRequired;
   bool get hasError => _status == AuthStatus.error && _errorMessage != null;
+  bool get hasSuccess =>
+      _status == AuthStatus.success &&
+      _successMessage != null; // Add success getter
 
   // Controllers
   final emailController = TextEditingController();
@@ -182,7 +189,8 @@ class AuthProvider extends ChangeNotifier {
 
   void clearError() {
     _errorMessage = null;
-    if (_status == AuthStatus.error) {
+    _successMessage = null; // Clear success message too
+    if (_status == AuthStatus.error || _status == AuthStatus.success) {
       _status = AuthStatus.initial;
       notifyListeners();
     }
@@ -271,6 +279,8 @@ class AuthProvider extends ChangeNotifier {
       (user) {
         otpController.clear();
         _setAuthenticated(user);
+        // Set success message for OTP verification
+        _setSuccess('OTP verified successfully!');
       },
     );
   }
@@ -334,6 +344,7 @@ class AuthProvider extends ChangeNotifier {
   void _setLoading() {
     _status = AuthStatus.loading;
     _errorMessage = null;
+    _successMessage = null;
     notifyListeners();
   }
 
@@ -348,12 +359,20 @@ class AuthProvider extends ChangeNotifier {
   void _setError(String message) {
     _status = AuthStatus.error;
     _errorMessage = message;
+    _successMessage = null;
+    notifyListeners();
+  }
+
+  void _setSuccess(String message) {
+    _successMessage = message;
+    // Don't change status here if already authenticated
     notifyListeners();
   }
 
   void _setOtpRequired() {
     _status = AuthStatus.otpRequired;
     _errorMessage = null;
+    _successMessage = null;
     notifyListeners();
   }
 

@@ -31,12 +31,15 @@ class AuthRepositoryImpl implements AuthRepository {
         password: password,
         firebaseId: firebaseId ?? "empty token",
       );
+
       final response = await apiClient.post(
         ApiConstants.login,
         body: requestData.toJson(),
       );
+
       final responseData = json.decode(response.body);
       final loginResponse = LoginResponseModel.fromJson(responseData);
+
       if (loginResponse.success) {
         if (loginResponse.token != null) {
           await StorageService.saveToken(loginResponse.token!);
@@ -70,7 +73,18 @@ class AuthRepositoryImpl implements AuthRepository {
           AuthFailure(message: loginResponse.message ?? 'Login failed'),
         );
       }
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(message: e.message));
+    } on ValidationException catch (e) {
+      return Left(ValidationFailure(message: e.message));
     } catch (e) {
+      debugPrint('Login error: $e');
+      if (e.toString().contains('Request failed:')) {
+        final errorMsg = e.toString().split('Request failed: ').last;
+        return Left(AuthFailure(message: errorMsg));
+      }
       return Left(AuthFailure(message: e.toString()));
     }
   }
@@ -159,6 +173,7 @@ class AuthRepositoryImpl implements AuthRepository {
         method: method,
         firebaseId: firebaseId ?? "empty token",
       );
+
       final response = await apiClient.post(
         ApiConstants.verifyOtp,
         body: requestData.toJson(),
@@ -179,29 +194,40 @@ class AuthRepositoryImpl implements AuthRepository {
             name: userDetails['name'] ?? '',
             email: userDetails['email'] ?? email,
             phone: userDetails['phone'] ?? '',
-            communityId: userDetails['communityId'] ?? '',
-            tier: userDetails['tier'] ?? '',
+            communityId: userDetails['communityId'] ?? userDetails['id'] ?? '',
+            tier: userDetails['tier'] ?? 'Moon',
             loyaltyPoints: userDetails['loyalityPoints'] ?? 0,
             walletAmount: (userDetails['walletAmount'] ?? 0).toDouble(),
             currencyCode: userDetails['currencyCode'] ?? 'INR',
             joinedDate: userDetails['joined'],
           );
-          await StorageService.saveUserId(userDetails['id']);
+          await StorageService.saveUserId(userDetails['id'] ?? '');
           await StorageService.saveUserEmail(userDetails['email'] ?? email);
           user = UserEntity(
             name: userDetails['name'] ?? '',
             id: userDetails['id'] ?? '',
-            email: userDetails['email'] ?? '',
+            email: userDetails['email'] ?? email,
             phone: userDetails['phone'] ?? '',
             country: userDetails['country'] ?? '',
             state: userDetails['state'] ?? '',
-            tier: userDetails['tier'] ?? '',
+            tier: userDetails['tier'] ?? 'Moon',
             loyaltyPoints: userDetails['loyalityPoints'] ?? 0,
             walletAmount: (userDetails['walletAmount'] ?? 0).toDouble(),
+            isOtpVerified: true,
+            profileCompleted: userDetails['profileCompleted'] ?? true,
+          );
+        } else {
+          user = UserEntity(
+            id: await StorageService.getUserId() ?? '',
+            name: (await StorageService.getUserData())['name'] ?? '',
+            email: email,
+            phone: phone ?? '',
+            isOtpVerified: true,
+            profileCompleted: true,
           );
         }
         await StorageService.setLoggedIn(true);
-        return Right(user!);
+        return Right(user);
       } else {
         return Left(
           AuthFailure(

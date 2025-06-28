@@ -1,4 +1,3 @@
-// lib/features/auth/presentation/widgets/profile_image_picker.dart
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -62,11 +61,13 @@ class ProfileImagePicker extends StatelessWidget {
                         color: AppConstants.white.withOpacity(0.7),
                       ),
               ),
+
+              // Camera/Add Button
               Positioned(
                 bottom: 0,
                 right: 0,
                 child: GestureDetector(
-                  onTap: () => _showImagePickerDialog(context, authProvider),
+                  onTap: () => _pickImageFromGallery(context, authProvider),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     width: 40,
@@ -87,8 +88,10 @@ class ProfileImagePicker extends StatelessWidget {
                         ),
                       ],
                     ),
-                    child: const Icon(
-                      Icons.camera_alt,
+                    child: Icon(
+                      authProvider.profileImage != null
+                          ? Icons.edit
+                          : Icons.add_a_photo,
                       size: 20,
                       color: AppConstants.black,
                     ),
@@ -125,177 +128,15 @@ class ProfileImagePicker extends StatelessWidget {
     );
   }
 
-  void _showImagePickerDialog(BuildContext context, AuthProvider authProvider) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppConstants.black,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return Container(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppConstants.white.withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 20),
-              const CommonTextWidget(
-                text: 'Select Profile Picture',
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: AppConstants.white,
-                align: TextAlign.center,
-              ),
-              const SizedBox(height: 20),
-              _buildImageOption(
-                context: context,
-                icon: Icons.camera_alt,
-                title: 'Take Photo',
-                subtitle: 'Use camera to take a new photo',
-                onTap: () => _pickImageFromCamera(context, authProvider),
-              ),
-              const SizedBox(height: 16),
-              _buildImageOption(
-                context: context,
-                icon: Icons.photo_library,
-                title: 'Choose from Gallery',
-                subtitle: 'Select from your photo library',
-                onTap: () => _pickImageFromGallery(context, authProvider),
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      side: BorderSide(
-                        color: AppConstants.white.withOpacity(0.3),
-                      ),
-                    ),
-                  ),
-                  child: const CommonTextWidget(
-                    text: 'Cancel',
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: AppConstants.white,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildImageOption({
-    required BuildContext context,
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppConstants.white.withOpacity(0.05),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppConstants.white.withOpacity(0.1)),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 50,
-              height: 50,
-              decoration: BoxDecoration(
-                color: AppConstants.appPrimaryColor.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: AppConstants.appPrimaryColor, size: 24),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  CommonTextWidget(
-                    text: title,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: AppConstants.white,
-                  ),
-                  const SizedBox(height: 4),
-                  CommonTextWidget(
-                    text: subtitle,
-                    fontSize: 14,
-                    color: AppConstants.white.withOpacity(0.7),
-                  ),
-                ],
-              ),
-            ),
-            Icon(
-              Icons.arrow_forward_ios,
-              color: AppConstants.white.withOpacity(0.5),
-              size: 16,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _pickImageFromCamera(
-    BuildContext context,
-    AuthProvider authProvider,
-  ) async {
-    Navigator.pop(context);
-    final cameraPermission = await Permission.camera.request();
-    if (cameraPermission.isGranted) {
-      try {
-        final ImagePicker picker = ImagePicker();
-        final XFile? image = await picker.pickImage(
-          source: ImageSource.camera,
-          imageQuality: 80,
-          maxWidth: 1024,
-          maxHeight: 1024,
-        );
-
-        if (image != null) {
-          final File imageFile = File(image.path);
-          authProvider.setProfileImage(imageFile);
-          onImageSelected?.call(imageFile);
-        }
-      } catch (e) {
-        _showErrorSnackBar(context, 'Failed to take photo: $e');
-      }
-    } else {
-      _showPermissionDialog(context, 'Camera');
-    }
-  }
-
   Future<void> _pickImageFromGallery(
     BuildContext context,
     AuthProvider authProvider,
   ) async {
-    Navigator.pop(context);
-    PermissionStatus permission = await Permission.photos.request();
-    if (permission.isGranted) {
-      try {
+    try {
+      // Check permission first
+      PermissionStatus permission = await Permission.photos.request();
+
+      if (permission.isGranted) {
         final ImagePicker picker = ImagePicker();
         final XFile? image = await picker.pickImage(
           source: ImageSource.gallery,
@@ -308,12 +149,20 @@ class ProfileImagePicker extends StatelessWidget {
           final File imageFile = File(image.path);
           authProvider.setProfileImage(imageFile);
           onImageSelected?.call(imageFile);
+
+          // Show success message
+          _showSuccessSnackBar(
+            context,
+            'Profile picture updated successfully!',
+          );
         }
-      } catch (e) {
-        _showErrorSnackBar(context, 'Failed to pick image: $e');
+      } else if (permission.isDenied) {
+        _showPermissionDialog(context, 'Photo Library');
+      } else if (permission.isPermanentlyDenied) {
+        _showPermissionDialog(context, 'Photo Library');
       }
-    } else {
-      _showPermissionDialog(context, 'Photo Library');
+    } catch (e) {
+      _showErrorSnackBar(context, 'Failed to pick image: $e');
     }
   }
 
@@ -323,11 +172,41 @@ class ProfileImagePicker extends StatelessWidget {
   }
 
   void _showErrorSnackBar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Row(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.white, size: 20),
+            const SizedBox(width: 8),
+            Expanded(child: Text(message)),
+          ],
+        ),
         backgroundColor: Colors.red,
         behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  void _showSuccessSnackBar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(
+              Icons.check_circle_outline,
+              color: Colors.white,
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: Colors.green,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
       ),
     );
   }
@@ -346,7 +225,7 @@ class ProfileImagePicker extends StatelessWidget {
         ),
         content: CommonTextWidget(
           text:
-              'Please grant $permissionType permission to select profile picture.',
+              'Please grant $permissionType permission to select profile picture from your gallery.',
           fontSize: 14,
           color: AppConstants.white.withOpacity(0.8),
         ),
@@ -365,7 +244,7 @@ class ProfileImagePicker extends StatelessWidget {
               openAppSettings();
             },
             child: const CommonTextWidget(
-              text: 'Settings',
+              text: 'Open Settings',
               fontSize: 14,
               fontWeight: FontWeight.w600,
               color: AppConstants.appPrimaryColor,

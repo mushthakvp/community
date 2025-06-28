@@ -142,26 +142,76 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog> {
       await authProvider.forgotPassword(_emailController.text.trim());
 
       if (mounted) {
+        // Close the dialog first
         Navigator.of(context).pop();
 
-        // Show success message
+        // Show success message with better styling
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              'Password reset link sent to ${_emailController.text.trim()}',
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        'Reset Link Sent!',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                      Text(
+                        'Check your email: ${_emailController.text.trim()}',
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            backgroundColor: Colors.green,
+            backgroundColor: Colors.green.shade600,
             behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.all(16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            duration: const Duration(seconds: 5),
+            action: SnackBarAction(
+              label: 'OK',
+              textColor: Colors.white,
+              onPressed: () {
+                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+              },
+            ),
           ),
         );
+
+        // Optional: Show a dialog with more detailed instructions
+        _showEmailSentDialog(_emailController.text.trim());
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to send reset link: ${e.toString()}'),
-            backgroundColor: Colors.red,
+            content: Row(
+              children: [
+                const Icon(Icons.error_outline, color: Colors.white, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text('Failed to send reset link: ${e.toString()}'),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.red.shade600,
             behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.all(16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
           ),
         );
       }
@@ -170,5 +220,94 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog> {
         setState(() => _isLoading = false);
       }
     }
+  }
+
+  void _showEmailSentDialog(String email) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppConstants.black,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.green.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.email_outlined,
+                color: Colors.green,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: CommonTextWidget(
+                text: 'Check Your Email',
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: AppConstants.white,
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            CommonTextWidget(
+              text: 'We\'ve sent a password reset link to:',
+              fontSize: 14,
+              color: AppConstants.white.withOpacity(0.8),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppConstants.appPrimaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: AppConstants.appPrimaryColor.withOpacity(0.3),
+                ),
+              ),
+              child: CommonTextWidget(
+                text: email,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppConstants.appPrimaryColor,
+              ),
+            ),
+            const SizedBox(height: 16),
+            CommonTextWidget(
+              text:
+                  'Please check your email and follow the instructions to reset your password.',
+              fontSize: 14,
+              color: AppConstants.white.withOpacity(0.8),
+            ),
+            const SizedBox(height: 8),
+            CommonTextWidget(
+              text: 'Don\'t see the email? Check your spam folder.',
+              fontSize: 12,
+              color: AppConstants.white.withOpacity(0.6),
+              fontStyle: FontStyle.italic,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const CommonTextWidget(
+              text: 'Got it',
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppConstants.appPrimaryColor,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

@@ -129,7 +129,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       } else if (authProvider.hasError) {
         ErrorHandler.showError(
           context,
-          UnknownFailure(message: authProvider.errorMessage!),
+          AuthFailure(message: authProvider.errorMessage ?? "Login failed"),
         );
       }
     });
