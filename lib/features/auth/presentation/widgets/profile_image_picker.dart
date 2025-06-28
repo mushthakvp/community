@@ -1,3 +1,4 @@
+// lib/features/auth/presentation/widgets/profile_image_picker.dart
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -21,6 +22,7 @@ class ProfileImagePicker extends StatelessWidget {
         return Center(
           child: Stack(
             children: [
+              // Main profile image container
               AnimatedContainer(
                 duration: const Duration(milliseconds: 300),
                 width: 120,
@@ -46,52 +48,107 @@ class ProfileImagePicker extends StatelessWidget {
                         ]
                       : null,
                 ),
-                child: authProvider.profileImage != null
-                    ? ClipOval(
-                        child: Image.file(
+                child: ClipOval(
+                  child: authProvider.profileImage != null
+                      ? Image.file(
                           authProvider.profileImage!,
                           fit: BoxFit.cover,
                           width: 120,
                           height: 120,
+                        )
+                      : Icon(
+                          Icons.person,
+                          size: 60,
+                          color: AppConstants.white.withOpacity(0.7),
                         ),
-                      )
-                    : Icon(
-                        Icons.person,
-                        size: 60,
-                        color: AppConstants.white.withOpacity(0.7),
-                      ),
+                ),
               ),
+
+              // Upload progress overlay
+              if (authProvider.isUploadingImage)
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppConstants.black.withOpacity(0.7),
+                    ),
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: 40,
+                            height: 40,
+                            child: CircularProgressIndicator(
+                              value: authProvider.uploadProgress,
+                              strokeWidth: 3,
+                              backgroundColor: AppConstants.white.withOpacity(
+                                0.3,
+                              ),
+                              valueColor: const AlwaysStoppedAnimation<Color>(
+                                AppConstants.appPrimaryColor,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          CommonTextWidget(
+                            text:
+                                '${(authProvider.uploadProgress * 100).toInt()}%',
+                            fontSize: 12,
+                            color: AppConstants.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
 
               // Camera/Add Button
               Positioned(
                 bottom: 0,
                 right: 0,
                 child: GestureDetector(
-                  onTap: () => _pickImageFromGallery(context, authProvider),
+                  onTap: authProvider.isUploadingImage
+                      ? null
+                      : () => _pickImageFromGallery(context, authProvider),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [
-                          AppConstants.appPrimaryColor,
-                          Color(0xFF00D4AA),
-                        ],
-                      ),
+                      gradient: authProvider.isUploadingImage
+                          ? LinearGradient(
+                              colors: [
+                                AppConstants.appPrimaryColor.withOpacity(0.5),
+                                const Color(0xFF00D4AA).withOpacity(0.5),
+                              ],
+                            )
+                          : const LinearGradient(
+                              colors: [
+                                AppConstants.appPrimaryColor,
+                                Color(0xFF00D4AA),
+                              ],
+                            ),
                       shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppConstants.appPrimaryColor.withOpacity(0.4),
-                          blurRadius: 10,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
+                      boxShadow: authProvider.isUploadingImage
+                          ? null
+                          : [
+                              BoxShadow(
+                                color: AppConstants.appPrimaryColor.withOpacity(
+                                  0.4,
+                                ),
+                                blurRadius: 10,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
                     ),
                     child: Icon(
-                      authProvider.profileImage != null
-                          ? Icons.edit
-                          : Icons.add_a_photo,
+                      authProvider.isUploadingImage
+                          ? Icons.hourglass_empty
+                          : (authProvider.profileImage != null
+                                ? Icons.edit
+                                : Icons.add_a_photo),
                       size: 20,
                       color: AppConstants.black,
                     ),
@@ -99,8 +156,9 @@ class ProfileImagePicker extends StatelessWidget {
                 ),
               ),
 
-              // Remove Button (if image is selected)
-              if (authProvider.profileImage != null)
+              // Remove Button (if image is selected and not uploading)
+              if (authProvider.profileImage != null &&
+                  !authProvider.isUploadingImage)
                 Positioned(
                   top: 0,
                   right: 0,
@@ -119,6 +177,19 @@ class ProfileImagePicker extends StatelessWidget {
                         color: Colors.white,
                       ),
                     ),
+                  ),
+                ),
+
+              // Success indicator
+              if (authProvider.uploadedImageUrl != null &&
+                  !authProvider.isUploadingImage)
+                const Positioned(
+                  top: 0,
+                  left: 0,
+                  child: CircleAvatar(
+                    radius: 15,
+                    backgroundColor: Colors.green,
+                    child: Icon(Icons.check, size: 16, color: Colors.white),
                   ),
                 ),
             ],
@@ -153,7 +224,7 @@ class ProfileImagePicker extends StatelessWidget {
           // Show success message
           _showSuccessSnackBar(
             context,
-            'Profile picture updated successfully!',
+            'Profile picture selected successfully!',
           );
         }
       } else if (permission.isDenied) {

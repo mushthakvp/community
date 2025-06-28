@@ -133,7 +133,6 @@ class AuthRepositoryImpl implements AuthRepository {
         ApiConstants.register,
         body: requestData.toJson(),
       );
-      debugPrint("Response: $response");
       final responseData = json.decode(response.body);
       final success = responseData['success'] ?? false;
       if (success) {

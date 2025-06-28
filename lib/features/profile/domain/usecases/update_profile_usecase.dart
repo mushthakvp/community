@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import '../../../../core/utils/result.dart';
 import '../entities/profile_entity.dart';
 import '../repositories/profile_repository.dart';
@@ -14,14 +12,14 @@ class UpdateProfileUseCase {
     required String email,
     required String phone,
     required String dialCode,
-    File? profileImage,
+    String? profileImageUrl,
   }) async {
     return await repository.updateProfile(
       name: name,
       email: email,
       phone: phone,
       dialCode: dialCode,
-      profileImage: profileImage,
+      profileImageUrl: profileImageUrl,
     );
   }
 }

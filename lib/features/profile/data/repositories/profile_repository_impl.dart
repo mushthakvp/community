@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import '../../../../core/error/error_handler.dart';
 import '../../../../core/utils/result.dart';
 import '../../domain/entities/loyalty_card_entity.dart';
@@ -50,15 +48,9 @@ class ProfileRepositoryImpl implements ProfileRepository {
     required String email,
     required String phone,
     required String dialCode,
-    File? profileImage,
+    String? profileImageUrl,
   }) async {
     try {
-      String? profileImageUrl;
-      if (profileImage != null) {
-        profileImageUrl = await remoteDataSource.uploadProfileImage(
-          profileImage,
-        );
-      }
       final updatedProfile = await remoteDataSource.updateProfile(
         name: name,
         email: email,

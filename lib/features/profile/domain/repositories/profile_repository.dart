@@ -1,19 +1,16 @@
-import 'dart:io';
-
 import '../../../../core/utils/result.dart';
 import '../entities/loyalty_card_entity.dart';
 import '../entities/point_transaction_entity.dart';
 import '../entities/profile_entity.dart';
 
 abstract class ProfileRepository {
-  // Profile Management
   Future<Result<ProfileEntity>> getProfile();
   Future<Result<ProfileEntity>> updateProfile({
     required String name,
     required String email,
     required String phone,
     required String dialCode,
-    File? profileImage,
+    String? profileImageUrl,
   });
   Future<Result<void>> changePassword({
     required String oldPassword,

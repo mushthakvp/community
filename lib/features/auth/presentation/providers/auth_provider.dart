@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import '../../../../core/services/cloudinary_service.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../domain/entities/user_entity.dart';
@@ -33,6 +34,11 @@ class AuthProvider extends ChangeNotifier {
   bool _hasNavigatedToOtp = false;
   bool _hasNavigatedToHome = false;
 
+  // Image upload state
+  bool _isUploadingImage = false;
+  double _uploadProgress = 0.0;
+  String? _uploadedImageUrl;
+
   // Getters
   AuthStatus get status => _status;
   UserEntity? get user => _user;
@@ -45,6 +51,11 @@ class AuthProvider extends ChangeNotifier {
   bool get hasError => _status == AuthStatus.error && _errorMessage != null;
   bool get hasSuccess =>
       _status == AuthStatus.success && _successMessage != null;
+
+  // Image upload getters
+  bool get isUploadingImage => _isUploadingImage;
+  double get uploadProgress => _uploadProgress;
+  String? get uploadedImageUrl => _uploadedImageUrl;
 
   // Controllers
   final emailController = TextEditingController();
@@ -176,12 +187,43 @@ class AuthProvider extends ChangeNotifier {
 
   void setProfileImage(File? image) {
     _profileImage = image;
+    _uploadedImageUrl = null;
     notifyListeners();
   }
 
   void setAgreeToTerms(bool agree) {
     _agreeToTerms = agree;
     notifyListeners();
+  }
+
+  Future<void> uploadProfileImage() async {
+    if (_profileImage == null) return;
+    _isUploadingImage = true;
+    _uploadProgress = 0.0;
+    notifyListeners();
+    try {
+      final cloudinaryService = CloudinaryService();
+      final imageUrl = await cloudinaryService.uploadSingleImage(
+        file: _profileImage!,
+        folder: 'vivera_profiles',
+        onProgress: (progress) {
+          _uploadProgress = progress;
+          notifyListeners();
+        },
+      );
+      if (imageUrl != null) {
+        _uploadedImageUrl = imageUrl;
+        debugPrint('Image uploaded successfully: $imageUrl');
+      } else {
+        _setError('Failed to upload profile image');
+      }
+    } catch (e) {
+      debugPrint('Image upload error: $e');
+      _setError('Failed to upload profile image: $e');
+    } finally {
+      _isUploadingImage = false;
+      notifyListeners();
+    }
   }
 
   Future<void> login() async {
@@ -209,6 +251,13 @@ class AuthProvider extends ChangeNotifier {
     if (!_validateRegisterForm()) return;
     _setLoading();
     resetNavigationFlags();
+    if (_profileImage != null && _uploadedImageUrl == null) {
+      await uploadProfileImage();
+      if (_uploadedImageUrl == null) {
+        _setError('Failed to upload profile image. Please try again.');
+        return;
+      }
+    }
     final result = await _repository.register(
       name: nameController.text.trim(),
       email: emailController.text.trim(),
@@ -223,12 +272,13 @@ class AuthProvider extends ChangeNotifier {
       stateCode: _selectedStateCode,
       district: _selectedDistrict.isNotEmpty ? _selectedDistrict : null,
       verificationMethod: _verificationMethod,
-      profileImage: _profileImage?.path,
+      profileImage: _uploadedImageUrl,
       referralCode: referralCodeController.text.trim().isNotEmpty
           ? referralCodeController.text.trim()
           : null,
       firebaseId: _firebaseToken ?? "empty token",
     );
+
     result.fold(
       (failure) {
         debugPrint('failure: ${failure.message}');
@@ -242,7 +292,6 @@ class AuthProvider extends ChangeNotifier {
     );
   }
 
-  // FIXED: Updated OTP verification method
   Future<void> verifyOtp({bool isLogin = false}) async {
     if (otpController.text.trim().length != 6) {
       _setError('Please enter a valid 6-digit OTP');
@@ -264,10 +313,8 @@ class AuthProvider extends ChangeNotifier {
       (failure) {
         debugPrint('OTP Verification Failed: ${failure.message}');
 
-        // FIXED: Check if the failure message actually indicates success
         if (failure.message.toLowerCase().contains('verified') ||
             failure.message.toLowerCase().contains('success')) {
-          // This is actually a success case, treat it as such
           debugPrint('OTP Verification Successful (from error message)');
           _handleOtpSuccess();
         } else {
@@ -281,17 +328,14 @@ class AuthProvider extends ChangeNotifier {
     );
   }
 
-  // FIXED: Separate method to handle OTP success
   void _handleOtpSuccess([UserEntity? user]) async {
     otpController.clear();
     _errorMessage = null;
     _successMessage = 'OTP verified successfully!';
 
-    // If we have user data, use it; otherwise create a basic user entity
     if (user != null) {
       _user = user;
     } else {
-      // Create a basic user entity from available data
       _user = UserEntity(
         id: await StorageService.getUserId() ?? '',
         name: nameController.text.trim().isNotEmpty
@@ -299,6 +343,7 @@ class AuthProvider extends ChangeNotifier {
             : (await StorageService.getUserData())['name'] ?? '',
         email: emailController.text.trim(),
         phone: phoneController.text.trim(),
+        profileImage: _uploadedImageUrl,
         isOtpVerified: true,
         profileCompleted: true,
       );
@@ -543,6 +588,7 @@ class AuthProvider extends ChangeNotifier {
     _selectedState = '';
     _selectedDistrict = '';
     _profileImage = null;
+    _uploadedImageUrl = null;
     _agreeToTerms = false;
   }
 }

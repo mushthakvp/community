@@ -1,7 +1,9 @@
+// lib/features/profile/presentation/providers/profile_provider.dart
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import '../../../../core/services/cloudinary_service.dart';
 import '../../../../core/utils/result.dart';
 import '../../domain/entities/loyalty_card_entity.dart';
 import '../../domain/entities/point_transaction_entity.dart';
@@ -63,8 +65,11 @@ class ProfileProvider extends ChangeNotifier {
   bool _isNewPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
 
-  // Selected profile image
+  // Selected profile image and upload state
   File? _selectedProfileImage;
+  bool _isUploadingImage = false;
+  double _uploadProgress = 0.0;
+  String? _uploadedImageUrl;
 
   // Tab selection for loyalty points
   int _selectedTab = 0;
@@ -94,6 +99,10 @@ class ProfileProvider extends ChangeNotifier {
   bool get isConfirmPasswordVisible => _isConfirmPasswordVisible;
 
   File? get selectedProfileImage => _selectedProfileImage;
+  bool get isUploadingImage => _isUploadingImage;
+  double get uploadProgress => _uploadProgress;
+  String? get uploadedImageUrl => _uploadedImageUrl;
+
   int get selectedTab => _selectedTab;
 
   // Profile Methods
@@ -116,6 +125,43 @@ class ProfileProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Image upload method
+  Future<void> uploadProfileImage() async {
+    if (_selectedProfileImage == null) return;
+
+    _isUploadingImage = true;
+    _uploadProgress = 0.0;
+    notifyListeners();
+
+    try {
+      final cloudinaryService = CloudinaryService();
+
+      final imageUrl = await cloudinaryService.uploadSingleImage(
+        file: _selectedProfileImage!,
+        folder: 'vivera_profiles',
+        onProgress: (progress) {
+          _uploadProgress = progress;
+          notifyListeners();
+        },
+      );
+
+      if (imageUrl != null) {
+        _uploadedImageUrl = imageUrl;
+        debugPrint('Profile image uploaded successfully: $imageUrl');
+      } else {
+        _updateProfileError = 'Failed to upload profile image';
+        _updateProfileState = ProfileState.error;
+      }
+    } catch (e) {
+      debugPrint('Image upload error: $e');
+      _updateProfileError = 'Failed to upload profile image: $e';
+      _updateProfileState = ProfileState.error;
+    } finally {
+      _isUploadingImage = false;
+      notifyListeners();
+    }
+  }
+
   Future<void> updateProfile({
     required String name,
     required String email,
@@ -126,19 +172,32 @@ class ProfileProvider extends ChangeNotifier {
     _updateProfileError = null;
     notifyListeners();
 
+    // Upload profile image first if selected
+    if (_selectedProfileImage != null && _uploadedImageUrl == null) {
+      await uploadProfileImage();
+      if (_uploadedImageUrl == null) {
+        _updateProfileError =
+            'Failed to upload profile image. Please try again.';
+        _updateProfileState = ProfileState.error;
+        notifyListeners();
+        return;
+      }
+    }
+
     final result = await updateProfileUseCase(
       name: name,
       email: email,
       phone: phone,
       dialCode: dialCode,
-      profileImage: _selectedProfileImage,
+      profileImageUrl: _uploadedImageUrl,
     );
 
     if (result is Success<ProfileEntity>) {
       _profile = result.data;
       _updateProfileState = ProfileState.success;
       _updateProfileError = null;
-      _selectedProfileImage = null; // Clear selected image
+      _selectedProfileImage = null;
+      _uploadedImageUrl = null;
     } else if (result is Error<ProfileEntity>) {
       _updateProfileState = ProfileState.error;
       _updateProfileError = result.message;
@@ -271,11 +330,13 @@ class ProfileProvider extends ChangeNotifier {
 
   void selectProfileImage(File image) {
     _selectedProfileImage = image;
+    _uploadedImageUrl = null;
     notifyListeners();
   }
 
   void clearSelectedProfileImage() {
     _selectedProfileImage = null;
+    _uploadedImageUrl = null;
     notifyListeners();
   }
 

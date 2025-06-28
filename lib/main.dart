@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import 'app/app.dart';
 import 'app/app_providers.dart';
+import 'core/services/cloudinary_service.dart';
 import 'core/services/storage_service.dart';
 
 Future<void> main() async {
@@ -13,6 +14,7 @@ Future<void> main() async {
 
 Future<void> _initializeServices() async {
   await StorageService.init();
+  CloudinaryService().initialize();
 }
 
 class CommunityApp extends StatelessWidget {
