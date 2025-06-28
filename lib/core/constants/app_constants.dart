@@ -17,6 +17,12 @@ class AppConstants {
   static const String appName = 'Community';
   static const String appVersion = '1.0.0';
 
+  //Music
+
+  static const String logoutSound = 'assets/sounds/logout_sound.mp3';
+  static const String appLaunchSound = 'assets/sounds/app_launch.mp3';
+  static const String clickSound = 'assets/sounds/click_sound.mp3';
+
   // Assets
   static const String viveraLogo = 'assets/images/vivera_logo.png';
   static const String userNotLoginedImg = 'assets/images/user_not_logined.png';

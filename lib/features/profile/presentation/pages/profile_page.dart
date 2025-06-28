@@ -155,7 +155,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   ],
                 ),
 
-                const SizedBox(height: 100), // Bottom padding for navigation
+                const SizedBox(height: 100),
               ],
             ),
           );

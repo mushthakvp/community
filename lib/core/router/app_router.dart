@@ -21,6 +21,7 @@ import '../../features/profile/presentation/pages/terms_conditions_page.dart';
 import '../../features/promos/presentation/pages/promos_page.dart';
 import '../../features/redemption/presentation/pages/redemption_page.dart';
 import '../../features/redemption/presentation/pages/wallet_recharge_page.dart';
+import '../../features/splash/presentation/pages/splash_page.dart';
 import '../constants/route_constants.dart';
 import '../widgets/navigation/bottom_navigation.dart';
 
@@ -32,9 +33,15 @@ class AppRouter {
 
   static GoRouter router = GoRouter(
     navigatorKey: _rootNavigatorKey,
-    initialLocation: RouteConstants.home,
+    initialLocation: RouteConstants.splash,
     redirect: _redirect,
     routes: [
+      // Splash route
+      GoRoute(
+        path: RouteConstants.splash,
+        builder: (context, state) => const SplashPage(),
+      ),
+
       // Auth routes (without bottom navigation)
       GoRoute(
         path: RouteConstants.login,
@@ -77,7 +84,6 @@ class AppRouter {
         path: RouteConstants.changePassword,
         builder: (context, state) => const ChangePasswordPage(),
       ),
-
       GoRoute(
         path: RouteConstants.notifications,
         builder: (context, state) => const NotificationsPage(),
@@ -130,8 +136,15 @@ class AppRouter {
   );
 
   static String? _redirect(BuildContext context, GoRouterState state) {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final location = state.uri.toString();
+
+    // Always allow splash screen
+    if (location == RouteConstants.splash) {
+      return null;
+    }
+
+    // Don't redirect during splash initialization
+    final authProvider = context.read<AuthProvider>();
 
     // Allow access to auth routes when not authenticated
     if (!authProvider.isAuthenticated && _isProtectedRoute(location)) {
@@ -154,7 +167,6 @@ class AppRouter {
       RouteConstants.walletRecharge,
       RouteConstants.profile,
       RouteConstants.coupons,
-      '/profile/',
     ];
     return protectedRoutes.any((route) => location.startsWith(route));
   }

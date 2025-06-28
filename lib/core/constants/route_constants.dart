@@ -13,11 +13,7 @@ class RouteConstants {
 
   // Feature Routes
   static const String coupons = '/coupons';
-
-  // Promos Routes
   static const String promos = '/promos';
-
-  // Redemption Routes
   static const String redemption = '/redemption';
   static const String walletRecharge = '/redemption/recharge';
 
