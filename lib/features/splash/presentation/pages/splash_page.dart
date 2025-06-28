@@ -7,7 +7,8 @@ import '../../../../core/constants/route_constants.dart';
 import '../../../../core/widgets/common/text_widget.dart';
 import '../providers/splash_provider.dart';
 import '../widgets/animated_logo.dart';
-import '../widgets/confetti_poppers.dart';
+import '../widgets/marketplace_particles.dart';
+import '../widgets/moon_animation.dart';
 import '../widgets/walking_women.dart';
 
 class SplashPage extends StatefulWidget {
@@ -20,9 +21,11 @@ class SplashPage extends StatefulWidget {
 class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
   late AnimationController _textController;
   late AnimationController _fadeController;
+  late AnimationController _moonController;
   late Animation<double> _textOpacity;
   late Animation<Offset> _textSlide;
   late Animation<double> _fadeAnimation;
+  late Animation<double> _moonAnimation;
 
   @override
   void initState() {
@@ -35,6 +38,11 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
 
     _fadeController = AnimationController(
       duration: const Duration(milliseconds: 2000),
+      vsync: this,
+    );
+
+    _moonController = AnimationController(
+      duration: const Duration(seconds: 3),
       vsync: this,
     );
 
@@ -53,16 +61,24 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
       end: 1.0,
     ).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeIn));
 
+    _moonAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _moonController, curve: Curves.easeInOut),
+    );
+
     // Initialize the splash provider
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final provider = context.read<SplashProvider>();
       provider.initializeApp().then((_) {
-        _navigateToNextScreen();
+        // Wait for lady to complete walking animation
+        provider.onWalkingComplete = () {
+          _navigateToNextScreen();
+        };
       });
     });
 
-    // Start fade animation immediately
+    // Start animations
     _fadeController.forward();
+    _moonController.repeat(reverse: true);
   }
 
   void _navigateToNextScreen() {
@@ -83,6 +99,7 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
   void dispose() {
     _textController.dispose();
     _fadeController.dispose();
+    _moonController.dispose();
     super.dispose();
   }
 
@@ -125,15 +142,25 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
                 ),
               ),
 
-              // Confetti Poppers
-              ConfettiPoppers(
+              // Moon Animation (top)
+              Positioned(
+                top: 50,
+                right: 30,
+                child: MoonAnimation(
+                  isActive: provider.animationPhase != 'initial',
+                  animation: _moonAnimation,
+                ),
+              ),
+
+              // Marketplace Particles (floating around)
+              MarketplaceParticles(
                 isActive:
-                    provider.animationPhase == 'poppers' ||
+                    provider.animationPhase == 'marketplace_particles' ||
                     provider.animationPhase == 'women_walking' ||
                     provider.animationPhase == 'final_glow',
               ),
 
-              // Walking Women Animation (bottom)
+              // Walking Women Animation (bottom) - triggers navigation when complete
               Positioned(
                 bottom: 0,
                 left: 0,
@@ -142,18 +169,60 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
                   isActive:
                       provider.animationPhase == 'women_walking' ||
                       provider.animationPhase == 'final_glow',
+                  onWalkingComplete: provider.onWalkingComplete,
                 ),
               ),
 
-              // Main content
+              // Main content with GIF logo
               Center(
                 child: FadeTransition(
                   opacity: _fadeAnimation,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Animated logo
-                      AnimatedLogo(animationPhase: provider.animationPhase),
+                      // GIF Animation Logo
+                      Container(
+                        width: 180,
+                        height: 180,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppConstants.appPrimaryColor.withOpacity(
+                                0.3,
+                              ),
+                              blurRadius: 30,
+                              spreadRadius: 10,
+                            ),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(20),
+                          child: provider.animationPhase != 'initial'
+                              ? Image.asset(
+                                  'assets/animation/vivera-animation.gif',
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    // Fallback to animated logo if GIF not found
+                                    return AnimatedLogo(
+                                      animationPhase: provider.animationPhase,
+                                    );
+                                  },
+                                )
+                              : Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(20),
+                                    gradient: RadialGradient(
+                                      colors: [
+                                        AppConstants.appPrimaryColor
+                                            .withOpacity(0.5),
+                                        Colors.transparent,
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                        ),
+                      ),
 
                       const SizedBox(height: 40),
 

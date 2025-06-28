@@ -7,6 +7,7 @@ class SplashProvider extends ChangeNotifier {
   bool _isLoading = true;
   bool _isAuthenticated = false;
   String _animationPhase = 'initial';
+  VoidCallback? onWalkingComplete;
 
   bool get isLoading => _isLoading;
   bool get isAuthenticated => _isAuthenticated;
@@ -26,30 +27,25 @@ class SplashProvider extends ChangeNotifier {
   }
 
   Future<void> _runAnimationSequence() async {
-    // Initial phase
     _animationPhase = 'logo_entrance';
     notifyListeners();
-    await Future.delayed(const Duration(milliseconds: 800));
-
-    // Livera text animation
+    await Future.delayed(const Duration(milliseconds: 1000));
     _animationPhase = 'text_animation';
     notifyListeners();
-    await Future.delayed(const Duration(milliseconds: 1000));
-
-    // Popper effects
-    _animationPhase = 'poppers';
-    notifyListeners();
     await Future.delayed(const Duration(milliseconds: 1200));
-
-    // Women walking animation
+    _animationPhase = 'marketplace_particles';
+    notifyListeners();
+    await Future.delayed(const Duration(milliseconds: 800));
     _animationPhase = 'women_walking';
     notifyListeners();
-    await Future.delayed(const Duration(milliseconds: 1500));
+  }
 
-    // Final glow effect
+  void completeWalkingAnimation() {
     _animationPhase = 'final_glow';
     notifyListeners();
-    await Future.delayed(const Duration(milliseconds: 600));
+    Future.delayed(const Duration(milliseconds: 500), () {
+      onWalkingComplete?.call();
+    });
   }
 
   Future<void> _checkAuthStatus() async {

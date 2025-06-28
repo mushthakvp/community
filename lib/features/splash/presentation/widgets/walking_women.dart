@@ -1,13 +1,20 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../providers/splash_provider.dart';
 
 class WalkingWomen extends StatefulWidget {
   final bool isActive;
+  final VoidCallback? onWalkingComplete;
 
-  const WalkingWomen({super.key, required this.isActive});
+  const WalkingWomen({
+    super.key,
+    required this.isActive,
+    this.onWalkingComplete,
+  });
 
   @override
   State<WalkingWomen> createState() => _WalkingWomenState();
@@ -18,12 +25,15 @@ class _WalkingWomenState extends State<WalkingWomen>
   late AnimationController _walkController;
   late AnimationController _fadeController;
   final List<WomanFigure> _women = [];
+  bool _hasCompleted = false;
 
   @override
   void initState() {
     super.initState();
     _walkController = AnimationController(
-      duration: const Duration(seconds: 8),
+      duration: const Duration(
+        seconds: 6,
+      ), // Reduced duration for faster completion
       vsync: this,
     );
 
@@ -33,28 +43,58 @@ class _WalkingWomenState extends State<WalkingWomen>
     );
 
     _generateWomen();
+
+    // Listen for animation completion
+    _walkController.addStatusListener((status) {
+      if (status == AnimationStatus.completed && !_hasCompleted) {
+        _hasCompleted = true;
+        // Trigger completion callback when main lady reaches the right side
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (mounted) {
+            final provider = context.read<SplashProvider>();
+            provider.completeWalkingAnimation();
+          }
+        });
+      }
+    });
   }
 
   void _generateWomen() {
     final random = math.Random();
     final colors = [
-      AppConstants.appPrimaryColor,
+      AppConstants.appPrimaryColor, // Main lady
       const Color(0xFFE91E63),
       const Color(0xFF9C27B0),
       const Color(0xFF3F51B5),
       const Color(0xFF009688),
     ];
 
-    for (int i = 0; i < 5; i++) {
+    // Main lady (index 0) - she's the one who triggers navigation
+    _women.add(
+      WomanFigure(
+        startX: -0.3,
+        endX: 1.4, // Goes beyond screen to ensure completion
+        y: 0.7,
+        color: colors[0],
+        speed: 1.0,
+        scale: 1.0,
+        delay: 0.0,
+        isMainLady: true,
+      ),
+    );
+
+    // Supporting ladies
+    for (int i = 1; i < 4; i++) {
       _women.add(
         WomanFigure(
           startX: -0.2 - (i * 0.15),
-          endX: 1.3 + (i * 0.1),
+          endX: 1.2 + (i * 0.1),
           y: 0.7 + (random.nextDouble() * 0.1),
           color: colors[i % colors.length],
-          speed: 0.8 + (random.nextDouble() * 0.4),
-          scale: 0.8 + (random.nextDouble() * 0.4),
-          delay: i * 0.3,
+          speed: 0.8 + (random.nextDouble() * 0.3),
+          scale: 0.8 + (random.nextDouble() * 0.3),
+          delay: i * 0.2,
+          isMainLady: false,
         ),
       );
     }
@@ -64,8 +104,10 @@ class _WalkingWomenState extends State<WalkingWomen>
   void didUpdateWidget(WalkingWomen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.isActive && !oldWidget.isActive) {
+      _hasCompleted = false;
       _fadeController.forward();
-      _walkController.repeat();
+      _walkController
+          .forward(); // Use forward() instead of repeat() for one-time animation
     } else if (!widget.isActive && oldWidget.isActive) {
       _fadeController.reverse();
       _walkController.stop();
@@ -103,6 +145,7 @@ class WomanFigure {
   final double startX, endX, y;
   final Color color;
   final double speed, scale, delay;
+  final bool isMainLady;
 
   WomanFigure({
     required this.startX,
@@ -112,6 +155,7 @@ class WomanFigure {
     required this.speed,
     required this.scale,
     required this.delay,
+    required this.isMainLady,
   });
 }
 
@@ -131,8 +175,8 @@ class WomenPainter extends CustomPainter {
       _drawWoman(canvas, size, woman);
     }
 
-    // Draw kudumbashree elements
-    _drawKudumbasreeElements(canvas, size);
+    // Draw empowerment elements
+    _drawEmpowermentElements(canvas, size);
   }
 
   void _drawPath(Canvas canvas, Size size) {
@@ -154,7 +198,7 @@ class WomenPainter extends CustomPainter {
 
     canvas.drawPath(path, pathPaint);
 
-    // Path border
+    // Path border with gradient effect
     final borderPaint = Paint()
       ..color = AppConstants.appPrimaryColor.withOpacity(0.3)
       ..style = PaintingStyle.stroke
@@ -170,6 +214,23 @@ class WomenPainter extends CustomPainter {
     );
 
     canvas.drawPath(borderPath, borderPaint);
+
+    // Add sparkles on the path
+    _drawPathSparkles(canvas, size);
+  }
+
+  void _drawPathSparkles(Canvas canvas, Size size) {
+    final sparklePaint = Paint()
+      ..color = AppConstants.appPrimaryColor.withOpacity(0.6)
+      ..style = PaintingStyle.fill;
+
+    for (int i = 0; i < 8; i++) {
+      final x = (i / 7) * size.width;
+      final y = size.height * 0.8 + math.sin(animationValue * 4 + i) * 5;
+      final sparkleSize = 1 + math.sin(animationValue * 6 + i * 2) * 1;
+
+      canvas.drawCircle(Offset(x, y), sparkleSize, sparklePaint);
+    }
   }
 
   void _drawWoman(Canvas canvas, Size size, WomanFigure woman) {
@@ -177,12 +238,13 @@ class WomenPainter extends CustomPainter {
       0.0,
       (animationValue - woman.delay).clamp(0.0, 1.0),
     );
+
     final currentX =
         woman.startX +
         (woman.endX - woman.startX) * adjustedAnimationValue * woman.speed;
 
-    // Skip if woman is out of view
-    if (currentX < -0.3 || currentX > 1.3) return;
+    // Don't draw if woman hasn't started or is too far off screen
+    if (adjustedAnimationValue <= 0 || currentX > 1.5) return;
 
     final position = Offset(currentX * size.width, woman.y * size.height);
     final walkCycle = math.sin(animationValue * 12 + woman.delay * 3) * 0.1;
@@ -191,9 +253,10 @@ class WomenPainter extends CustomPainter {
     canvas.translate(position.dx, position.dy + walkCycle * 10);
     canvas.scale(woman.scale);
 
-    // Shadow
+    // Enhanced shadow for main lady
+    final shadowOpacity = woman.isMainLady ? 0.3 : 0.2;
     final shadowPaint = Paint()
-      ..color = Colors.black.withOpacity(0.2)
+      ..color = Colors.black.withOpacity(shadowOpacity)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
 
     canvas.drawOval(
@@ -201,19 +264,25 @@ class WomenPainter extends CustomPainter {
       shadowPaint,
     );
 
-    // Body
+    // Body with enhanced colors for main lady
+    final bodyColor = woman.isMainLady
+        ? woman.color.withOpacity(1.0)
+        : woman.color.withOpacity(0.9);
+
     final bodyPaint = Paint()
-      ..color = woman.color
+      ..color = bodyColor
       ..style = PaintingStyle.fill;
 
     // Head
     canvas.drawCircle(const Offset(0, -25), 8, bodyPaint);
 
-    // Hair
+    // Hair with traditional style
     final hairPaint = Paint()
       ..color = Colors.brown.shade800
       ..style = PaintingStyle.fill;
 
+    // Traditional hair bun
+    canvas.drawCircle(const Offset(0, -30), 6, hairPaint);
     canvas.drawArc(
       Rect.fromCenter(center: const Offset(0, -25), width: 20, height: 16),
       math.pi,
@@ -222,16 +291,24 @@ class WomenPainter extends CustomPainter {
       hairPaint,
     );
 
-    // Body/Dress
+    // Traditional dress/saree
     final dressPath = Path();
-    dressPath.moveTo(-8, -15);
-    dressPath.lineTo(8, -15);
-    dressPath.lineTo(12, 20);
-    dressPath.lineTo(-12, 20);
+    dressPath.moveTo(-10, -15);
+    dressPath.lineTo(10, -15);
+    dressPath.quadraticBezierTo(15, 0, 12, 20);
+    dressPath.quadraticBezierTo(8, 25, -8, 25);
+    dressPath.quadraticBezierTo(-15, 0, -10, -15);
     dressPath.close();
     canvas.drawPath(dressPath, bodyPaint);
 
-    // Arms with walking motion
+    // Traditional border on dress
+    final borderPaint = Paint()
+      ..color = Colors.amber.withOpacity(0.8)
+      ..strokeWidth = 1
+      ..style = PaintingStyle.stroke;
+    canvas.drawPath(dressPath, borderPaint);
+
+    // Arms with natural walking motion
     final armSwing = math.sin(animationValue * 8 + woman.delay * 2) * 0.3;
 
     // Left arm
@@ -242,7 +319,7 @@ class WomenPainter extends CustomPainter {
       const Offset(0, 0),
       const Offset(0, 15),
       Paint()
-        ..color = woman.color.withOpacity(0.8)
+        ..color = bodyColor
         ..strokeWidth = 3
         ..strokeCap = StrokeCap.round,
     );
@@ -256,7 +333,7 @@ class WomenPainter extends CustomPainter {
       const Offset(0, 0),
       const Offset(0, 15),
       Paint()
-        ..color = woman.color.withOpacity(0.8)
+        ..color = bodyColor
         ..strokeWidth = 3
         ..strokeCap = StrokeCap.round,
     );
@@ -273,7 +350,7 @@ class WomenPainter extends CustomPainter {
       const Offset(0, 0),
       const Offset(0, 20),
       Paint()
-        ..color = woman.color.withOpacity(0.9)
+        ..color = bodyColor
         ..strokeWidth = 4
         ..strokeCap = StrokeCap.round,
     );
@@ -287,65 +364,80 @@ class WomenPainter extends CustomPainter {
       const Offset(0, 0),
       const Offset(0, 20),
       Paint()
-        ..color = woman.color.withOpacity(0.9)
+        ..color = bodyColor
         ..strokeWidth = 4
         ..strokeCap = StrokeCap.round,
     );
     canvas.restore();
 
-    // Dupatta/Scarf flowing
+    // Flowing dupatta/pallu
     final scarf = Path();
-    final scarfFlow = math.sin(animationValue * 6 + woman.delay) * 5;
+    final scarfFlow = math.sin(animationValue * 6 + woman.delay) * 8;
     scarf.moveTo(8, -15);
-    scarf.quadraticBezierTo(15 + scarfFlow, -10, 20 + scarfFlow, 5);
-    scarf.quadraticBezierTo(18 + scarfFlow, 8, 15 + scarfFlow, 10);
-    scarf.quadraticBezierTo(10 + scarfFlow, 5, 8, -10);
+    scarf.quadraticBezierTo(15 + scarfFlow, -10, 22 + scarfFlow, 0);
+    scarf.quadraticBezierTo(25 + scarfFlow, 5, 20 + scarfFlow, 12);
+    scarf.quadraticBezierTo(15 + scarfFlow, 8, 12 + scarfFlow, 5);
+    scarf.quadraticBezierTo(8 + scarfFlow, -5, 8, -10);
     scarf.close();
 
     canvas.drawPath(
       scarf,
       Paint()
-        ..color = woman.color.withOpacity(0.6)
+        ..color = woman.color.withOpacity(0.7)
         ..style = PaintingStyle.fill,
     );
+
+    // Add traditional jewelry dots (necklace)
+    if (woman.isMainLady) {
+      final jewelPaint = Paint()
+        ..color = Colors.amber
+        ..style = PaintingStyle.fill;
+
+      for (int i = 0; i < 5; i++) {
+        final x = -6 + (i * 3);
+        canvas.drawCircle(Offset(x.toDouble(), -12), 1, jewelPaint);
+      }
+    }
 
     canvas.restore();
   }
 
-  void _drawKudumbasreeElements(Canvas canvas, Size size) {
-    // Draw lotus flowers (Kudumbashree symbol)
-    _drawLotusFlowers(canvas, size);
+  void _drawEmpowermentElements(Canvas canvas, Size size) {
+    // Draw subtle lotus flowers representing growth
+    _drawLotusElements(canvas, size);
 
-    // Draw empowerment symbols
-    _drawEmpowermentSymbols(canvas, size);
+    // Draw unity symbols
+    _drawUnitySymbols(canvas, size);
   }
 
-  void _drawLotusFlowers(Canvas canvas, Size size) {
-    final lotus1 = Offset(size.width * 0.1, size.height * 0.3);
-    final lotus2 = Offset(size.width * 0.9, size.height * 0.2);
-    final lotus3 = Offset(size.width * 0.8, size.height * 0.6);
+  void _drawLotusElements(Canvas canvas, Size size) {
+    final lotusPositions = [
+      Offset(size.width * 0.15, size.height * 0.2),
+      Offset(size.width * 0.85, size.height * 0.15),
+      Offset(size.width * 0.7, size.height * 0.4),
+    ];
 
-    for (var center in [lotus1, lotus2, lotus3]) {
-      _drawLotus(canvas, center);
+    for (var position in lotusPositions) {
+      _drawSmallLotus(canvas, position);
     }
   }
 
-  void _drawLotus(Canvas canvas, Offset center) {
+  void _drawSmallLotus(Canvas canvas, Offset center) {
     final petalPaint = Paint()
-      ..color = AppConstants.appPrimaryColor.withOpacity(0.4)
+      ..color = AppConstants.appPrimaryColor.withOpacity(0.3)
       ..style = PaintingStyle.fill;
 
-    // Draw petals
-    for (int i = 0; i < 8; i++) {
-      final angle = (i * math.pi * 2) / 8;
+    // Simple lotus representation
+    for (int i = 0; i < 6; i++) {
+      final angle = (i * math.pi * 2) / 6;
       canvas.save();
       canvas.translate(center.dx, center.dy);
       canvas.rotate(angle);
 
       final petal = Path();
       petal.moveTo(0, 0);
-      petal.quadraticBezierTo(5, -10, 0, -15);
-      petal.quadraticBezierTo(-5, -10, 0, 0);
+      petal.quadraticBezierTo(3, -6, 0, -8);
+      petal.quadraticBezierTo(-3, -6, 0, 0);
 
       canvas.drawPath(petal, petalPaint);
       canvas.restore();
@@ -354,70 +446,32 @@ class WomenPainter extends CustomPainter {
     // Center
     canvas.drawCircle(
       center,
-      3,
+      2,
       Paint()
-        ..color = AppConstants.appPrimaryColor.withOpacity(0.7)
+        ..color = AppConstants.appPrimaryColor.withOpacity(0.6)
         ..style = PaintingStyle.fill,
     );
   }
 
-  void _drawEmpowermentSymbols(Canvas canvas, Size size) {
-    // Draw linked hands symbol
-    final handsCenter = Offset(size.width * 0.2, size.height * 0.1);
-    _drawLinkedHands(canvas, handsCenter);
+  void _drawUnitySymbols(Canvas canvas, Size size) {
+    // Draw connected circles representing unity and collaboration
+    final unityCenter = Offset(size.width * 0.5, size.height * 0.1);
 
-    // Draw unity circles
-    final unityCenter = Offset(size.width * 0.7, size.height * 0.1);
-    _drawUnityCircles(canvas, unityCenter);
-  }
-
-  void _drawLinkedHands(Canvas canvas, Offset center) {
-    final handPaint = Paint()
-      ..color = AppConstants.appPrimaryColor.withOpacity(0.3)
-      ..strokeWidth = 2
-      ..style = PaintingStyle.stroke;
-
-    // Draw connecting hands
-    for (int i = 0; i < 3; i++) {
-      final x = center.dx + (i * 15);
-      final y = center.dy + math.sin(animationValue * 3 + i) * 3;
-
-      // Hand shape
-      canvas.drawCircle(Offset(x, y), 4, handPaint);
-
-      // Connection line
-      if (i < 2) {
-        canvas.drawLine(Offset(x + 4, y), Offset(x + 11, y), handPaint);
-      }
-    }
-  }
-
-  void _drawUnityCircles(Canvas canvas, Offset center) {
     final circlePaint = Paint()
       ..color = AppConstants.appPrimaryColor.withOpacity(0.2)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5;
 
-    // Draw overlapping circles representing unity
-    for (int i = 0; i < 4; i++) {
-      final angle = (i * math.pi * 2) / 4;
-      final radius = 8.0;
+    // Three overlapping circles
+    for (int i = 0; i < 3; i++) {
+      final angle = (i * 2 * math.pi) / 3;
       final circleCenter = Offset(
-        center.dx + math.cos(angle) * 6,
-        center.dy + math.sin(angle) * 6,
+        unityCenter.dx + math.cos(angle) * 8,
+        unityCenter.dy + math.sin(angle) * 8,
       );
 
-      canvas.drawCircle(circleCenter, radius, circlePaint);
+      canvas.drawCircle(circleCenter, 6, circlePaint);
     }
-
-    // Center circle
-    canvas.drawCircle(
-      center,
-      3,
-      Paint()
-        ..color = AppConstants.appPrimaryColor.withOpacity(0.4)
-        ..style = PaintingStyle.fill,
-    );
   }
 
   @override
