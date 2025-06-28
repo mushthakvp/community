@@ -24,12 +24,12 @@ class _ConfettiPoppersState extends State<ConfettiPoppers>
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: const Duration(seconds: 4),
+      duration: const Duration(milliseconds: 2500),
       vsync: this,
     );
 
     _popController = AnimationController(
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 600),
       vsync: this,
     );
 
@@ -42,26 +42,23 @@ class _ConfettiPoppersState extends State<ConfettiPoppers>
     final colors = [
       AppConstants.appPrimaryColor,
       const Color(0xFFFFD700),
-      const Color(0xFFFF6B6B),
       const Color(0xFF4ECDC4),
       const Color(0xFF45B7D1),
-      const Color(0xFF96CEB4),
-      const Color(0xFFFFA07A),
     ];
 
-    for (int i = 0; i < 50; i++) {
+    for (int i = 0; i < 25; i++) {
       _particles.add(
         ConfettiParticle(
           startX: random.nextDouble(),
-          startY: random.nextDouble() * 0.3 + 0.1,
+          startY: random.nextDouble() * 0.4 + 0.1,
           endX: random.nextDouble(),
-          endY: random.nextDouble() * 0.7 + 0.3,
-          size: random.nextDouble() * 6 + 3,
+          endY: random.nextDouble() * 0.6 + 0.4,
+          size: random.nextDouble() * 4 + 2,
           rotation: random.nextDouble() * 6.28,
-          rotationSpeed: random.nextDouble() * 4 - 2,
+          rotationSpeed: random.nextDouble() * 3 - 1.5,
           color: colors[random.nextInt(colors.length)],
-          shape: ['circle', 'square', 'triangle'][random.nextInt(3)],
-          gravity: random.nextDouble() * 0.5 + 0.2,
+          shape: ['circle', 'square'][random.nextInt(2)],
+          gravity: random.nextDouble() * 0.3 + 0.1,
         ),
       );
     }
@@ -70,13 +67,13 @@ class _ConfettiPoppersState extends State<ConfettiPoppers>
   void _generateBursts() {
     final random = math.Random();
 
-    // Create multiple burst points
-    for (int i = 0; i < 4; i++) {
+    // Create fewer, more strategic burst points
+    for (int i = 0; i < 2; i++) {
       _bursts.add(
         PopperBurst(
-          x: random.nextDouble() * 0.6 + 0.2,
-          y: random.nextDouble() * 0.4 + 0.1,
-          delay: i * 200.0,
+          x: 0.3 + (i * 0.4),
+          y: 0.2 + (random.nextDouble() * 0.2),
+          delay: i * 150.0,
         ),
       );
     }
@@ -88,8 +85,13 @@ class _ConfettiPoppersState extends State<ConfettiPoppers>
     if (widget.isActive && !oldWidget.isActive) {
       _controller.reset();
       _popController.reset();
-      _controller.forward();
+      // Start immediately without delay
       _popController.forward();
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (mounted) {
+          _controller.forward();
+        }
+      });
     } else if (!widget.isActive && oldWidget.isActive) {
       _controller.stop();
       _popController.stop();
@@ -174,45 +176,28 @@ class ConfettiPainter extends CustomPainter {
     for (var burst in bursts) {
       final burstProgress = math.max(
         0.0,
-        math.min(1.0, popValue * 4 - (burst.delay / 200)),
+        math.min(1.0, popValue * 3 - (burst.delay / 200)),
       );
 
       if (burstProgress > 0) {
         final center = Offset(burst.x * size.width, burst.y * size.height);
 
-        // Outer explosion ring
+        // Simplified burst effect
         final outerPaint = Paint()
           ..color = AppConstants.appPrimaryColor.withOpacity(
-            0.3 * (1 - burstProgress),
+            0.4 * (1 - burstProgress),
           )
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 4;
+          ..strokeWidth = 2;
 
-        canvas.drawCircle(center, burstProgress * 100, outerPaint);
+        canvas.drawCircle(center, burstProgress * 60, outerPaint);
 
-        // Inner bright flash
+        // Inner flash
         final innerPaint = Paint()
-          ..color = Colors.white.withOpacity(0.8 * (1 - burstProgress))
+          ..color = Colors.white.withOpacity(0.6 * (1 - burstProgress))
           ..style = PaintingStyle.fill;
 
-        canvas.drawCircle(center, (1 - burstProgress) * 15, innerPaint);
-
-        // Radiating lines
-        for (int i = 0; i < 8; i++) {
-          final angle = (i * math.pi * 2) / 8;
-          final lineEnd = Offset(
-            center.dx + math.cos(angle) * burstProgress * 60,
-            center.dy + math.sin(angle) * burstProgress * 60,
-          );
-
-          final linePaint = Paint()
-            ..color = AppConstants.appPrimaryColor.withOpacity(
-              0.6 * (1 - burstProgress),
-            )
-            ..strokeWidth = 2;
-
-          canvas.drawLine(center, lineEnd, linePaint);
-        }
+        canvas.drawCircle(center, (1 - burstProgress) * 8, innerPaint);
       }
     }
   }

@@ -34,27 +34,27 @@ class SplashProvider extends ChangeNotifier {
     // Initial phase
     _animationPhase = 'logo_entrance';
     notifyListeners();
-    await Future.delayed(const Duration(milliseconds: 1000));
+    await Future.delayed(const Duration(milliseconds: 800));
 
     // Livera text animation
     _animationPhase = 'text_animation';
     notifyListeners();
-    await Future.delayed(const Duration(milliseconds: 1200));
+    await Future.delayed(const Duration(milliseconds: 1000));
 
     // Popper effects
     _animationPhase = 'poppers';
     notifyListeners();
-    await Future.delayed(const Duration(milliseconds: 1500));
+    await Future.delayed(const Duration(milliseconds: 1200));
 
     // Women walking animation
     _animationPhase = 'women_walking';
     notifyListeners();
-    await Future.delayed(const Duration(milliseconds: 2000));
+    await Future.delayed(const Duration(milliseconds: 1500));
 
     // Final glow effect
     _animationPhase = 'final_glow';
     notifyListeners();
-    await Future.delayed(const Duration(milliseconds: 800));
+    await Future.delayed(const Duration(milliseconds: 600));
   }
 
   Future<void> _checkAuthStatus() async {
