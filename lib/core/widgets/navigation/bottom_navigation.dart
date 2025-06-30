@@ -6,6 +6,7 @@ import '../../../features/home/presentation/pages/home_page.dart';
 import '../../../features/profile/presentation/pages/profile_page.dart';
 import '../../../features/promos/presentation/pages/promos_page.dart';
 import '../../../features/redemption/presentation/pages/redemption_page.dart';
+import '../../../features/vizzle/home/presentation/pages/vizzle_home_page.dart';
 import '../../constants/app_constants.dart';
 import '../../constants/route_constants.dart';
 import '../common/text_widget.dart';
@@ -90,6 +91,7 @@ class _BottomNavigationState extends State<BottomNavigation>
           PromosPage(),
           RedemptionPage(),
           ProfilePage(),
+          VizzleHomePage(), // Add VizzleHomePage to IndexedStack
         ],
       ),
       floatingActionButton: _buildFloatingActionButton(),
@@ -105,36 +107,33 @@ class _BottomNavigationState extends State<BottomNavigation>
         height: 69,
         width: 69,
         child: FloatingActionButton(
-          backgroundColor: AppConstants.appPrimaryColor,
+          backgroundColor: const Color(0xFFF0B90B),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(50),
           ),
-          onPressed: () => _onSpecialTap(context),
+          onPressed: () => _onVizzleTap(context),
           elevation: 8,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                height: 35,
-                width: 48,
+                height: 40,
+                width: 40,
                 decoration: const BoxDecoration(
                   image: DecorationImage(
-                    image: AssetImage(AppConstants.viveraLogo),
+                    image: AssetImage(
+                      'assets/animation/vizil_icon_animation.png',
+                    ),
                     fit: BoxFit.contain,
                   ),
-                ),
-                child: const Icon(
-                  Icons.apps,
-                  color: AppConstants.black,
-                  size: 24,
                 ),
               ),
               const SizedBox(height: 2),
               const CommonTextWidget(
                 fontSize: 10,
                 align: TextAlign.center,
-                text: "Community",
-                fontWeight: FontWeight.w600,
+                text: "vizzle",
+                fontWeight: FontWeight.bold,
                 color: AppConstants.black,
               ),
             ],
@@ -250,6 +249,10 @@ class _BottomNavigationState extends State<BottomNavigation>
   }
 
   int _getSelectedIndex(String location) {
+    if (location.startsWith('/vizzle')) {
+      return 4;
+    }
+
     final items = _getBottomNavItems();
     for (int i = 0; i < items.length; i++) {
       if (location.startsWith(items[i]['route'])) {
@@ -269,10 +272,10 @@ class _BottomNavigationState extends State<BottomNavigation>
     }
   }
 
-  void _onSpecialTap(BuildContext context) {
+  void _onVizzleTap(BuildContext context) {
     setState(() {
-      _currentIndex = 0;
+      _currentIndex = 4;
     });
-    context.go(RouteConstants.home);
+    context.go('/vizzle');
   }
 }

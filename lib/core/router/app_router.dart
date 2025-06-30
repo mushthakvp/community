@@ -22,6 +22,9 @@ import '../../features/promos/presentation/pages/promos_page.dart';
 import '../../features/redemption/presentation/pages/redemption_page.dart';
 import '../../features/redemption/presentation/pages/wallet_recharge_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
+import '../../features/vizzle/add_or_edit/presentation/pages/create_ad_page.dart';
+import '../../features/vizzle/add_or_edit/presentation/pages/edit_ad_page.dart';
+import '../../features/vizzle/home/presentation/pages/vizzle_home_page.dart';
 import '../constants/route_constants.dart';
 import '../widgets/navigation/bottom_navigation.dart';
 
@@ -109,6 +112,20 @@ class AppRouter {
         builder: (context, state) => const ContactUsPage(),
       ),
 
+      // Vizzle standalone pages (without bottom navigation)
+      GoRoute(
+        path: RouteConstants.createAd,
+        builder: (context, state) => const CreateAdPage(),
+      ),
+      GoRoute(
+        path: '${RouteConstants.editAd}/:adId',
+        builder: (context, state) {
+          final adId = state.pathParameters['adId'] ?? '';
+          final adData = state.extra as Map<String, dynamic>?;
+          return EditAdPage(adId: adId, adData: adData);
+        },
+      ),
+
       // Main app with bottom navigation
       ShellRoute(
         navigatorKey: _shellNavigatorKey,
@@ -129,6 +146,11 @@ class AppRouter {
           GoRoute(
             path: RouteConstants.profile,
             builder: (context, state) => const ProfilePage(),
+          ),
+          // Add Vizzle home route within the shell
+          GoRoute(
+            path: RouteConstants.vizzleHome,
+            builder: (context, state) => const VizzleHomePage(),
           ),
         ],
       ),
@@ -167,6 +189,8 @@ class AppRouter {
       RouteConstants.walletRecharge,
       RouteConstants.profile,
       RouteConstants.coupons,
+      RouteConstants.vizzleHome,
+      RouteConstants.createAd,
     ];
     return protectedRoutes.any((route) => location.startsWith(route));
   }

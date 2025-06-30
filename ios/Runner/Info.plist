@@ -53,5 +53,10 @@
     <!-- Permission options for the `photos` group -->
     <key>NSPhotoLibraryUsageDescription</key>
     <string>This app needs access to photo library to select profile pictures</string>
+	<!-- Location Permission -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>This app needs access to location to upload your product on market place</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>This app needs access to location to upload your product on market place</string>
 </dict>
 </plist>
