@@ -103,10 +103,10 @@ class LocationPickerWidget extends StatelessWidget {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => LocationPickerPage(
-          initialLocation: provider.currentLocation,
+        builder: (context) => LocationSearchView(
+          googleApiKey: "AIzaSyBOHuJ-4CqJBjmSi_RugeonwPU5cBVqbeA",
           onLocationSelected: (location) {
-            provider.updateLocation(location.latitude!, location.longitude!);
+            provider.updateLocation(location.latitude, location.longitude);
           },
         ),
       ),
