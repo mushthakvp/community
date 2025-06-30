@@ -2,13 +2,44 @@ import 'package:flutter/material.dart';
 
 class AppConstants {
   // Colors
-  static const Color appPrimaryColor = Color(0xFFFFD700);
-  static const Color black = Color(0xFF000000);
-  static const Color white = Color(0xFFFFFFFF);
-  static const Color textFieldColor = Color(0xFF1E1E1E);
-  static const Color transparent = Colors.transparent;
   static const Color red = Colors.red;
   static const Color green = Colors.green;
+
+  // Colors - Modern UI Palette
+  static const Color primary = Color(0xFFFF6B35);
+  static const Color primaryLight = Color(0xFFFF8A65);
+  static const Color primaryDark = Color(0xFFE65100);
+
+  static const Color secondary = Color(0xFF2196F3);
+  static const Color secondaryLight = Color(0xFF64B5F6);
+  static const Color secondaryDark = Color(0xFF1976D2);
+
+  static const Color accent = Color(0xFFFFC107);
+  static const Color accentLight = Color(0xFFFFD54F);
+  static const Color accentDark = Color(0xFFF57C00);
+
+  // Surface Colors
+  static const Color surface = Color(0xFF121212);
+  static const Color surfaceVariant = Color(0xFF1E1E1E);
+  static const Color surfaceContainer = Color(0xFF2D2D2D);
+
+  // Text Colors
+  static const Color onSurface = Color(0xFFFFFFFF);
+  static const Color onSurfaceVariant = Color(0xFFE0E0E0);
+  static const Color onSurfaceSecondary = Color(0xFFB0B0B0);
+
+  // Status Colors
+  static const Color success = Color(0xFF4CAF50);
+  static const Color warning = Color(0xFFFF9800);
+  static const Color error = Color(0xFFF44336);
+  static const Color info = Color(0xFF2196F3);
+
+  // Legacy Support
+  static const Color black = surface;
+  static const Color white = onSurface;
+  static const Color appPrimaryColor = primary;
+  static const Color textFieldColor = surfaceVariant;
+  static const Color transparent = Colors.transparent;
 
   // Font
   static const String fontFamily = 'Inter';
@@ -84,6 +115,24 @@ class AppConstants {
       '''<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="107" height="80" viewBox="0 0 107 80">
                     <image xlink:href="data:image/png;base64,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" x="0" y="0" width="107" height="80"/>
                   </svg>''';
+
+  static const String searchSvg =
+      '''<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+    <path d="M21 21L16.514 16.506L21 21ZM19 10.5C19 15.194 15.194 19 10.5 19C5.806 19 2 15.194 2 10.5C2 5.806 5.806 2 10.5 2C15.194 2 19 5.806 19 10.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>''';
+
+  static const String filterSvg =
+      '''<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+    <path d="M3 4C3 3.44772 3.44772 3 4 3H20C20.5523 3 21 3.44772 21 4C21 4.55228 20.5523 5 20 5H4C3.44772 5 3 4.55228 3 4Z" fill="currentColor"/>
+    <path d="M3 12C3 11.4477 3.44772 11 4 11H16C16.5523 11 17 11.4477 17 12C17 12.5523 16.5523 13 16 13H4C3.44772 13 3 12.5523 3 12Z" fill="currentColor"/>
+    <path d="M3 20C3 19.4477 3.44772 19 4 19H12C12.5523 19 13 19.4477 13 20C13 20.5523 12.5523 21 12 21H4C3.44772 21 3 20.5523 3 20Z" fill="currentColor"/>
+  </svg>''';
+
+  static const String sortSvg =
+      '''<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+    <path d="M8 9L12 5L16 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M16 15L12 19L8 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>''';
 
   // Animation Durations
   static const Duration defaultAnimationDuration = Duration(milliseconds: 300);

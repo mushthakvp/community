@@ -28,4 +28,17 @@ class RouteConstants {
   static const String privacy = '/profile/privacy';
   static const String termsConditions = '/profile/terms-conditions';
   static const String aboutApp = '/profile/about';
+
+  // Vizzle Routes
+  static const String vizzleHome = '/vizzle';
+  static const String adsListing = '/vizzle/ads';
+  static const String adDetails = '/vizzle/ad-details';
+  static const String createAd = '/vizzle/create-ad';
+  static const String editAd = '/vizzle/edit-ad';
+  static const String savedAds = '/vizzle/saved-ads';
+  static const String searchAll = '/vizzle/search';
+  static const String filterAds = '/vizzle/filter';
+  static const String categoryListing = '/vizzle/category';
+  static const String subCategoryListing = '/vizzle/subcategory';
+  static const String vizzleProfile = '/vizzle/profile';
 }

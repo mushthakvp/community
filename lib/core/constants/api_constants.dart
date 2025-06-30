@@ -2,7 +2,7 @@ class ApiConstants {
   String baseUrlPro = 'https://api.app.liveraapp.com/';
   String baseUrlDev = 'http://192.168.3.115:3553/';
 
-  static String baseUrl = 'http://192.168.3.115:3553/';
+  static String baseUrl = 'http://192.168.3.6:3553/';
 
   static const int timeoutDuration = 30;
 
@@ -49,4 +49,19 @@ class ApiConstants {
   static const String claimLoyaltyPoints = 'user/claimLoyalityPoints';
   static const String loyaltyPointHistory = 'user/loyalityPointHistory';
   static const String optOut = 'user/addOptItOut';
+
+  // Vizzle Endpoints
+  static const String getVizzleHome = 'user/getVizzleHome';
+  static const String getCitySectionAndCategories = 'user/getCities';
+  static const String createAd = 'user/createAd';
+  static const String createJobAd = 'user/createJobAd';
+  static const String getAds = 'user/getAds';
+  static const String getSavedAds = 'user/savedAds';
+  static const String addToFavorite = 'user/saveFeed/';
+  static const String shareFeed = 'user/shareFeed/';
+  static const String deleteAd = 'user/deleteAd/';
+  static const String editAd = 'user/editAd/';
+  static const String searchAll = 'user/searchAll';
+  static const String setFilters = 'user/setFilters';
+  static const String getSubSubCategories = 'user/getSubSubCategories/';
 }

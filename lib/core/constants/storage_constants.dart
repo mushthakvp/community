@@ -34,4 +34,14 @@ class StorageConstants {
   // Country Codes
   static const String countryCode = 'country_code';
   static const String countryName = 'country_name';
+
+  static const String vizzleHomeCache = 'vizzle_home_cache';
+  static const String vizzleCategoriesCache = 'vizzle_categories_cache';
+  static const String adsCache = 'vizzle_ads_cache';
+  static const String filtersCache = 'vizzle_filters_cache';
+
+  // User Preferences
+  static const String selectedCity = 'selected_city';
+  static const String searchHistory = 'search_history';
+  static const String favoriteCategories = 'favorite_categories';
 }
