@@ -12,6 +12,7 @@ class CommonCard extends StatelessWidget {
   final List<BoxShadow>? boxShadow;
   final double? elevation;
   final VoidCallback? onTap;
+  final Color? borderColor;
 
   const CommonCard({
     super.key,
@@ -24,6 +25,7 @@ class CommonCard extends StatelessWidget {
     this.boxShadow,
     this.elevation,
     this.onTap,
+    this.borderColor,
   });
 
   @override
@@ -37,7 +39,10 @@ class CommonCard extends StatelessWidget {
             BorderRadius.circular(AppConstants.defaultBorderRadius),
         border:
             border ??
-            Border.all(color: AppConstants.white.withOpacity(0.1), width: 1),
+            Border.all(
+              color: borderColor ?? AppConstants.white.withOpacity(0.1),
+              width: 1,
+            ),
         boxShadow:
             boxShadow ??
             [
