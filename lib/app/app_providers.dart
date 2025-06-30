@@ -39,11 +39,19 @@ import '../features/redemption/domain/usecases/initiate_wallet_recharge_usecase.
 import '../features/redemption/domain/usecases/verify_payment_usecase.dart';
 import '../features/redemption/presentation/providers/redemption_provider.dart';
 import '../features/redemption/presentation/providers/wallet_recharge_provider.dart';
-import '../features/splash/presentation/providers/splash_provider.dart'; // Add this import
+import '../features/splash/presentation/providers/splash_provider.dart';
+import '../features/vizzle/add_or_edit/data/datasources/add_edit_remote_datasource.dart';
+import '../features/vizzle/add_or_edit/data/repositories/add_edit_repository_impl.dart';
+import '../features/vizzle/add_or_edit/domain/repositories/add_edit_repository.dart';
+import '../features/vizzle/add_or_edit/domain/usecases/create_ad_usecase.dart';
+import '../features/vizzle/add_or_edit/domain/usecases/get_cities_usecase.dart';
+import '../features/vizzle/add_or_edit/domain/usecases/update_ad_usecase.dart';
+import '../features/vizzle/add_or_edit/domain/usecases/upload_images_usecase.dart';
+import '../features/vizzle/add_or_edit/presentation/providers/add_edit_provider.dart';
 
 class AppProviders {
   static List<SingleChildWidget> providers = [
-    // Splash Provider - Add this at the beginning
+    // Splash Provider
     ChangeNotifierProvider<SplashProvider>(create: (_) => SplashProvider()),
 
     // Connectivity Provider
@@ -314,6 +322,67 @@ class AppProviders {
                 initiateWalletRechargeUseCase: initiateWalletRechargeUseCase,
                 initiateTierUpgradeUseCase: initiateTierUpgradeUseCase,
                 verifyPaymentUseCase: verifyPaymentUseCase,
+              ),
+    ),
+
+    // Vizzle Add/Edit Module - Data Sources
+    ProxyProvider<ApiClient, AddEditRemoteDataSource>(
+      update: (_, apiClient, __) =>
+          AddEditRemoteDataSourceImpl(client: apiClient),
+    ),
+
+    // Vizzle Add/Edit Module - Repositories
+    ProxyProvider<AddEditRemoteDataSource, AddEditRepository>(
+      update: (_, remoteDataSource, __) =>
+          AddEditRepositoryImpl(remoteDataSource: remoteDataSource),
+    ),
+
+    // Vizzle Add/Edit Module - Use Cases
+    ProxyProvider<AddEditRepository, GetCitiesUseCase>(
+      update: (_, repository, __) => GetCitiesUseCase(repository),
+    ),
+
+    ProxyProvider<AddEditRepository, CreateAdUseCase>(
+      update: (_, repository, __) => CreateAdUseCase(repository),
+    ),
+
+    ProxyProvider<AddEditRepository, UpdateAdUseCase>(
+      update: (_, repository, __) => UpdateAdUseCase(repository),
+    ),
+
+    ProxyProvider<AddEditRepository, UploadImagesUseCase>(
+      update: (_, repository, __) => UploadImagesUseCase(repository),
+    ),
+
+    // Vizzle Add/Edit Module - Provider
+    ChangeNotifierProxyProvider4<
+      GetCitiesUseCase,
+      CreateAdUseCase,
+      UpdateAdUseCase,
+      UploadImagesUseCase,
+      AddEditProvider
+    >(
+      create: (context) => AddEditProvider(
+        getCitiesUseCase: context.read<GetCitiesUseCase>(),
+        createAdUseCase: context.read<CreateAdUseCase>(),
+        updateAdUseCase: context.read<UpdateAdUseCase>(),
+        uploadImagesUseCase: context.read<UploadImagesUseCase>(),
+      ),
+      update:
+          (
+            _,
+            getCitiesUseCase,
+            createAdUseCase,
+            updateAdUseCase,
+            uploadImagesUseCase,
+            previous,
+          ) =>
+              previous ??
+              AddEditProvider(
+                getCitiesUseCase: getCitiesUseCase,
+                createAdUseCase: createAdUseCase,
+                updateAdUseCase: updateAdUseCase,
+                uploadImagesUseCase: uploadImagesUseCase,
               ),
     ),
   ];

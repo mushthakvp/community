@@ -41,4 +41,10 @@ class RouteConstants {
   static const String categoryListing = '/vizzle/category';
   static const String subCategoryListing = '/vizzle/subcategory';
   static const String vizzleProfile = '/vizzle/profile';
+
+  // Additional Vizzle routes for specific functionalities
+  static const String citySelection = '/vizzle/city-selection';
+  static const String categorySelection = '/vizzle/category-selection';
+  static const String locationPicker = '/vizzle/location-picker';
+  static const String imagePreview = '/vizzle/image-preview';
 }

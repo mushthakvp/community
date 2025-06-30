@@ -11,6 +11,7 @@ import '../../data/models/cities_response_model.dart';
 import '../../domain/entities/location_entity.dart';
 import '../../domain/usecases/create_ad_usecase.dart';
 import '../../domain/usecases/get_cities_usecase.dart';
+import '../../domain/usecases/update_ad_usecase.dart';
 import '../../domain/usecases/upload_images_usecase.dart';
 
 enum AddEditState { initial, loading, success, error }
@@ -18,11 +19,13 @@ enum AddEditState { initial, loading, success, error }
 class AddEditProvider extends ChangeNotifier {
   final GetCitiesUseCase getCitiesUseCase;
   final CreateAdUseCase createAdUseCase;
+  final UpdateAdUseCase updateAdUseCase;
   final UploadImagesUseCase uploadImagesUseCase;
 
   AddEditProvider({
     required this.getCitiesUseCase,
     required this.createAdUseCase,
+    required this.updateAdUseCase,
     required this.uploadImagesUseCase,
   });
 
@@ -67,6 +70,13 @@ class AddEditProvider extends ChangeNotifier {
 
   String _selectedSubcategoryId = '';
   String get selectedSubcategoryId => _selectedSubcategoryId;
+
+  // Edit mode tracking
+  bool _isEditMode = false;
+  bool get isEditMode => _isEditMode;
+
+  String? _editingAdId;
+  String? get editingAdId => _editingAdId;
 
   // Methods
   void _setState(AddEditState newState) {
@@ -169,9 +179,58 @@ class AddEditProvider extends ChangeNotifier {
     }
   }
 
+  // Set edit mode and load existing ad data
+  void setEditMode(String adId, Map<String, dynamic>? adData) {
+    _isEditMode = true;
+    _editingAdId = adId;
+
+    if (adData != null) {
+      _loadAdData(adData);
+    }
+
+    notifyListeners();
+  }
+
+  void _loadAdData(Map<String, dynamic> adData) {
+    // Load text data
+    titleController.text = adData['title'] ?? '';
+    descriptionController.text = adData['description'] ?? '';
+    priceController.text = adData['price']?.toString() ?? '';
+    phoneController.text = adData['phone'] ?? '';
+    addressController.text = adData['address'] ?? '';
+
+    // Load selected values
+    if (adData['district'] != null) {
+      _selectedCity = adData['district'];
+    }
+
+    if (adData['category'] != null) {
+      _selectedCategoryId = adData['category'];
+    }
+
+    if (adData['subCategory'] != null) {
+      _selectedSubcategoryId = adData['subCategory'];
+    }
+
+    // Load location if available
+    if (adData['latitude'] != null && adData['longitude'] != null) {
+      try {
+        final lat = double.parse(adData['latitude'].toString());
+        final lng = double.parse(adData['longitude'].toString());
+        updateLocation(lat, lng);
+      } catch (e) {
+        debugPrint('Error loading location: $e');
+      }
+    }
+
+    // Note: Images from existing ad would need to be handled separately
+    // since they are URLs, not local files
+  }
+
   Future<void> createAd() async {
     if (!_validateForm()) return;
     _setState(AddEditState.loading);
+
     try {
       List<String> imageUrls = [];
       if (_selectedImages.isNotEmpty) {
@@ -184,20 +243,10 @@ class AddEditProvider extends ChangeNotifier {
           },
         );
       }
-      final adModel = AdCreationModel(
-        district: _selectedCity.isEmpty ? 'Default City' : _selectedCity,
-        title: titleController.text.trim(),
-        description: descriptionController.text.trim(),
-        images: imageUrls,
-        category: _selectedCategoryId,
-        subCategory: _selectedSubcategoryId,
-        latitude: _currentLocation?.latitude?.toString(),
-        longitude: _currentLocation?.longitude?.toString(),
-        address: _currentLocation?.address ?? addressController.text.trim(),
-        price: double.tryParse(priceController.text.trim()),
-        phone: phoneController.text.trim(),
-      );
+
+      final adModel = _buildAdModel(imageUrls);
       final result = await createAdUseCase(adModel);
+
       result.fold(
         onSuccess: (message) {
           _resetForm();
@@ -208,6 +257,55 @@ class AddEditProvider extends ChangeNotifier {
     } catch (e) {
       _setError("Failed to create ad: ${e.toString()}");
     }
+  }
+
+  Future<void> updateAd(String adId) async {
+    if (!_validateForm()) return;
+    _setState(AddEditState.loading);
+
+    try {
+      List<String> imageUrls = [];
+
+      // Only upload new images if any were selected
+      if (_selectedImages.isNotEmpty) {
+        final uploadResult = await uploadImagesUseCase(_selectedImages);
+        uploadResult.fold(
+          onSuccess: (urls) => imageUrls = urls,
+          onError: (error) {
+            _setError(error);
+            return;
+          },
+        );
+      }
+
+      final adModel = _buildAdModel(imageUrls);
+      final result = await updateAdUseCase.call(adId, adModel);
+
+      result.fold(
+        onSuccess: (message) {
+          _setState(AddEditState.success);
+        },
+        onError: (error) => _setError(error),
+      );
+    } catch (e) {
+      _setError("Failed to update ad: ${e.toString()}");
+    }
+  }
+
+  AdCreationModel _buildAdModel(List<String> imageUrls) {
+    return AdCreationModel(
+      district: _selectedCity.isEmpty ? 'Default City' : _selectedCity,
+      title: titleController.text.trim(),
+      description: descriptionController.text.trim(),
+      images: imageUrls,
+      category: _selectedCategoryId,
+      subCategory: _selectedSubcategoryId,
+      latitude: _currentLocation?.latitude?.toString(),
+      longitude: _currentLocation?.longitude?.toString(),
+      address: _currentLocation?.address ?? addressController.text.trim(),
+      price: double.tryParse(priceController.text.trim()),
+      phone: phoneController.text.trim(),
+    );
   }
 
   bool _validateForm() {
@@ -223,14 +321,19 @@ class AddEditProvider extends ChangeNotifier {
       _setError("Please enter your phone number");
       return false;
     }
-    if (_selectedImages.isEmpty) {
-      _setError("Please add at least one image");
-      return false;
+
+    // For create mode, require images and location
+    if (!_isEditMode) {
+      if (_selectedImages.isEmpty) {
+        _setError("Please add at least one image");
+        return false;
+      }
+      if (_currentLocation == null || !_currentLocation!.isValid) {
+        _setError("Please select a location");
+        return false;
+      }
     }
-    if (_currentLocation == null || !_currentLocation!.isValid) {
-      _setError("Please select a location");
-      return false;
-    }
+
     return true;
   }
 
@@ -246,6 +349,8 @@ class AddEditProvider extends ChangeNotifier {
     _selectedCategoryId = '';
     _selectedSubcategoryId = '';
     _selectedCategory = null;
+    _isEditMode = false;
+    _editingAdId = null;
     notifyListeners();
   }
 
@@ -253,6 +358,29 @@ class AddEditProvider extends ChangeNotifier {
     _errorMessage = null;
     if (_state == AddEditState.error) {
       _setState(AddEditState.initial);
+    }
+  }
+
+  void exitEditMode() {
+    _isEditMode = false;
+    _editingAdId = null;
+    _resetForm();
+  }
+
+  // Method to handle pre-loading data for edit mode
+  void initializeForEdit(String adId, Map<String, dynamic> adData) {
+    setEditMode(adId, adData);
+
+    // If categories are already loaded, try to find and set the selected category
+    if (_citiesResponse?.categories != null && _selectedCategoryId.isNotEmpty) {
+      final category = _citiesResponse!.categories!.firstWhere(
+        (cat) => cat.id == _selectedCategoryId,
+        orElse: () => CategoryModel(),
+      );
+
+      if (category.id != null) {
+        _selectedCategory = category;
+      }
     }
   }
 
