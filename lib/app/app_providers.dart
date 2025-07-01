@@ -1,4 +1,3 @@
-// lib/app/app_providers.dart
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
@@ -41,7 +40,7 @@ import '../features/redemption/domain/usecases/verify_payment_usecase.dart';
 import '../features/redemption/presentation/providers/redemption_provider.dart';
 import '../features/redemption/presentation/providers/wallet_recharge_provider.dart';
 import '../features/splash/presentation/providers/splash_provider.dart';
-// Import Ads Listing providers
+// Vizzle Ads Listing Providers
 import '../features/vizzle/ads_listing/data/datasources/ads_local_data_source.dart';
 import '../features/vizzle/ads_listing/data/datasources/ads_remote_data_source.dart';
 import '../features/vizzle/ads_listing/data/repositories/ads_repository_impl.dart';
@@ -50,69 +49,72 @@ import '../features/vizzle/ads_listing/domain/usecases/get_ad_details_usecase.da
 import '../features/vizzle/ads_listing/domain/usecases/get_ads_usecase.dart'
     as ads_uc;
 import '../features/vizzle/ads_listing/domain/usecases/get_filter_options_usecase.dart';
-import '../features/vizzle/ads_listing/domain/usecases/manage_recently_viewed_usecase.dart'
-    as ads_rv;
 import '../features/vizzle/ads_listing/domain/usecases/toggle_favorite_usecase.dart';
 import '../features/vizzle/ads_listing/presentation/providers/ads_listing_provider.dart';
+// Vizzle Core Providers
 import '../features/vizzle/data/datasources/vizzle_local_data_source.dart';
 import '../features/vizzle/data/datasources/vizzle_remote_data_source.dart';
 import '../features/vizzle/data/repositories/vizzle_repository_impl.dart';
-import '../features/vizzle/domain/usecases/get_ads_usecase.dart';
 import '../features/vizzle/domain/usecases/get_categories_usecase.dart';
 import '../features/vizzle/domain/usecases/get_sub_categories_usecase.dart';
 import '../features/vizzle/domain/usecases/get_sub_items_usecase.dart';
 import '../features/vizzle/domain/usecases/get_sub_sub_categories_usecase.dart';
 import '../features/vizzle/domain/usecases/get_vizzle_home_usecase.dart';
-import '../features/vizzle/domain/usecases/manage_favorites_usecase.dart';
-import '../features/vizzle/domain/usecases/recently_viewed_usecase.dart';
-import '../features/vizzle/features/vizzle/domain/usecases/search_ads_usecase.dart';
 import '../features/vizzle/home/presentation/providers/vizzle_home_provider.dart';
+// Vizzle Search Providers
+import '../features/vizzle/search/data/datasources/search_remote_datasource.dart';
+import '../features/vizzle/search/data/repositories/search_repository_impl.dart';
+import '../features/vizzle/search/domain/usecases/search_ads_usecase.dart';
+import '../features/vizzle/search/presentation/providers/search_provider.dart';
+// Vizzle Seller Details Providers
+import '../features/vizzle/seller_details/data/datasources/seller_remote_datasource.dart';
+import '../features/vizzle/seller_details/data/repositories/seller_repository_impl.dart';
+import '../features/vizzle/seller_details/domain/usecases/get_seller_profile_usecase.dart';
+import '../features/vizzle/seller_details/presentation/providers/seller_details_provider.dart';
 import '../features/vizzle/sub_category_listing/presentation/providers/sub_category_listing_provider.dart';
 import '../features/vizzle/sub_items_view/presentation/providers/sub_items_provider.dart';
 import '../features/vizzle/sub_sub_category_list_view/presentation/providers/sub_sub_category_provider.dart';
 
 class AppProviders {
   static List<SingleChildWidget> providers = [
+    // ========================================
+    // CORE PROVIDERS
+    // ========================================
+
     // Splash Provider
     ChangeNotifierProvider<SplashProvider>(create: (_) => SplashProvider()),
 
-    // Connectivity Provider
+    // Network Providers
     Provider<Connectivity>(create: (_) => Connectivity()),
-
-    // Network Info Provider
     ProxyProvider<Connectivity, NetworkInfo>(
       update: (_, connectivity, __) => NetworkInfoImpl(connectivity),
     ),
-
-    // Core API Client Provider (with NetworkInfo)
     ProxyProvider<NetworkInfo, ApiClient>(
       update: (_, networkInfo, __) =>
           ApiClient(baseUrl: ApiConstants.baseUrl, networkInfo: networkInfo),
     ),
 
-    // Auth Provider
+    // ========================================
+    // AUTH PROVIDERS
+    // ========================================
     ChangeNotifierProvider<AuthProvider>(
-      create: (context) {
-        return AuthProvider(
-          repository: AuthRepositoryImpl(apiClient: context.read<ApiClient>()),
-        );
-      },
+      create: (context) => AuthProvider(
+        repository: AuthRepositoryImpl(apiClient: context.read<ApiClient>()),
+      ),
     ),
 
-    // Home Repository Provider
+    // ========================================
+    // HOME PROVIDERS
+    // ========================================
     ProxyProvider<ApiClient, HomeRepositoryImpl>(
       update: (_, apiClient, __) => HomeRepositoryImpl(apiClient: apiClient),
     ),
-
-    // Home Use Cases Providers
     ProxyProvider<HomeRepositoryImpl, GetUserDetailsUseCase>(
       update: (_, repository, __) => GetUserDetailsUseCase(repository),
     ),
     ProxyProvider<HomeRepositoryImpl, GetNotificationsUseCase>(
       update: (_, repository, __) => GetNotificationsUseCase(repository),
     ),
-
-    // Home Provider
     ChangeNotifierProxyProvider2<
       GetUserDetailsUseCase,
       GetNotificationsUseCase,
@@ -126,17 +128,16 @@ class AppProviders {
           HomeProvider(getUserDetailsUseCase: getUserDetailsUseCase),
     ),
 
-    // Profile Data Sources
+    // ========================================
+    // PROFILE PROVIDERS
+    // ========================================
     ProxyProvider<ApiClient, ProfileRemoteDataSource>(
       update: (_, apiClient, __) =>
           ProfileRemoteDataSourceImpl(client: apiClient),
     ),
-
     Provider<ProfileLocalDataSource>(
       create: (_) => ProfileLocalDataSourceImpl(),
     ),
-
-    // Profile Repository
     ProxyProvider2<
       ProfileRemoteDataSource,
       ProfileLocalDataSource,
@@ -153,23 +154,18 @@ class AppProviders {
     ProxyProvider<ProfileRepositoryImpl, GetProfileUseCase>(
       update: (_, repository, __) => GetProfileUseCase(repository),
     ),
-
     ProxyProvider<ProfileRepositoryImpl, UpdateProfileUseCase>(
       update: (_, repository, __) => UpdateProfileUseCase(repository),
     ),
-
     ProxyProvider<ProfileRepositoryImpl, ChangePasswordUseCase>(
       update: (_, repository, __) => ChangePasswordUseCase(repository),
     ),
-
     ProxyProvider<ProfileRepositoryImpl, GetLoyaltyCardUseCase>(
       update: (_, repository, __) => GetLoyaltyCardUseCase(repository),
     ),
-
     ProxyProvider<ProfileRepositoryImpl, ClaimLoyaltyPointsUseCase>(
       update: (_, repository, __) => ClaimLoyaltyPointsUseCase(repository),
     ),
-
     ProxyProvider<ProfileRepositoryImpl, GetPointTransactionsUseCase>(
       update: (_, repository, __) => GetPointTransactionsUseCase(repository),
     ),
@@ -215,14 +211,15 @@ class AppProviders {
               ),
     ),
 
-    // Coupon Provider
+    // ========================================
+    // COUPON & PROMOS PROVIDERS
+    // ========================================
     ChangeNotifierProvider<CouponProvider>(
       create: (context) => CouponProvider(
         repository: CouponRepositoryImpl(apiClient: context.read<ApiClient>()),
       ),
     ),
 
-    // Promos Provider
     ChangeNotifierProvider<PromosProvider>(
       create: (context) {
         final apiClient = context.read<ApiClient>();
@@ -230,28 +227,24 @@ class AppProviders {
         final repository = PromosRepositoryImpl(
           remoteDataSource: remoteDataSource,
         );
-        final getPromosUseCase = GetPromosUseCase(repository);
-        final addRewardPointsUseCase = AddRewardPointsUseCase(repository);
-        final launchUrlUseCase = LaunchUrlUseCase();
         return PromosProvider(
-          getPromosUseCase: getPromosUseCase,
-          addRewardPointsUseCase: addRewardPointsUseCase,
-          launchUrlUseCase: launchUrlUseCase,
+          getPromosUseCase: GetPromosUseCase(repository),
+          addRewardPointsUseCase: AddRewardPointsUseCase(repository),
+          launchUrlUseCase: LaunchUrlUseCase(),
         );
       },
     ),
 
-    // Redemption Data Sources
+    // ========================================
+    // REDEMPTION PROVIDERS
+    // ========================================
     ProxyProvider<ApiClient, RedemptionRemoteDataSource>(
       update: (_, apiClient, __) =>
           RedemptionRemoteDataSourceImpl(client: apiClient),
     ),
-
     Provider<RedemptionLocalDataSource>(
       create: (_) => RedemptionLocalDataSourceImpl(),
     ),
-
-    // Redemption Repository
     ProxyProvider2<
       RedemptionRemoteDataSource,
       RedemptionLocalDataSource,
@@ -268,25 +261,21 @@ class AppProviders {
     ProxyProvider<RedemptionRepositoryImpl, GetWalletTransactionsUseCase>(
       update: (_, repository, __) => GetWalletTransactionsUseCase(repository),
     ),
-
     ProxyProvider<RedemptionRepositoryImpl, GetUserRedemptionDetailsUseCase>(
       update: (_, repository, __) =>
           GetUserRedemptionDetailsUseCase(repository),
     ),
-
     ProxyProvider<RedemptionRepositoryImpl, InitiateWalletRechargeUseCase>(
       update: (_, repository, __) => InitiateWalletRechargeUseCase(repository),
     ),
-
     ProxyProvider<RedemptionRepositoryImpl, InitiateTierUpgradeUseCase>(
       update: (_, repository, __) => InitiateTierUpgradeUseCase(repository),
     ),
-
     ProxyProvider<RedemptionRepositoryImpl, VerifyPaymentUseCase>(
       update: (_, repository, __) => VerifyPaymentUseCase(repository),
     ),
 
-    // Redemption Provider
+    // Redemption Providers
     ChangeNotifierProxyProvider2<
       GetWalletTransactionsUseCase,
       GetUserRedemptionDetailsUseCase,
@@ -313,7 +302,6 @@ class AppProviders {
               ),
     ),
 
-    // Wallet Recharge Provider
     ChangeNotifierProxyProvider3<
       InitiateWalletRechargeUseCase,
       InitiateTierUpgradeUseCase,
@@ -347,12 +335,15 @@ class AppProviders {
               ),
     ),
 
+    // ========================================
+    // VIZZLE CORE PROVIDERS
+    // ========================================
+
     // Vizzle Data Sources
     ProxyProvider<ApiClient, VizzleRemoteDataSource>(
       update: (_, apiClient, __) =>
           VizzleRemoteDataSourceImpl(apiClient: apiClient),
     ),
-
     Provider<VizzleLocalDataSource>(create: (_) => VizzleLocalDataSourceImpl()),
 
     // Vizzle Repository
@@ -374,37 +365,17 @@ class AppProviders {
     ProxyProvider<VizzleRepositoryImpl, GetVizzleHomeUseCase>(
       update: (_, repository, __) => GetVizzleHomeUseCase(repository),
     ),
-
     ProxyProvider<VizzleRepositoryImpl, GetCategoriesUseCase>(
       update: (_, repository, __) => GetCategoriesUseCase(repository),
     ),
-
     ProxyProvider<VizzleRepositoryImpl, GetSubCategoriesUseCase>(
       update: (_, repository, __) => GetSubCategoriesUseCase(repository),
     ),
-
     ProxyProvider<VizzleRepositoryImpl, GetSubSubCategoriesUseCase>(
       update: (_, repository, __) => GetSubSubCategoriesUseCase(repository),
     ),
-
     ProxyProvider<VizzleRepositoryImpl, GetSubItemsUseCase>(
       update: (_, repository, __) => GetSubItemsUseCase(repository),
-    ),
-
-    ProxyProvider<VizzleRepositoryImpl, GetAdsUseCase>(
-      update: (_, repository, __) => GetAdsUseCase(repository),
-    ),
-
-    ProxyProvider<VizzleRepositoryImpl, ManageFavoritesUseCase>(
-      update: (_, repository, __) => ManageFavoritesUseCase(repository),
-    ),
-
-    ProxyProvider<VizzleRepositoryImpl, RecentlyViewedUseCase>(
-      update: (_, repository, __) => RecentlyViewedUseCase(repository),
-    ),
-
-    ProxyProvider<VizzleRepositoryImpl, SearchAdsUseCase>(
-      update: (_, repository, __) => SearchAdsUseCase(repository),
     ),
 
     // Vizzle Providers
@@ -457,18 +428,17 @@ class AppProviders {
     ),
 
     // ========================================
-    // NEW ADS LISTING PROVIDERS
+    // VIZZLE ADS LISTING PROVIDERS
     // ========================================
 
-    // Ads Listing Data Sources
+    // Ads Data Sources
     ProxyProvider<ApiClient, AdsRemoteDataSource>(
       update: (_, apiClient, __) =>
           AdsRemoteDataSourceImpl(apiClient: apiClient),
     ),
-
     Provider<AdsLocalDataSource>(create: (_) => AdsLocalDataSourceImpl()),
 
-    // Ads Listing Repository
+    // Ads Repository
     ProxyProvider3<
       AdsRemoteDataSource,
       AdsLocalDataSource,
@@ -483,29 +453,21 @@ class AppProviders {
           ),
     ),
 
-    // Ads Listing Use Cases
+    // Ads Use Cases
     ProxyProvider<AdsRepository, ads_uc.GetAdsUseCase>(
       update: (_, repository, __) => ads_uc.GetAdsUseCase(repository),
     ),
-
     ProxyProvider<AdsRepository, GetAdDetailsUseCase>(
       update: (_, repository, __) => GetAdDetailsUseCase(repository),
     ),
-
     ProxyProvider<AdsRepository, GetFilterOptionsUseCase>(
       update: (_, repository, __) => GetFilterOptionsUseCase(repository),
     ),
-
     ProxyProvider<AdsRepository, ToggleFavoriteUseCase>(
       update: (_, repository, __) => ToggleFavoriteUseCase(repository),
     ),
 
-    ProxyProvider<AdsRepository, ads_rv.ManageRecentlyViewedUseCase>(
-      update: (_, repository, __) =>
-          ads_rv.ManageRecentlyViewedUseCase(repository),
-    ),
-
-    // Ads Listing Provider
+    // Ads Provider
     ChangeNotifierProxyProvider3<
       ads_uc.GetAdsUseCase,
       GetFilterOptionsUseCase,
@@ -531,6 +493,56 @@ class AppProviders {
                 getFilterOptionsUseCase: getFilterOptionsUseCase,
                 toggleFavoriteUseCase: toggleFavoriteUseCase,
               ),
+    ),
+
+    // ========================================
+    // VIZZLE SEARCH PROVIDERS
+    // ========================================
+    ProxyProvider<ApiClient, SearchRemoteDataSource>(
+      update: (_, apiClient, __) =>
+          SearchRemoteDataSourceImpl(apiClient: apiClient),
+    ),
+    ProxyProvider2<SearchRemoteDataSource, NetworkInfo, SearchRepositoryImpl>(
+      update: (_, remoteDataSource, networkInfo, __) => SearchRepositoryImpl(
+        remoteDataSource: remoteDataSource,
+        networkInfo: networkInfo,
+      ),
+    ),
+    ProxyProvider<SearchRepositoryImpl, SearchAdsUseCase>(
+      update: (_, repository, __) => SearchAdsUseCase(repository),
+    ),
+    ChangeNotifierProxyProvider<SearchAdsUseCase, SearchProvider>(
+      create: (context) =>
+          SearchProvider(searchAdsUseCase: context.read<SearchAdsUseCase>()),
+      update: (_, searchAdsUseCase, previous) =>
+          previous ?? SearchProvider(searchAdsUseCase: searchAdsUseCase),
+    ),
+
+    // ========================================
+    // VIZZLE SELLER DETAILS PROVIDERS
+    // ========================================
+    ProxyProvider<ApiClient, SellerRemoteDataSource>(
+      update: (_, apiClient, __) =>
+          SellerRemoteDataSourceImpl(apiClient: apiClient),
+    ),
+    ProxyProvider2<SellerRemoteDataSource, NetworkInfo, SellerRepositoryImpl>(
+      update: (_, remoteDataSource, networkInfo, __) => SellerRepositoryImpl(
+        remoteDataSource: remoteDataSource,
+        networkInfo: networkInfo,
+      ),
+    ),
+    ProxyProvider<SellerRepositoryImpl, GetSellerProfileUseCase>(
+      update: (_, repository, __) => GetSellerProfileUseCase(repository),
+    ),
+    ChangeNotifierProxyProvider<GetSellerProfileUseCase, SellerDetailsProvider>(
+      create: (context) => SellerDetailsProvider(
+        getSellerProfileUseCase: context.read<GetSellerProfileUseCase>(),
+      ),
+      update: (_, getSellerProfileUseCase, previous) =>
+          previous ??
+          SellerDetailsProvider(
+            getSellerProfileUseCase: getSellerProfileUseCase,
+          ),
     ),
   ];
 }
