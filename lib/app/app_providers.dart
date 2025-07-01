@@ -1,3 +1,4 @@
+// lib/app/app_providers.dart
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
@@ -40,6 +41,19 @@ import '../features/redemption/domain/usecases/verify_payment_usecase.dart';
 import '../features/redemption/presentation/providers/redemption_provider.dart';
 import '../features/redemption/presentation/providers/wallet_recharge_provider.dart';
 import '../features/splash/presentation/providers/splash_provider.dart';
+// Import Ads Listing providers
+import '../features/vizzle/ads_listing/data/datasources/ads_local_data_source.dart';
+import '../features/vizzle/ads_listing/data/datasources/ads_remote_data_source.dart';
+import '../features/vizzle/ads_listing/data/repositories/ads_repository_impl.dart';
+import '../features/vizzle/ads_listing/domain/repositories/ads_repository.dart';
+import '../features/vizzle/ads_listing/domain/usecases/get_ad_details_usecase.dart';
+import '../features/vizzle/ads_listing/domain/usecases/get_ads_usecase.dart'
+    as ads_uc;
+import '../features/vizzle/ads_listing/domain/usecases/get_filter_options_usecase.dart';
+import '../features/vizzle/ads_listing/domain/usecases/manage_recently_viewed_usecase.dart'
+    as ads_rv;
+import '../features/vizzle/ads_listing/domain/usecases/toggle_favorite_usecase.dart';
+import '../features/vizzle/ads_listing/presentation/providers/ads_listing_provider.dart';
 import '../features/vizzle/data/datasources/vizzle_local_data_source.dart';
 import '../features/vizzle/data/datasources/vizzle_remote_data_source.dart';
 import '../features/vizzle/data/repositories/vizzle_repository_impl.dart';
@@ -440,6 +454,83 @@ class AppProviders {
       ),
       update: (_, getSubItemsUseCase, previous) =>
           previous ?? SubItemsProvider(getSubItemsUseCase: getSubItemsUseCase),
+    ),
+
+    // ========================================
+    // NEW ADS LISTING PROVIDERS
+    // ========================================
+
+    // Ads Listing Data Sources
+    ProxyProvider<ApiClient, AdsRemoteDataSource>(
+      update: (_, apiClient, __) =>
+          AdsRemoteDataSourceImpl(apiClient: apiClient),
+    ),
+
+    Provider<AdsLocalDataSource>(create: (_) => AdsLocalDataSourceImpl()),
+
+    // Ads Listing Repository
+    ProxyProvider3<
+      AdsRemoteDataSource,
+      AdsLocalDataSource,
+      NetworkInfo,
+      AdsRepository
+    >(
+      update: (_, remoteDataSource, localDataSource, networkInfo, __) =>
+          AdsRepositoryImpl(
+            remoteDataSource: remoteDataSource,
+            localDataSource: localDataSource,
+            networkInfo: networkInfo,
+          ),
+    ),
+
+    // Ads Listing Use Cases
+    ProxyProvider<AdsRepository, ads_uc.GetAdsUseCase>(
+      update: (_, repository, __) => ads_uc.GetAdsUseCase(repository),
+    ),
+
+    ProxyProvider<AdsRepository, GetAdDetailsUseCase>(
+      update: (_, repository, __) => GetAdDetailsUseCase(repository),
+    ),
+
+    ProxyProvider<AdsRepository, GetFilterOptionsUseCase>(
+      update: (_, repository, __) => GetFilterOptionsUseCase(repository),
+    ),
+
+    ProxyProvider<AdsRepository, ToggleFavoriteUseCase>(
+      update: (_, repository, __) => ToggleFavoriteUseCase(repository),
+    ),
+
+    ProxyProvider<AdsRepository, ads_rv.ManageRecentlyViewedUseCase>(
+      update: (_, repository, __) =>
+          ads_rv.ManageRecentlyViewedUseCase(repository),
+    ),
+
+    // Ads Listing Provider
+    ChangeNotifierProxyProvider3<
+      ads_uc.GetAdsUseCase,
+      GetFilterOptionsUseCase,
+      ToggleFavoriteUseCase,
+      AdsListingProvider
+    >(
+      create: (context) => AdsListingProvider(
+        getAdsUseCase: context.read<ads_uc.GetAdsUseCase>(),
+        getFilterOptionsUseCase: context.read<GetFilterOptionsUseCase>(),
+        toggleFavoriteUseCase: context.read<ToggleFavoriteUseCase>(),
+      ),
+      update:
+          (
+            _,
+            getAdsUseCase,
+            getFilterOptionsUseCase,
+            toggleFavoriteUseCase,
+            previous,
+          ) =>
+              previous ??
+              AdsListingProvider(
+                getAdsUseCase: getAdsUseCase,
+                getFilterOptionsUseCase: getFilterOptionsUseCase,
+                toggleFavoriteUseCase: toggleFavoriteUseCase,
+              ),
     ),
   ];
 }
