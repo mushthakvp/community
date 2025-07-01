@@ -22,6 +22,12 @@ class AppConstants {
   static const Color surface = Color(0xFF121212);
   static const Color surfaceVariant = Color(0xFF1E1E1E);
   static const Color surfaceContainer = Color(0xFF2D2D2D);
+  static const Color grey = Color(0xFF666666);
+  static const Color greyLight = Color(0xFF999999);
+  static const Color greyDark = Color(0xFF333333);
+
+  // Surface Colors
+  static const Color cardColor = Color(0xFF212121);
 
   // Text Colors
   static const Color onSurface = Color(0xFFFFFFFF);

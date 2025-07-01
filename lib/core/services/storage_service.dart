@@ -224,4 +224,12 @@ class StorageService {
   static String? getCountryName() {
     return getString(StorageConstants.countryName);
   }
+
+  static Future<void> setCurrencyCode(String currencyCode) async {
+    await setString(StorageConstants.currencyCode, currencyCode);
+  }
+
+  static String? getCurrencyCode() {
+    return getString(StorageConstants.currencyCode);
+  }
 }
