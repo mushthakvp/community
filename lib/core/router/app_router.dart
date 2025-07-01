@@ -23,6 +23,7 @@ import '../../features/promos/presentation/pages/promos_page.dart';
 import '../../features/redemption/presentation/pages/redemption_page.dart';
 import '../../features/redemption/presentation/pages/wallet_recharge_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
+import '../../features/vizzle/ads_listing/presentation/pages/ads_listing_page.dart';
 import '../../features/vizzle/home/presentation/pages/vizzle_home_page.dart';
 import '../../features/vizzle/sub_category_listing/presentation/pages/sub_category_listing_page.dart';
 import '../../features/vizzle/sub_items_view/presentation/pages/sub_items_page.dart';
@@ -119,20 +120,54 @@ class AppRouter {
           );
         },
       ),
+
+      // NEW: Vizzle Ads Listing Route
+      GoRoute(
+        path: RouteConstants.vizzleAdsListing,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>? ?? {};
+
+          return AdsListingPage(
+            categoryId: extra['categoryId'],
+            subCategoryId: extra['subCategoryId'],
+            categoryName: extra['categoryName'],
+            subCategoryName: extra['subCategoryName'],
+            initialFilter: extra['initialFilter'],
+          );
+        },
+      ),
+
+      // NEW: Vizzle Search Route
       GoRoute(
         path: RouteConstants.vizzleSearch,
         builder: (context, state) => const VizzleSearchPage(),
       ),
+
+      // NEW: Vizzle Product Details Route
       GoRoute(
         path: '${RouteConstants.vizzleProductDetails}/:productId',
         builder: (context, state) {
           final productId = state.pathParameters['productId']!;
-          final productShareUrl = state.uri.queryParameters['shareUrl'];
+          final extra = state.extra as Map<String, dynamic>? ?? {};
+          final productShareUrl = extra['shareUrl'];
+
           return VizzleProductDetailsPage(
             productId: productId,
             shareUrl: productShareUrl,
           );
         },
+      ),
+
+      // NEW: Vizzle Favorites Route
+      GoRoute(
+        path: RouteConstants.vizzleFavorites,
+        builder: (context, state) => const VizzleFavoritesPage(),
+      ),
+
+      // NEW: Vizzle Recently Viewed Route
+      GoRoute(
+        path: RouteConstants.vizzleRecentlyViewed,
+        builder: (context, state) => const VizzleRecentlyViewedPage(),
       ),
 
       // Standalone pages (without bottom navigation)
@@ -249,6 +284,9 @@ class AppRouter {
       RouteConstants.profile,
       RouteConstants.coupons,
       RouteConstants.vizzleHome,
+      RouteConstants.vizzleAdsListing,
+      RouteConstants.vizzleFavorites,
+      RouteConstants.vizzleRecentlyViewed,
     ];
     return protectedRoutes.any((route) => location.startsWith(route));
   }
@@ -286,5 +324,25 @@ class VizzleProductDetailsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(body: Center(child: Text('Product Details: $productId')));
+  }
+}
+
+class VizzleFavoritesPage extends StatelessWidget {
+  const VizzleFavoritesPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(body: Center(child: Text('Vizzle Favorites Page')));
+  }
+}
+
+class VizzleRecentlyViewedPage extends StatelessWidget {
+  const VizzleRecentlyViewedPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(child: Text('Vizzle Recently Viewed Page')),
+    );
   }
 }
