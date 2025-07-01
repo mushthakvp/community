@@ -81,6 +81,12 @@ class ApiConstants {
   // Profile & User Data
   static const String vizzleProfile = 'user/getProfile';
 
+  // Seller Details Endpoints
+  static const String getSellerProfile = 'user/getProfile';
+
+  // Search Endpoints
+  static const String searchAllAds = 'user/searchAll';
+
   // Helper methods for dynamic endpoints
   static String getVizzleSubSubCategoriesBySubCategory(String subCategoryId) =>
       '$vizzleSubSubCategories/$subCategoryId';
@@ -105,6 +111,14 @@ class ApiConstants {
 
   static String searchVizzleWithKeyword(String keyword) =>
       '$vizzleSearch?keyword=$keyword';
+
+  /// Get seller profile by seller ID
+  static String getSellerProfileWithId(String sellerId) =>
+      '$getSellerProfile?userId=$sellerId';
+
+  /// Search ads with keyword
+  static String searchAdsWithKeyword(String keyword) =>
+      '$searchAllAds?keyword=$keyword';
 
   // Helper methods for query parameters
   static String getVizzleAdsWithFilters({
@@ -161,5 +175,106 @@ class ApiConstants {
     if (limit != null) params.add('limit=$limit');
 
     return '$vizzleSearch?${params.join('&')}';
+  }
+
+  static String getAdvancedSearchEndpoint({
+    String? keyword,
+    String? categoryId,
+    String? subCategoryId,
+    String? location,
+    double? minPrice,
+    double? maxPrice,
+    String? condition,
+    String? sortBy,
+    int? page,
+    int? limit,
+  }) {
+    List<String> params = [];
+
+    if (keyword != null && keyword.isNotEmpty) {
+      params.add('keyword=${Uri.encodeComponent(keyword)}');
+    }
+    if (categoryId != null) params.add('categoryId=$categoryId');
+    if (subCategoryId != null) params.add('subCategoryId=$subCategoryId');
+    if (location != null) {
+      params.add('location=${Uri.encodeComponent(location)}');
+    }
+    if (minPrice != null) params.add('minPrice=$minPrice');
+    if (maxPrice != null) params.add('maxPrice=$maxPrice');
+    if (condition != null) params.add('condition=$condition');
+    if (sortBy != null) params.add('sortBy=$sortBy');
+    if (page != null) params.add('page=$page');
+    if (limit != null) params.add('limit=$limit');
+
+    return params.isNotEmpty
+        ? '$vizzleSearch?${params.join('&')}'
+        : vizzleSearch;
+  }
+
+  /// Get seller's active ads
+  static String getSellerAds(String sellerId, {int? page, int? limit}) {
+    List<String> params = ['sellerId=$sellerId'];
+    if (page != null) params.add('page=$page');
+    if (limit != null) params.add('limit=$limit');
+
+    return '$vizzleAds?${params.join('&')}';
+  }
+
+  /// Get seller statistics
+  static String getSellerStats(String sellerId) =>
+      'user/getSellerStats?sellerId=$sellerId';
+
+  /// Get seller reviews
+  static String getSellerReviews(String sellerId, {int? page, int? limit}) {
+    List<String> params = ['sellerId=$sellerId'];
+    if (page != null) params.add('page=$page');
+    if (limit != null) params.add('limit=$limit');
+
+    return 'user/getSellerReviews?${params.join('&')}';
+  }
+
+  /// Get search suggestions
+  static String getSearchSuggestions(String query) =>
+      'user/getSearchSuggestions?q=${Uri.encodeComponent(query)}';
+
+  /// Get popular searches
+  static const String getPopularSearches = 'user/getPopularSearches';
+
+  /// Save search history
+  static const String saveSearchHistory = 'user/saveSearchHistory';
+
+  /// Get user search history
+  static const String getUserSearchHistory = 'user/getSearchHistory';
+
+  /// Clear search history
+  static const String clearSearchHistory = 'user/clearSearchHistory';
+
+  /// Get available filter options for search
+  static const String getSearchFilters = 'user/getSearchFilters';
+
+  /// Get price range for category
+  static String getCategoryPriceRange(String categoryId) =>
+      'user/getCategoryPriceRange?categoryId=$categoryId';
+
+  /// Get locations for search
+  static const String getSearchLocations = 'user/getSearchLocations';
+
+  /// Build URL with base URL
+  static String buildUrl(String endpoint) => '$baseUrl$endpoint';
+
+  /// Encode search query for URL
+  static String encodeSearchQuery(String query) => Uri.encodeComponent(query);
+
+  /// Build pagination parameters
+  static Map<String, String> buildPaginationParams({
+    int? page,
+    int? limit,
+    int defaultPage = 1,
+    int defaultLimit = 20,
+  }) {
+    return {
+      'page': (page ?? defaultPage).toString(),
+      'limit': (limit ?? defaultLimit).toString(),
+    };
   }
 }

@@ -25,6 +25,9 @@ import '../../features/redemption/presentation/pages/wallet_recharge_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
 import '../../features/vizzle/ads_listing/presentation/pages/ads_listing_page.dart';
 import '../../features/vizzle/home/presentation/pages/vizzle_home_page.dart';
+// NEW IMPORTS FOR SELLER DETAILS & SEARCH
+import '../../features/vizzle/search/presentation/pages/search_page.dart';
+import '../../features/vizzle/seller_details/presentation/pages/seller_details_page.dart';
 import '../../features/vizzle/sub_category_listing/presentation/pages/sub_category_listing_page.dart';
 import '../../features/vizzle/sub_items_view/presentation/pages/sub_items_page.dart';
 import '../../features/vizzle/sub_sub_category_list_view/presentation/pages/sub_sub_category_page.dart';
@@ -63,6 +66,21 @@ class AppRouter {
           email: state.uri.queryParameters['email'] ?? '',
           isLogin: state.uri.queryParameters['isLogin'] == 'true',
         ),
+      ),
+
+      // Seller Details Main Route
+      GoRoute(
+        path: '${RouteConstants.vizzleSellerDetails}/:sellerId',
+        builder: (context, state) {
+          final sellerId = state.pathParameters['sellerId']!;
+          return SellerDetailsPage(sellerId: sellerId);
+        },
+      ),
+
+      // Advanced Search Route
+      GoRoute(
+        path: RouteConstants.vizzleAdvancedSearch,
+        builder: (context, state) => const SearchPage(),
       ),
 
       // Vizzle sub-pages (without bottom navigation)
@@ -121,7 +139,7 @@ class AppRouter {
         },
       ),
 
-      // NEW: Vizzle Ads Listing Route
+      // Vizzle Ads Listing Route
       GoRoute(
         path: RouteConstants.vizzleAdsListing,
         builder: (context, state) {
@@ -135,39 +153,6 @@ class AppRouter {
             initialFilter: extra['initialFilter'],
           );
         },
-      ),
-
-      // NEW: Vizzle Search Route
-      GoRoute(
-        path: RouteConstants.vizzleSearch,
-        builder: (context, state) => const VizzleSearchPage(),
-      ),
-
-      // NEW: Vizzle Product Details Route
-      GoRoute(
-        path: '${RouteConstants.vizzleProductDetails}/:productId',
-        builder: (context, state) {
-          final productId = state.pathParameters['productId']!;
-          final extra = state.extra as Map<String, dynamic>? ?? {};
-          final productShareUrl = extra['shareUrl'];
-
-          return VizzleProductDetailsPage(
-            productId: productId,
-            shareUrl: productShareUrl,
-          );
-        },
-      ),
-
-      // NEW: Vizzle Favorites Route
-      GoRoute(
-        path: RouteConstants.vizzleFavorites,
-        builder: (context, state) => const VizzleFavoritesPage(),
-      ),
-
-      // NEW: Vizzle Recently Viewed Route
-      GoRoute(
-        path: RouteConstants.vizzleRecentlyViewed,
-        builder: (context, state) => const VizzleRecentlyViewedPage(),
       ),
 
       // Standalone pages (without bottom navigation)
@@ -253,96 +238,17 @@ class AppRouter {
 
   static String? _redirect(BuildContext context, GoRouterState state) {
     final location = state.uri.toString();
-
-    // Always allow splash screen
     if (location == RouteConstants.splash) {
       return null;
     }
-
-    // Don't redirect during splash initialization
     final authProvider = context.read<AuthProvider>();
-
-    // Allow access to auth routes when not authenticated
-    if (!authProvider.isAuthenticated && _isProtectedRoute(location)) {
+    if (!authProvider.isAuthenticated &&
+        RouteConstants.isProtectedRoute(location)) {
       return RouteConstants.login;
     }
-
-    // Redirect to home if authenticated user tries to access auth routes
-    if (authProvider.isAuthenticated && _isAuthRoute(location)) {
+    if (authProvider.isAuthenticated && RouteConstants.isAuthRoute(location)) {
       return RouteConstants.home;
     }
-
     return null;
-  }
-
-  static bool _isProtectedRoute(String location) {
-    const protectedRoutes = [
-      RouteConstants.home,
-      RouteConstants.promos,
-      RouteConstants.redemption,
-      RouteConstants.walletRecharge,
-      RouteConstants.profile,
-      RouteConstants.coupons,
-      RouteConstants.vizzleHome,
-      RouteConstants.vizzleAdsListing,
-      RouteConstants.vizzleFavorites,
-      RouteConstants.vizzleRecentlyViewed,
-    ];
-    return protectedRoutes.any((route) => location.startsWith(route));
-  }
-
-  static bool _isAuthRoute(String location) {
-    const authRoutes = [
-      RouteConstants.login,
-      RouteConstants.register,
-      RouteConstants.otpVerification,
-    ];
-    return authRoutes.any((route) => location.startsWith(route));
-  }
-}
-
-// Placeholder classes for missing pages
-class VizzleSearchPage extends StatelessWidget {
-  const VizzleSearchPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(body: Center(child: Text('Vizzle Search Page')));
-  }
-}
-
-class VizzleProductDetailsPage extends StatelessWidget {
-  final String productId;
-  final String? shareUrl;
-
-  const VizzleProductDetailsPage({
-    super.key,
-    required this.productId,
-    this.shareUrl,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(body: Center(child: Text('Product Details: $productId')));
-  }
-}
-
-class VizzleFavoritesPage extends StatelessWidget {
-  const VizzleFavoritesPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(body: Center(child: Text('Vizzle Favorites Page')));
-  }
-}
-
-class VizzleRecentlyViewedPage extends StatelessWidget {
-  const VizzleRecentlyViewedPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: Text('Vizzle Recently Viewed Page')),
-    );
   }
 }
