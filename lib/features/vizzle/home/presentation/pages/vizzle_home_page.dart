@@ -95,16 +95,6 @@ class _VizzleHomePageState extends State<VizzleHomePage> {
       elevation: 0,
       title: Row(
         children: [
-          Container(
-            height: 32,
-            width: 32,
-            decoration: const BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage('assets/animation/vizil_icon_animation.png'),
-                fit: BoxFit.contain,
-              ),
-            ),
-          ),
           const SizedBox(width: 8),
           const CommonTextWidget(
             text: 'Vizzle Marketplace',
