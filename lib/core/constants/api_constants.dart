@@ -184,15 +184,18 @@ class ApiConstants {
     // Basic filters
     if (categoryId != null) params.add('categoryId=$categoryId');
     if (subCategoryId != null) params.add('subCategoryId=$subCategoryId');
-    if (subSubCategoryId != null)
+    if (subSubCategoryId != null) {
       params.add('subSubCategoryId=$subSubCategoryId');
+    }
     if (subItemId != null) params.add('subItemId=$subItemId');
-    if (searchQuery != null)
+    if (searchQuery != null) {
       params.add('searchQuery=${Uri.encodeComponent(searchQuery)}');
+    }
     if (minPrice != null) params.add('minPrice=$minPrice');
     if (maxPrice != null) params.add('maxPrice=$maxPrice');
-    if (location != null)
+    if (location != null) {
       params.add('location=${Uri.encodeComponent(location)}');
+    }
     if (condition != null) params.add('condition=$condition');
     if (sortBy != null) params.add('sortBy=$sortBy');
 
@@ -260,8 +263,9 @@ class ApiConstants {
     }
     if (categoryId != null) params.add('categoryId=$categoryId');
     if (subCategoryId != null) params.add('subCategoryId=$subCategoryId');
-    if (location != null)
+    if (location != null) {
       params.add('location=${Uri.encodeComponent(location)}');
+    }
     if (minPrice != null) params.add('minPrice=$minPrice');
     if (maxPrice != null) params.add('maxPrice=$maxPrice');
     if (condition != null) params.add('condition=$condition');
