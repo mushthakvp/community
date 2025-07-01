@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../../../core/constants/app_constants.dart';
 import '../../../domain/entities/vizzle_entities.dart';
 import 'vizzle_product_card.dart';
 

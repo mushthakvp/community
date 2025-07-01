@@ -40,6 +40,22 @@ import '../features/redemption/domain/usecases/verify_payment_usecase.dart';
 import '../features/redemption/presentation/providers/redemption_provider.dart';
 import '../features/redemption/presentation/providers/wallet_recharge_provider.dart';
 import '../features/splash/presentation/providers/splash_provider.dart';
+import '../features/vizzle/data/datasources/vizzle_local_data_source.dart';
+import '../features/vizzle/data/datasources/vizzle_remote_data_source.dart';
+import '../features/vizzle/data/repositories/vizzle_repository_impl.dart';
+import '../features/vizzle/domain/usecases/get_ads_usecase.dart';
+import '../features/vizzle/domain/usecases/get_categories_usecase.dart';
+import '../features/vizzle/domain/usecases/get_sub_categories_usecase.dart';
+import '../features/vizzle/domain/usecases/get_sub_items_usecase.dart';
+import '../features/vizzle/domain/usecases/get_sub_sub_categories_usecase.dart';
+import '../features/vizzle/domain/usecases/get_vizzle_home_usecase.dart';
+import '../features/vizzle/domain/usecases/manage_favorites_usecase.dart';
+import '../features/vizzle/domain/usecases/recently_viewed_usecase.dart';
+import '../features/vizzle/features/vizzle/domain/usecases/search_ads_usecase.dart';
+import '../features/vizzle/home/presentation/providers/vizzle_home_provider.dart';
+import '../features/vizzle/sub_category_listing/presentation/providers/sub_category_listing_provider.dart';
+import '../features/vizzle/sub_items_view/presentation/providers/sub_items_provider.dart';
+import '../features/vizzle/sub_sub_category_list_view/presentation/providers/sub_sub_category_provider.dart';
 
 class AppProviders {
   static List<SingleChildWidget> providers = [
@@ -315,6 +331,115 @@ class AppProviders {
                 initiateTierUpgradeUseCase: initiateTierUpgradeUseCase,
                 verifyPaymentUseCase: verifyPaymentUseCase,
               ),
+    ),
+
+    // Vizzle Data Sources
+    ProxyProvider<ApiClient, VizzleRemoteDataSource>(
+      update: (_, apiClient, __) =>
+          VizzleRemoteDataSourceImpl(apiClient: apiClient),
+    ),
+
+    Provider<VizzleLocalDataSource>(create: (_) => VizzleLocalDataSourceImpl()),
+
+    // Vizzle Repository
+    ProxyProvider3<
+      VizzleRemoteDataSource,
+      VizzleLocalDataSource,
+      NetworkInfo,
+      VizzleRepositoryImpl
+    >(
+      update: (_, remoteDataSource, localDataSource, networkInfo, __) =>
+          VizzleRepositoryImpl(
+            remoteDataSource: remoteDataSource,
+            localDataSource: localDataSource,
+            networkInfo: networkInfo,
+          ),
+    ),
+
+    // Vizzle Use Cases
+    ProxyProvider<VizzleRepositoryImpl, GetVizzleHomeUseCase>(
+      update: (_, repository, __) => GetVizzleHomeUseCase(repository),
+    ),
+
+    ProxyProvider<VizzleRepositoryImpl, GetCategoriesUseCase>(
+      update: (_, repository, __) => GetCategoriesUseCase(repository),
+    ),
+
+    ProxyProvider<VizzleRepositoryImpl, GetSubCategoriesUseCase>(
+      update: (_, repository, __) => GetSubCategoriesUseCase(repository),
+    ),
+
+    ProxyProvider<VizzleRepositoryImpl, GetSubSubCategoriesUseCase>(
+      update: (_, repository, __) => GetSubSubCategoriesUseCase(repository),
+    ),
+
+    ProxyProvider<VizzleRepositoryImpl, GetSubItemsUseCase>(
+      update: (_, repository, __) => GetSubItemsUseCase(repository),
+    ),
+
+    ProxyProvider<VizzleRepositoryImpl, GetAdsUseCase>(
+      update: (_, repository, __) => GetAdsUseCase(repository),
+    ),
+
+    ProxyProvider<VizzleRepositoryImpl, ManageFavoritesUseCase>(
+      update: (_, repository, __) => ManageFavoritesUseCase(repository),
+    ),
+
+    ProxyProvider<VizzleRepositoryImpl, RecentlyViewedUseCase>(
+      update: (_, repository, __) => RecentlyViewedUseCase(repository),
+    ),
+
+    ProxyProvider<VizzleRepositoryImpl, SearchAdsUseCase>(
+      update: (_, repository, __) => SearchAdsUseCase(repository),
+    ),
+
+    // Vizzle Providers
+    ChangeNotifierProxyProvider<GetVizzleHomeUseCase, VizzleHomeProvider>(
+      create: (context) => VizzleHomeProvider(
+        getVizzleHomeUseCase: context.read<GetVizzleHomeUseCase>(),
+      ),
+      update: (_, getVizzleHomeUseCase, previous) =>
+          previous ??
+          VizzleHomeProvider(getVizzleHomeUseCase: getVizzleHomeUseCase),
+    ),
+
+    ChangeNotifierProxyProvider2<
+      GetCategoriesUseCase,
+      GetSubCategoriesUseCase,
+      SubCategoryListingProvider
+    >(
+      create: (context) => SubCategoryListingProvider(
+        getCategoriesUseCase: context.read<GetCategoriesUseCase>(),
+        getSubCategoriesUseCase: context.read<GetSubCategoriesUseCase>(),
+      ),
+      update: (_, getCategoriesUseCase, getSubCategoriesUseCase, previous) =>
+          previous ??
+          SubCategoryListingProvider(
+            getCategoriesUseCase: getCategoriesUseCase,
+            getSubCategoriesUseCase: getSubCategoriesUseCase,
+          ),
+    ),
+
+    ChangeNotifierProxyProvider<
+      GetSubSubCategoriesUseCase,
+      SubSubCategoryProvider
+    >(
+      create: (context) => SubSubCategoryProvider(
+        getSubSubCategoriesUseCase: context.read<GetSubSubCategoriesUseCase>(),
+      ),
+      update: (_, getSubSubCategoriesUseCase, previous) =>
+          previous ??
+          SubSubCategoryProvider(
+            getSubSubCategoriesUseCase: getSubSubCategoriesUseCase,
+          ),
+    ),
+
+    ChangeNotifierProxyProvider<GetSubItemsUseCase, SubItemsProvider>(
+      create: (context) => SubItemsProvider(
+        getSubItemsUseCase: context.read<GetSubItemsUseCase>(),
+      ),
+      update: (_, getSubItemsUseCase, previous) =>
+          previous ?? SubItemsProvider(getSubItemsUseCase: getSubItemsUseCase),
     ),
   ];
 }

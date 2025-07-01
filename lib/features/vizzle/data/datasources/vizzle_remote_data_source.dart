@@ -223,8 +223,9 @@ class VizzleRemoteDataSourceImpl implements VizzleRemoteDataSource {
 
       if (categoryId != null) queryParams['categoryId'] = categoryId;
       if (subCategoryId != null) queryParams['subCategoryId'] = subCategoryId;
-      if (subSubCategoryId != null)
+      if (subSubCategoryId != null) {
         queryParams['subSubCategoryId'] = subSubCategoryId;
+      }
       if (subItemId != null) queryParams['subItemId'] = subItemId;
       if (searchQuery != null) queryParams['searchQuery'] = searchQuery;
       if (minPrice != null) queryParams['minPrice'] = minPrice.toString();
