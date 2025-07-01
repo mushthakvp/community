@@ -167,8 +167,6 @@ class AppRouter {
       RouteConstants.walletRecharge,
       RouteConstants.profile,
       RouteConstants.coupons,
-      RouteConstants.vizzleHome,
-      RouteConstants.createAd,
     ];
     return protectedRoutes.any((route) => location.startsWith(route));
   }
