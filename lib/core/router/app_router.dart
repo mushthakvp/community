@@ -1,3 +1,4 @@
+// lib/core/router/app_router.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -22,6 +23,10 @@ import '../../features/promos/presentation/pages/promos_page.dart';
 import '../../features/redemption/presentation/pages/redemption_page.dart';
 import '../../features/redemption/presentation/pages/wallet_recharge_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
+import '../../features/vizzle/home/presentation/pages/vizzle_home_page.dart';
+import '../../features/vizzle/sub_category_listing/presentation/pages/sub_category_listing_page.dart';
+import '../../features/vizzle/sub_items_view/presentation/pages/sub_items_page.dart';
+import '../../features/vizzle/sub_sub_category_list_view/presentation/pages/sub_sub_category_page.dart';
 import '../constants/route_constants.dart';
 import '../widgets/navigation/bottom_navigation.dart';
 
@@ -57,6 +62,81 @@ class AppRouter {
           email: state.uri.queryParameters['email'] ?? '',
           isLogin: state.uri.queryParameters['isLogin'] == 'true',
         ),
+      ),
+
+      // Vizzle routes (standalone pages without bottom navigation)
+      GoRoute(
+        path: RouteConstants.vizzleHome,
+        builder: (context, state) => const VizzleHomePage(),
+      ),
+      GoRoute(
+        path: '${RouteConstants.vizzleCategory}/:categoryName',
+        builder: (context, state) {
+          final categoryName = state.pathParameters['categoryName']!;
+          return SubCategoryListingPage(categoryName: categoryName);
+        },
+      ),
+      GoRoute(
+        path:
+            '${RouteConstants.vizzleSubCategory}/:categoryName/:subCategoryId',
+        builder: (context, state) {
+          final categoryName = state.pathParameters['categoryName']!;
+          final subCategoryId = state.pathParameters['subCategoryId']!;
+          final subCategoryName =
+              state.uri.queryParameters['subCategoryName'] ?? '';
+          final categoryId = state.uri.queryParameters['categoryId'] ?? '';
+          final isFromListAd =
+              state.uri.queryParameters['isFromListAd'] ?? 'false';
+
+          return SubSubCategoryPage(
+            categoryName: categoryName,
+            subCategoryName: subCategoryName,
+            subCategoryId: subCategoryId,
+            categoryId: categoryId,
+            isFromListAd: isFromListAd,
+          );
+        },
+      ),
+      GoRoute(
+        path: '${RouteConstants.vizzleSubItems}/:subSubCategoryId',
+        builder: (context, state) {
+          final subSubCategoryId = state.pathParameters['subSubCategoryId']!;
+          final subSubCategoryName =
+              state.uri.queryParameters['subSubCategoryName'] ?? '';
+          final categoryName = state.uri.queryParameters['categoryName'] ?? '';
+          final subCategoryName =
+              state.uri.queryParameters['subCategoryName'] ?? '';
+          final categoryId = state.uri.queryParameters['categoryId'] ?? '';
+          final subCategoryId =
+              state.uri.queryParameters['subCategoryId'] ?? '';
+          final isFromListAd =
+              state.uri.queryParameters['isFromListAd'] == 'true';
+
+          return SubItemsPage(
+            subSubCategoryId: subSubCategoryId,
+            subSubCategoryName: subSubCategoryName,
+            categoryName: categoryName,
+            subCategoryName: subCategoryName,
+            categoryId: categoryId,
+            subCategoryId: subCategoryId,
+            isFromListAd: isFromListAd,
+          );
+        },
+      ),
+      GoRoute(
+        path: RouteConstants.vizzleSearch,
+        builder: (context, state) => const VizzleSearchPage(),
+      ),
+      GoRoute(
+        path: '${RouteConstants.vizzleProductDetails}/:productId',
+        builder: (context, state) {
+          final productId = state.pathParameters['productId']!;
+          final productShareUrl = state.uri.queryParameters['shareUrl'];
+          return VizzleProductDetailsPage(
+            productId: productId,
+            shareUrl: productShareUrl,
+          );
+        },
       ),
 
       // Standalone pages (without bottom navigation)
@@ -167,6 +247,7 @@ class AppRouter {
       RouteConstants.walletRecharge,
       RouteConstants.profile,
       RouteConstants.coupons,
+      RouteConstants.vizzleHome,
     ];
     return protectedRoutes.any((route) => location.startsWith(route));
   }
@@ -178,5 +259,31 @@ class AppRouter {
       RouteConstants.otpVerification,
     ];
     return authRoutes.any((route) => location.startsWith(route));
+  }
+}
+
+// Placeholder classes for missing pages
+class VizzleSearchPage extends StatelessWidget {
+  const VizzleSearchPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(body: Center(child: Text('Vizzle Search Page')));
+  }
+}
+
+class VizzleProductDetailsPage extends StatelessWidget {
+  final String productId;
+  final String? shareUrl;
+
+  const VizzleProductDetailsPage({
+    super.key,
+    required this.productId,
+    this.shareUrl,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(body: Center(child: Text('Product Details: $productId')));
   }
 }

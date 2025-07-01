@@ -17,6 +17,18 @@ class RouteConstants {
   static const String redemption = '/redemption';
   static const String walletRecharge = '/redemption/recharge';
 
+  // Vizzle Routes
+  static const String vizzleHome = '/vizzle';
+  static const String vizzleSearch = '/vizzle/search';
+  static const String vizzleCategory = '/vizzle/category';
+  static const String vizzleSubCategory = '/vizzle/subcategory';
+  static const String vizzleSubSubCategory = '/vizzle/sub-subcategory';
+  static const String vizzleSubItems = '/vizzle/sub-items';
+  static const String vizzleProductDetails = '/vizzle/product';
+  static const String vizzleAdsListing = '/vizzle/ads';
+  static const String vizzleFavorites = '/vizzle/favorites';
+  static const String vizzleRecentlyViewed = '/vizzle/recently-viewed';
+
   // Profile Routes
   static const String editProfile = '/profile/edit';
   static const String loyaltyPoints = '/profile/loyalty-points';
