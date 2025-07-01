@@ -48,6 +48,12 @@ class RouteConstants {
   static const String vizzleRecentlyViewed = '/vizzle/recently-viewed';
   static const String vizzleSavedAds = '/vizzle/saved';
 
+  // ==================== COMMUNITY ROUTES ====================
+  static const String communitySavedView = '/community/saved';
+  static const String communityRecentlyViewed = '/community/recently-viewed';
+  static const String communityManageFavorites = '/community/manage-favorites';
+  static const String communityFeedActions = '/community/feed-actions';
+
   // Seller Routes
   static const String vizzleSellerDetails = '/vizzle/seller';
   static const String vizzleSellerProfile = '/vizzle/seller/profile';
@@ -84,6 +90,12 @@ class RouteConstants {
   static const String aboutApp = '/profile/about';
 
   // ==================== DYNAMIC ROUTE BUILDERS ====================
+
+  /// Generate community saved view route
+  static String communitySavedViewRoute() => communitySavedView;
+
+  /// Generate community recently viewed route
+  static String communityRecentlyViewedRoute() => communityRecentlyViewed;
 
   /// Generate seller details route with seller ID
   static String sellerDetailsWithId(String sellerId) =>
@@ -264,6 +276,11 @@ class RouteConstants {
     return route.startsWith('/vizzle');
   }
 
+  /// Check if route is a Community route
+  static bool isCommunityRoute(String route) {
+    return route.startsWith('/community');
+  }
+
   /// Check if route is an auth route
   static bool isAuthRoute(String route) {
     const authRoutes = [
@@ -290,6 +307,8 @@ class RouteConstants {
       vizzleSearchPage,
       vizzleFavorites,
       vizzleMyAds,
+      communitySavedView,
+      communityRecentlyViewed,
       editProfile,
       loyaltyPoints,
       changePassword,
@@ -367,6 +386,14 @@ class RouteConstants {
     vizzleMyAds,
   ];
 
+  /// Get all Community feature routes
+  static List<String> get communityRoutes => [
+    communitySavedView,
+    communityRecentlyViewed,
+    communityManageFavorites,
+    communityFeedActions,
+  ];
+
   /// Get all profile-related routes
   static List<String> get profileRoutes => [
     profile,
@@ -422,6 +449,16 @@ class RouteConstants {
     return 'community://category/${Uri.encodeComponent(categoryName)}';
   }
 
+  /// Generate deep link for community saved view
+  static String generateCommunitySavedDeepLink() {
+    return 'community://saved';
+  }
+
+  /// Generate deep link for community recently viewed
+  static String generateCommunityRecentlyViewedDeepLink() {
+    return 'community://recently-viewed';
+  }
+
   /// Parse deep link and return route
   static String parseDeepLink(String deepLink) {
     final uri = Uri.parse(deepLink);
@@ -445,6 +482,10 @@ class RouteConstants {
           return categoryWithName(uri.pathSegments.first);
         }
         break;
+      case 'saved':
+        return communitySavedView;
+      case 'recently-viewed':
+        return communityRecentlyViewed;
       default:
         return home;
     }
@@ -458,6 +499,7 @@ class RouteConstants {
   static String getRouteCategory(String route) {
     if (isAuthRoute(route)) return 'auth';
     if (isVizzleRoute(route)) return 'vizzle';
+    if (isCommunityRoute(route)) return 'community';
     if (isSellerRoute(route)) return 'seller';
     if (isSearchRoute(route)) return 'search';
     if (isCategoryRoute(route)) return 'category';
@@ -490,6 +532,9 @@ class RouteConstants {
 
   /// Check if Vizzle marketplace is enabled
   static bool get isVizzleEnabled => true;
+
+  /// Check if Community features are enabled
+  static bool get isCommunityEnabled => true;
 
   /// Check if seller features are enabled
   static bool get isSellerFeaturesEnabled => true;

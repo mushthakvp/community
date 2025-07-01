@@ -50,6 +50,14 @@ class ApiConstants {
   static const String loyaltyPointHistory = 'user/loyalityPointHistory';
   static const String optOut = 'user/addOptItOut';
 
+  // ========== COMMUNITY ENDPOINTS ==========
+  static const String communitySavedAds = 'user/savedAds';
+  static const String communityRecentlyViewed = 'user/recentlyViewedAds';
+  static const String communityAddToFavorite = 'user/saveFeed';
+  static const String communityRemoveFromFavorite = 'user/removeFeed';
+  static const String communityShareFeed = 'user/shareFeed';
+  static const String communityReportPost = 'user/reportPost';
+
   // ========== VIZZLE MARKETPLACE ENDPOINTS ==========
 
   // Core Vizzle
@@ -99,6 +107,16 @@ class ApiConstants {
   static const String getSearchLocations = 'user/getSearchLocations';
 
   // ========== DYNAMIC ENDPOINT BUILDERS ==========
+
+  // Community Management
+  static String addCommunityToFavoriteById(String adId) =>
+      '$communityAddToFavorite/$adId';
+  static String removeCommunityFromFavoriteById(String adId) =>
+      '$communityRemoveFromFavorite/$adId';
+  static String shareCommunityFeedById(String adId) =>
+      '$communityShareFeed/$adId';
+  static String reportCommunityPostById(String adId) =>
+      '$communityReportPost/$adId';
 
   // Category Hierarchy Navigation
   static String getVizzleSubSubCategoriesBySubCategory(String subCategoryId) =>
@@ -366,6 +384,16 @@ class ApiConstants {
         endpoint.contains('searchAll') ||
         endpoint.contains('getCities') ||
         endpoint.contains('getSubCategories');
+  }
+
+  /// Validate if endpoint is a Community endpoint
+  static bool isCommunityEndpoint(String endpoint) {
+    return endpoint.contains('savedAds') ||
+        endpoint.contains('recentlyViewedAds') ||
+        endpoint.contains('saveFeed') ||
+        endpoint.contains('removeFeed') ||
+        endpoint.contains('shareFeed') ||
+        endpoint.contains('reportPost');
   }
 
   /// Validate required parameters for ads query

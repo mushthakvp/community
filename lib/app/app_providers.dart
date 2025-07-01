@@ -49,7 +49,8 @@ import '../features/vizzle/ads_listing/domain/usecases/get_ad_details_usecase.da
 import '../features/vizzle/ads_listing/domain/usecases/get_ads_usecase.dart'
     as ads_uc;
 import '../features/vizzle/ads_listing/domain/usecases/get_filter_options_usecase.dart';
-import '../features/vizzle/ads_listing/domain/usecases/toggle_favorite_usecase.dart';
+import '../features/vizzle/ads_listing/domain/usecases/toggle_favorite_usecase.dart'
+    as ads_toggle;
 import '../features/vizzle/ads_listing/presentation/providers/ads_listing_provider.dart';
 // Vizzle Core Providers
 import '../features/vizzle/data/datasources/vizzle_local_data_source.dart';
@@ -61,6 +62,25 @@ import '../features/vizzle/domain/usecases/get_sub_items_usecase.dart';
 import '../features/vizzle/domain/usecases/get_sub_sub_categories_usecase.dart';
 import '../features/vizzle/domain/usecases/get_vizzle_home_usecase.dart';
 import '../features/vizzle/home/presentation/providers/vizzle_home_provider.dart';
+// Vizzle Recently Viewed Providers
+import '../features/vizzle/recently_viewed/data/datasources/recently_viewed_local_datasource.dart';
+import '../features/vizzle/recently_viewed/data/datasources/recently_viewed_remote_datasource.dart';
+import '../features/vizzle/recently_viewed/data/repositories/recently_viewed_repository_impl.dart';
+import '../features/vizzle/recently_viewed/domain/repositories/recently_viewed_repository.dart';
+import '../features/vizzle/recently_viewed/domain/usecases/clear_recently_viewed_cache_usecase.dart';
+import '../features/vizzle/recently_viewed/domain/usecases/clear_recently_viewed_usecase.dart';
+import '../features/vizzle/recently_viewed/domain/usecases/get_recently_viewed_ads_usecase.dart';
+import '../features/vizzle/recently_viewed/domain/usecases/toggle_recently_viewed_favorite_usecase.dart';
+import '../features/vizzle/recently_viewed/presentation/providers/recently_viewed_provider.dart';
+// Vizzle Saved View Providers
+import '../features/vizzle/saved_view/data/datasources/saved_ads_local_datasource.dart';
+import '../features/vizzle/saved_view/data/datasources/saved_ads_remote_datasource.dart';
+import '../features/vizzle/saved_view/data/repositories/saved_ads_repository_impl.dart';
+import '../features/vizzle/saved_view/domain/repositories/saved_ads_repository.dart';
+import '../features/vizzle/saved_view/domain/usecases/clear_saved_cache_usecase.dart';
+import '../features/vizzle/saved_view/domain/usecases/get_saved_ads_usecase.dart';
+import '../features/vizzle/saved_view/domain/usecases/toggle_saved_favorite_usecase.dart';
+import '../features/vizzle/saved_view/presentation/providers/saved_ads_provider.dart';
 // Vizzle Search Providers
 import '../features/vizzle/search/data/datasources/search_remote_datasource.dart';
 import '../features/vizzle/search/data/repositories/search_repository_impl.dart';
@@ -463,21 +483,22 @@ class AppProviders {
     ProxyProvider<AdsRepository, GetFilterOptionsUseCase>(
       update: (_, repository, __) => GetFilterOptionsUseCase(repository),
     ),
-    ProxyProvider<AdsRepository, ToggleFavoriteUseCase>(
-      update: (_, repository, __) => ToggleFavoriteUseCase(repository),
+    ProxyProvider<AdsRepository, ads_toggle.ToggleFavoriteUseCase>(
+      update: (_, repository, __) =>
+          ads_toggle.ToggleFavoriteUseCase(repository),
     ),
 
     // Ads Provider
     ChangeNotifierProxyProvider3<
       ads_uc.GetAdsUseCase,
       GetFilterOptionsUseCase,
-      ToggleFavoriteUseCase,
+      ads_toggle.ToggleFavoriteUseCase,
       AdsListingProvider
     >(
       create: (context) => AdsListingProvider(
         getAdsUseCase: context.read<ads_uc.GetAdsUseCase>(),
         getFilterOptionsUseCase: context.read<GetFilterOptionsUseCase>(),
-        toggleFavoriteUseCase: context.read<ToggleFavoriteUseCase>(),
+        toggleFavoriteUseCase: context.read<ads_toggle.ToggleFavoriteUseCase>(),
       ),
       update:
           (
@@ -543,6 +564,154 @@ class AppProviders {
           SellerDetailsProvider(
             getSellerProfileUseCase: getSellerProfileUseCase,
           ),
+    ),
+
+    // ========================================
+    // VIZZLE SAVED ADS PROVIDERS (FIXED)
+    // ========================================
+
+    // Saved Ads Data Sources
+    ProxyProvider<ApiClient, SavedAdsRemoteDataSource>(
+      update: (_, apiClient, __) =>
+          SavedAdsRemoteDataSourceImpl(apiClient: apiClient),
+    ),
+    Provider<SavedAdsLocalDataSource>(
+      create: (_) => SavedAdsLocalDataSourceImpl(),
+    ),
+
+    // Saved Ads Repository
+    ProxyProvider3<
+      SavedAdsRemoteDataSource,
+      SavedAdsLocalDataSource,
+      NetworkInfo,
+      SavedAdsRepository
+    >(
+      update: (_, remoteDataSource, localDataSource, networkInfo, __) =>
+          SavedAdsRepositoryImpl(
+            remoteDataSource: remoteDataSource,
+            localDataSource: localDataSource,
+            networkInfo: networkInfo,
+          ),
+    ),
+
+    // Saved Ads Use Cases
+    ProxyProvider<SavedAdsRepository, GetSavedAdsUseCase>(
+      update: (_, repository, __) => GetSavedAdsUseCase(repository),
+    ),
+    ProxyProvider<SavedAdsRepository, ToggleSavedFavoriteUseCase>(
+      update: (_, repository, __) => ToggleSavedFavoriteUseCase(repository),
+    ),
+    ProxyProvider<SavedAdsRepository, ClearSavedCacheUseCase>(
+      update: (_, repository, __) => ClearSavedCacheUseCase(repository),
+    ),
+
+    // Saved Ads Provider
+    ChangeNotifierProxyProvider3<
+      GetSavedAdsUseCase,
+      ToggleSavedFavoriteUseCase,
+      ClearSavedCacheUseCase,
+      SavedAdsProvider
+    >(
+      create: (context) => SavedAdsProvider(
+        getSavedAdsUseCase: context.read<GetSavedAdsUseCase>(),
+        toggleSavedFavoriteUseCase: context.read<ToggleSavedFavoriteUseCase>(),
+        clearSavedCacheUseCase: context.read<ClearSavedCacheUseCase>(),
+      ),
+      update:
+          (
+            _,
+            getSavedAdsUseCase,
+            toggleSavedFavoriteUseCase,
+            clearSavedCacheUseCase,
+            previous,
+          ) =>
+              previous ??
+              SavedAdsProvider(
+                getSavedAdsUseCase: getSavedAdsUseCase,
+                toggleSavedFavoriteUseCase: toggleSavedFavoriteUseCase,
+                clearSavedCacheUseCase: clearSavedCacheUseCase,
+              ),
+    ),
+
+    // ========================================
+    // VIZZLE RECENTLY VIEWED PROVIDERS
+    // ========================================
+
+    // Recently Viewed Data Sources
+    ProxyProvider<ApiClient, RecentlyViewedRemoteDataSource>(
+      update: (_, apiClient, __) =>
+          RecentlyViewedRemoteDataSourceImpl(apiClient: apiClient),
+    ),
+    Provider<RecentlyViewedLocalDataSource>(
+      create: (_) => RecentlyViewedLocalDataSourceImpl(),
+    ),
+
+    // Recently Viewed Repository
+    ProxyProvider3<
+      RecentlyViewedRemoteDataSource,
+      RecentlyViewedLocalDataSource,
+      NetworkInfo,
+      RecentlyViewedRepository
+    >(
+      update: (_, remoteDataSource, localDataSource, networkInfo, __) =>
+          RecentlyViewedRepositoryImpl(
+            remoteDataSource: remoteDataSource,
+            localDataSource: localDataSource,
+            networkInfo: networkInfo,
+          ),
+    ),
+
+    // Recently Viewed Use Cases
+    ProxyProvider<RecentlyViewedRepository, GetRecentlyViewedAdsUseCase>(
+      update: (_, repository, __) => GetRecentlyViewedAdsUseCase(repository),
+    ),
+    ProxyProvider<
+      RecentlyViewedRepository,
+      ToggleRecentlyViewedFavoriteUseCase
+    >(
+      update: (_, repository, __) =>
+          ToggleRecentlyViewedFavoriteUseCase(repository),
+    ),
+    ProxyProvider<RecentlyViewedRepository, ClearRecentlyViewedUseCase>(
+      update: (_, repository, __) => ClearRecentlyViewedUseCase(repository),
+    ),
+    ProxyProvider<RecentlyViewedRepository, ClearRecentlyViewedCacheUseCase>(
+      update: (_, repository, __) =>
+          ClearRecentlyViewedCacheUseCase(repository),
+    ),
+
+    // Recently Viewed Provider
+    ChangeNotifierProxyProvider4<
+      GetRecentlyViewedAdsUseCase,
+      ToggleRecentlyViewedFavoriteUseCase,
+      ClearRecentlyViewedUseCase,
+      ClearRecentlyViewedCacheUseCase,
+      RecentlyViewedProvider
+    >(
+      create: (context) => RecentlyViewedProvider(
+        getRecentlyViewedAdsUseCase: context
+            .read<GetRecentlyViewedAdsUseCase>(),
+        toggleFavoriteUseCase: context
+            .read<ToggleRecentlyViewedFavoriteUseCase>(),
+        clearRecentlyViewedUseCase: context.read<ClearRecentlyViewedUseCase>(),
+        clearCacheUseCase: context.read<ClearRecentlyViewedCacheUseCase>(),
+      ),
+      update:
+          (
+            _,
+            getRecentlyViewedAdsUseCase,
+            toggleFavoriteUseCase,
+            clearRecentlyViewedUseCase,
+            clearCacheUseCase,
+            previous,
+          ) =>
+              previous ??
+              RecentlyViewedProvider(
+                getRecentlyViewedAdsUseCase: getRecentlyViewedAdsUseCase,
+                toggleFavoriteUseCase: toggleFavoriteUseCase,
+                clearRecentlyViewedUseCase: clearRecentlyViewedUseCase,
+                clearCacheUseCase: clearCacheUseCase,
+              ),
     ),
   ];
 }

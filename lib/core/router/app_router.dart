@@ -25,6 +25,8 @@ import '../../features/splash/presentation/pages/splash_page.dart';
 // Vizzle Feature Imports
 import '../../features/vizzle/ads_listing/presentation/pages/ads_listing_page.dart';
 import '../../features/vizzle/home/presentation/pages/vizzle_home_page.dart';
+import '../../features/vizzle/recently_viewed/presentation/pages/recently_viewed_page.dart';
+import '../../features/vizzle/saved_view/presentation/pages/saved_ads_page.dart';
 import '../../features/vizzle/search/presentation/pages/search_page.dart';
 import '../../features/vizzle/seller_details/presentation/pages/seller_details_page.dart';
 import '../../features/vizzle/sub_category_listing/presentation/pages/sub_category_listing_page.dart';
@@ -405,6 +407,22 @@ class AppRouter {
             body: const Center(child: Text('Sort Options')),
           );
         },
+      ),
+
+      // Vizzle User Content Routes (update existing ones)
+      GoRoute(
+        path: RouteConstants.vizzleFavorites,
+        builder: (context, state) => const SavedAdsPage(),
+      ),
+
+      GoRoute(
+        path: RouteConstants.vizzleRecentlyViewed,
+        builder: (context, state) => const RecentlyViewedPage(),
+      ),
+
+      GoRoute(
+        path: RouteConstants.vizzleSavedAds,
+        builder: (context, state) => const SavedAdsPage(),
       ),
 
       // ==================== STANDALONE PAGES ====================
