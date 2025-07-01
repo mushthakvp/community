@@ -6,6 +6,7 @@ import '../../../features/home/presentation/pages/home_page.dart';
 import '../../../features/profile/presentation/pages/profile_page.dart';
 import '../../../features/promos/presentation/pages/promos_page.dart';
 import '../../../features/redemption/presentation/pages/redemption_page.dart';
+import '../../../features/vizzle/home/presentation/pages/vizzle_home_page.dart';
 import '../../constants/app_constants.dart';
 import '../../constants/route_constants.dart';
 import '../common/text_widget.dart';
@@ -90,7 +91,7 @@ class _BottomNavigationState extends State<BottomNavigation>
           PromosPage(),
           RedemptionPage(),
           ProfilePage(),
-          // VizzleHomePage(),
+          VizzleHomePage(),
         ],
       ),
       floatingActionButton: _buildFloatingActionButton(),

@@ -1,16 +1,13 @@
-// lib/features/vizzle/home/presentation/pages/vizzle_home_page.dart
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../../core/constants/app_constants.dart';
-import '../../../../../core/widgets/common/app_bar.dart';
 import '../../../../../core/widgets/common/text_widget.dart';
 import '../../../../../core/widgets/loading/loading_widget.dart';
 import '../providers/vizzle_home_provider.dart';
-import '../widgets/vizzle_category_grid.dart';
 import '../widgets/vizzle_home_search_bar.dart';
-import '../widgets/vizzle_product_grid.dart';
+import '../widgets/vizzle_marketplace_categories.dart';
+import '../widgets/vizzle_recent_ads_section.dart';
 
 class VizzleHomePage extends StatefulWidget {
   const VizzleHomePage({super.key});
@@ -32,100 +29,58 @@ class _VizzleHomePageState extends State<VizzleHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppConstants.black,
-      appBar: CommonAppBar(
-        title: 'Vizzle',
-        actions: [
-          IconButton(
-            onPressed: () => context.push('/profile'),
-            icon: const Icon(Icons.person_outline, color: AppConstants.white),
-          ),
-        ],
-      ),
+      appBar: _buildAppBar(),
       body: Consumer<VizzleHomeProvider>(
         builder: (context, provider, child) {
           if (provider.isLoading && !provider.hasData) {
             return const Center(child: LoadingWidget());
           }
-
           return RefreshIndicator(
             onRefresh: () => provider.refreshData(),
             child: CustomScrollView(
               slivers: [
                 SliverPadding(
                   padding: const EdgeInsets.all(16),
-                  sliver: SliverList(
-                    delegate: SliverChildListDelegate([
-                      const VizzleHomeSearchBar(),
-                      const SizedBox(height: 20),
-                      const VizzleCategoryGrid(),
-                      const SizedBox(height: 20),
-                    ]),
+                  sliver: SliverToBoxAdapter(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const VizzleHomeSearchBar(),
+                        const SizedBox(height: 24),
+                        _buildSectionHeader('Browse Categories'),
+                        const SizedBox(height: 16),
+                      ],
+                    ),
                   ),
                 ),
-
-                // Motors Section
-                if (provider.vizzleHome?.motors.isNotEmpty == true) ...[
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: _buildSectionHeader('Popular Cars'),
+                const SliverPadding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  sliver: VizzleMarketplaceCategories(),
+                ),
+                if (provider.vizzleHome?.hasAnyAds == true) ...[
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(16, 32, 16, 16),
+                    sliver: SliverToBoxAdapter(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _buildSectionHeader('Recent Ads'),
+                          GestureDetector(
+                            onTap: () {},
+                            child: const CommonTextWidget(
+                              text: 'View All',
+                              color: AppConstants.appPrimaryColor,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                  VizzleProductGrid(
-                    products: provider.vizzleHome!.motors,
-                    section: 'motors',
-                    currencyCode: provider.vizzleHome!.currencyCode,
-                  ),
+                  VizzleRecentAdsSection(vizzleHome: provider.vizzleHome!),
                 ],
-
-                // Classifieds Section
-                if (provider.vizzleHome?.classifieds.isNotEmpty == true) ...[
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: _buildSectionHeader('Popular Classifieds'),
-                    ),
-                  ),
-                  VizzleProductGrid(
-                    products: provider.vizzleHome!.classifieds,
-                    section: 'classifieds',
-                    currencyCode: provider.vizzleHome!.currencyCode,
-                  ),
-                ],
-
-                // Furniture & Garden Section
-                if (provider.vizzleHome?.furnitureGarden.isNotEmpty ==
-                    true) ...[
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: _buildSectionHeader('Furniture & Garden'),
-                    ),
-                  ),
-                  VizzleProductGrid(
-                    products: provider.vizzleHome!.furnitureGarden,
-                    section: 'furnitureGarden',
-                    currencyCode: provider.vizzleHome!.currencyCode,
-                  ),
-                ],
-
-                // Property For Sale Section
-                if (provider.vizzleHome?.propertyForSale.isNotEmpty ==
-                    true) ...[
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: _buildSectionHeader('Property For Sale'),
-                    ),
-                  ),
-                  VizzleProductGrid(
-                    products: provider.vizzleHome!.propertyForSale,
-                    section: 'propertyForSale',
-                    currencyCode: provider.vizzleHome!.currencyCode,
-                  ),
-                ],
-
-                const SliverToBoxAdapter(child: SizedBox(height: 20)),
+                const SliverToBoxAdapter(child: SizedBox(height: 100)),
               ],
             ),
           );
@@ -134,15 +89,67 @@ class _VizzleHomePageState extends State<VizzleHomePage> {
     );
   }
 
-  Widget _buildSectionHeader(String title) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: CommonTextWidget(
-        text: title,
-        fontSize: 18,
-        fontWeight: FontWeight.w600,
-        color: AppConstants.white,
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      backgroundColor: AppConstants.black,
+      elevation: 0,
+      title: Row(
+        children: [
+          Container(
+            height: 32,
+            width: 32,
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('assets/animation/vizil_icon_animation.png'),
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          const CommonTextWidget(
+            text: 'Vizzle Marketplace',
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: AppConstants.white,
+          ),
+        ],
       ),
+      actions: [
+        IconButton(
+          onPressed: () {},
+          icon: Stack(
+            children: [
+              const Icon(
+                Icons.notifications_outlined,
+                color: AppConstants.white,
+                size: 24,
+              ),
+              Positioned(
+                right: 0,
+                top: 0,
+                child: Container(
+                  height: 8,
+                  width: 8,
+                  decoration: const BoxDecoration(
+                    color: AppConstants.appPrimaryColor,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 8),
+      ],
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return CommonTextWidget(
+      text: title,
+      fontSize: 18,
+      fontWeight: FontWeight.w600,
+      color: AppConstants.white,
     );
   }
 }

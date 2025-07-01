@@ -64,11 +64,7 @@ class AppRouter {
         ),
       ),
 
-      // Vizzle routes (standalone pages without bottom navigation)
-      GoRoute(
-        path: RouteConstants.vizzleHome,
-        builder: (context, state) => const VizzleHomePage(),
-      ),
+      // Vizzle sub-pages (without bottom navigation)
       GoRoute(
         path: '${RouteConstants.vizzleCategory}/:categoryName',
         builder: (context, state) {
@@ -189,7 +185,7 @@ class AppRouter {
         builder: (context, state) => const ContactUsPage(),
       ),
 
-      // Main app with bottom navigation
+      // Main app with bottom navigation (including Vizzle home)
       ShellRoute(
         navigatorKey: _shellNavigatorKey,
         builder: (context, state, child) => BottomNavigation(child: child),
@@ -209,6 +205,11 @@ class AppRouter {
           GoRoute(
             path: RouteConstants.profile,
             builder: (context, state) => const ProfilePage(),
+          ),
+          // Add Vizzle home to bottom navigation
+          GoRoute(
+            path: RouteConstants.vizzleHome,
+            builder: (context, state) => const VizzleHomePage(),
           ),
         ],
       ),
