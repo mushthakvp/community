@@ -149,7 +149,7 @@ class StorageService {
     await setDouble(StorageConstants.walletAmount, walletAmount);
     await setString(StorageConstants.currencyCode, currencyCode);
     if (countryName != null) {
-      await setString(StorageConstants.countryName, joinedDate ?? '');
+      await setString(StorageConstants.countryName, countryName);
     }
     if (joinedDate != null) {
       await setString(StorageConstants.joinedDate, joinedDate);

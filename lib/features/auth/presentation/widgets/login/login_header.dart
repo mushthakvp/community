@@ -98,7 +98,7 @@ class LoginHeader extends StatelessWidget {
             ).createShader(bounds);
           },
           child: const CommonTextWidget(
-            text: 'Welcome to Vivera Community',
+            text: 'Welcome to Livera Community',
             fontSize: 26,
             fontWeight: FontWeight.bold,
             color: Colors.white,

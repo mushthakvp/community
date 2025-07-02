@@ -209,7 +209,6 @@ class EssentialsGrid extends StatelessWidget {
     if (item.isExternal) {
       _launchExternalApp(context, item);
     } else if (item.isNavigationRoute) {
-      // Navigate to the specified route (for V-One -> Coupons)
       context.go(item.route);
     } else {
       _navigateToRoute(context, item.route);

@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:developer' as dev;
 
+import 'package:vivera/core/constants/api_constants.dart';
+
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/network/api_client.dart';
 import '../models/vizzle_models.dart';
@@ -48,7 +50,7 @@ class VizzleRemoteDataSourceImpl implements VizzleRemoteDataSource {
   @override
   Future<VizzleHomeModel> getVizzleHome() async {
     try {
-      final response = await apiClient.get('user/getVizzleHome');
+      final response = await apiClient.get(ApiConstants.vizzleHome);
       dev.log('Vizzle Home Response Status: ${response.statusCode}');
       final responseData = json.decode(response.body);
       dev.log('Vizzle Home Response Data: $responseData');
