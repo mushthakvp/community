@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../../core/constants/app_constants.dart';
+import '../../../../../core/constants/route_constants.dart';
 import '../../../../../core/widgets/common/app_bar.dart';
 import '../../../../../core/widgets/common/spacer_widget.dart';
 import '../../../../../core/widgets/common/text_widget.dart';
@@ -21,7 +23,8 @@ class _SelectCategoryPageState extends State<SelectCategoryPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<PlaceAddProvider>().loadCategories();
+      final provider = context.read<PlaceAddProvider>();
+      provider.loadCategories();
     });
   }
 
@@ -43,66 +46,154 @@ class _SelectCategoryPageState extends State<SelectCategoryPage> {
 
           final result = provider.categoriesResult;
           if (result == null) {
-            return const Center(
-              child: CommonTextWidget(text: 'No data available', fontSize: 16),
-            );
+            return _buildEmptyState(provider);
           }
 
           if (result.isError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.error_outline,
-                    color: AppConstants.error,
-                    size: 64,
-                  ),
-                  AppSpacing.verticalMD,
-                  CommonTextWidget(
-                    text: result.errorMessage ?? 'Something went wrong',
-                    fontSize: 16,
-                    align: TextAlign.center,
-                  ),
-                ],
-              ),
-            );
+            return _buildErrorState(provider, result.errorMessage);
           }
 
           final categories = provider.categories!;
 
-          return Padding(
+          return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const CommonTextWidget(
-                  text: 'What are you listing?',
-                  fontSize: 22,
-                  fontWeight: FontWeight.w500,
-                  align: TextAlign.center,
-                ),
-                AppSpacing.verticalSM,
-                const CommonTextWidget(
-                  text: 'Choose the right category',
-                  fontSize: 14,
-                  fontWeight: FontWeight.w300,
-                  align: TextAlign.center,
+                _buildHeader(provider),
+                AppSpacing.verticalXL,
+                CategoryGridWidget(
+                  categories: categories,
+                  onCategorySelected: (category) {
+                    provider.selectCategory(category);
+                    context.push(RouteConstants.selectSubCategory);
+                  },
                 ),
                 AppSpacing.verticalXL,
-                Expanded(
-                  child: CategoryGridWidget(
-                    categories: categories,
-                    onCategorySelected: (category) {
-                      provider.selectCategory(category);
-                      Navigator.pushNamed(context, '/select-subcategory');
-                    },
-                  ),
-                ),
               ],
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildHeader(PlaceAddProvider provider) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const CommonTextWidget(
+          text: 'What are you listing?',
+          fontSize: 24,
+          fontWeight: FontWeight.w600,
+        ),
+        AppSpacing.verticalSM,
+        CommonTextWidget(
+          text: 'Choose the right category for your item',
+          fontSize: 14,
+          fontWeight: FontWeight.w400,
+          color: AppConstants.white.withOpacity(0.7),
+        ),
+        if (provider.selectedCity != null) ...[
+          AppSpacing.verticalMD,
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: AppConstants.appPrimaryColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: AppConstants.appPrimaryColor.withOpacity(0.3),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.location_on,
+                  size: 16,
+                  color: AppConstants.appPrimaryColor,
+                ),
+                const SizedBox(width: 4),
+                CommonTextWidget(
+                  text: provider.selectedCity!,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: AppConstants.appPrimaryColor,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildEmptyState(PlaceAddProvider provider) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.category,
+            size: 80,
+            color: AppConstants.white.withOpacity(0.3),
+          ),
+          AppSpacing.verticalMD,
+          const CommonTextWidget(
+            text: 'No categories available',
+            fontSize: 18,
+            fontWeight: FontWeight.w500,
+          ),
+          AppSpacing.verticalSM,
+          CommonTextWidget(
+            text: 'Please try again later',
+            fontSize: 14,
+            color: AppConstants.white.withOpacity(0.6),
+          ),
+          AppSpacing.verticalXL,
+          ElevatedButton(
+            onPressed: () => provider.loadCategories(),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppConstants.appPrimaryColor,
+              foregroundColor: AppConstants.black,
+            ),
+            child: const Text('Retry'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState(PlaceAddProvider provider, String? errorMessage) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.error_outline, color: AppConstants.error, size: 80),
+          AppSpacing.verticalMD,
+          const CommonTextWidget(
+            text: 'Failed to load categories',
+            fontSize: 18,
+            fontWeight: FontWeight.w500,
+          ),
+          AppSpacing.verticalSM,
+          CommonTextWidget(
+            text: errorMessage ?? 'Something went wrong',
+            fontSize: 14,
+            color: AppConstants.white.withOpacity(0.6),
+            align: TextAlign.center,
+          ),
+          AppSpacing.verticalXL,
+          ElevatedButton(
+            onPressed: () => provider.loadCategories(),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppConstants.appPrimaryColor,
+              foregroundColor: AppConstants.black,
+            ),
+            child: const Text('Retry'),
+          ),
+        ],
       ),
     );
   }

@@ -29,6 +29,7 @@ import '../../features/vizzle/place_add/presentation/pages/create_ad_page.dart';
 import '../../features/vizzle/place_add/presentation/pages/location_picker_page.dart';
 import '../../features/vizzle/place_add/presentation/pages/select_category_page.dart';
 import '../../features/vizzle/place_add/presentation/pages/select_city_page.dart';
+import '../../features/vizzle/place_add/presentation/pages/select_subcategory_page.dart';
 import '../../features/vizzle/product_detail/presentation/pages/product_detail_page.dart';
 import '../../features/vizzle/product_detail/presentation/pages/report_product_page.dart';
 import '../../features/vizzle/recently_viewed/presentation/pages/recently_viewed_page.dart';
@@ -104,9 +105,7 @@ class AppRouter {
         ],
       ),
 
-      // ==================== VIZZLE MARKETPLACE ROUTES ====================
-
-      // ========== CREATE AD FLOW ROUTES ==========
+      // ==================== PLACE ADD FLOW ROUTES ====================
       GoRoute(
         path: RouteConstants.selectCity,
         builder: (context, state) => const SelectCityPage(),
@@ -114,6 +113,10 @@ class AppRouter {
       GoRoute(
         path: RouteConstants.selectCategory,
         builder: (context, state) => const SelectCategoryPage(),
+      ),
+      GoRoute(
+        path: RouteConstants.selectSubCategory,
+        builder: (context, state) => const SelectSubCategoryPage(),
       ),
       GoRoute(
         path: RouteConstants.createAd,
@@ -549,7 +552,7 @@ class AppRouter {
         builder: (context, state) => const ContactUsPage(),
       ),
 
-      //
+      // ========== ADDITIONAL REPORT PRODUCT ROUTES ==========
       GoRoute(
         path: '/vizzle/report-product/:productId/:productTitle',
         builder: (context, state) {
