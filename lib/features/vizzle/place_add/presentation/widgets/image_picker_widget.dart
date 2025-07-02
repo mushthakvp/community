@@ -1,11 +1,9 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../../core/constants/app_constants.dart';
-import '../../../../../core/widgets/common/spacer_widget.dart';
 import '../../../../../core/widgets/common/text_widget.dart';
 import '../providers/place_add_provider.dart';
 
@@ -19,17 +17,23 @@ class ImagePickerWidget extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const CommonTextWidget(
+              text: 'Photos *',
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+            ),
+            const SizedBox(height: 8),
             SizedBox(
-              height: 160,
+              height: 120,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 itemCount: provider.selectedImages.length + 1,
-                separatorBuilder: (context, index) => AppSpacing.horizontalSM,
+                separatorBuilder: (context, index) => const SizedBox(width: 12),
                 itemBuilder: (context, index) {
                   if (index < provider.selectedImages.length) {
                     return _buildImageItem(
                       context,
-                      XFile(provider.selectedImages[index].path),
+                      provider.selectedImages[index],
                       index,
                       provider,
                     );
@@ -39,11 +43,10 @@ class ImagePickerWidget extends StatelessWidget {
                 },
               ),
             ),
-            AppSpacing.verticalSM,
+            const SizedBox(height: 8),
             CommonTextWidget(
               text:
-                  'Photos: ${provider.selectedImages.length}/10 '
-                  'Choose main photo first',
+                  'Photos: ${provider.selectedImages.length}/10 • Choose main photo first',
               fontSize: 12,
               fontWeight: FontWeight.w300,
               color: AppConstants.white.withOpacity(0.6),
@@ -56,40 +59,70 @@ class ImagePickerWidget extends StatelessWidget {
 
   Widget _buildImageItem(
     BuildContext context,
-    XFile image,
+    File image,
     int index,
     PlaceAddProvider provider,
   ) {
     return Container(
-      width: 95,
-      height: 160,
+      width: 100,
+      height: 120,
       decoration: BoxDecoration(
-        color: AppConstants.white,
-        borderRadius: BorderRadius.circular(10),
+        color: AppConstants.surfaceVariant,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: index == 0
+              ? AppConstants.appPrimaryColor
+              : AppConstants.white.withOpacity(0.2),
+          width: index == 0 ? 2 : 1,
+        ),
       ),
       child: Stack(
         children: [
-          Container(
-            width: 84,
-            height: 120,
-            margin: const EdgeInsets.all(5.5),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              image: DecorationImage(
-                image: FileImage(File(image.path)),
-                fit: BoxFit.cover,
-              ),
+          // Image
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.file(
+              image,
+              width: 100,
+              height: 120,
+              fit: BoxFit.cover,
             ),
           ),
+
+          // Main photo indicator
+          if (index == 0)
+            Positioned(
+              bottom: 4,
+              left: 4,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppConstants.appPrimaryColor,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const CommonTextWidget(
+                  text: 'Main',
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: AppConstants.black,
+                ),
+              ),
+            ),
+
+          // Remove button
           Positioned(
-            right: -8,
-            top: -8,
-            child: IconButton(
-              onPressed: () => provider.removeImage(index),
-              icon: const Icon(
-                Icons.close,
-                color: AppConstants.black,
-                size: 20,
+            top: 4,
+            right: 4,
+            child: GestureDetector(
+              onTap: () => provider.removeImage(index),
+              child: Container(
+                width: 24,
+                height: 24,
+                decoration: const BoxDecoration(
+                  color: Colors.red,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.close, color: Colors.white, size: 16),
               ),
             ),
           ),
@@ -99,28 +132,42 @@ class ImagePickerWidget extends StatelessWidget {
   }
 
   Widget _buildAddImageButton(BuildContext context, PlaceAddProvider provider) {
+    final canAddMore = provider.selectedImages.length < 10;
+
     return GestureDetector(
-      onTap: () => _showImageSourceDialog(context, provider),
+      onTap: canAddMore
+          ? () => _showImageSourceDialog(context, provider)
+          : null,
       child: Container(
         width: 100,
-        height: 160,
+        height: 120,
         decoration: BoxDecoration(
           color: AppConstants.surfaceVariant,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: AppConstants.white.withOpacity(0.3),
+            width: 1,
+            style: BorderStyle.solid,
+          ),
         ),
-        child: const Column(
+        child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               Icons.add_photo_alternate,
-              size: 30,
-              color: AppConstants.appPrimaryColor,
+              size: 32,
+              color: canAddMore
+                  ? AppConstants.appPrimaryColor
+                  : AppConstants.white.withOpacity(0.3),
             ),
-            AppSpacing.verticalSM,
+            const SizedBox(height: 8),
             CommonTextWidget(
-              text: 'Add Photos',
-              fontSize: 14,
-              fontWeight: FontWeight.w400,
+              text: canAddMore ? 'Add Photo' : 'Max 10',
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: canAddMore
+                  ? AppConstants.white
+                  : AppConstants.white.withOpacity(0.3),
             ),
           ],
         ),
@@ -136,7 +183,7 @@ class ImagePickerWidget extends StatelessWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) => Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -145,7 +192,7 @@ class ImagePickerWidget extends StatelessWidget {
               fontSize: 18,
               fontWeight: FontWeight.w600,
             ),
-            AppSpacing.verticalXL,
+            const SizedBox(height: 24),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -155,13 +202,7 @@ class ImagePickerWidget extends StatelessWidget {
                   Icons.camera_alt,
                   () async {
                     Navigator.pop(context);
-                    final ImagePicker picker = ImagePicker();
-                    final XFile? image = await picker.pickImage(
-                      source: ImageSource.camera,
-                    );
-                    if (image != null) {
-                      provider.addImage(true);
-                    }
+                    await provider.addImage(false); // false = camera
                   },
                 ),
                 _buildSourceOption(
@@ -170,18 +211,12 @@ class ImagePickerWidget extends StatelessWidget {
                   Icons.photo_library,
                   () async {
                     Navigator.pop(context);
-                    final ImagePicker picker = ImagePicker();
-                    final XFile? image = await picker.pickImage(
-                      source: ImageSource.gallery,
-                    );
-                    if (image != null) {
-                      provider.addImage(true);
-                    }
+                    await provider.addImage(true); // true = gallery
                   },
                 ),
               ],
             ),
-            AppSpacing.verticalXL,
+            const SizedBox(height: 24),
           ],
         ),
       ),
@@ -203,15 +238,18 @@ class ImagePickerWidget extends StatelessWidget {
             height: 80,
             decoration: BoxDecoration(
               color: AppConstants.appPrimaryColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppConstants.appPrimaryColor, width: 1),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: AppConstants.appPrimaryColor.withOpacity(0.3),
+                width: 1,
+              ),
             ),
             child: Icon(icon, size: 40, color: AppConstants.appPrimaryColor),
           ),
-          AppSpacing.verticalSM,
+          const SizedBox(height: 12),
           CommonTextWidget(
             text: title,
-            fontSize: 16,
+            fontSize: 14,
             fontWeight: FontWeight.w500,
             color: AppConstants.appPrimaryColor,
           ),

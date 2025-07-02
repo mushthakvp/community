@@ -22,10 +22,8 @@ class _MapWidgetState extends State<MapWidget> {
   Widget build(BuildContext context) {
     return Consumer<PlaceAddProvider>(
       builder: (context, provider, child) {
-        double lat = (provider.latitude ?? 11.8745) as double;
-        double lng = (provider.longitude ?? 75.3704) as double;
-
-        // Update camera position when location changes
+        double lat = double.tryParse(provider.latitude ?? "11.8745") ?? 11.8745;
+        double lng = double.tryParse(provider.longitude ?? "75.37") ?? 75.37;
         if (_mapController != null) {
           _mapController!.animateCamera(
             CameraUpdate.newLatLng(LatLng(lat, lng)),
