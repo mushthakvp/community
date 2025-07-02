@@ -107,6 +107,8 @@ class _BottomNavigationState extends State<BottomNavigation>
         height: 69,
         width: 69,
         child: FloatingActionButton(
+          // ADD THIS LINE - Unique hero tag for bottom navigation FAB
+          heroTag: "bottom_navigation_vizzle_fab",
           backgroundColor: const Color(0xFFF0B90B),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(50),

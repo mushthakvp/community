@@ -10,7 +10,14 @@ import '../../../../../core/widgets/common/text_widget.dart';
 import '../providers/place_add_provider.dart';
 
 class LocationPickerPage extends StatefulWidget {
-  const LocationPickerPage({super.key});
+  final double? initialLatitude;
+  final double? initialLongitude;
+
+  const LocationPickerPage({
+    super.key,
+    this.initialLatitude,
+    this.initialLongitude,
+  });
 
   @override
   State<LocationPickerPage> createState() => _LocationPickerPageState();
@@ -18,14 +25,25 @@ class LocationPickerPage extends StatefulWidget {
 
 class _LocationPickerPageState extends State<LocationPickerPage> {
   final Completer<GoogleMapController> _controller = Completer();
-  LatLng _currentPosition = const LatLng(11.8745, 75.3704); // Kannur, Kerala
+  late LatLng _currentPosition;
   String _currentAddress = 'Loading...';
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _getCurrentLocation();
+    // Use provided coordinates or default to Kannur, Kerala
+    _currentPosition = LatLng(
+      widget.initialLatitude ?? 11.8745,
+      widget.initialLongitude ?? 75.3704,
+    );
+
+    if (widget.initialLatitude != null && widget.initialLongitude != null) {
+      _isLoading = false;
+      _updateAddress();
+    } else {
+      _getCurrentLocation();
+    }
   }
 
   Future<void> _getCurrentLocation() async {
@@ -34,6 +52,7 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
       if (!serviceEnabled) {
         setState(() {
           _isLoading = false;
+          _currentAddress = 'Location services disabled';
         });
         return;
       }
@@ -44,6 +63,7 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
         if (permission == LocationPermission.denied) {
           setState(() {
             _isLoading = false;
+            _currentAddress = 'Location permission denied';
           });
           return;
         }
@@ -52,11 +72,15 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
       if (permission == LocationPermission.deniedForever) {
         setState(() {
           _isLoading = false;
+          _currentAddress = 'Location permission permanently denied';
         });
         return;
       }
 
-      Position position = await Geolocator.getCurrentPosition();
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
       setState(() {
         _currentPosition = LatLng(position.latitude, position.longitude);
         _isLoading = false;
@@ -66,16 +90,31 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
     } catch (e) {
       setState(() {
         _isLoading = false;
+        _currentAddress = 'Failed to get location';
       });
     }
   }
 
   void _updateAddress() async {
-    // Here you would typically use a geocoding service
-    // For now, we'll use a placeholder
-    setState(() {
-      _currentAddress = 'Kannur, Kerala, India';
-    });
+    try {
+      // Here you would typically use a geocoding service
+      // For now, we'll use a placeholder based on coordinates
+      if (_currentPosition.latitude == 11.8745 &&
+          _currentPosition.longitude == 75.3704) {
+        setState(() {
+          _currentAddress = 'Kannur, Kerala, India';
+        });
+      } else {
+        // You can integrate with a geocoding service here
+        setState(() {
+          _currentAddress = 'Selected Location';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _currentAddress = 'Unable to get address';
+      });
+    }
   }
 
   void _onMapTap(LatLng position) {
@@ -93,6 +132,14 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
       _currentAddress,
     );
     Navigator.pop(context);
+  }
+
+  void _useCurrentLocation() async {
+    await _getCurrentLocation();
+    if (_controller.isCompleted) {
+      final controller = await _controller.future;
+      controller.animateCamera(CameraUpdate.newLatLng(_currentPosition));
+    }
   }
 
   @override
@@ -128,6 +175,35 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
               Icons.location_on,
               size: 40,
               color: AppConstants.appPrimaryColor,
+            ),
+          ),
+
+          // Top back button
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 16,
+            left: 16,
+            child: CircleAvatar(
+              backgroundColor: AppConstants.surfaceVariant,
+              child: IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.arrow_back, color: AppConstants.white),
+              ),
+            ),
+          ),
+
+          // Current location button
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 16,
+            right: 16,
+            child: CircleAvatar(
+              backgroundColor: AppConstants.surfaceVariant,
+              child: IconButton(
+                onPressed: _useCurrentLocation,
+                icon: const Icon(
+                  Icons.my_location,
+                  color: AppConstants.appPrimaryColor,
+                ),
+              ),
             ),
           ),
 
@@ -180,44 +256,59 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
                         ),
                       )
                     else
-                      ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        leading: CircleAvatar(
-                          backgroundColor: AppConstants.appPrimaryColor
-                              .withOpacity(0.1),
-                          radius: 16,
-                          child: const Icon(
-                            Icons.location_on,
-                            size: 16,
-                            color: AppConstants.appPrimaryColor,
+                      Column(
+                        children: [
+                          ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: CircleAvatar(
+                              backgroundColor: AppConstants.appPrimaryColor
+                                  .withOpacity(0.1),
+                              radius: 16,
+                              child: const Icon(
+                                Icons.location_on,
+                                size: 16,
+                                color: AppConstants.appPrimaryColor,
+                              ),
+                            ),
+                            title: CommonTextWidget(
+                              text: _currentAddress,
+                              fontSize: 16,
+                            ),
+                            subtitle: const CommonTextWidget(
+                              text: 'Tap to confirm this location',
+                              fontSize: 12,
+                              color: AppConstants.onSurfaceVariant,
+                            ),
+                            onTap: _confirmLocation,
                           ),
-                        ),
-                        title: CommonTextWidget(
-                          text: _currentAddress,
-                          fontSize: 16,
-                        ),
-                        subtitle: const CommonTextWidget(
-                          text: 'Tap to confirm this location',
-                          fontSize: 12,
-                          color: AppConstants.onSurfaceVariant,
-                        ),
-                        onTap: _confirmLocation,
+
+                          const SizedBox(height: 16),
+
+                          // Confirm button
+                          SizedBox(
+                            width: double.infinity,
+                            height: 50,
+                            child: ElevatedButton(
+                              onPressed: _confirmLocation,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppConstants.appPrimaryColor,
+                                foregroundColor: AppConstants.black,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: const CommonTextWidget(
+                                text: 'Confirm Location',
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: AppConstants.black,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                   ],
                 ),
-              ),
-            ),
-          ),
-
-          // Top back button
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 16,
-            left: 16,
-            child: CircleAvatar(
-              backgroundColor: AppConstants.surfaceVariant,
-              child: IconButton(
-                onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.arrow_back, color: AppConstants.white),
               ),
             ),
           ),

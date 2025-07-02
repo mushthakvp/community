@@ -38,6 +38,7 @@ import '../../features/vizzle/seller_details/presentation/pages/seller_details_p
 import '../../features/vizzle/sub_category_listing/presentation/pages/sub_category_listing_page.dart';
 import '../../features/vizzle/sub_items_view/presentation/pages/sub_items_page.dart';
 import '../../features/vizzle/sub_sub_category_list_view/presentation/pages/sub_sub_category_page.dart';
+import '../constants/app_constants.dart';
 import '../constants/route_constants.dart';
 import '../widgets/navigation/bottom_navigation.dart';
 
@@ -75,9 +76,150 @@ class AppRouter {
         ),
       ),
 
+      // ==================== MAIN APP WITH BOTTOM NAVIGATION ====================
+      ShellRoute(
+        navigatorKey: _shellNavigatorKey,
+        builder: (context, state, child) => BottomNavigation(child: child),
+        routes: [
+          GoRoute(
+            path: RouteConstants.home,
+            builder: (context, state) => const HomePage(),
+          ),
+          GoRoute(
+            path: RouteConstants.promos,
+            builder: (context, state) => const PromosPage(),
+          ),
+          GoRoute(
+            path: RouteConstants.redemption,
+            builder: (context, state) => const RedemptionPage(),
+          ),
+          GoRoute(
+            path: RouteConstants.profile,
+            builder: (context, state) => const ProfilePage(),
+          ),
+          GoRoute(
+            path: RouteConstants.vizzleHome,
+            builder: (context, state) => const VizzleHomePage(),
+          ),
+        ],
+      ),
+
       // ==================== VIZZLE MARKETPLACE ROUTES ====================
 
-      // Vizzle Search Routes
+      // ========== CREATE AD FLOW ROUTES ==========
+      GoRoute(
+        path: RouteConstants.selectCity,
+        builder: (context, state) => const SelectCityPage(),
+      ),
+      GoRoute(
+        path: RouteConstants.selectCategory,
+        builder: (context, state) => const SelectCategoryPage(),
+      ),
+      GoRoute(
+        path: RouteConstants.createAd,
+        builder: (context, state) => const CreateAdPage(),
+      ),
+      GoRoute(
+        path: RouteConstants.locationPicker,
+        builder: (context, state) {
+          final queryParams = state.uri.queryParameters;
+          return LocationPickerPage(
+            initialLatitude: double.tryParse(queryParams['lat'] ?? ''),
+            initialLongitude: double.tryParse(queryParams['lng'] ?? ''),
+          );
+        },
+      ),
+
+      // ========== CATEGORY SPECIFIC CREATE AD ROUTES ==========
+      GoRoute(
+        path: RouteConstants.createMotorAd,
+        builder: (context, state) => const CreateAdPage(),
+      ),
+      GoRoute(
+        path: RouteConstants.createPropertyAd,
+        builder: (context, state) => const CreateAdPage(),
+      ),
+      GoRoute(
+        path: RouteConstants.createElectronicsAd,
+        builder: (context, state) => const CreateAdPage(),
+      ),
+      GoRoute(
+        path: RouteConstants.createFurnitureAd,
+        builder: (context, state) => const CreateAdPage(),
+      ),
+      GoRoute(
+        path: RouteConstants.createFarmFreshAd,
+        builder: (context, state) => const CreateAdPage(),
+      ),
+      GoRoute(
+        path: RouteConstants.createCommunityAd,
+        builder: (context, state) => const CreateAdPage(),
+      ),
+
+      // ========== PRODUCT DETAIL ROUTES ==========
+      GoRoute(
+        path: RouteConstants.productDetail,
+        builder: (context, state) {
+          final queryParams = state.uri.queryParameters;
+          final shareUrl = queryParams['shareUrl'];
+          final isPersonal = queryParams['isPersonal'] == 'true';
+
+          if (shareUrl == null || shareUrl.isEmpty) {
+            return const Scaffold(
+              backgroundColor: AppConstants.black,
+              body: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.error_outline, color: Colors.red, size: 64),
+                    SizedBox(height: 16),
+                    Text(
+                      'Invalid product URL',
+                      style: TextStyle(color: Colors.white, fontSize: 18),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          return ProductDetailPage(shareUrl: shareUrl, isPersonal: isPersonal);
+        },
+      ),
+      GoRoute(
+        path: RouteConstants.reportProduct,
+        builder: (context, state) {
+          final queryParams = state.uri.queryParameters;
+          final productId = queryParams['productId'];
+          final productTitle = queryParams['title'] ?? 'Product';
+
+          if (productId == null || productId.isEmpty) {
+            return const Scaffold(
+              backgroundColor: AppConstants.black,
+              body: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.error_outline, color: Colors.red, size: 64),
+                    SizedBox(height: 16),
+                    Text(
+                      'Invalid product ID',
+                      style: TextStyle(color: Colors.white, fontSize: 18),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          return ReportProductPage(
+            productId: productId,
+            productTitle: productTitle,
+          );
+        },
+      ),
+
+      // ========== SEARCH ROUTES ==========
       GoRoute(
         path: RouteConstants.vizzleSearch,
         builder: (context, state) {
@@ -108,69 +250,7 @@ class AppRouter {
         builder: (context, state) => const SearchPage(),
       ),
 
-      // Vizzle Category Navigation Routes
-      GoRoute(
-        path: '${RouteConstants.vizzleCategory}/:categoryName',
-        builder: (context, state) {
-          final categoryName = state.pathParameters['categoryName']!;
-          return SubCategoryListingPage(categoryName: categoryName);
-        },
-      ),
-
-      GoRoute(
-        path:
-            '${RouteConstants.vizzleSubCategory}/:categoryName/:subCategoryId',
-        builder: (context, state) {
-          final categoryName = state.pathParameters['categoryName']!;
-          final subCategoryId = state.pathParameters['subCategoryId']!;
-          final queryParams = state.uri.queryParameters;
-
-          return SubSubCategoryPage(
-            categoryName: categoryName,
-            subCategoryName: queryParams['subCategoryName'] ?? '',
-            subCategoryId: subCategoryId,
-            categoryId: queryParams['categoryId'] ?? '',
-            isFromListAd: queryParams['isFromListAd'] ?? 'false',
-          );
-        },
-      ),
-
-      GoRoute(
-        path:
-            '${RouteConstants.vizzleSubSubCategory}/:categoryName/:subCategoryId/:subSubCategoryId',
-        builder: (context, state) {
-          final pathParams = state.pathParameters;
-          final queryParams = state.uri.queryParameters;
-
-          return SubSubCategoryPage(
-            categoryName: pathParams['categoryName']!,
-            subCategoryName: queryParams['subCategoryName'] ?? '',
-            subCategoryId: pathParams['subCategoryId']!,
-            categoryId: queryParams['categoryId'] ?? '',
-            isFromListAd: queryParams['isFromListAd'] ?? 'false',
-          );
-        },
-      ),
-
-      GoRoute(
-        path: '${RouteConstants.vizzleSubItems}/:subSubCategoryId',
-        builder: (context, state) {
-          final subSubCategoryId = state.pathParameters['subSubCategoryId']!;
-          final queryParams = state.uri.queryParameters;
-
-          return SubItemsPage(
-            subSubCategoryId: subSubCategoryId,
-            subSubCategoryName: queryParams['subSubCategoryName'] ?? '',
-            categoryName: queryParams['categoryName'] ?? '',
-            subCategoryName: queryParams['subCategoryName'] ?? '',
-            categoryId: queryParams['categoryId'] ?? '',
-            subCategoryId: queryParams['subCategoryId'] ?? '',
-            isFromListAd: queryParams['isFromListAd'] == 'true',
-          );
-        },
-      ),
-
-      // Vizzle Ads & Product Routes
+      // ========== ADS LISTING ROUTES ==========
       GoRoute(
         path: RouteConstants.vizzleAdsListing,
         builder: (context, state) {
@@ -190,6 +270,80 @@ class AppRouter {
         },
       ),
 
+      // ========== USER CONTENT ROUTES ==========
+      GoRoute(
+        path: RouteConstants.vizzleRecentlyViewed,
+        builder: (context, state) => const RecentlyViewedPage(),
+      ),
+      GoRoute(
+        path: RouteConstants.vizzleSavedAds,
+        builder: (context, state) => const SavedAdsPage(),
+      ),
+      GoRoute(
+        path: RouteConstants.vizzleFavorites,
+        builder: (context, state) => const SavedAdsPage(),
+      ),
+
+      // ========== CATEGORY NAVIGATION ROUTES ==========
+      GoRoute(
+        path: '${RouteConstants.vizzleCategory}/:categoryName',
+        builder: (context, state) {
+          final categoryName = state.pathParameters['categoryName']!;
+          return SubCategoryListingPage(categoryName: categoryName);
+        },
+      ),
+      GoRoute(
+        path:
+            '${RouteConstants.vizzleSubCategory}/:categoryName/:subCategoryId',
+        builder: (context, state) {
+          final categoryName = state.pathParameters['categoryName']!;
+          final subCategoryId = state.pathParameters['subCategoryId']!;
+          final queryParams = state.uri.queryParameters;
+
+          return SubSubCategoryPage(
+            categoryName: categoryName,
+            subCategoryName: queryParams['subCategoryName'] ?? '',
+            subCategoryId: subCategoryId,
+            categoryId: queryParams['categoryId'] ?? '',
+            isFromListAd: queryParams['isFromListAd'] ?? 'false',
+          );
+        },
+      ),
+      GoRoute(
+        path:
+            '${RouteConstants.vizzleSubSubCategory}/:categoryName/:subCategoryId/:subSubCategoryId',
+        builder: (context, state) {
+          final pathParams = state.pathParameters;
+          final queryParams = state.uri.queryParameters;
+
+          return SubSubCategoryPage(
+            categoryName: pathParams['categoryName']!,
+            subCategoryName: queryParams['subCategoryName'] ?? '',
+            subCategoryId: pathParams['subCategoryId']!,
+            categoryId: queryParams['categoryId'] ?? '',
+            isFromListAd: queryParams['isFromListAd'] ?? 'false',
+          );
+        },
+      ),
+      GoRoute(
+        path: '${RouteConstants.vizzleSubItems}/:subSubCategoryId',
+        builder: (context, state) {
+          final subSubCategoryId = state.pathParameters['subSubCategoryId']!;
+          final queryParams = state.uri.queryParameters;
+
+          return SubItemsPage(
+            subSubCategoryId: subSubCategoryId,
+            subSubCategoryName: queryParams['subSubCategoryName'] ?? '',
+            categoryName: queryParams['categoryName'] ?? '',
+            subCategoryName: queryParams['subCategoryName'] ?? '',
+            categoryId: queryParams['categoryId'] ?? '',
+            subCategoryId: queryParams['subCategoryId'] ?? '',
+            isFromListAd: queryParams['isFromListAd'] == 'true',
+          );
+        },
+      ),
+
+      // ========== PRODUCT & AD DETAIL ROUTES ==========
       GoRoute(
         path: '${RouteConstants.vizzleProductDetails}/:productId',
         builder: (context, state) {
@@ -210,7 +364,6 @@ class AppRouter {
           );
         },
       ),
-
       GoRoute(
         path: '${RouteConstants.vizzleAdDetails}/:adId',
         builder: (context, state) {
@@ -222,7 +375,7 @@ class AppRouter {
         },
       ),
 
-      // Vizzle Seller Routes
+      // ========== SELLER ROUTES ==========
       GoRoute(
         path: '${RouteConstants.vizzleSellerDetails}/:sellerId',
         builder: (context, state) {
@@ -230,7 +383,6 @@ class AppRouter {
           return SellerDetailsPage(sellerId: sellerId);
         },
       ),
-
       GoRoute(
         path: '${RouteConstants.vizzleSellerProfile}/:sellerId',
         builder: (context, state) {
@@ -238,7 +390,6 @@ class AppRouter {
           return SellerDetailsPage(sellerId: sellerId);
         },
       ),
-
       GoRoute(
         path: '${RouteConstants.vizzleSellerAds}/:sellerId',
         builder: (context, state) {
@@ -249,7 +400,6 @@ class AppRouter {
           );
         },
       ),
-
       GoRoute(
         path: '${RouteConstants.vizzleSellerReviews}/:sellerId',
         builder: (context, state) {
@@ -260,7 +410,6 @@ class AppRouter {
           );
         },
       ),
-
       GoRoute(
         path: '${RouteConstants.vizzleSellerStats}/:sellerId',
         builder: (context, state) {
@@ -272,48 +421,11 @@ class AppRouter {
         },
       ),
 
-      // Vizzle User Content Routes
-      GoRoute(
-        path: RouteConstants.vizzleFavorites,
-        builder: (context, state) {
-          return Scaffold(
-            appBar: AppBar(title: const Text('Favorites')),
-            body: const Center(child: Text('Your Favorite Ads')),
-          );
-        },
-      ),
-
-      GoRoute(
-        path: RouteConstants.vizzleRecentlyViewed,
-        builder: (context, state) {
-          return Scaffold(
-            appBar: AppBar(title: const Text('Recently Viewed')),
-            body: const Center(child: Text('Recently Viewed Ads')),
-          );
-        },
-      ),
-
-      GoRoute(
-        path: RouteConstants.vizzleSavedAds,
-        builder: (context, state) {
-          return Scaffold(
-            appBar: AppBar(title: const Text('Saved Ads')),
-            body: const Center(child: Text('Your Saved Ads')),
-          );
-        },
-      ),
-
-      // Vizzle Ad Management Routes (Future Implementation)
+      // ========== AD MANAGEMENT ROUTES ==========
       GoRoute(
         path: RouteConstants.vizzleCreateAd,
-        builder: (context, state) {
-          return Scaffold(
-            appBar: AppBar(title: const Text('Create Ad')),
-            body: const Center(child: Text('Create New Ad')),
-          );
-        },
+        builder: (context, state) => const CreateAdPage(),
       ),
-
       GoRoute(
         path: RouteConstants.vizzleEditAd,
         builder: (context, state) {
@@ -323,7 +435,6 @@ class AppRouter {
           );
         },
       ),
-
       GoRoute(
         path: RouteConstants.vizzleMyAds,
         builder: (context, state) {
@@ -333,7 +444,6 @@ class AppRouter {
           );
         },
       ),
-
       GoRoute(
         path: RouteConstants.vizzleAdPreview,
         builder: (context, state) {
@@ -344,57 +454,29 @@ class AppRouter {
         },
       ),
 
+      // ========== LEGACY CATEGORY SPECIFIC AD CREATION ==========
       GoRoute(
         path: RouteConstants.vizzleCreateMotorAd,
-        builder: (context, state) {
-          return Scaffold(
-            appBar: AppBar(title: const Text('Create Motor Ad')),
-            body: const Center(child: Text('Create Motor Advertisement')),
-          );
-        },
+        builder: (context, state) => const CreateAdPage(),
       ),
-
       GoRoute(
         path: RouteConstants.vizzleCreatePropertyAd,
-        builder: (context, state) {
-          return Scaffold(
-            appBar: AppBar(title: const Text('Create Property Ad')),
-            body: const Center(child: Text('Create Property Advertisement')),
-          );
-        },
+        builder: (context, state) => const CreateAdPage(),
       ),
-
       GoRoute(
         path: RouteConstants.vizzleCreateClassifiedAd,
-        builder: (context, state) {
-          return Scaffold(
-            appBar: AppBar(title: const Text('Create Classified Ad')),
-            body: const Center(child: Text('Create Classified Advertisement')),
-          );
-        },
+        builder: (context, state) => const CreateAdPage(),
       ),
-
       GoRoute(
         path: RouteConstants.vizzleCreateFurnitureAd,
-        builder: (context, state) {
-          return Scaffold(
-            appBar: AppBar(title: const Text('Create Furniture Ad')),
-            body: const Center(child: Text('Create Furniture Advertisement')),
-          );
-        },
+        builder: (context, state) => const CreateAdPage(),
       ),
-
       GoRoute(
         path: RouteConstants.vizzleCreateJobAd,
-        builder: (context, state) {
-          return Scaffold(
-            appBar: AppBar(title: const Text('Create Job Ad')),
-            body: const Center(child: Text('Create Job Advertisement')),
-          );
-        },
+        builder: (context, state) => const CreateAdPage(),
       ),
 
-      // Vizzle Filter & Sort Routes
+      // ========== FILTER & SORT ROUTES ==========
       GoRoute(
         path: RouteConstants.vizzleFilters,
         builder: (context, state) {
@@ -404,7 +486,6 @@ class AppRouter {
           );
         },
       ),
-
       GoRoute(
         path: RouteConstants.vizzleSortOptions,
         builder: (context, state) {
@@ -415,37 +496,21 @@ class AppRouter {
         },
       ),
 
-      // Vizzle User Content Routes (update existing ones)
-      GoRoute(
-        path: RouteConstants.vizzleFavorites,
-        builder: (context, state) => const SavedAdsPage(),
-      ),
-
-      GoRoute(
-        path: RouteConstants.vizzleRecentlyViewed,
-        builder: (context, state) => const RecentlyViewedPage(),
-      ),
-
-      GoRoute(
-        path: RouteConstants.vizzleSavedAds,
-        builder: (context, state) => const SavedAdsPage(),
-      ),
-
       // ==================== STANDALONE PAGES ====================
 
-      // Coupons
+      // ========== COUPONS ==========
       GoRoute(
         path: RouteConstants.coupons,
         builder: (context, state) => const CouponHomePage(),
       ),
 
-      // Redemption
+      // ========== REDEMPTION ==========
       GoRoute(
         path: RouteConstants.walletRecharge,
         builder: (context, state) => const WalletRechargePage(),
       ),
 
-      // Profile Pages
+      // ========== PROFILE PAGES ==========
       GoRoute(
         path: RouteConstants.editProfile,
         builder: (context, state) => const EditProfilePage(),
@@ -482,147 +547,6 @@ class AppRouter {
         path: RouteConstants.contactUs,
         builder: (context, state) => const ContactUsPage(),
       ),
-
-      // ==================== MAIN APP WITH BOTTOM NAVIGATION ====================
-      ShellRoute(
-        navigatorKey: _shellNavigatorKey,
-        builder: (context, state, child) => BottomNavigation(child: child),
-        routes: [
-          GoRoute(
-            path: RouteConstants.home,
-            builder: (context, state) => const HomePage(),
-          ),
-          GoRoute(
-            path: RouteConstants.promos,
-            builder: (context, state) => const PromosPage(),
-          ),
-          GoRoute(
-            path: RouteConstants.redemption,
-            builder: (context, state) => const RedemptionPage(),
-          ),
-          GoRoute(
-            path: RouteConstants.profile,
-            builder: (context, state) => const ProfilePage(),
-          ),
-          GoRoute(
-            path: RouteConstants.vizzleHome,
-            builder: (context, state) => const VizzleHomePage(),
-          ),
-        ],
-      ),
-      // ==================== PLACE ADD ROUTES ====================
-
-      // Select City
-      GoRoute(
-        path: RouteConstants.selectCity,
-        builder: (context, state) => const SelectCityPage(),
-      ),
-
-      // Select Category
-      GoRoute(
-        path: RouteConstants.selectCategory,
-        builder: (context, state) => const SelectCategoryPage(),
-      ),
-
-      // Location Picker
-      GoRoute(
-        path: RouteConstants.locationPicker,
-        builder: (context, state) {
-          return LocationPickerPage();
-        },
-      ),
-
-      // Create Ad (General)
-      GoRoute(
-        path: RouteConstants.createAd,
-        builder: (context, state) {
-          return CreateAdPage();
-        },
-      ),
-
-      // Category Specific Create Routes
-      GoRoute(
-        path: RouteConstants.createMotorAd,
-        builder: (context, state) {
-          return CreateAdPage();
-        },
-      ),
-
-      GoRoute(
-        path: RouteConstants.createPropertyAd,
-        builder: (context, state) {
-          return CreateAdPage();
-        },
-      ),
-
-      GoRoute(
-        path: RouteConstants.createElectronicsAd,
-        builder: (context, state) {
-          return CreateAdPage();
-        },
-      ),
-
-      GoRoute(
-        path: RouteConstants.createFurnitureAd,
-        builder: (context, state) {
-          return CreateAdPage();
-        },
-      ),
-
-      GoRoute(
-        path: RouteConstants.createFarmFreshAd,
-        builder: (context, state) {
-          return CreateAdPage();
-        },
-      ),
-
-      GoRoute(
-        path: RouteConstants.createCommunityAd,
-        builder: (context, state) {
-          return CreateAdPage();
-        },
-      ),
-
-      // ==================== PRODUCT DETAIL ROUTES ====================
-
-      // Product Detail
-      GoRoute(
-        path: RouteConstants.productDetail,
-        builder: (context, state) {
-          final queryParams = state.uri.queryParameters;
-          final shareUrl = queryParams['shareUrl'];
-          final isPersonal = queryParams['isPersonal'] == 'true';
-
-          if (shareUrl == null) {
-            return const Scaffold(
-              body: Center(child: Text('Invalid product URL')),
-            );
-          }
-
-          return ProductDetailPage(shareUrl: shareUrl, isPersonal: isPersonal);
-        },
-      ),
-
-      // Report Product
-      GoRoute(
-        path: RouteConstants.reportProduct,
-        builder: (context, state) {
-          final queryParams = state.uri.queryParameters;
-          final productId = queryParams['productId'];
-          final productTitle = queryParams['title'] ?? 'Product';
-
-          if (productId == null) {
-            return const Scaffold(
-              body: Center(child: Text('Invalid product ID')),
-            );
-          }
-
-          return ReportProductPage(
-            productId: productId,
-            productTitle: productTitle,
-          );
-        },
-      ),
     ],
   );
 
@@ -651,7 +575,109 @@ class AppRouter {
     return null;
   }
 
-  // ==================== UTILITY METHODS ====================
+  // ==================== NAVIGATION HELPER METHODS ====================
+
+  /// Navigate to create ad flow
+  static void navigateToCreateAd(BuildContext context) {
+    context.push(RouteConstants.selectCity);
+  }
+
+  /// Navigate to product details with share URL
+  static void navigateToProductDetail(
+    BuildContext context,
+    String shareUrl, {
+    bool isPersonal = false,
+  }) {
+    final encodedUrl = Uri.encodeComponent(shareUrl);
+    context.push(
+      '${RouteConstants.productDetail}?shareUrl=$encodedUrl&isPersonal=$isPersonal',
+    );
+  }
+
+  /// Navigate to report product
+  static void navigateToReportProduct(
+    BuildContext context,
+    String productId,
+    String productTitle,
+  ) {
+    final encodedTitle = Uri.encodeComponent(productTitle);
+    context.push(
+      '${RouteConstants.reportProduct}?productId=$productId&title=$encodedTitle',
+    );
+  }
+
+  /// Navigate to ads listing with filters
+  static void navigateToAdsListing(
+    BuildContext context, {
+    String? categoryId,
+    String? subCategoryId,
+    String? categoryName,
+    String? subCategoryName,
+    Map<String, dynamic>? initialFilter,
+  }) {
+    final queryParams = <String, String>{};
+
+    if (categoryId != null) queryParams['categoryId'] = categoryId;
+    if (subCategoryId != null) queryParams['subCategoryId'] = subCategoryId;
+    if (categoryName != null) {
+      queryParams['categoryName'] = Uri.encodeComponent(categoryName);
+    }
+    if (subCategoryName != null) {
+      queryParams['subCategoryName'] = Uri.encodeComponent(subCategoryName);
+    }
+
+    String route = RouteConstants.vizzleAdsListing;
+    if (queryParams.isNotEmpty) {
+      final query = queryParams.entries
+          .map((e) => '${e.key}=${e.value}')
+          .join('&');
+      route += '?$query';
+    }
+
+    final extra = initialFilter != null
+        ? {'initialFilter': initialFilter}
+        : null;
+
+    if (extra != null) {
+      context.push(route, extra: extra);
+    } else {
+      context.push(route);
+    }
+  }
+
+  /// Navigate to search with query
+  static void navigateToSearch(
+    BuildContext context, {
+    String? query,
+    String? categoryId,
+    String? location,
+    double? minPrice,
+    double? maxPrice,
+  }) {
+    final queryParams = <String, String>{};
+
+    if (query != null && query.isNotEmpty) {
+      queryParams['q'] = Uri.encodeComponent(query);
+    }
+    if (categoryId != null) queryParams['categoryId'] = categoryId;
+    if (location != null) {
+      queryParams['location'] = Uri.encodeComponent(location);
+    }
+    if (minPrice != null) queryParams['minPrice'] = minPrice.toString();
+    if (maxPrice != null) queryParams['maxPrice'] = maxPrice.toString();
+
+    String route = RouteConstants.vizzleSearch;
+    if (queryParams.isNotEmpty) {
+      final queryString = queryParams.entries
+          .map((e) => '${e.key}=${e.value}')
+          .join('&');
+      route += '?$queryString';
+    }
+
+    context.push(route);
+  }
+
+  // ==================== LEGACY UTILITY METHODS ====================
 
   /// Navigate to a specific route with optional parameters
   static void navigateTo(
@@ -690,7 +716,7 @@ class AppRouter {
     context.push(RouteConstants.sellerDetailsWithId(sellerId));
   }
 
-  /// Navigate to product details with product ID
+  /// Navigate to product details with product ID (legacy method)
   static void navigateToProductDetails(
     BuildContext context,
     String productId, {
@@ -700,51 +726,7 @@ class AppRouter {
     context.push(RouteConstants.productDetailsWithId(productId), extra: extra);
   }
 
-  /// Navigate to search with parameters
-  static void navigateToSearch(
-    BuildContext context, {
-    String? keyword,
-    String? categoryId,
-    String? location,
-    double? minPrice,
-    double? maxPrice,
-  }) {
-    final route = RouteConstants.searchWithQuery(
-      keyword: keyword,
-      categoryId: categoryId,
-      location: location,
-      minPrice: minPrice,
-      maxPrice: maxPrice,
-    );
-    context.push(route);
-  }
-
-  /// Navigate to ads listing with filters
-  static void navigateToAdsListing(
-    BuildContext context, {
-    String? categoryId,
-    String? subCategoryId,
-    String? categoryName,
-    String? subCategoryName,
-    String? keyword,
-    double? minPrice,
-    double? maxPrice,
-    String? location,
-    String? sortBy,
-  }) {
-    final route = RouteConstants.adsListingWithFilters(
-      categoryId: categoryId,
-      subCategoryId: subCategoryId,
-      categoryName: categoryName,
-      subCategoryName: subCategoryName,
-      keyword: keyword,
-      minPrice: minPrice,
-      maxPrice: maxPrice,
-      location: location,
-      sortBy: sortBy,
-    );
-    context.push(route);
-  }
+  // ==================== ROUTE ANALYSIS METHODS ====================
 
   /// Check if current route is a Vizzle route
   static bool isCurrentRouteVizzle(BuildContext context) {
