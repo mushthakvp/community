@@ -547,6 +547,33 @@ class AppRouter {
         path: RouteConstants.contactUs,
         builder: (context, state) => const ContactUsPage(),
       ),
+
+      //
+      GoRoute(
+        path: '/vizzle/report-product/:productId/:productTitle',
+        builder: (context, state) {
+          final productId = state.pathParameters['productId']!;
+          final productTitle = Uri.decodeComponent(
+            state.pathParameters['productTitle']!,
+          );
+
+          return ReportProductPage(
+            productId: productId,
+            productTitle: productTitle,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/report-product',
+        builder: (context, state) {
+          final productId = state.uri.queryParameters['productId']!;
+          final productTitle = state.uri.queryParameters['title']!;
+          return ReportProductPage(
+            productId: productId,
+            productTitle: productTitle,
+          );
+        },
+      ),
     ],
   );
 

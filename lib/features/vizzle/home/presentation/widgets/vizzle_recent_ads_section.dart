@@ -22,23 +22,25 @@ class VizzleRecentAdsSection extends StatelessWidget {
 
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      sliver: SliverList(
+      sliver: SliverGrid(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          childAspectRatio: 0.75,
+          mainAxisSpacing: 16,
+          crossAxisSpacing: 16,
+        ),
         delegate: SliverChildBuilderDelegate((context, index) {
           final ad = recentAds[index];
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: _RecentAdCard(
-              ad: ad,
-              currencyCode: vizzleHome.currencyCode,
-              onTap: () {
-                // Fixed navigation - use the correct route format
-                context.push(
-                  '${RouteConstants.productDetail}?shareUrl=${Uri.encodeComponent(ad.shareLink)}&isPersonal=false',
-                );
-              },
-            ),
+          return _RecentAdCard(
+            ad: ad,
+            currencyCode: vizzleHome.currencyCode,
+            onTap: () {
+              context.push(
+                '${RouteConstants.productDetail}?shareUrl=${Uri.encodeComponent(ad.shareLink)}&isPersonal=false',
+              );
+            },
           );
-        }, childCount: recentAds.length > 5 ? 5 : recentAds.length),
+        }, childCount: recentAds.length > 6 ? 6 : recentAds.length),
       ),
     );
   }
@@ -51,8 +53,7 @@ class VizzleRecentAdsSection extends StatelessWidget {
       ...vizzleHome.propertyForSale,
     ];
 
-    // Return first 5 ads as "recent"
-    return allAds.take(5).toList();
+    return allAds.take(6).toList();
   }
 }
 
@@ -73,49 +74,52 @@ class _RecentAdCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
         child: Container(
-          height: 120,
           decoration: BoxDecoration(
-            color: const Color(0xFF1A1A1A),
-            borderRadius: BorderRadius.circular(12),
+            color: const Color(0xFF1B1B1B),
+            borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: AppConstants.white.withOpacity(0.1),
               width: 1,
             ),
           ),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Image Section
-              Container(
-                width: 120,
-                height: 120,
-                decoration: const BoxDecoration(
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(12),
-                    bottomLeft: Radius.circular(12),
+              Expanded(
+                flex: 3,
+                child: Container(
+                  width: double.infinity,
+                  decoration: const BoxDecoration(
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(14),
+                      topRight: Radius.circular(14),
+                    ),
                   ),
-                ),
-                child: ClipRRect(
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(12),
-                    bottomLeft: Radius.circular(12),
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(14),
+                      topRight: Radius.circular(14),
+                    ),
+                    child: ad.hasValidImage
+                        ? CachedNetworkImage(
+                            imageUrl: ad.primaryImage,
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) =>
+                                _buildImagePlaceholder(),
+                            errorWidget: (context, url, error) =>
+                                _buildImageError(),
+                          )
+                        : _buildImageError(),
                   ),
-                  child: ad.hasValidImage
-                      ? CachedNetworkImage(
-                          imageUrl: ad.primaryImage,
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) =>
-                              _buildImagePlaceholder(),
-                          errorWidget: (context, url, error) =>
-                              _buildImageError(),
-                        )
-                      : _buildImageError(),
                 ),
               ),
 
               // Content Section
               Expanded(
+                flex: 2,
                 child: Padding(
                   padding: const EdgeInsets.all(12),
                   child: Column(
@@ -125,57 +129,42 @@ class _RecentAdCard extends StatelessWidget {
                       CommonTextWidget(
                         text: '$currencyCode ${ad.formattedPrice}',
                         color: AppConstants.appPrimaryColor,
-                        fontSize: 16,
+                        fontSize: 14,
                         fontWeight: FontWeight.w600,
                       ),
                       const SizedBox(height: 4),
 
                       // Title
-                      CommonTextWidget(
-                        text: ad.displayTitle,
-                        color: AppConstants.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        maxLines: 2,
+                      Expanded(
+                        child: CommonTextWidget(
+                          text: ad.displayTitle,
+                          color: AppConstants.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          maxLines: 2,
+                        ),
                       ),
 
-                      const Spacer(),
+                      const SizedBox(height: 4),
 
-                      // Additional Info Row
-                      Row(
-                        children: [
-                          // Category or additional info
-                          if (ad.isMotorAd) ...[
-                            Expanded(
-                              child: CommonTextWidget(
-                                text: '${ad.year} • ${ad.kilometers} km',
-                                color: AppConstants.white.withOpacity(0.6),
-                                fontSize: 12,
-                                maxLines: 1,
-                              ),
-                            ),
-                          ] else if (ad.brand != null &&
-                              ad.brand!.isNotEmpty) ...[
-                            Expanded(
-                              child: CommonTextWidget(
-                                text: ad.brand!,
-                                color: AppConstants.white.withOpacity(0.6),
-                                fontSize: 12,
-                                maxLines: 1,
-                              ),
-                            ),
-                          ] else ...[
-                            const Expanded(child: SizedBox()),
-                          ],
-
-                          // Arrow indicator
-                          Icon(
-                            Icons.arrow_forward_ios,
-                            color: AppConstants.white.withOpacity(0.4),
-                            size: 14,
-                          ),
-                        ],
-                      ),
+                      // Additional Info
+                      if (ad.isMotorAd) ...[
+                        CommonTextWidget(
+                          text: '${ad.year} • ${ad.kilometers} km',
+                          color: AppConstants.white.withOpacity(0.6),
+                          fontSize: 10,
+                          fontWeight: FontWeight.w300,
+                          maxLines: 1,
+                        ),
+                      ] else if (ad.brand != null && ad.brand!.isNotEmpty) ...[
+                        CommonTextWidget(
+                          text: ad.brand!,
+                          color: AppConstants.white.withOpacity(0.6),
+                          fontSize: 10,
+                          fontWeight: FontWeight.w300,
+                          maxLines: 1,
+                        ),
+                      ],
                     ],
                   ),
                 ),

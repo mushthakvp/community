@@ -89,6 +89,10 @@ class RouteConstants {
   static const String termsConditions = '/profile/terms-conditions';
   static const String aboutApp = '/profile/about';
 
+  static const String productDetail = '/product-detail';
+  static const String reportProduct = '/vizzle/report-product';
+  static const String selectCity = '/select-city';
+
   // ==================== DYNAMIC ROUTE BUILDERS ====================
 
   /// Generate community saved view route
@@ -555,7 +559,6 @@ class RouteConstants {
 
   // Core Place Add Routes
   static const String placeAddHome = '/place-add';
-  static const String selectCity = '/place-add/select-city';
   static const String selectCategory = '/place-add/select-category';
   static const String selectSubCategory = '/place-add/select-subcategory';
   static const String createAd = '/place-add/create';
@@ -573,9 +576,7 @@ class RouteConstants {
   // ==================== PRODUCT DETAIL ROUTES ====================
 
   // Product Detail Routes
-  static const String productDetail = '/product-detail';
   static const String productDetailShare = '/product-detail/share';
-  static const String reportProduct = '/product-detail/report';
   static const String productImageGallery = '/product-detail/images';
 
   // ==================== DYNAMIC ROUTE BUILDERS ====================

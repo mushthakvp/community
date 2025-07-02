@@ -23,50 +23,33 @@ class ProductDetailContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return RefreshIndicator(
-      onRefresh: () async {
-        // Implement refresh logic
-      },
+      onRefresh: () async {},
       child: CustomScrollView(
         slivers: [
-          // Image Gallery
-          SliverToBoxAdapter(
-            child: ProductImageGallery(
-              images: product.images,
-              productId: product.id,
-              isSaved: product.isSaved,
-              isPersonal: isPersonal,
-              shareLink: product.shareLink ?? '',
-            ),
+          ProductImageGallery(
+            images: product.images,
+            productId: product.id,
+            isSaved: product.isSaved,
+            isPersonal: isPersonal,
+            shareLink: product.shareLink ?? '',
           ),
-
-          // Content
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Product Info
                   ProductInfoSection(product: product),
-
                   const SizedBox(height: 24),
                   const Divider(color: Colors.white24),
                   const SizedBox(height: 24),
-
-                  // Actions (Chat, Call, WhatsApp)
                   if (!product.isCurrentUser && !isPersonal)
                     ProductActionsSection(product: product),
-
                   if (!product.isCurrentUser && !isPersonal)
                     const SizedBox(height: 24),
-
-                  // Description
                   ProductDescriptionSection(description: product.description),
-
                   const SizedBox(height: 24),
                   const Divider(color: Colors.white24),
-
-                  // Location (only if not personal)
                   if (!isPersonal) ...[
                     const SizedBox(height: 24),
                     ProductLocationSection(
@@ -76,23 +59,15 @@ class ProductDetailContent extends StatelessWidget {
                     ),
 
                     const SizedBox(height: 24),
-
-                    // Seller Profile
                     SellerProfileSection(
                       user: product.user,
                       sellerType: product.sellerType ?? '',
                     ),
-
                     const SizedBox(height: 24),
                     const Divider(color: Colors.white24),
                     const SizedBox(height: 24),
-
-                    // Report Ad Section
                     _buildReportSection(context),
-
                     const SizedBox(height: 24),
-
-                    // Related Products
                     if (product.relatedProducts.isNotEmpty)
                       RelatedProductsSection(
                         relatedProducts: product.relatedProducts,
@@ -119,8 +94,9 @@ class ProductDetailContent extends StatelessWidget {
         const Spacer(),
         GestureDetector(
           onTap: () {
-            // Navigate to report page
-            context.go('/report-product?productId=${product.id}&title=Ad');
+            context.push(
+              '/vizzle/report-product/${product.id}/${Uri.encodeComponent(product.title)}',
+            );
           },
           child: const Row(
             children: [

@@ -14,25 +14,6 @@ class ProductActionsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        // Chat Button
-        Expanded(
-          child: _ActionButton(
-            icon: Icons.chat_bubble_outline,
-            label: 'Chat',
-            onTap: () async {
-              final provider = context.read<ProductDetailProvider>();
-              final chatId = await provider.accessChat();
-              if (chatId != null) {
-                // Navigate to chat screen
-                // Navigator.push(...);
-              }
-            },
-          ),
-        ),
-
-        const SizedBox(width: 12),
-
-        // Call Button
         Expanded(
           child: _ActionButton(
             icon: Icons.phone,
@@ -46,13 +27,10 @@ class ProductActionsSection extends StatelessWidget {
             },
           ),
         ),
-
         const SizedBox(width: 12),
-
-        // WhatsApp Button
         Expanded(
           child: _ActionButton(
-            icon: Icons.message,
+            icon: Icons.wechat,
             label: 'WhatsApp',
             onTap: () {
               if (product.phone != null) {

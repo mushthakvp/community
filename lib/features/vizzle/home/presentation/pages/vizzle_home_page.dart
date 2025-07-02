@@ -7,7 +7,6 @@ import '../../../../../core/constants/route_constants.dart';
 import '../../../../../core/widgets/common/text_widget.dart';
 import '../../../../../core/widgets/loading/loading_widget.dart';
 import '../providers/vizzle_home_provider.dart';
-import '../widgets/vizzle_home_search_bar.dart';
 import '../widgets/vizzle_marketplace_categories.dart';
 import '../widgets/vizzle_recent_ads_section.dart';
 
@@ -47,9 +46,6 @@ class _VizzleHomePageState extends State<VizzleHomePage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const VizzleHomeSearchBar(),
-                        const SizedBox(height: 24),
-
                         // Create Ad Button
                         _buildCreateAdButton(),
                         const SizedBox(height: 24),
@@ -98,7 +94,6 @@ class _VizzleHomePageState extends State<VizzleHomePage> {
           );
         },
       ),
-      floatingActionButton: _buildFloatingActionButton(),
     );
   }
 
@@ -119,28 +114,10 @@ class _VizzleHomePageState extends State<VizzleHomePage> {
       ),
       actions: [
         IconButton(
-          onPressed: () {},
-          icon: Stack(
-            children: [
-              const Icon(
-                Icons.notifications_outlined,
-                color: AppConstants.white,
-                size: 24,
-              ),
-              Positioned(
-                right: 0,
-                top: 0,
-                child: Container(
-                  height: 8,
-                  width: 8,
-                  decoration: const BoxDecoration(
-                    color: AppConstants.appPrimaryColor,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ),
-            ],
-          ),
+          onPressed: () {
+            context.push(RouteConstants.vizzleSearch);
+          },
+          icon: const Icon(Icons.search, color: AppConstants.white, size: 24),
         ),
         const SizedBox(width: 8),
       ],
@@ -171,18 +148,6 @@ class _VizzleHomePageState extends State<VizzleHomePage> {
           color: AppConstants.black,
         ),
       ),
-    );
-  }
-
-  Widget _buildFloatingActionButton() {
-    return FloatingActionButton.extended(
-      onPressed: () {
-        context.push(RouteConstants.selectCity);
-      },
-      backgroundColor: AppConstants.appPrimaryColor,
-      foregroundColor: AppConstants.black,
-      icon: const Icon(Icons.add),
-      label: const Text('Sell', style: TextStyle(fontWeight: FontWeight.w600)),
     );
   }
 
