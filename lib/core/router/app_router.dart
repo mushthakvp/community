@@ -25,6 +25,12 @@ import '../../features/splash/presentation/pages/splash_page.dart';
 // Vizzle Feature Imports
 import '../../features/vizzle/ads_listing/presentation/pages/ads_listing_page.dart';
 import '../../features/vizzle/home/presentation/pages/vizzle_home_page.dart';
+import '../../features/vizzle/place_add/presentation/pages/create_ad_page.dart';
+import '../../features/vizzle/place_add/presentation/pages/location_picker_page.dart';
+import '../../features/vizzle/place_add/presentation/pages/select_category_page.dart';
+import '../../features/vizzle/place_add/presentation/pages/select_city_page.dart';
+import '../../features/vizzle/product_detail/presentation/pages/product_detail_page.dart';
+import '../../features/vizzle/product_detail/presentation/pages/report_product_page.dart';
 import '../../features/vizzle/recently_viewed/presentation/pages/recently_viewed_page.dart';
 import '../../features/vizzle/saved_view/presentation/pages/saved_ads_page.dart';
 import '../../features/vizzle/search/presentation/pages/search_page.dart';
@@ -503,6 +509,119 @@ class AppRouter {
             builder: (context, state) => const VizzleHomePage(),
           ),
         ],
+      ),
+      // ==================== PLACE ADD ROUTES ====================
+
+      // Select City
+      GoRoute(
+        path: RouteConstants.selectCity,
+        builder: (context, state) => const SelectCityPage(),
+      ),
+
+      // Select Category
+      GoRoute(
+        path: RouteConstants.selectCategory,
+        builder: (context, state) => const SelectCategoryPage(),
+      ),
+
+      // Location Picker
+      GoRoute(
+        path: RouteConstants.locationPicker,
+        builder: (context, state) {
+          return LocationPickerPage();
+        },
+      ),
+
+      // Create Ad (General)
+      GoRoute(
+        path: RouteConstants.createAd,
+        builder: (context, state) {
+          return CreateAdPage();
+        },
+      ),
+
+      // Category Specific Create Routes
+      GoRoute(
+        path: RouteConstants.createMotorAd,
+        builder: (context, state) {
+          return CreateAdPage();
+        },
+      ),
+
+      GoRoute(
+        path: RouteConstants.createPropertyAd,
+        builder: (context, state) {
+          return CreateAdPage();
+        },
+      ),
+
+      GoRoute(
+        path: RouteConstants.createElectronicsAd,
+        builder: (context, state) {
+          return CreateAdPage();
+        },
+      ),
+
+      GoRoute(
+        path: RouteConstants.createFurnitureAd,
+        builder: (context, state) {
+          return CreateAdPage();
+        },
+      ),
+
+      GoRoute(
+        path: RouteConstants.createFarmFreshAd,
+        builder: (context, state) {
+          return CreateAdPage();
+        },
+      ),
+
+      GoRoute(
+        path: RouteConstants.createCommunityAd,
+        builder: (context, state) {
+          return CreateAdPage();
+        },
+      ),
+
+      // ==================== PRODUCT DETAIL ROUTES ====================
+
+      // Product Detail
+      GoRoute(
+        path: RouteConstants.productDetail,
+        builder: (context, state) {
+          final queryParams = state.uri.queryParameters;
+          final shareUrl = queryParams['shareUrl'];
+          final isPersonal = queryParams['isPersonal'] == 'true';
+
+          if (shareUrl == null) {
+            return const Scaffold(
+              body: Center(child: Text('Invalid product URL')),
+            );
+          }
+
+          return ProductDetailPage(shareUrl: shareUrl, isPersonal: isPersonal);
+        },
+      ),
+
+      // Report Product
+      GoRoute(
+        path: RouteConstants.reportProduct,
+        builder: (context, state) {
+          final queryParams = state.uri.queryParameters;
+          final productId = queryParams['productId'];
+          final productTitle = queryParams['title'] ?? 'Product';
+
+          if (productId == null) {
+            return const Scaffold(
+              body: Center(child: Text('Invalid product ID')),
+            );
+          }
+
+          return ReportProductPage(
+            productId: productId,
+            productTitle: productTitle,
+          );
+        },
       ),
     ],
   );

@@ -544,4 +544,247 @@ class RouteConstants {
 
   /// Check if search features are enabled
   static bool get isSearchEnabled => true;
+
+  ///
+  ///
+  ///
+
+  // Add these route constants to your existing RouteConstants class
+
+  // ==================== PLACE ADD ROUTES ====================
+
+  // Core Place Add Routes
+  static const String placeAddHome = '/place-add';
+  static const String selectCity = '/place-add/select-city';
+  static const String selectCategory = '/place-add/select-category';
+  static const String selectSubCategory = '/place-add/select-subcategory';
+  static const String createAd = '/place-add/create';
+  static const String editAd = '/place-add/edit';
+  static const String locationPicker = '/place-add/location-picker';
+
+  // Category Specific Creation Routes
+  static const String createMotorAd = '/place-add/create/motor';
+  static const String createPropertyAd = '/place-add/create/property';
+  static const String createElectronicsAd = '/place-add/create/electronics';
+  static const String createFurnitureAd = '/place-add/create/furniture';
+  static const String createFarmFreshAd = '/place-add/create/farm-fresh';
+  static const String createCommunityAd = '/place-add/create/community';
+
+  // ==================== PRODUCT DETAIL ROUTES ====================
+
+  // Product Detail Routes
+  static const String productDetail = '/product-detail';
+  static const String productDetailShare = '/product-detail/share';
+  static const String reportProduct = '/product-detail/report';
+  static const String productImageGallery = '/product-detail/images';
+
+  // ==================== DYNAMIC ROUTE BUILDERS ====================
+
+  /// Generate create ad route with category
+  static String createAdWithCategory(String categoryName) =>
+      '$createAd?category=${Uri.encodeComponent(categoryName)}';
+
+  /// Generate edit ad route with ad ID
+  static String editAdWithId(String adId) => '$editAd/$adId';
+
+  /// Generate product detail route with share URL
+  static String productDetailWithShareUrl(String shareUrl) =>
+      '$productDetail?shareUrl=${Uri.encodeComponent(shareUrl)}';
+
+  /// Generate product detail route with product ID and personal flag
+  static String productDetailWithParams({
+    required String shareUrl,
+    bool isPersonal = false,
+  }) {
+    List<String> params = ['shareUrl=${Uri.encodeComponent(shareUrl)}'];
+    if (isPersonal) params.add('isPersonal=true');
+    return '$productDetail?${params.join('&')}';
+  }
+
+  /// Generate report product route with product info
+  static String reportProductWithInfo({
+    required String productId,
+    required String productTitle,
+  }) {
+    return '$reportProduct?productId=$productId&title=${Uri.encodeComponent(productTitle)}';
+  }
+
+  /// Generate location picker route with initial coordinates
+  static String locationPickerWithCoordinates({
+    double? latitude,
+    double? longitude,
+  }) {
+    if (latitude != null && longitude != null) {
+      return '$locationPicker?lat=$latitude&lng=$longitude';
+    }
+    return locationPicker;
+  }
+
+  // ==================== PLACE ADD NAVIGATION HELPERS ====================
+
+  /// Get next route after city selection
+  static String getNextRouteAfterCity() => selectCategory;
+
+  /// Get next route after category selection
+  static String getNextRouteAfterCategory(String categoryName) {
+    switch (categoryName.toLowerCase()) {
+      case 'motors':
+        return createMotorAd;
+      case 'property for sale':
+      case 'property for rent':
+        return createPropertyAd;
+      case 'electronics':
+        return createElectronicsAd;
+      case 'furniture & garden':
+        return createFurnitureAd;
+      case 'freshly grown':
+        return createFarmFreshAd;
+      case 'community':
+        return createCommunityAd;
+      default:
+        return createAd;
+    }
+  }
+
+  /// Get category specific route
+  static String getCategorySpecificRoute(
+    String categoryId,
+    String categoryName,
+  ) {
+    final routeMap = {
+      'motors': createMotorAd,
+      'property_sale': createPropertyAd,
+      'property_rent': createPropertyAd,
+      'electronics': createElectronicsAd,
+      'furniture': createFurnitureAd,
+      'farm_fresh': createFarmFreshAd,
+      'community': createCommunityAd,
+    };
+
+    return routeMap[categoryId.toLowerCase()] ?? createAd;
+  }
+
+  // ==================== ROUTE VALIDATION HELPERS ====================
+
+  /// Check if route is a place add route
+  static bool isPlaceAddRoute(String route) {
+    return route.startsWith('/place-add');
+  }
+
+  /// Check if route is a product detail route
+  static bool isProductDetailRoute(String route) {
+    return route.startsWith('/product-detail');
+  }
+
+  /// Check if route requires location services
+  static bool requiresLocationServices(String route) {
+    const locationRoutes = [
+      locationPicker,
+      createAd,
+      createMotorAd,
+      createPropertyAd,
+      createElectronicsAd,
+      createFurnitureAd,
+      createFarmFreshAd,
+      createCommunityAd,
+    ];
+    return locationRoutes.any(
+      (locationRoute) => route.startsWith(locationRoute),
+    );
+  }
+
+  /// Check if route requires camera/gallery permissions
+  static bool requiresCameraPermissions(String route) {
+    const cameraRoutes = [
+      createAd,
+      editAd,
+      createMotorAd,
+      createPropertyAd,
+      createElectronicsAd,
+      createFurnitureAd,
+      createFarmFreshAd,
+      createCommunityAd,
+    ];
+    return cameraRoutes.any((cameraRoute) => route.startsWith(cameraRoute));
+  }
+
+  // ==================== DEEP LINK HANDLING ====================
+
+  /// Generate deep link for place add with category
+  static String generatePlaceAddDeepLink(String categoryName) {
+    return 'app://place-add?category=${Uri.encodeComponent(categoryName)}';
+  }
+
+  /// Generate deep link for product detail
+  static String generateProductDetailDeepLink(String shareUrl) {
+    return 'app://product-detail?shareUrl=${Uri.encodeComponent(shareUrl)}';
+  }
+
+  /// Generate deep link for edit ad
+  static String generateEditAdDeepLink(String adId) {
+    return 'app://place-add/edit/$adId';
+  }
+
+  /// Parse place add deep link
+  static Map<String, String> parsePlaceAddDeepLink(String deepLink) {
+    final uri = Uri.parse(deepLink);
+    final params = <String, String>{};
+
+    if (uri.queryParameters.containsKey('category')) {
+      params['category'] = uri.queryParameters['category']!;
+    }
+
+    if (uri.pathSegments.contains('edit') && uri.pathSegments.length > 1) {
+      final editIndex = uri.pathSegments.indexOf('edit');
+      if (editIndex + 1 < uri.pathSegments.length) {
+        params['adId'] = uri.pathSegments[editIndex + 1];
+      }
+    }
+
+    return params;
+  }
+
+  // ==================== ANALYTICS HELPERS ====================
+
+  /// Get step name for place add analytics
+  static String getPlaceAddStep(String route) {
+    if (route.contains('select-city')) return 'city_selection';
+    if (route.contains('select-category')) return 'category_selection';
+    if (route.contains('select-subcategory')) return 'subcategory_selection';
+    if (route.contains('location-picker')) return 'location_selection';
+    if (route.contains('create')) return 'ad_creation';
+    if (route.contains('edit')) return 'ad_editing';
+    return 'unknown';
+  }
+
+  /// Get category type for analytics
+  static String getCategoryTypeForAnalytics(String route) {
+    if (route.contains('motor')) return 'motor';
+    if (route.contains('property')) return 'property';
+    if (route.contains('electronics')) return 'electronics';
+    if (route.contains('furniture')) return 'furniture';
+    if (route.contains('farm-fresh')) return 'farm_fresh';
+    if (route.contains('community')) return 'community';
+    return 'general';
+  }
+
+  // ==================== FEATURE FLAGS ====================
+
+  /// Check if category-specific forms are enabled
+  static bool get isCategoryFormsEnabled => true;
+
+  /// Check if location picker is enabled
+  static bool get isLocationPickerEnabled => true;
+
+  /// Check if image upload is enabled
+  static bool get isImageUploadEnabled => true;
+
+  /// Check if edit ad functionality is enabled
+  static bool get isEditAdEnabled => true;
+
+  /// Check if product sharing is enabled
+  static bool get isProductSharingEnabled => true;
+
+  /// Check if product reporting is enabled
+  static bool get isProductReportingEnabled => true;
 }

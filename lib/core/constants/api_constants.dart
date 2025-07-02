@@ -406,4 +406,175 @@ class ApiConstants {
   static bool validateSellerId(String? sellerId) {
     return sellerId != null && sellerId.isNotEmpty && sellerId.length >= 3;
   }
+
+  ///
+  ///
+
+  // Add these constants to your existing ApiConstants class
+
+  // ========== PLACE ADD ENDPOINTS ==========
+  static const String createAd = 'user/createAd';
+  static const String createJobAd = 'user/createJobAd';
+  static const String editAd = 'user/editAd';
+  static const String deleteAd = 'user/deleteAd';
+  static const String uploadImages = 'upload/images';
+  static const String getCities = 'user/getCities';
+  static const String getCategories = 'user/getCategories';
+  static const String reverseGeocode = 'geocoding/reverse';
+
+  // ========== PRODUCT DETAIL ENDPOINTS ==========
+  static const String getProductDetail = 'user/getProductDetail';
+  static const String toggleProductFavorite = 'user/saveFeed';
+  static const String shareProduct = 'user/shareFeed';
+  static const String reportProduct = 'user/reportPost';
+  static const String accessChat = 'user/accessChat';
+
+  // ========== DYNAMIC ENDPOINT BUILDERS ==========
+
+  // Place Add Management
+  static String editAdById(String adId) => '$editAd/$adId';
+  static String deleteAdById(String adId) => '$deleteAd/$adId';
+
+  // Product Detail Actions
+  static String toggleProductFavoriteById(String productId) =>
+      '$toggleProductFavorite/$productId';
+  static String shareProductById(String productId) =>
+      '$shareProduct/$productId';
+
+  // Chat Access
+  static String accessChatWithParams(String friendId, String postId) =>
+      '$accessChat?friendId=$friendId&postId=$postId';
+
+  // Reverse Geocoding
+  static String reverseGeocodeWithCoordinates(
+    double latitude,
+    double longitude,
+  ) => '$reverseGeocode?lat=$latitude&lng=$longitude';
+
+  // ========== PLACE ADD QUERY BUILDERS ==========
+
+  /// Build comprehensive ad creation request
+  static Map<String, dynamic> buildAdCreationRequest({
+    required String title,
+    required String description,
+    required String phoneNumber,
+    required String district,
+    required String categoryId,
+    required String subCategoryId,
+    String? subSubCategoryId,
+    required List<String> images,
+    required double latitude,
+    required double longitude,
+    required String address,
+    double? price,
+    Map<String, dynamic> additionalFields = const {},
+  }) {
+    final request = <String, dynamic>{
+      'title': title,
+      'description': description,
+      'phone': phoneNumber,
+      'district': district,
+      'category': categoryId,
+      'subCategory': subCategoryId,
+      'images': images,
+      'latitude': latitude.toString(),
+      'longitude': longitude.toString(),
+      'address': address,
+    };
+
+    if (price != null) {
+      request['price'] = price;
+    }
+
+    if (subSubCategoryId != null) {
+      request['subSubcategory'] = subSubCategoryId;
+    }
+
+    // Add all additional fields
+    request.addAll(additionalFields);
+
+    return request;
+  }
+
+  /// Build report product request
+  static Map<String, dynamic> buildReportProductRequest({
+    required String productId,
+    required String reason,
+    String postType = 'advertisement',
+  }) {
+    return {'postId': productId, 'postType': postType, 'reason': reason};
+  }
+
+  /// Build image upload request for Cloudinary
+  static Map<String, dynamic> buildImageUploadRequest({
+    required String folder,
+    required List<String> imagePaths,
+  }) {
+    return {'folder': folder, 'images': imagePaths};
+  }
+
+  // ========== VALIDATION HELPERS ==========
+
+  /// Validate ad creation request
+  static bool validateAdCreationRequest(Map<String, dynamic> request) {
+    final requiredFields = [
+      'title',
+      'description',
+      'phone',
+      'district',
+      'category',
+      'subCategory',
+      'images',
+      'latitude',
+      'longitude',
+      'address',
+    ];
+
+    for (final field in requiredFields) {
+      if (!request.containsKey(field) ||
+          request[field] == null ||
+          request[field].toString().isEmpty) {
+        return false;
+      }
+    }
+
+    // Validate images array
+    if (request['images'] is List && (request['images'] as List).isEmpty) {
+      return false;
+    }
+
+    return true;
+  }
+
+  /// Validate product ID format
+  static bool validateProductId(String? productId) {
+    return productId != null && productId.isNotEmpty && productId.length >= 3;
+  }
+
+  /// Validate coordinates
+  static bool validateCoordinates(double? latitude, double? longitude) {
+    return latitude != null &&
+        longitude != null &&
+        latitude >= -90 &&
+        latitude <= 90 &&
+        longitude >= -180 &&
+        longitude <= 180;
+  }
+
+  // ========== UTILITY METHODS ==========
+
+  /// Clean phone number for API
+  static String cleanPhoneNumber(String phoneNumber) {
+    return phoneNumber.replaceAll(RegExp(r'[^0-9]'), '');
+  }
+
+  /// Format price for display
+  static String formatPrice(double price, String currencyCode) {
+    return '$currencyCode ${price.toStringAsFixed(2)}';
+  }
+
+  /// Build complete image URL
+  static String buildImageUrl(String imagePath) {
+    return imagePath.startsWith('http') ? imagePath : '$baseUrl$imagePath';
+  }
 }

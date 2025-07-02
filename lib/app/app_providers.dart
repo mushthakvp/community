@@ -56,12 +56,29 @@ import '../features/vizzle/ads_listing/presentation/providers/ads_listing_provid
 import '../features/vizzle/data/datasources/vizzle_local_data_source.dart';
 import '../features/vizzle/data/datasources/vizzle_remote_data_source.dart';
 import '../features/vizzle/data/repositories/vizzle_repository_impl.dart';
-import '../features/vizzle/domain/usecases/get_categories_usecase.dart';
+import '../features/vizzle/domain/usecases/get_categories_usecase.dart'
+    as vizzle_core;
 import '../features/vizzle/domain/usecases/get_sub_categories_usecase.dart';
 import '../features/vizzle/domain/usecases/get_sub_items_usecase.dart';
 import '../features/vizzle/domain/usecases/get_sub_sub_categories_usecase.dart';
 import '../features/vizzle/domain/usecases/get_vizzle_home_usecase.dart';
 import '../features/vizzle/home/presentation/providers/vizzle_home_provider.dart';
+import '../features/vizzle/place_add/data/datasources/place_add_remote_datasource.dart';
+import '../features/vizzle/place_add/data/repositories/place_add_repository_impl.dart';
+import '../features/vizzle/place_add/domain/usecases/create_ad_usecase.dart';
+import '../features/vizzle/place_add/domain/usecases/get_categories_usecase.dart'
+    as place_add;
+import '../features/vizzle/place_add/domain/usecases/get_cities_usecase.dart';
+import '../features/vizzle/place_add/domain/usecases/upload_images_usecase.dart';
+import '../features/vizzle/place_add/presentation/providers/place_add_provider.dart';
+import '../features/vizzle/product_detail/data/datasources/product_detail_remote_datasource.dart';
+import '../features/vizzle/product_detail/data/repositories/product_detail_repository_impl.dart';
+import '../features/vizzle/product_detail/domain/usecases/access_chat_usecase.dart';
+import '../features/vizzle/product_detail/domain/usecases/get_product_detail_usecase.dart';
+import '../features/vizzle/product_detail/domain/usecases/report_product_usecase.dart';
+import '../features/vizzle/product_detail/domain/usecases/share_product_usecase.dart';
+import '../features/vizzle/product_detail/domain/usecases/toggle_favorite_usecase.dart';
+import '../features/vizzle/product_detail/presentation/providers/product_detail_provider.dart';
 import '../features/vizzle/recently_viewed/data/datasources/recently_viewed_local_datasource.dart';
 import '../features/vizzle/recently_viewed/data/datasources/recently_viewed_remote_datasource.dart';
 import '../features/vizzle/recently_viewed/data/repositories/recently_viewed_repository_impl.dart';
@@ -384,8 +401,9 @@ class AppProviders {
     ProxyProvider<VizzleRepositoryImpl, GetVizzleHomeUseCase>(
       update: (_, repository, __) => GetVizzleHomeUseCase(repository),
     ),
-    ProxyProvider<VizzleRepositoryImpl, GetCategoriesUseCase>(
-      update: (_, repository, __) => GetCategoriesUseCase(repository),
+    ProxyProvider<VizzleRepositoryImpl, vizzle_core.GetCategoriesUseCase>(
+      update: (_, repository, __) =>
+          vizzle_core.GetCategoriesUseCase(repository),
     ),
     ProxyProvider<VizzleRepositoryImpl, GetSubCategoriesUseCase>(
       update: (_, repository, __) => GetSubCategoriesUseCase(repository),
@@ -408,12 +426,12 @@ class AppProviders {
     ),
 
     ChangeNotifierProxyProvider2<
-      GetCategoriesUseCase,
+      vizzle_core.GetCategoriesUseCase,
       GetSubCategoriesUseCase,
       SubCategoryListingProvider
     >(
       create: (context) => SubCategoryListingProvider(
-        getCategoriesUseCase: context.read<GetCategoriesUseCase>(),
+        getCategoriesUseCase: context.read<vizzle_core.GetCategoriesUseCase>(),
         getSubCategoriesUseCase: context.read<GetSubCategoriesUseCase>(),
       ),
       update: (_, getCategoriesUseCase, getSubCategoriesUseCase, previous) =>
@@ -714,7 +732,147 @@ class AppProviders {
     ),
 
     // ========================================
-    // VIZZLE PLACE A ADD PROVIDERS
+    // VIZZLE PLACE ADD PROVIDERS
     // ========================================
+
+    // Place Add Data Sources
+    ProxyProvider<ApiClient, PlaceAddRemoteDataSource>(
+      update: (_, apiClient, __) =>
+          PlaceAddRemoteDataSourceImpl(apiClient: apiClient),
+    ),
+
+    // Place Add Repository
+    ProxyProvider2<
+      PlaceAddRemoteDataSource,
+      NetworkInfo,
+      PlaceAddRepositoryImpl
+    >(
+      update: (_, remoteDataSource, networkInfo, __) => PlaceAddRepositoryImpl(
+        remoteDataSource: remoteDataSource,
+        networkInfo: networkInfo,
+      ),
+    ),
+
+    // Place Add Use Cases
+    ProxyProvider<PlaceAddRepositoryImpl, GetCitiesUseCase>(
+      update: (_, repository, __) => GetCitiesUseCase(repository),
+    ),
+    ProxyProvider<PlaceAddRepositoryImpl, place_add.GetCategoriesUseCase>(
+      update: (_, repository, __) => place_add.GetCategoriesUseCase(repository),
+    ),
+    ProxyProvider<PlaceAddRepositoryImpl, CreateAdUseCase>(
+      update: (_, repository, __) => CreateAdUseCase(repository),
+    ),
+    ProxyProvider<PlaceAddRepositoryImpl, UploadImagesUseCase>(
+      update: (_, repository, __) => UploadImagesUseCase(repository),
+    ),
+
+    // Place Add Provider
+    ChangeNotifierProxyProvider4<
+      GetCitiesUseCase,
+      place_add.GetCategoriesUseCase,
+      CreateAdUseCase,
+      UploadImagesUseCase,
+      PlaceAddProvider
+    >(
+      create: (context) => PlaceAddProvider(
+        getCitiesUseCase: context.read<GetCitiesUseCase>(),
+        getCategoriesUseCase: context.read<place_add.GetCategoriesUseCase>(),
+        createAdUseCase: context.read<CreateAdUseCase>(),
+        uploadImagesUseCase: context.read<UploadImagesUseCase>(),
+      ),
+      update:
+          (
+            _,
+            getCitiesUseCase,
+            getCategoriesUseCase,
+            createAdUseCase,
+            uploadImagesUseCase,
+            previous,
+          ) =>
+              previous ??
+              PlaceAddProvider(
+                getCitiesUseCase: getCitiesUseCase,
+                getCategoriesUseCase: getCategoriesUseCase,
+                createAdUseCase: createAdUseCase,
+                uploadImagesUseCase: uploadImagesUseCase,
+              ),
+    ),
+
+    // ========================================
+    // VIZZLE PRODUCT DETAIL PROVIDERS
+    // ========================================
+
+    // Product Detail Data Sources
+    ProxyProvider<ApiClient, ProductDetailRemoteDataSource>(
+      update: (_, apiClient, __) =>
+          ProductDetailRemoteDataSourceImpl(apiClient: apiClient),
+    ),
+
+    // Product Detail Repository
+    ProxyProvider2<
+      ProductDetailRemoteDataSource,
+      NetworkInfo,
+      ProductDetailRepositoryImpl
+    >(
+      update: (_, remoteDataSource, networkInfo, __) =>
+          ProductDetailRepositoryImpl(
+            remoteDataSource: remoteDataSource,
+            networkInfo: networkInfo,
+          ),
+    ),
+
+    // Product Detail Use Cases
+    ProxyProvider<ProductDetailRepositoryImpl, GetProductDetailUseCase>(
+      update: (_, repository, __) => GetProductDetailUseCase(repository),
+    ),
+    ProxyProvider<ProductDetailRepositoryImpl, ToggleFavoriteUseCase>(
+      update: (_, repository, __) => ToggleFavoriteUseCase(repository),
+    ),
+    ProxyProvider<ProductDetailRepositoryImpl, ShareProductUseCase>(
+      update: (_, repository, __) => ShareProductUseCase(repository),
+    ),
+    ProxyProvider<ProductDetailRepositoryImpl, ReportProductUseCase>(
+      update: (_, repository, __) => ReportProductUseCase(repository),
+    ),
+    ProxyProvider<ProductDetailRepositoryImpl, AccessChatUseCase>(
+      update: (_, repository, __) => AccessChatUseCase(repository),
+    ),
+
+    // Product Detail Provider
+    ChangeNotifierProxyProvider5<
+      GetProductDetailUseCase,
+      ToggleFavoriteUseCase,
+      ShareProductUseCase,
+      ReportProductUseCase,
+      AccessChatUseCase,
+      ProductDetailProvider
+    >(
+      create: (context) => ProductDetailProvider(
+        getProductDetailUseCase: context.read<GetProductDetailUseCase>(),
+        toggleFavoriteUseCase: context.read<ToggleFavoriteUseCase>(),
+        shareProductUseCase: context.read<ShareProductUseCase>(),
+        reportProductUseCase: context.read<ReportProductUseCase>(),
+        accessChatUseCase: context.read<AccessChatUseCase>(),
+      ),
+      update:
+          (
+            _,
+            getProductDetailUseCase,
+            toggleFavoriteUseCase,
+            shareProductUseCase,
+            reportProductUseCase,
+            accessChatUseCase,
+            previous,
+          ) =>
+              previous ??
+              ProductDetailProvider(
+                getProductDetailUseCase: getProductDetailUseCase,
+                toggleFavoriteUseCase: toggleFavoriteUseCase,
+                shareProductUseCase: shareProductUseCase,
+                reportProductUseCase: reportProductUseCase,
+                accessChatUseCase: accessChatUseCase,
+              ),
+    ),
   ];
 }
