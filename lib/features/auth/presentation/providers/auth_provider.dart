@@ -202,8 +202,7 @@ class AuthProvider extends ChangeNotifier {
     _uploadProgress = 0.0;
     notifyListeners();
     try {
-      final cloudinaryService = CloudinaryService();
-      final imageUrl = await cloudinaryService.uploadSingleImage(
+      final imageUrl = await CloudinaryService.uploadSingleImage(
         file: _profileImage!,
         folder: 'vivera_profiles',
         onProgress: (progress) {

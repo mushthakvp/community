@@ -128,15 +128,11 @@ class ProfileProvider extends ChangeNotifier {
   // Image upload method
   Future<void> uploadProfileImage() async {
     if (_selectedProfileImage == null) return;
-
     _isUploadingImage = true;
     _uploadProgress = 0.0;
     notifyListeners();
-
     try {
-      final cloudinaryService = CloudinaryService();
-
-      final imageUrl = await cloudinaryService.uploadSingleImage(
+      final imageUrl = await CloudinaryService.uploadSingleImage(
         file: _selectedProfileImage!,
         folder: 'vivera_profiles',
         onProgress: (progress) {

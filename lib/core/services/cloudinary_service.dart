@@ -27,7 +27,7 @@ class CloudinaryService {
   factory CloudinaryService() => _instance;
   CloudinaryService._internal();
 
-  late final Cloudinary _cloudinary;
+  static late final Cloudinary _cloudinary;
 
   void initialize() {
     _cloudinary = Cloudinary.signedConfig(
@@ -37,7 +37,7 @@ class CloudinaryService {
     );
   }
 
-  Future<String?> uploadSingleImage({
+  static Future<String?> uploadSingleImage({
     required File file,
     String? folder,
     Function(double)? onProgress,
@@ -139,5 +139,41 @@ class CloudinaryService {
     });
 
     return controller.stream;
+  }
+
+  static Future<List<String>> uploadImagesList({
+    required List<File> files,
+    String? folder,
+    Function(double)? onProgress,
+  }) async {
+    try {
+      final uploadedUrls = <String>[];
+      final totalFiles = files.length;
+
+      for (int i = 0; i < files.length; i++) {
+        final file = files[i];
+        final url = await uploadSingleImage(
+          file: file,
+          folder: folder,
+          onProgress: onProgress != null
+              ? (fileProgress) {
+                  final overallProgress = (i + fileProgress) / totalFiles;
+                  onProgress(overallProgress);
+                }
+              : null,
+        );
+
+        if (url != null) {
+          uploadedUrls.add(url);
+        } else {
+          throw Exception('Failed to upload image: ${file.path}');
+        }
+      }
+
+      return uploadedUrls;
+    } catch (e) {
+      debugPrint("Failed to upload images list: $e");
+      rethrow;
+    }
   }
 }

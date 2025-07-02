@@ -62,7 +62,6 @@ import '../features/vizzle/domain/usecases/get_sub_items_usecase.dart';
 import '../features/vizzle/domain/usecases/get_sub_sub_categories_usecase.dart';
 import '../features/vizzle/domain/usecases/get_vizzle_home_usecase.dart';
 import '../features/vizzle/home/presentation/providers/vizzle_home_provider.dart';
-// Vizzle Recently Viewed Providers
 import '../features/vizzle/recently_viewed/data/datasources/recently_viewed_local_datasource.dart';
 import '../features/vizzle/recently_viewed/data/datasources/recently_viewed_remote_datasource.dart';
 import '../features/vizzle/recently_viewed/data/repositories/recently_viewed_repository_impl.dart';
@@ -713,5 +712,9 @@ class AppProviders {
                 clearCacheUseCase: clearCacheUseCase,
               ),
     ),
+
+    // ========================================
+    // VIZZLE PLACE A ADD PROVIDERS
+    // ========================================
   ];
 }
