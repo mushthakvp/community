@@ -367,6 +367,7 @@ class _CreateAdPageState extends State<CreateAdPage> {
     return PrimaryButton(
       text: 'Publish Ad',
       onPressed: () {
+        FocusScope.of(context).unfocus();
         if (_validateForm(provider)) {
           _createAd(provider);
         }
@@ -379,24 +380,20 @@ class _CreateAdPageState extends State<CreateAdPage> {
   }
 
   bool _validateForm(PlaceAddProvider provider) {
-    // Validate form fields
     if (!_formKey.currentState!.validate()) {
       return false;
     }
 
-    // Check if images are selected
     if (provider.selectedImages.isEmpty) {
       _showErrorDialog('Please add at least one image');
       return false;
     }
 
-    // Check if location is set
     if (provider.latitude == null || provider.longitude == null) {
       _showErrorDialog('Please select a location');
       return false;
     }
 
-    // Check if city and category are selected
     if (provider.selectedCity == null) {
       _showErrorDialog('Please select a city');
       return false;
@@ -457,9 +454,7 @@ class _CreateAdPageState extends State<CreateAdPage> {
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
-              // Navigate back to home and clear the stack
               context.go(RouteConstants.vizzleHome);
-              // Clear provider data
               context.read<PlaceAddProvider>().clearAllData();
             },
             child: const CommonTextWidget(

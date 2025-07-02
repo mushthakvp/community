@@ -46,8 +46,7 @@ class PlaceAddRemoteDataSourceImpl implements PlaceAddRemoteDataSource {
   @override
   Future<List<CategoryModel>> getCategories() async {
     try {
-      // Use the correct endpoint for categories
-      final response = await apiClient.get('user/getCategories');
+      final response = await apiClient.get('user/getCities');
       final data = jsonDecode(response.body);
 
       if (data['success'] == true) {
@@ -56,19 +55,7 @@ class PlaceAddRemoteDataSourceImpl implements PlaceAddRemoteDataSource {
             .map((category) => CategoryModel.fromJson(category))
             .toList();
       } else {
-        // If categories endpoint doesn't work, try getCities which might have categories too
-        final fallbackResponse = await apiClient.get('user/getCities');
-        final fallbackData = jsonDecode(fallbackResponse.body);
-
-        if (fallbackData['success'] == true &&
-            fallbackData['categories'] != null) {
-          final categories = fallbackData['categories'] as List<dynamic>;
-          return categories
-              .map((category) => CategoryModel.fromJson(category))
-              .toList();
-        } else {
-          throw ServerException(data['message'] ?? 'Failed to get categories');
-        }
+        throw ServerException(data['message'] ?? 'Failed to get categories');
       }
     } catch (e) {
       if (e is ServerException) rethrow;
@@ -79,16 +66,11 @@ class PlaceAddRemoteDataSourceImpl implements PlaceAddRemoteDataSource {
   @override
   Future<List<String>> uploadImages(List<XFile> images) async {
     try {
-      List<String> urls = [];
-      try {
-        urls = await CloudinaryService.uploadImagesList(
-          folder: 'vivera_ads',
-          files: images.map((xfile) => File(xfile.path)).toList(),
-        );
-      } catch (e) {
-        throw ServerException('Failed to upload image');
-      }
-      return urls;
+      List<String> uploadedUrls = await CloudinaryService.uploadImagesList(
+        folder: 'upload/image',
+        files: images.map((image) => File(image.path)).toList(),
+      );
+      return uploadedUrls;
     } catch (e) {
       if (e is ServerException) rethrow;
       throw ServerException('Failed to upload images: $e');
