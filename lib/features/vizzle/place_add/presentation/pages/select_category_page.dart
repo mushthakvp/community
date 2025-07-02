@@ -43,35 +43,40 @@ class _SelectCategoryPageState extends State<SelectCategoryPage> {
               child: LoadingWidget(message: 'Loading categories...'),
             );
           }
-
           final result = provider.categoriesResult;
           if (result == null) {
             return _buildEmptyState(provider);
           }
-
           if (result.isError) {
             return _buildErrorState(provider, result.errorMessage);
           }
-
           final categories = provider.categories!;
-
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildHeader(provider),
-                AppSpacing.verticalXL,
-                CategoryGridWidget(
-                  categories: categories,
-                  onCategorySelected: (category) {
-                    provider.selectCategory(category);
-                    context.push(RouteConstants.selectSubCategory);
-                  },
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: _buildHeader(provider),
+              ),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CategoryGridWidget(
+                        categories: categories,
+                        onCategorySelected: (category) {
+                          provider.selectCategory(category);
+                          context.push(RouteConstants.selectSubCategory);
+                        },
+                      ),
+                      const SizedBox(height: 24),
+                    ],
+                  ),
                 ),
-                AppSpacing.verticalXL,
-              ],
-            ),
+              ),
+            ],
           );
         },
       ),
@@ -109,7 +114,7 @@ class _SelectCategoryPageState extends State<SelectCategoryPage> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
+                const Icon(
                   Icons.location_on,
                   size: 16,
                   color: AppConstants.appPrimaryColor,

@@ -16,53 +16,95 @@ class CategoryGridWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GridView.builder(
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
-        childAspectRatio: 0.8,
+    // Calculate the height needed for the grid
+    final screenWidth = MediaQuery.of(context).size.width;
+    final crossAxisCount = 3;
+    final crossAxisSpacing = 8.0;
+    final mainAxisSpacing = 8.0;
+    final childAspectRatio = 1.0;
+    final horizontalPadding = 32.0;
+
+    final availableWidth = screenWidth - horizontalPadding;
+    final itemWidth =
+        (availableWidth - (crossAxisSpacing * (crossAxisCount - 1))) /
+        crossAxisCount;
+    final itemHeight = itemWidth / childAspectRatio;
+
+    final rowCount = (categories.length / crossAxisCount).ceil();
+    final gridHeight =
+        (rowCount * itemHeight) + ((rowCount - 1) * mainAxisSpacing);
+
+    return SizedBox(
+      height: gridHeight,
+      child: GridView.builder(
+        physics: const NeverScrollableScrollPhysics(),
+        shrinkWrap: true,
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: crossAxisCount,
+          crossAxisSpacing: crossAxisSpacing,
+          mainAxisSpacing: mainAxisSpacing,
+          childAspectRatio: childAspectRatio,
+        ),
+        itemCount: categories.length,
+        itemBuilder: (context, index) {
+          final category = categories[index];
+          return _buildCategoryItem(category);
+        },
       ),
-      itemCount: categories.length,
-      itemBuilder: (context, index) {
-        final category = categories[index];
-        return _buildCategoryItem(category);
-      },
     );
   }
 
   Widget _buildCategoryItem(Category category) {
-    return GestureDetector(
-      onTap: () => onCategorySelected(category),
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppConstants.surfaceVariant,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: AppConstants.appPrimaryColor.withOpacity(0.3),
-            width: 1,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => onCategorySelected(category),
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: AppConstants.surfaceVariant,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: AppConstants.appPrimaryColor.withOpacity(0.3),
+              width: 1,
+            ),
           ),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              _getCategoryIcon(category.name),
-              size: 40,
-              color: AppConstants.appPrimaryColor,
-            ),
-            const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: CommonTextWidget(
-                text: category.name.replaceAll('&', '&\n'),
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                align: TextAlign.center,
-                maxLines: 2,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 45,
+                height: 45,
+                decoration: BoxDecoration(
+                  color: AppConstants.appPrimaryColor.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: AppConstants.appPrimaryColor.withOpacity(0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Icon(
+                  _getCategoryIcon(category.name),
+                  size: 24,
+                  color: AppConstants.appPrimaryColor,
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 8),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: CommonTextWidget(
+                    text: category.name.replaceAll('&', '&\n'),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    align: TextAlign.center,
+                    maxLines: 2,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
