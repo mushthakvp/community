@@ -329,16 +329,16 @@ class AppRouter {
         path: '${RouteConstants.vizzleSubItems}/:subSubCategoryId',
         builder: (context, state) {
           final subSubCategoryId = state.pathParameters['subSubCategoryId']!;
-          final queryParams = state.uri.queryParameters;
+          final extra = state.extra as Map<String, dynamic>? ?? {};
 
           return SubItemsPage(
             subSubCategoryId: subSubCategoryId,
-            subSubCategoryName: queryParams['subSubCategoryName'] ?? '',
-            categoryName: queryParams['categoryName'] ?? '',
-            subCategoryName: queryParams['subCategoryName'] ?? '',
-            categoryId: queryParams['categoryId'] ?? '',
-            subCategoryId: queryParams['subCategoryId'] ?? '',
-            isFromListAd: queryParams['isFromListAd'] == 'true',
+            subSubCategoryName: extra['subSubCategoryName'] ?? '',
+            categoryName: extra['categoryName'] ?? '',
+            subCategoryName: extra['subCategoryName'] ?? '',
+            categoryId: extra['categoryId'] ?? '',
+            subCategoryId: extra['subCategoryId'] ?? '',
+            isFromListAd: extra['isFromListAd'] == true,
           );
         },
       ),

@@ -235,16 +235,20 @@ class SubItemEntity extends Equatable {
 
   const SubItemEntity({required this.id, required this.name});
 
-  SubItemEntity copyWith({String? id, String? name}) {
-    return SubItemEntity(id: id ?? this.id, name: name ?? this.name);
-  }
-
-  // Helper methods
-  String get displayName => name.isNotEmpty ? name : 'Unknown Item';
-  bool get isValid => id.isNotEmpty && name.isNotEmpty;
-
   @override
   List<Object?> get props => [id, name];
+}
+
+class SubItemModel extends SubItemEntity {
+  const SubItemModel({required super.id, required super.name});
+
+  factory SubItemModel.fromJson(Map<String, dynamic> json) {
+    return SubItemModel(id: json['_id'] ?? '', name: json['name'] ?? '');
+  }
+
+  Map<String, dynamic> toJson() {
+    return {'_id': id, 'name': name};
+  }
 }
 
 // Filter Entity for managing filters

@@ -179,20 +179,24 @@ class VizzleRemoteDataSourceImpl implements VizzleRemoteDataSource {
   Future<List<SubItemModel>> getSubItems(String subSubCategoryId) async {
     try {
       final response = await apiClient.get(
-        'user/getSubItems/$subSubCategoryId',
+        '/user/getSubSubCategories/$subSubCategoryId',
       );
       final responseData = json.decode(response.body);
-      dev.log('Sub Items Response Data: $responseData');
-
-      if (responseData['subItems'] != null) {
-        return (responseData['subItems'] as List)
-            .map((subItem) => SubItemModel.fromJson(subItem))
-            .toList();
+      if (responseData['success'] == true) {
+        final categories = responseData['categories'] as List;
+        final category = categories.firstWhere(
+          (cat) => cat['_id'] == subSubCategoryId,
+          orElse: () => null,
+        );
+        if (category != null && category['subItems'] != null) {
+          final subItems = category['subItems'] as List;
+          return subItems.map((item) => SubItemModel.fromJson(item)).toList();
+        }
       }
       return [];
     } catch (e) {
       dev.log('Error getting sub items: $e');
-      throw const ServerException('Failed to get sub items');
+      throw ServerException('Failed to get sub items');
     }
   }
 

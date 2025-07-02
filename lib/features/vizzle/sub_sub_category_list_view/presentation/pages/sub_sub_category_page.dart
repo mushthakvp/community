@@ -96,6 +96,10 @@ class _SubSubCategoryPageState extends State<SubSubCategoryPage> {
   }
 
   void _handleSubSubCategoryTap(SubSubCategoryEntity subSubCategory) {
+    debugPrint('SubSubCategory: ${subSubCategory.name}');
+    debugPrint('SubItems count: ${subSubCategory.subItems.length}');
+    debugPrint('SubItems: ${subSubCategory.subItems}');
+
     if (subSubCategory.subItems.isEmpty) {
       context.push(
         RouteConstants.vizzleAdsListing,
@@ -109,7 +113,6 @@ class _SubSubCategoryPageState extends State<SubSubCategoryPage> {
         },
       );
     } else {
-      debugPrint('subItems: ${subSubCategory.subItems}');
       context.push(
         '${RouteConstants.vizzleSubItems}/${subSubCategory.id}',
         extra: {
