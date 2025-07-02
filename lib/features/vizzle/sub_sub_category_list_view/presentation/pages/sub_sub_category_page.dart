@@ -122,6 +122,9 @@ class _SubSubCategoryPageState extends State<SubSubCategoryPage> {
           'subCategoryName': widget.subCategoryName,
           'subCategoryId': widget.subCategoryId,
           'isFromListAd': widget.isFromListAd == 'true',
+          'subItems': subSubCategory.subItems
+              .map((item) => {'_id': item.id, 'name': item.name})
+              .toList(),
         },
       );
     }

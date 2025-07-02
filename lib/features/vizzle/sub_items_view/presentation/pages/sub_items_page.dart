@@ -18,6 +18,7 @@ class SubItemsPage extends StatefulWidget {
   final String categoryId;
   final String subCategoryId;
   final bool isFromListAd;
+  final List<Map<String, dynamic>>? subItems;
 
   const SubItemsPage({
     super.key,
@@ -28,6 +29,7 @@ class SubItemsPage extends StatefulWidget {
     required this.categoryId,
     required this.subCategoryId,
     required this.isFromListAd,
+    this.subItems,
   });
 
   @override
@@ -39,9 +41,23 @@ class _SubItemsPageState extends State<SubItemsPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<SubItemsProvider>().loadSubItems(
-        subSubCategoryId: widget.subSubCategoryId,
-      );
+      if (widget.subItems != null) {
+        context.read<SubItemsProvider>().setSubItemsDirectly(
+          widget.subItems!
+              .map(
+                (item) => SubItemEntity(
+                  id: item['_id'] ?? '',
+                  name: item['name'] ?? '',
+                ),
+              )
+              .toList(),
+        );
+      } else {
+        // Otherwise, fetch from API (fallback)
+        context.read<SubItemsProvider>().loadSubItems(
+          subSubCategoryId: widget.subSubCategoryId,
+        );
+      }
     });
   }
 

@@ -47,6 +47,13 @@ class SubItemsProvider extends ChangeNotifier {
     }
   }
 
+  void setSubItemsDirectly(List<SubItemEntity> subItems) {
+    _subItems = subItems;
+    _status = SubItemsStatus.loaded;
+    _errorMessage = null;
+    notifyListeners();
+  }
+
   Future<void> refreshData(String subSubCategoryId) async {
     await loadSubItems(subSubCategoryId: subSubCategoryId, forceRefresh: true);
   }

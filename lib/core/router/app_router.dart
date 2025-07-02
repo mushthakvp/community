@@ -339,6 +339,7 @@ class AppRouter {
             categoryId: extra['categoryId'] ?? '',
             subCategoryId: extra['subCategoryId'] ?? '',
             isFromListAd: extra['isFromListAd'] == true,
+            subItems: extra['subItems'] as List<Map<String, dynamic>>?,
           );
         },
       ),
