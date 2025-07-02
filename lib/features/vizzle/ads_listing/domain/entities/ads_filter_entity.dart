@@ -3,6 +3,8 @@ import 'package:equatable/equatable.dart';
 class AdsFilterEntity extends Equatable {
   final String? categoryId;
   final String? subCategoryId;
+  final String? subSubCategoryId;
+  final String? subItemId;
   final String? location;
   final double? minPrice;
   final double? maxPrice;
@@ -15,6 +17,8 @@ class AdsFilterEntity extends Equatable {
   const AdsFilterEntity({
     this.categoryId,
     this.subCategoryId,
+    this.subSubCategoryId,
+    this.subItemId,
     this.location,
     this.minPrice,
     this.maxPrice,
@@ -28,6 +32,8 @@ class AdsFilterEntity extends Equatable {
   AdsFilterEntity copyWith({
     String? categoryId,
     String? subCategoryId,
+    String? subSubCategoryId,
+    String? subItemId,
     String? location,
     double? minPrice,
     double? maxPrice,
@@ -40,6 +46,8 @@ class AdsFilterEntity extends Equatable {
     return AdsFilterEntity(
       categoryId: categoryId ?? this.categoryId,
       subCategoryId: subCategoryId ?? this.subCategoryId,
+      subSubCategoryId: subSubCategoryId ?? this.subSubCategoryId,
+      subItemId: subItemId ?? this.subItemId,
       location: location ?? this.location,
       minPrice: minPrice ?? this.minPrice,
       maxPrice: maxPrice ?? this.maxPrice,
@@ -58,6 +66,8 @@ class AdsFilterEntity extends Equatable {
   bool get hasActiveFilters =>
       categoryId != null ||
       subCategoryId != null ||
+      subSubCategoryId != null ||
+      subItemId != null ||
       location != null ||
       minPrice != null ||
       maxPrice != null ||
@@ -70,6 +80,8 @@ class AdsFilterEntity extends Equatable {
   List<Object?> get props => [
     categoryId,
     subCategoryId,
+    subSubCategoryId,
+    subItemId,
     location,
     minPrice,
     maxPrice,

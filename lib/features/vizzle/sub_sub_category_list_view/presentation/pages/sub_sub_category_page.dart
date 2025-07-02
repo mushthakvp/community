@@ -97,22 +97,19 @@ class _SubSubCategoryPageState extends State<SubSubCategoryPage> {
 
   void _handleSubSubCategoryTap(SubSubCategoryEntity subSubCategory) {
     if (subSubCategory.subItems.isEmpty) {
-      if (widget.isFromListAd == 'true') {
-        context.push(
-          RouteConstants.vizzleAdsListing,
-          extra: {
-            'subCategoryName': subSubCategory.name,
-            'subCategoryId': widget.subCategoryId,
-            'categoryName': widget.categoryName,
-            'categoryId': widget.categoryId,
-            'subSubCategoryId': subSubCategory.id,
-            'subItemsId': '',
-          },
-        );
-      } else {
-        _navigateBasedOnCategory(subSubCategory);
-      }
+      context.push(
+        RouteConstants.vizzleAdsListing,
+        extra: {
+          'categoryId': widget.categoryId,
+          'subCategoryId': widget.subCategoryId,
+          'subSubCategoryId': subSubCategory.id,
+          'categoryName': widget.categoryName,
+          'subCategoryName': widget.subCategoryName,
+          'subSubCategoryName': subSubCategory.name,
+        },
+      );
     } else {
+      debugPrint('subItems: ${subSubCategory.subItems}');
       context.push(
         '${RouteConstants.vizzleSubItems}/${subSubCategory.id}',
         extra: {
@@ -125,70 +122,5 @@ class _SubSubCategoryPageState extends State<SubSubCategoryPage> {
         },
       );
     }
-  }
-
-  void _navigateBasedOnCategory(SubSubCategoryEntity subSubCategory) {
-    // switch (widget.categoryName) {
-    //   case "Classifieds":
-    //     context.push(
-    //       RouteConstants.vizzleCreateClassifiedAd,
-    //       extra: {
-    //         'category': widget.subCategoryName,
-    //         'subSubCategoryId': subSubCategory.id,
-    //         'subItemsId': '',
-    //       },
-    //     );
-    //     break;
-    //   case "Furniture & Garden":
-    //     context.push(
-    //       RouteConstants.vizzleCreateFurnitureAd,
-    //       extra: {
-    //         'category': widget.subCategoryName,
-    //         'subSubCategoryId': subSubCategory.id,
-    //         'subItemsId': '',
-    //       },
-    //     );
-    //     break;
-    //   case "Motors":
-    //     context.push(
-    //       RouteConstants.vizzleCreateMotorAd,
-    //       extra: {
-    //         'category': widget.subCategoryName,
-    //         'subSubCategoryId': subSubCategory.id,
-    //         'subItemsId': '',
-    //       },
-    //     );
-    //     break;
-    //   case "Property For Sale":
-    //     context.push(
-    //       RouteConstants.vizzlePropertySubLand,
-    //       extra: {
-    //         'category': widget.subCategoryName,
-    //         'subSubCategoryId': subSubCategory.id,
-    //       },
-    //     );
-    //     break;
-    //   case 'Community':
-    //     context.push(
-    //       RouteConstants.vizzleAddCommunity,
-    //       extra: {
-    //         'category': widget.subCategoryName,
-    //         'subSubCategoryId': subSubCategory.id,
-    //       },
-    //     );
-    //     break;
-    //   case 'Property For Rent':
-    //     context.push(
-    //       RouteConstants.vizzleSelectAgentOrLandlord,
-    //       extra: {
-    //         'category': widget.subCategoryName,
-    //         'subSubCategoryId': subSubCategory.id,
-    //       },
-    //     );
-    //     break;
-    //   default:
-    //     // Handle default case or show error
-    //     break;
-    // }
   }
 }

@@ -633,43 +633,33 @@ class AppRouter {
     );
   }
 
-  /// Navigate to ads listing with filters
   static void navigateToAdsListing(
     BuildContext context, {
     String? categoryId,
     String? subCategoryId,
+    String? subSubCategoryId,
+    String? subItemId,
     String? categoryName,
     String? subCategoryName,
+    String? subSubCategoryName,
+    String? subItemName,
     Map<String, dynamic>? initialFilter,
   }) {
-    final queryParams = <String, String>{};
+    final extra = <String, dynamic>{};
 
-    if (categoryId != null) queryParams['categoryId'] = categoryId;
-    if (subCategoryId != null) queryParams['subCategoryId'] = subCategoryId;
-    if (categoryName != null) {
-      queryParams['categoryName'] = Uri.encodeComponent(categoryName);
+    if (categoryId != null) extra['categoryId'] = categoryId;
+    if (subCategoryId != null) extra['subCategoryId'] = subCategoryId;
+    if (subSubCategoryId != null) extra['subSubCategoryId'] = subSubCategoryId;
+    if (subItemId != null) extra['subItemId'] = subItemId;
+    if (categoryName != null) extra['categoryName'] = categoryName;
+    if (subCategoryName != null) extra['subCategoryName'] = subCategoryName;
+    if (subSubCategoryName != null) {
+      extra['subSubCategoryName'] = subSubCategoryName;
     }
-    if (subCategoryName != null) {
-      queryParams['subCategoryName'] = Uri.encodeComponent(subCategoryName);
-    }
+    if (subItemName != null) extra['subItemName'] = subItemName;
+    if (initialFilter != null) extra['initialFilter'] = initialFilter;
 
-    String route = RouteConstants.vizzleAdsListing;
-    if (queryParams.isNotEmpty) {
-      final query = queryParams.entries
-          .map((e) => '${e.key}=${e.value}')
-          .join('&');
-      route += '?$query';
-    }
-
-    final extra = initialFilter != null
-        ? {'initialFilter': initialFilter}
-        : null;
-
-    if (extra != null) {
-      context.push(route, extra: extra);
-    } else {
-      context.push(route);
-    }
+    context.push(RouteConstants.vizzleAdsListing, extra: extra);
   }
 
   /// Navigate to search with query

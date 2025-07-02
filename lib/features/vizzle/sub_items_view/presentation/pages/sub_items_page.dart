@@ -102,57 +102,18 @@ class _SubItemsPageState extends State<SubItemsPage> {
   }
 
   void _handleSubItemTap(SubItemEntity subItem) {
-    if (widget.isFromListAd) {
-      context.push(
-        RouteConstants.vizzleAdsListing,
-        extra: {
-          'subCategoryName': widget.subSubCategoryName,
-          'subCategoryId': widget.subCategoryId,
-          'categoryName': widget.categoryName,
-          'categoryId': widget.categoryId,
-          'subSubCategoryId': widget.subSubCategoryId,
-          'subItemsId': subItem.id,
-        },
-      );
-    } else {
-      _navigateBasedOnCategory(subItem);
-    }
-  }
-
-  void _navigateBasedOnCategory(SubItemEntity subItem) {
-    // switch (widget.categoryName) {
-    //   case "Classifieds":
-    //     context.push(
-    //       RouteConstants.vizzleCreateClassifiedAd,
-    //       extra: {
-    //         'category': widget.subCategoryName,
-    //         'subSubCategoryId': widget.subSubCategoryId,
-    //         'subItemsId': subItem.id,
-    //       },
-    //     );
-    //     break;
-    //   case "Furniture & Garden":
-    //     context.push(
-    //       RouteConstants.vizzleCreateFurnitureAd,
-    //       extra: {
-    //         'category': widget.subCategoryName,
-    //         'subSubCategoryId': widget.subSubCategoryId,
-    //         'subItemsId': subItem.id,
-    //       },
-    //     );
-    //     break;
-    //   case "Motors":
-    //     context.push(
-    //       RouteConstants.vizzleCreateMotorAd,
-    //       extra: {
-    //         'category': widget.subCategoryName,
-    //         'subSubCategoryId': widget.subSubCategoryId,
-    //         'subItemsId': subItem.id,
-    //       },
-    //     );
-    //     break;
-    //   default:
-    //     break;
-    // }
+    context.push(
+      RouteConstants.vizzleAdsListing,
+      extra: {
+        'categoryId': widget.categoryId,
+        'subCategoryId': widget.subCategoryId,
+        'subSubCategoryId': widget.subSubCategoryId,
+        'subItemId': subItem.id,
+        'categoryName': widget.categoryName,
+        'subCategoryName': widget.subCategoryName,
+        'subSubCategoryName': widget.subSubCategoryName,
+        'subItemName': subItem.name,
+      },
+    );
   }
 }

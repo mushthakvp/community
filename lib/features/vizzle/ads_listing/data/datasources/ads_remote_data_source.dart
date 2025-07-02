@@ -40,6 +40,10 @@ class AdsRemoteDataSourceImpl implements AdsRemoteDataSource {
   }) async {
     try {
       final queryParams = _buildQueryParams(page, limit, filter);
+      dev.log(
+        'Making request to ${ApiConstants.vizzleAds} with params: $queryParams',
+      );
+
       final response = await apiClient.get(
         ApiConstants.vizzleAds,
         queryParameters: queryParams,
@@ -142,21 +146,30 @@ class AdsRemoteDataSourceImpl implements AdsRemoteDataSource {
     };
 
     if (filter != null) {
+      // Category filters - Use the correct parameter names as per your working endpoint
       if (filter.categoryId != null) {
-        params['categoryId'] = filter.categoryId!;
+        params['category'] =
+            filter.categoryId!; // Changed from 'categoryId' to 'category'
       }
       if (filter.subCategoryId != null) {
-        params['subCategoryId'] = filter.subCategoryId!;
+        params['subCategory'] = filter
+            .subCategoryId!; // Changed from 'subCategoryId' to 'subCategory'
       }
+
+      // Location filter
       if (filter.location != null) {
-        params['location'] = filter.location!;
+        params['city'] = filter.location!; // Changed from 'location' to 'city'
       }
+
+      // Price filters
       if (filter.minPrice != null) {
         params['minPrice'] = filter.minPrice!.toString();
       }
       if (filter.maxPrice != null) {
         params['maxPrice'] = filter.maxPrice!.toString();
       }
+
+      // Search keyword
       if (filter.keyword != null && filter.keyword!.isNotEmpty) {
         params['keyword'] = filter.keyword!;
       }
@@ -171,10 +184,8 @@ class AdsRemoteDataSourceImpl implements AdsRemoteDataSource {
           params['brands'] = vehicleFilter.brands.join(',');
         }
         if (vehicleFilter.minYear != null) {
-          params['minYear'] = vehicleFilter.minYear!.toString();
-        }
-        if (vehicleFilter.maxYear != null) {
-          params['maxYear'] = vehicleFilter.maxYear!.toString();
+          params['year'] = vehicleFilter.minYear!
+              .toString(); // Using year instead of minYear/maxYear
         }
         if (vehicleFilter.minKilometers != null) {
           params['minKilometers'] = vehicleFilter.minKilometers!.toString();
@@ -183,13 +194,15 @@ class AdsRemoteDataSourceImpl implements AdsRemoteDataSource {
           params['maxKilometers'] = vehicleFilter.maxKilometers!.toString();
         }
         if (vehicleFilter.fuelTypes.isNotEmpty) {
-          params['fuelTypes'] = vehicleFilter.fuelTypes.join(',');
+          params['fuelType'] =
+              vehicleFilter.fuelTypes.first; // Using single fuelType
         }
         if (vehicleFilter.transmissions.isNotEmpty) {
-          params['transmissions'] = vehicleFilter.transmissions.join(',');
+          params['transmissionType'] =
+              vehicleFilter.transmissions.first; // Using transmissionType
         }
         if (vehicleFilter.colors.isNotEmpty) {
-          params['colors'] = vehicleFilter.colors.join(',');
+          params['color'] = vehicleFilter.colors.first; // Using single color
         }
       }
 
@@ -219,9 +232,13 @@ class AdsRemoteDataSourceImpl implements AdsRemoteDataSource {
         }
       }
 
+      // Amenities
       if (filter.amenities.isNotEmpty) {
         params['amenities'] = filter.amenities.join(',');
       }
+
+      // Add default empty values for parameters that should be present
+      params.putIfAbsent('adsPostedWithin', () => '');
     }
 
     return params;

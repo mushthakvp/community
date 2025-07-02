@@ -93,10 +93,10 @@ class _SubCategoryListingPageState extends State<SubCategoryListingPage> {
       context.push(
         RouteConstants.vizzleAdsListing,
         extra: {
-          'subCategoryName': subCategoryName,
+          'categoryId': categoryId,
           'subCategoryId': subCategoryId,
           'categoryName': widget.categoryName,
-          'categoryId': categoryId,
+          'subCategoryName': subCategoryName,
         },
       );
     } else if (widget.categoryName == 'Property For Sale') {
@@ -104,29 +104,29 @@ class _SubCategoryListingPageState extends State<SubCategoryListingPage> {
         context.push(
           RouteConstants.vizzleAdsListing,
           extra: {
-            'subCategoryName': subCategoryName,
+            'categoryId': categoryId,
             'subCategoryId': subCategoryId,
             'categoryName': widget.categoryName,
-            'categoryId': categoryId,
+            'subCategoryName': subCategoryName,
           },
         );
       } else {
         context.push(
-          '${RouteConstants.vizzleSubCategory}/${widget.categoryName}/$subCategoryId',
+          '${RouteConstants.vizzleSubCategory}/${Uri.encodeComponent(widget.categoryName)}/$subCategoryId',
           extra: {
             'subCategoryName': subCategoryName,
             'categoryId': categoryId,
-            'isFromListAd': 'true',
+            'isFromListAd': 'false',
           },
         );
       }
     } else {
       context.push(
-        '${RouteConstants.vizzleSubCategory}/${widget.categoryName}/$subCategoryId',
+        '${RouteConstants.vizzleSubCategory}/${Uri.encodeComponent(widget.categoryName)}/$subCategoryId',
         extra: {
           'subCategoryName': subCategoryName,
           'categoryId': categoryId,
-          'isFromListAd': 'true',
+          'isFromListAd': 'false',
         },
       );
     }

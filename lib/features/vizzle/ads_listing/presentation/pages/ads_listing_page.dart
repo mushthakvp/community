@@ -18,16 +18,24 @@ enum AdsViewType { grid, list }
 class AdsListingPage extends StatefulWidget {
   final String? categoryId;
   final String? subCategoryId;
+  final String? subSubCategoryId;
+  final String? subItemId;
   final String? categoryName;
   final String? subCategoryName;
+  final String? subSubCategoryName;
+  final String? subItemName;
   final AdsFilterEntity? initialFilter;
 
   const AdsListingPage({
     super.key,
     this.categoryId,
     this.subCategoryId,
+    this.subSubCategoryId,
+    this.subItemId,
     this.categoryName,
     this.subCategoryName,
+    this.subSubCategoryName,
+    this.subItemName,
     this.initialFilter,
   });
 
@@ -78,21 +86,22 @@ class _AdsListingPageState extends State<AdsListingPage> {
       // Load filter options
       provider.loadFilterOptions();
 
-      // Create initial filter
-      AdsFilterEntity initialFilter =
-          widget.initialFilter ?? const AdsFilterEntity();
+      // Create filter based on the navigation parameters
+      AdsFilterEntity filter = widget.initialFilter ?? const AdsFilterEntity();
 
+      // Build filter based on passed parameters
       if (widget.categoryId != null) {
-        initialFilter = initialFilter.copyWith(categoryId: widget.categoryId);
+        filter = filter.copyWith(categoryId: widget.categoryId);
       }
       if (widget.subCategoryId != null) {
-        initialFilter = initialFilter.copyWith(
-          subCategoryId: widget.subCategoryId,
-        );
+        filter = filter.copyWith(subCategoryId: widget.subCategoryId);
       }
 
-      // Load ads with initial filter
-      provider.loadAds(filter: initialFilter);
+      // For more specific filters, we might need to extend the filter entity
+      // or handle them in a different way based on your API requirements
+
+      // Load ads with the constructed filter
+      provider.loadAds(filter: filter);
     });
   }
 
@@ -152,13 +161,7 @@ class _AdsListingPageState extends State<AdsListingPage> {
   }
 
   PreferredSizeWidget _buildAppBar() {
-    String title = 'Ads';
-    if (widget.categoryName != null) {
-      title = widget.categoryName!;
-      if (widget.subCategoryName != null) {
-        title = widget.subCategoryName!;
-      }
-    }
+    String title = _buildTitle();
 
     return CommonAppBar(
       title: title,
@@ -185,6 +188,21 @@ class _AdsListingPageState extends State<AdsListingPage> {
         ),
       ],
     );
+  }
+
+  String _buildTitle() {
+    // Build title based on the navigation hierarchy
+    if (widget.subItemName != null) {
+      return widget.subItemName!;
+    } else if (widget.subSubCategoryName != null) {
+      return widget.subSubCategoryName!;
+    } else if (widget.subCategoryName != null) {
+      return widget.subCategoryName!;
+    } else if (widget.categoryName != null) {
+      return widget.categoryName!;
+    } else {
+      return 'Ads';
+    }
   }
 
   Widget _buildContent(AdsListingProvider provider) {
