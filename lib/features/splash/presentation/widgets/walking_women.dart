@@ -30,12 +30,14 @@ class _WalkingWomenState extends State<WalkingWomen>
   void initState() {
     super.initState();
     _walkController = AnimationController(
-      duration: const Duration(seconds: 6),
+      duration: const Duration(
+        seconds: 2,
+      ), // Reduced from 6 seconds to 2 seconds
       vsync: this,
     );
 
     _fadeController = AnimationController(
-      duration: const Duration(milliseconds: 1000),
+      duration: const Duration(milliseconds: 400), // Reduced from 1000ms
       vsync: this,
     );
 
@@ -45,7 +47,8 @@ class _WalkingWomenState extends State<WalkingWomen>
     _walkController.addStatusListener((status) {
       if (status == AnimationStatus.completed && !_hasCompleted) {
         _hasCompleted = true;
-        Future.delayed(const Duration(milliseconds: 300), () {
+        Future.delayed(const Duration(milliseconds: 100), () {
+          // Reduced delay
           if (mounted) {
             final provider = context.read<SplashProvider>();
             provider.completeWalkingAnimation();
@@ -72,7 +75,7 @@ class _WalkingWomenState extends State<WalkingWomen>
         endX: 1.4,
         y: 0.7,
         color: colors[0],
-        speed: 1.0,
+        speed: 1.5, // Increased speed
         scale: 1.0,
         delay: 0.0,
         isMainLady: true,
@@ -87,9 +90,9 @@ class _WalkingWomenState extends State<WalkingWomen>
           endX: 1.2 + (i * 0.1),
           y: 0.7 + (random.nextDouble() * 0.1),
           color: colors[i % colors.length],
-          speed: 0.8 + (random.nextDouble() * 0.3),
+          speed: 1.2 + (random.nextDouble() * 0.3), // Increased base speed
           scale: 0.8 + (random.nextDouble() * 0.3),
-          delay: i * 0.2,
+          delay: i * 0.1, // Reduced delay between women
           isMainLady: false,
         ),
       );
@@ -136,6 +139,7 @@ class _WalkingWomenState extends State<WalkingWomen>
   }
 }
 
+// Keep the rest of the classes unchanged (WomanFigure and WomenPainter)
 class WomanFigure {
   final double startX, endX, y;
   final Color color;
@@ -281,7 +285,9 @@ class WomenPainter extends CustomPainter {
         (woman.endX - woman.startX) * adjustedAnimationValue * woman.speed;
     if (adjustedAnimationValue <= 0 || currentX > 1.5) return;
     final position = Offset(currentX * size.width, woman.y * size.height);
-    final walkCycle = math.sin(animationValue * 12 + woman.delay * 3) * 0.1;
+    final walkCycle =
+        math.sin(animationValue * 15 + woman.delay * 3) *
+        0.1; // Faster walk cycle
     canvas.save();
     canvas.translate(position.dx, position.dy + walkCycle * 10);
     canvas.scale(woman.scale);
@@ -349,9 +355,13 @@ class WomenPainter extends CustomPainter {
       ..style = PaintingStyle.stroke;
     canvas.drawPath(dressPath, borderPaint);
     _drawSareePattern(canvas, woman);
-    final armSwing = math.sin(animationValue * 8 + woman.delay * 2) * 0.3;
+    final armSwing =
+        math.sin(animationValue * 12 + woman.delay * 2) *
+        0.3; // Faster arm swing
     _drawArmsWithBangles(canvas, bodyColor, armSwing, woman.isMainLady);
-    final legSwing = math.sin(animationValue * 8 + woman.delay * 2) * 0.4;
+    final legSwing =
+        math.sin(animationValue * 12 + woman.delay * 2) *
+        0.4; // Faster leg swing
     _drawLegsWithAnklets(canvas, bodyColor, legSwing, woman.isMainLady);
     _drawGoldenDupatta(canvas, woman);
     if (woman.isMainLady) {
@@ -462,7 +472,8 @@ class WomenPainter extends CustomPainter {
 
   void _drawGoldenDupatta(Canvas canvas, WomanFigure woman) {
     final scarf = Path();
-    final scarfFlow = math.sin(animationValue * 6 + woman.delay) * 8;
+    final scarfFlow =
+        math.sin(animationValue * 8 + woman.delay) * 8; // Faster flow
     scarf.moveTo(8, -15);
     scarf.quadraticBezierTo(15 + scarfFlow, -10, 22 + scarfFlow, 0);
     scarf.quadraticBezierTo(25 + scarfFlow, 5, 20 + scarfFlow, 12);

@@ -29,13 +29,16 @@ class SplashProvider extends ChangeNotifier {
   Future<void> _runAnimationSequence() async {
     _animationPhase = 'logo_entrance';
     notifyListeners();
-    await Future.delayed(const Duration(milliseconds: 1000));
+    await Future.delayed(const Duration(milliseconds: 400));
+
     _animationPhase = 'text_animation';
     notifyListeners();
-    await Future.delayed(const Duration(milliseconds: 1200));
+    await Future.delayed(const Duration(milliseconds: 500));
+
     _animationPhase = 'marketplace_particles';
     notifyListeners();
-    await Future.delayed(const Duration(milliseconds: 800));
+    await Future.delayed(const Duration(milliseconds: 300));
+
     _animationPhase = 'women_walking';
     notifyListeners();
   }
@@ -43,7 +46,7 @@ class SplashProvider extends ChangeNotifier {
   void completeWalkingAnimation() {
     _animationPhase = 'final_glow';
     notifyListeners();
-    Future.delayed(const Duration(milliseconds: 500), () {
+    Future.delayed(const Duration(milliseconds: 200), () {
       onWalkingComplete?.call();
     });
   }
