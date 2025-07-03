@@ -1,9 +1,10 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/services/custom_tab_service.dart';
+import '../../../../core/utils/extensions.dart';
 import '../../../../core/widgets/common/app_bar.dart';
 import '../widgets/ios_settings_item.dart';
 import '../widgets/ios_settings_section.dart';
@@ -59,7 +60,7 @@ class AboutAppPage extends StatelessWidget {
                   icon: Icons.rate_review_outlined,
                   title: 'Rate the App',
                   subtitle: 'Share your feedback',
-                  onTap: () => _rateApp(),
+                  onTap: () => _rateApp(context),
                 ),
               ],
             ),
@@ -111,20 +112,25 @@ class AboutAppPage extends StatelessWidget {
     );
   }
 
-  Future<void> _rateApp() async {
-    String storeUrl;
-
-    if (Platform.isAndroid) {
-      storeUrl = 'https://play.google.com/store/apps/details?id=com.livera.app';
-    } else if (Platform.isIOS) {
-      storeUrl = 'https://apps.apple.com/app/livera-community/id1234567890';
-    } else {
-      return;
-    }
-
-    final Uri uri = Uri.parse(storeUrl);
-    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-      throw Exception('Could not launch app store');
+  Future<void> _rateApp(BuildContext context) async {
+    try {
+      if (Platform.isAndroid) {
+        await CustomTabService.openAppStore(
+          androidPackageId: 'com.livera.app',
+          iosAppId: '1234567890',
+        );
+      } else if (Platform.isIOS) {
+        await CustomTabService.openAppStore(
+          androidPackageId: 'com.livera.app',
+          iosAppId: '1234567890',
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        context.showErrorSnackBar(
+          'Could not open app store. Please try again.',
+        );
+      }
     }
   }
 }

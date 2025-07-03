@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/services/custom_tab_service.dart';
+import '../../../../core/utils/extensions.dart';
 import '../../../../core/widgets/common/app_bar.dart';
 import '../widgets/ios_settings_item.dart';
 import '../widgets/ios_settings_section.dart';
@@ -25,26 +26,26 @@ class ContactUsPage extends StatelessWidget {
                   icon: Icons.phone_outlined,
                   title: 'Call Support - India',
                   subtitle: '+91 95670 77011',
-                  onTap: () => _launchPhone('+919567077011'),
+                  onTap: () => _launchPhone(context, '+919567077011'),
                 ),
                 IOSSettingsItem(
                   icon: Icons.phone_outlined,
                   title: 'Call Support - UAE',
                   subtitle: '+971 50 328 0101',
-                  onTap: () => _launchPhone('+971503280101'),
+                  onTap: () => _launchPhone(context, '+971503280101'),
                 ),
                 IOSSettingsItem(
                   icon: Icons.email_outlined,
                   title: 'Email',
                   subtitle: 'connect@liveraapp.com',
-                  onTap: () => _launchEmail('connect@liveraapp.com'),
+                  onTap: () => _launchEmail(context, 'connect@liveraapp.com'),
                 ),
                 IOSSettingsItem(
                   icon: Icons.location_on_outlined,
                   title: 'Address',
                   subtitle:
                       'Livera Infocomm Limited Pallur PO Near Wadakancherry, Cheruthuruthy Rd, Desamangalam, Thrissur, Kerala 679532, India',
-                  onTap: () => _launchMaps(),
+                  onTap: () => _launchMaps(context),
                 ),
               ],
             ),
@@ -73,28 +74,39 @@ class ContactUsPage extends StatelessWidget {
     );
   }
 
-  Future<void> _launchPhone(String phoneNumber) async {
-    final Uri phoneUri = Uri(scheme: 'tel', path: phoneNumber);
-    if (!await launchUrl(phoneUri)) {
-      throw Exception('Could not launch phone dialer');
+  Future<void> _launchPhone(BuildContext context, String phoneNumber) async {
+    try {
+      await CustomTabService.openPhone(phoneNumber);
+    } catch (e) {
+      if (context.mounted) {
+        context.showErrorSnackBar(
+          'Could not open phone dialer. Please try again.',
+        );
+      }
     }
   }
 
-  Future<void> _launchEmail(String email) async {
-    final Uri emailUri = Uri(scheme: 'mailto', path: email);
-    if (!await launchUrl(emailUri)) {
-      throw Exception('Could not launch email');
+  Future<void> _launchEmail(BuildContext context, String email) async {
+    try {
+      await CustomTabService.openEmail(email);
+    } catch (e) {
+      if (context.mounted) {
+        context.showErrorSnackBar(
+          'Could not open email app. Please try again.',
+        );
+      }
     }
   }
 
-  Future<void> _launchMaps() async {
-    const String address =
-        'Livera Infocomm Limited Pallur PO Near Wadakancherry, Cheruthuruthy Rd, Desamangalam, Thrissur, Kerala 679532, India';
-    final Uri mapsUri = Uri.parse(
-      'https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(address)}',
-    );
-    if (!await launchUrl(mapsUri, mode: LaunchMode.externalApplication)) {
-      throw Exception('Could not launch maps');
+  Future<void> _launchMaps(BuildContext context) async {
+    try {
+      const String address =
+          'Livera Infocomm Limited Pallur PO Near Wadakancherry, Cheruthuruthy Rd, Desamangalam, Thrissur, Kerala 679532, India';
+      await CustomTabService.openMaps(address);
+    } catch (e) {
+      if (context.mounted) {
+        context.showErrorSnackBar('Could not open maps. Please try again.');
+      }
     }
   }
 }

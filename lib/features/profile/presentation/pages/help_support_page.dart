@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/services/custom_tab_service.dart';
+import '../../../../core/utils/extensions.dart';
 import '../../../../core/widgets/common/app_bar.dart';
 import '../widgets/ios_settings_item.dart';
 import '../widgets/ios_settings_section.dart';
@@ -31,7 +32,7 @@ class HelpSupportPage extends StatelessWidget {
                   icon: Icons.email_outlined,
                   title: 'Email Support',
                   subtitle: 'connect@liveraapp.com',
-                  onTap: () => _launchEmail('connect@liveraapp.com'),
+                  onTap: () => _launchEmail(context, 'connect@liveraapp.com'),
                 ),
               ],
             ),
@@ -43,8 +44,10 @@ class HelpSupportPage extends StatelessWidget {
                   icon: Icons.article_outlined,
                   title: 'User Guide',
                   subtitle: 'Detailed app documentation',
-                  onTap: () =>
-                      _launchURL('https://www.liveraapp.com/vv-user-guide'),
+                  onTap: () => _openCustomTab(
+                    context,
+                    'https://www.liveraapp.com/vv-user-guide',
+                  ),
                 ),
               ],
             ),
@@ -55,17 +58,25 @@ class HelpSupportPage extends StatelessWidget {
     );
   }
 
-  Future<void> _launchURL(String url) async {
-    final Uri uri = Uri.parse(url);
-    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-      throw Exception('Could not launch $url');
+  Future<void> _openCustomTab(BuildContext context, String url) async {
+    try {
+      await CustomTabService.openUrl(url);
+    } catch (e) {
+      if (context.mounted) {
+        context.showErrorSnackBar('Could not open the link. Please try again.');
+      }
     }
   }
 
-  Future<void> _launchEmail(String email) async {
-    final Uri emailUri = Uri(scheme: 'mailto', path: email);
-    if (!await launchUrl(emailUri)) {
-      throw Exception('Could not launch email');
+  Future<void> _launchEmail(BuildContext context, String email) async {
+    try {
+      await CustomTabService.openEmail(email);
+    } catch (e) {
+      if (context.mounted) {
+        context.showErrorSnackBar(
+          'Could not open email app. Please try again.',
+        );
+      }
     }
   }
 
