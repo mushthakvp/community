@@ -46,12 +46,12 @@ class _ProfilePageState extends State<ProfilePage> {
                 IOSSettingsSection(
                   title: 'Account',
                   items: [
-                    IOSSettingsItem(
-                      icon: Icons.person_outline,
-                      title: 'Edit Profile',
-                      subtitle: 'Update your personal information',
-                      onTap: () => context.push(RouteConstants.editProfile),
-                    ),
+                    // IOSSettingsItem(
+                    //   icon: Icons.person_outline,
+                    //   title: 'Edit Profile',
+                    //   subtitle: 'Update your personal information',
+                    //   onTap: () => context.push(RouteConstants.editProfile),
+                    // ),
                     IOSSettingsItem(
                       icon: Icons.lock_outline,
                       title: 'Change Password',
