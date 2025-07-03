@@ -79,6 +79,22 @@ import '../features/vizzle/product_detail/domain/usecases/report_product_usecase
 import '../features/vizzle/product_detail/domain/usecases/share_product_usecase.dart';
 import '../features/vizzle/product_detail/domain/usecases/toggle_favorite_usecase.dart';
 import '../features/vizzle/product_detail/presentation/providers/product_detail_provider.dart';
+// Vizzle Profile Providers
+import '../features/vizzle/profile/data/datasources/profile_local_datasource.dart'
+    as vizzle_profile_local;
+import '../features/vizzle/profile/data/datasources/profile_remote_datasource.dart'
+    as vizzle_profile_remote;
+import '../features/vizzle/profile/data/repositories/profile_repository_impl.dart'
+    as vizzle_profile_repo;
+import '../features/vizzle/profile/domain/repositories/profile_repository.dart'
+    as vizzle_profile_interface;
+import '../features/vizzle/profile/domain/usecases/clear_profile_cache_usecase.dart';
+import '../features/vizzle/profile/domain/usecases/delete_ad_usecase.dart';
+import '../features/vizzle/profile/domain/usecases/get_profile_usecase.dart'
+    as vizzle_profile_get;
+import '../features/vizzle/profile/domain/usecases/mark_as_sold_usecase.dart';
+import '../features/vizzle/profile/presentation/providers/profile_provider.dart'
+    as vizzle_profile_provider;
 import '../features/vizzle/recently_viewed/data/datasources/recently_viewed_local_datasource.dart';
 import '../features/vizzle/recently_viewed/data/datasources/recently_viewed_remote_datasource.dart';
 import '../features/vizzle/recently_viewed/data/repositories/recently_viewed_repository_impl.dart';
@@ -165,7 +181,7 @@ class AppProviders {
     ),
 
     // ========================================
-    // PROFILE PROVIDERS
+    // MAIN PROFILE PROVIDERS
     // ========================================
     ProxyProvider<ApiClient, ProfileRemoteDataSource>(
       update: (_, apiClient, __) =>
@@ -186,7 +202,7 @@ class AppProviders {
           ),
     ),
 
-    // Profile Use Cases
+    // Main Profile Use Cases
     ProxyProvider<ProfileRepositoryImpl, GetProfileUseCase>(
       update: (_, repository, __) => GetProfileUseCase(repository),
     ),
@@ -206,7 +222,7 @@ class AppProviders {
       update: (_, repository, __) => GetPointTransactionsUseCase(repository),
     ),
 
-    // Profile Provider
+    // Main Profile Provider
     ChangeNotifierProxyProvider6<
       GetProfileUseCase,
       UpdateProfileUseCase,
@@ -584,7 +600,7 @@ class AppProviders {
     ),
 
     // ========================================
-    // VIZZLE SAVED ADS PROVIDERS (FIXED)
+    // VIZZLE SAVED ADS PROVIDERS
     // ========================================
 
     // Saved Ads Data Sources
@@ -876,7 +892,85 @@ class AppProviders {
     ),
 
     // ========================================
-    // VIZZLE PROFILE PROVIDERS
+    // VIZZLE PROFILE PROVIDERS (FIXED)
     // ========================================
+
+    // Vizzle Profile Data Sources
+    ProxyProvider<ApiClient, vizzle_profile_remote.ProfileRemoteDataSource>(
+      update: (_, apiClient, __) =>
+          vizzle_profile_remote.ProfileRemoteDataSourceImpl(
+            apiClient: apiClient,
+          ),
+    ),
+    Provider<vizzle_profile_local.ProfileLocalDataSource>(
+      create: (_) => vizzle_profile_local.ProfileLocalDataSourceImpl(),
+    ),
+
+    // Vizzle Profile Repository
+    ProxyProvider3<
+      vizzle_profile_remote.ProfileRemoteDataSource,
+      vizzle_profile_local.ProfileLocalDataSource,
+      NetworkInfo,
+      vizzle_profile_interface.ProfileRepository
+    >(
+      update: (_, remoteDataSource, localDataSource, networkInfo, __) =>
+          vizzle_profile_repo.ProfileRepositoryImpl(
+            remoteDataSource: remoteDataSource,
+            localDataSource: localDataSource,
+            networkInfo: networkInfo,
+          ),
+    ),
+
+    // Vizzle Profile Use Cases
+    ProxyProvider<
+      vizzle_profile_interface.ProfileRepository,
+      vizzle_profile_get.GetProfileUseCase
+    >(
+      update: (_, repository, __) =>
+          vizzle_profile_get.GetProfileUseCase(repository),
+    ),
+    ProxyProvider<vizzle_profile_interface.ProfileRepository, DeleteAdUseCase>(
+      update: (_, repository, __) => DeleteAdUseCase(repository),
+    ),
+    ProxyProvider<
+      vizzle_profile_interface.ProfileRepository,
+      MarkAsSoldUseCase
+    >(update: (_, repository, __) => MarkAsSoldUseCase(repository)),
+    ProxyProvider<
+      vizzle_profile_interface.ProfileRepository,
+      ClearProfileCacheUseCase
+    >(update: (_, repository, __) => ClearProfileCacheUseCase(repository)),
+
+    // Vizzle Profile Provider
+    ChangeNotifierProxyProvider4<
+      vizzle_profile_get.GetProfileUseCase,
+      DeleteAdUseCase,
+      MarkAsSoldUseCase,
+      ClearProfileCacheUseCase,
+      vizzle_profile_provider.ProfileProvider
+    >(
+      create: (context) => vizzle_profile_provider.ProfileProvider(
+        getProfileUseCase: context.read<vizzle_profile_get.GetProfileUseCase>(),
+        deleteAdUseCase: context.read<DeleteAdUseCase>(),
+        markAsSoldUseCase: context.read<MarkAsSoldUseCase>(),
+        clearProfileCacheUseCase: context.read<ClearProfileCacheUseCase>(),
+      ),
+      update:
+          (
+            _,
+            getProfileUseCase,
+            deleteAdUseCase,
+            markAsSoldUseCase,
+            clearProfileCacheUseCase,
+            previous,
+          ) =>
+              previous ??
+              vizzle_profile_provider.ProfileProvider(
+                getProfileUseCase: getProfileUseCase,
+                deleteAdUseCase: deleteAdUseCase,
+                markAsSoldUseCase: markAsSoldUseCase,
+                clearProfileCacheUseCase: clearProfileCacheUseCase,
+              ),
+    ),
   ];
 }
