@@ -874,5 +874,9 @@ class AppProviders {
                 accessChatUseCase: accessChatUseCase,
               ),
     ),
+
+    // ========================================
+    // VIZZLE PROFILE PROVIDERS
+    // ========================================
   ];
 }

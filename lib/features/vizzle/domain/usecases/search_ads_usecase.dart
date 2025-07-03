@@ -1,8 +1,8 @@
 import 'package:dartz/dartz.dart';
 
-import '../../../../../../core/error/failures.dart';
-import '../../../../domain/entities/vizzle_entities.dart';
-import '../../../../domain/repositories/vizzle_repository.dart';
+import '../../../../core/error/failures.dart';
+import '../entities/vizzle_entities.dart';
+import '../repositories/vizzle_repository.dart';
 
 class SearchAdsUseCase {
   final VizzleRepository repository;
