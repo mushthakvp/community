@@ -29,9 +29,16 @@ class SpinProviders {
       update: (_, apiClient, __) =>
           SpinRemoteDataSourceImpl(apiClient: apiClient),
     ),
-    ProxyProvider<SharedPreferences, SpinLocalDataSource>(
-      update: (_, sharedPreferences, __) =>
-          SpinLocalDataSourceImpl(sharedPreferences: sharedPreferences),
+
+    // Spin Local Data Source - handles async SharedPreferences
+    ProxyProvider<SharedPreferences?, SpinLocalDataSource>(
+      update: (_, sharedPreferences, __) {
+        if (sharedPreferences == null) {
+          // Return a mock implementation or throw error
+          throw Exception('SharedPreferences not initialized yet');
+        }
+        return SpinLocalDataSourceImpl(sharedPreferences: sharedPreferences);
+      },
     ),
 
     // Spin Repository

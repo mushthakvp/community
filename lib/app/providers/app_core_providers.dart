@@ -30,7 +30,43 @@ class AppCoreProviders {
           ApiClient(baseUrl: ApiConstants.baseUrl, networkInfo: networkInfo),
     ),
 
-    // SharedPreferences Provider
-    Provider<SharedPreferences?>(create: (_) => null, lazy: false),
+    // SharedPreferences Provider - FIXED: Now properly initializes SharedPreferences
+    Provider<SharedPreferences>(
+      create: (_) =>
+          throw UnimplementedError('SharedPreferences must be initialized'),
+      lazy: false,
+    ),
   ];
+
+  /// Initialize SharedPreferences and return updated providers
+  static Future<List<SingleChildWidget>> getInitializedProviders() async {
+    final sharedPreferences = await SharedPreferences.getInstance();
+
+    return [
+      // ========================================
+      // CORE INFRASTRUCTURE PROVIDERS
+      // ========================================
+
+      // Splash Provider
+      ChangeNotifierProvider<SplashProvider>(create: (_) => SplashProvider()),
+
+      // Network Providers
+      Provider<Connectivity>(create: (_) => Connectivity()),
+      ProxyProvider<Connectivity, NetworkInfo>(
+        update: (_, connectivity, __) => NetworkInfoImpl(connectivity),
+      ),
+
+      // API Client
+      ProxyProvider<NetworkInfo, ApiClient>(
+        update: (_, networkInfo, __) =>
+            ApiClient(baseUrl: ApiConstants.baseUrl, networkInfo: networkInfo),
+      ),
+
+      // SharedPreferences Provider - Now properly initialized
+      Provider<SharedPreferences>(
+        create: (_) => sharedPreferences,
+        lazy: false,
+      ),
+    ];
+  }
 }

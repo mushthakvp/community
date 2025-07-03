@@ -21,6 +21,22 @@ class AppProviders {
     ...VizzleProviders.providers,
   ];
 
+  /// Get properly initialized providers with SharedPreferences
+  static Future<List<SingleChildWidget>> getInitializedProviders() async {
+    final coreProviders = await AppCoreProviders.getInitializedProviders();
+
+    return [
+      ...coreProviders,
+      ...AuthProviders.providers,
+      ...HomeProviders.providers,
+      ...ProfileProviders.providers,
+      ...SpinProviders.providers,
+      ...CouponPromoProviders.providers,
+      ...RedemptionProviders.providers,
+      ...VizzleProviders.providers,
+    ];
+  }
+
   static List<SingleChildWidget> getCoreProviders() =>
       AppCoreProviders.providers;
   static List<SingleChildWidget> getAuthProviders() => AuthProviders.providers;

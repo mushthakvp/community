@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:provider/single_child_widget.dart';
 
 import 'app/app.dart';
 import 'app/app_providers.dart';
@@ -22,6 +23,25 @@ class CommunityApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(providers: AppProviders.providers, child: const App());
+    return FutureBuilder<List<SingleChildWidget>>(
+      future: AppProviders.getInitializedProviders(),
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          return MultiProvider(providers: snapshot.data!, child: const App());
+        } else if (snapshot.hasError) {
+          return MaterialApp(
+            home: Scaffold(
+              body: Center(
+                child: Text('Error initializing app: ${snapshot.error}'),
+              ),
+            ),
+          );
+        } else {
+          return const MaterialApp(
+            home: Scaffold(body: Center(child: CircularProgressIndicator())),
+          );
+        }
+      },
+    );
   }
 }
