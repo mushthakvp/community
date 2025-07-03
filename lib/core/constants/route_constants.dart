@@ -14,6 +14,10 @@ class RouteConstants {
   // ==================== VIZZLE MARKETPLACE ROUTES ====================
   static const String vizzleHome = '/vizzle';
 
+  // ========== VIZZLE PROFILE ROUTES ==========
+  static const String vizzleProfile = '/vizzle/profile';
+  static const String vizzleMyProfile = '/vizzle/my-profile';
+
   // ========== PLACE ADD FLOW ROUTES ==========
   static const String selectCity = '/place-add/select-city';
   static const String selectCategory = '/place-add/select-category';
@@ -112,6 +116,8 @@ class RouteConstants {
       changePassword,
       notifications,
       vizzleHome,
+      vizzleProfile,
+      vizzleMyProfile,
       selectCity,
       selectCategory,
       createAd,

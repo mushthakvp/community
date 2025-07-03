@@ -9,7 +9,6 @@ import '../../../features/redemption/presentation/pages/redemption_page.dart';
 import '../../../features/vizzle/home/presentation/pages/vizzle_home_page.dart';
 import '../../constants/app_constants.dart';
 import '../../constants/route_constants.dart';
-import '../common/text_widget.dart';
 
 class BottomNavigation extends StatefulWidget {
   final Widget child;
@@ -107,9 +106,8 @@ class _BottomNavigationState extends State<BottomNavigation>
         height: 69,
         width: 69,
         child: FloatingActionButton(
-          // ADD THIS LINE - Unique hero tag for bottom navigation FAB
           heroTag: "bottom_navigation_vizzle_fab",
-          backgroundColor: const Color(0xFFF0B90B),
+          backgroundColor: AppConstants.appPrimaryColor,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(50),
           ),
@@ -118,26 +116,7 @@ class _BottomNavigationState extends State<BottomNavigation>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                height: 40,
-                width: 40,
-                decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage(
-                      'assets/animation/vizil_icon_animation.png',
-                    ),
-                    fit: BoxFit.contain,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 2),
-              const CommonTextWidget(
-                fontSize: 10,
-                align: TextAlign.center,
-                text: "vizzle",
-                fontWeight: FontWeight.bold,
-                color: AppConstants.black,
-              ),
+              const Icon(Icons.store, color: AppConstants.white, size: 35),
             ],
           ),
         ),

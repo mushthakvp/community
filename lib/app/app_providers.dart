@@ -79,9 +79,6 @@ import '../features/vizzle/product_detail/domain/usecases/report_product_usecase
 import '../features/vizzle/product_detail/domain/usecases/share_product_usecase.dart';
 import '../features/vizzle/product_detail/domain/usecases/toggle_favorite_usecase.dart';
 import '../features/vizzle/product_detail/presentation/providers/product_detail_provider.dart';
-import '../features/vizzle/profile/domain/usecases/clear_profile_cache_usecase.dart';
-import '../features/vizzle/profile/domain/usecases/delete_ad_usecase.dart';
-import '../features/vizzle/profile/domain/usecases/mark_as_sold_usecase.dart';
 import '../features/vizzle/recently_viewed/data/datasources/recently_viewed_local_datasource.dart';
 import '../features/vizzle/recently_viewed/data/datasources/recently_viewed_remote_datasource.dart';
 import '../features/vizzle/recently_viewed/data/repositories/recently_viewed_repository_impl.dart';
@@ -881,84 +878,5 @@ class AppProviders {
     // ========================================
     // VIZZLE PROFILE PROVIDERS
     // ========================================
-
-    // Profile Data Sources
-    ProxyProvider<ApiClient, ProfileRemoteDataSource>(
-      update: (_, apiClient, __) =>
-          ProfileRemoteDataSourceImpl(client: apiClient),
-    ),
-    Provider<ProfileLocalDataSource>(
-      create: (_) => ProfileLocalDataSourceImpl(),
-    ),
-
-    // Profile Repository
-    ProxyProvider3<
-      ProfileRemoteDataSource,
-      ProfileLocalDataSource,
-      NetworkInfo,
-      ProfileRepositoryImpl
-    >(
-      update: (_, remoteDataSource, localDataSource, networkInfo, __) =>
-          ProfileRepositoryImpl(
-            remoteDataSource: remoteDataSource,
-            localDataSource: localDataSource,
-          ),
-    ),
-
-    // Profile Use Cases
-    ProxyProvider<ProfileRepositoryImpl, GetProfileUseCase>(
-      update: (_, repository, __) => GetProfileUseCase(repository),
-    ),
-    ProxyProvider<ProfileRepositoryImpl, DeleteAdUseCase>(
-      update: (_, repository, __) => DeleteAdUseCase(repository),
-    ),
-    ProxyProvider<ProfileRepositoryImpl, MarkAsSoldUseCase>(
-      update: (_, repository, __) => MarkAsSoldUseCase(repository),
-    ),
-    ProxyProvider<ProfileRepositoryImpl, ClearProfileCacheUseCase>(
-      update: (_, repository, __) => ClearProfileCacheUseCase(repository),
-    ),
-
-    // Profile Provider
-    ChangeNotifierProxyProvider4<
-      GetProfileUseCase,
-      DeleteAdUseCase,
-      MarkAsSoldUseCase,
-      ClearProfileCacheUseCase,
-      ProfileProvider
-    >(
-      create: (context) => ProfileProvider(
-        getProfileUseCase: context.read<GetProfileUseCase>(),
-        deleteAdUseCase: context.read<DeleteAdUseCase>(),
-        markAsSoldUseCase: context.read<MarkAsSoldUseCase>(),
-        clearProfileCacheUseCase: context.read<ClearProfileCacheUseCase>(),
-        updateProfileUseCase: null,
-        changePasswordUseCase: null,
-        getLoyaltyCardUseCase: null,
-        claimLoyaltyPointsUseCase: null,
-        getPointTransactionsUseCase: null,
-      ),
-      update:
-          (
-            _,
-            getProfileUseCase,
-            deleteAdUseCase,
-            markAsSoldUseCase,
-            clearProfileCacheUseCase,
-            previous,
-          ) =>
-              previous ??
-              ProfileProvider(
-                getProfileUseCase: getProfileUseCase,
-                deleteAdUseCase: deleteAdUseCase,
-                markAsSoldUseCase: markAsSoldUseCase,
-                clearProfileCacheUseCase: clearProfileCacheUseCase,
-                updateProfileUseCase: null,
-                changePasswordUseCase: null,
-                getLoyaltyCardUseCase: null,
-                claimLoyaltyPointsUseCase: null,
-                getPointTransactionsUseCase: null,
-              ),
-    ),
   ];
 }

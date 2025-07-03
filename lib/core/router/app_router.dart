@@ -32,6 +32,7 @@ import '../../features/vizzle/place_add/presentation/pages/select_city_page.dart
 import '../../features/vizzle/place_add/presentation/pages/select_subcategory_page.dart';
 import '../../features/vizzle/product_detail/presentation/pages/product_detail_page.dart';
 import '../../features/vizzle/product_detail/presentation/pages/report_product_page.dart';
+import '../../features/vizzle/profile/presentation/pages/vizzle_profile_page.dart';
 import '../../features/vizzle/recently_viewed/presentation/pages/recently_viewed_page.dart';
 import '../../features/vizzle/saved_view/presentation/pages/saved_ads_page.dart';
 import '../../features/vizzle/search/presentation/pages/search_page.dart';
@@ -577,6 +578,15 @@ class AppRouter {
             productTitle: productTitle,
           );
         },
+      ),
+      // ========== VIZZLE PROFILE ROUTES ==========
+      GoRoute(
+        path: RouteConstants.vizzleProfile,
+        builder: (context, state) => const VizzleProfilePage(),
+      ),
+      GoRoute(
+        path: RouteConstants.vizzleMyProfile,
+        builder: (context, state) => const VizzleProfilePage(),
       ),
     ],
   );
