@@ -8,7 +8,7 @@ class AdsListView extends StatelessWidget {
   final List<AdEntity> ads;
   final ScrollController scrollController;
   final bool isLoadingMore;
-  final Function(String) onAdTap;
+  final Function(String, String) onAdTap;
   final Function(String) onFavoriteTap;
 
   const AdsListView({
@@ -34,7 +34,7 @@ class AdsListView extends StatelessWidget {
                 padding: const EdgeInsets.only(bottom: 12),
                 child: AdCard(
                   ad: ad,
-                  onTap: () => onAdTap(ad.id),
+                  onTap: () => onAdTap(ad.id, ad.shareLink),
                   onFavoriteTap: () => onFavoriteTap(ad.id),
                   cardType: AdCardType.list,
                 ),

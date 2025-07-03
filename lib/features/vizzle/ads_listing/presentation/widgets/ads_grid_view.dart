@@ -8,7 +8,7 @@ class AdsGridView extends StatelessWidget {
   final List<AdEntity> ads;
   final ScrollController scrollController;
   final bool isLoadingMore;
-  final Function(String) onAdTap;
+  final Function(String, String) onAdTap;
   final Function(String) onFavoriteTap;
 
   const AdsGridView({
@@ -38,7 +38,7 @@ class AdsGridView extends StatelessWidget {
               final ad = ads[index];
               return AdCard(
                 ad: ad,
-                onTap: () => onAdTap(ad.id),
+                onTap: () => onAdTap(ad.id, ad.shareLink),
                 onFavoriteTap: () => onFavoriteTap(ad.id),
                 cardType: AdCardType.grid,
               );

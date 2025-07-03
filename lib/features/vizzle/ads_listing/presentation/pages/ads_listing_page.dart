@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../../core/constants/app_constants.dart';
+import '../../../../../core/constants/route_constants.dart';
 import '../../../../../core/widgets/common/app_bar.dart';
 import '../../../../../core/widgets/loading/loading_widget.dart';
 import '../../domain/entities/ads_filter_entity.dart';
@@ -191,7 +193,6 @@ class _AdsListingPageState extends State<AdsListingPage> {
   }
 
   String _buildTitle() {
-    // Build title based on the navigation hierarchy
     if (widget.subItemName != null) {
       return widget.subItemName!;
     } else if (widget.subSubCategoryName != null) {
@@ -244,9 +245,10 @@ class _AdsListingPageState extends State<AdsListingPage> {
     );
   }
 
-  void _handleAdTap(String adId) {
-    // Navigate to ad details page
-    // context.push('/ads/$adId');
+  void _handleAdTap(String adId, String shareUrl) {
+    context.push(
+      '${RouteConstants.productDetail}?shareUrl=${Uri.encodeComponent(shareUrl)}&isPersonal=false',
+    );
   }
 
   void _scrollToTop() {

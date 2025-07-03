@@ -134,7 +134,6 @@ class _SearchPageState extends State<SearchPage> {
           return _buildEmptyState();
         }
 
-        // FIXED: Use the correct getters
         if (result.isError) {
           return Center(
             child: Column(
@@ -473,8 +472,7 @@ class _SearchPageState extends State<SearchPage> {
 
   void _onAdTap(SearchAd ad) {
     context.push(
-      RouteConstants.productDetailsWithId(ad.id),
-      extra: {'shareUrl': ad.shareLink},
+      '${RouteConstants.productDetail}?shareUrl=${Uri.encodeComponent(ad.shareLink ?? "")}&isPersonal=false',
     );
   }
 
