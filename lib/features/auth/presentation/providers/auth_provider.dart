@@ -366,13 +366,13 @@ class AuthProvider extends ChangeNotifier {
     _status = AuthStatus.error;
     _errorMessage = message;
     _successMessage = null;
-    debugPrint('AuthProvider Error: $message');
     notifyListeners();
   }
 
   void clearError() {
     _errorMessage = null;
     _successMessage = null;
+    resetNavigationFlags();
     if (_status == AuthStatus.error || _status == AuthStatus.success) {
       _status = _status == AuthStatus.authenticated
           ? AuthStatus.authenticated

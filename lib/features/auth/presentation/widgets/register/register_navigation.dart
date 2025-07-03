@@ -1,4 +1,3 @@
-// lib/features/auth/presentation/widgets/register/register_navigation.dart - Fixed
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -7,7 +6,7 @@ import '../../../../../core/widgets/common/text_widget.dart';
 import '../../providers/auth_provider.dart';
 import 'register_validator.dart';
 
-class RegisterNavigation extends StatelessWidget {
+class RegisterNavigation extends StatefulWidget {
   final int currentPage;
   final PageController pageController;
   final Function(int) onPageChanged;
@@ -24,6 +23,13 @@ class RegisterNavigation extends StatelessWidget {
   });
 
   @override
+  State<RegisterNavigation> createState() => _RegisterNavigationState();
+}
+
+class _RegisterNavigationState extends State<RegisterNavigation> {
+  bool _isNavigating = false;
+
+  @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(24),
@@ -38,7 +44,7 @@ class RegisterNavigation extends StatelessWidget {
           builder: (context, authProvider, child) {
             return Row(
               children: [
-                if (currentPage > 0) ...[
+                if (widget.currentPage > 0) ...[
                   Expanded(flex: 2, child: _buildBackButton(authProvider)),
                   const SizedBox(width: 16),
                 ],
@@ -55,7 +61,8 @@ class RegisterNavigation extends StatelessWidget {
   }
 
   Widget _buildBackButton(AuthProvider authProvider) {
-    final isDisabled = isLoading || authProvider.isLoading;
+    final isDisabled =
+        widget.isLoading || authProvider.isLoading || _isNavigating;
 
     return Container(
       height: 56,
@@ -103,8 +110,9 @@ class RegisterNavigation extends StatelessWidget {
   }
 
   Widget _buildNextButton(BuildContext context, AuthProvider authProvider) {
-    final isLastPage = currentPage == 2;
-    final isDisabled = isLoading || authProvider.isLoading;
+    final isLastPage = widget.currentPage == 2;
+    final isDisabled =
+        widget.isLoading || authProvider.isLoading || _isNavigating;
 
     return Container(
       height: 56,
@@ -141,7 +149,7 @@ class RegisterNavigation extends StatelessWidget {
                     : _safeNextPage(context, authProvider),
           child: Container(
             alignment: Alignment.center,
-            child: (isLoading || authProvider.isLoading) && isLastPage
+            child: (widget.isLoading || authProvider.isLoading) && isLastPage
                 ? const SizedBox(
                     width: 24,
                     height: 24,
@@ -175,38 +183,69 @@ class RegisterNavigation extends StatelessWidget {
     );
   }
 
-  void _safeNextPage(BuildContext context, AuthProvider authProvider) {
+  Future<void> _safeNextPage(
+    BuildContext context,
+    AuthProvider authProvider,
+  ) async {
+    if (_isNavigating) return;
+
     if (RegisterValidator.validateCurrentPage(
       context,
-      currentPage,
+      widget.currentPage,
       authProvider,
     )) {
-      _safePageNavigation(() {
-        pageController.nextPage(
+      setState(() {
+        _isNavigating = true;
+      });
+
+      try {
+        await _safePageNavigation(() async {
+          await widget.pageController.nextPage(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          );
+        });
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isNavigating = false;
+          });
+        }
+      }
+    }
+  }
+
+  Future<void> _safePreviousPage() async {
+    if (_isNavigating) return;
+
+    setState(() {
+      _isNavigating = true;
+    });
+
+    try {
+      await _safePageNavigation(() async {
+        await widget.pageController.previousPage(
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeInOut,
         );
       });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isNavigating = false;
+        });
+      }
     }
   }
 
-  void _safePreviousPage() {
-    _safePageNavigation(() {
-      pageController.previousPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
-    });
-  }
-
-  void _safePageNavigation(VoidCallback navigationAction) {
-    // Check if PageController is attached before navigation
-    if (pageController.hasClients) {
+  Future<void> _safePageNavigation(
+    Future<void> Function() navigationAction,
+  ) async {
+    if (widget.pageController.hasClients) {
       try {
-        navigationAction();
+        await navigationAction();
       } catch (e) {
         debugPrint('Navigation error: $e');
-        // Handle navigation error gracefully
       }
     } else {
       debugPrint('PageController is not attached to PageView');
@@ -216,10 +255,10 @@ class RegisterNavigation extends StatelessWidget {
   void _handleRegister(BuildContext context, AuthProvider authProvider) {
     if (RegisterValidator.validateCurrentPage(
       context,
-      currentPage,
+      widget.currentPage,
       authProvider,
     )) {
-      onRegisterPressed?.call();
+      widget.onRegisterPressed?.call();
     }
   }
 }

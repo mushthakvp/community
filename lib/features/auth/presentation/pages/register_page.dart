@@ -1,4 +1,3 @@
-// lib/features/auth/presentation/pages/register_page.dart - Fixed
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -28,6 +27,7 @@ class _RegisterPageState extends State<RegisterPage>
   int _currentPage = 0;
   bool _isNavigating = false;
   bool _isPageControllerReady = false;
+  bool _hasHandledError = false;
 
   late AnimationController _slideController;
   late AnimationController _scaleController;
@@ -36,8 +36,6 @@ class _RegisterPageState extends State<RegisterPage>
   void initState() {
     super.initState();
     _initAnimations();
-
-    // Mark PageController as ready after the widget is built
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         setState(() {
@@ -111,6 +109,7 @@ class _RegisterPageState extends State<RegisterPage>
     if (mounted) {
       setState(() {
         _currentPage = page;
+        _hasHandledError = false;
       });
     }
   }
@@ -118,6 +117,7 @@ class _RegisterPageState extends State<RegisterPage>
   void _handleRegister(AuthProvider authProvider) {
     setState(() {
       _isNavigating = true;
+      _hasHandledError = false;
     });
     authProvider.register();
   }
@@ -129,29 +129,28 @@ class _RegisterPageState extends State<RegisterPage>
       if (authProvider.isOtpRequired) {
         setState(() {
           _isNavigating = false;
+          _hasHandledError = false;
         });
         context.go(
           '${RouteConstants.otpVerification}?email=${authProvider.emailController.text}&isLogin=false',
         );
-      } else if (authProvider.hasError) {
+      } else if (authProvider.hasError && !_hasHandledError) {
         setState(() {
           _isNavigating = false;
+          _hasHandledError = true;
         });
-
-        // Show error message
         ErrorHandler.showError(
           context,
           ServerFailure(message: authProvider.errorMessage ?? ""),
         );
-
-        // Navigate to first page only if PageController is ready and attached
-        _safeNavigateToFirstPage();
+        if (_currentPage != 0) {
+          _safeNavigateToFirstPage();
+        }
       }
     });
   }
 
   void _safeNavigateToFirstPage() {
-    // Only navigate if PageController is ready, mounted, and not already on first page
     if (_isPageControllerReady &&
         mounted &&
         _pageController.hasClients &&
@@ -162,9 +161,6 @@ class _RegisterPageState extends State<RegisterPage>
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeInOut,
         );
-        setState(() {
-          _currentPage = 0;
-        });
       } catch (e) {
         debugPrint('Failed to animate to first page: $e');
         if (mounted) {

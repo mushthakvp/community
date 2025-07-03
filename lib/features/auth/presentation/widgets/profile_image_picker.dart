@@ -1,9 +1,8 @@
-// lib/features/auth/presentation/widgets/profile_image_picker.dart
+// lib/features/auth/presentation/widgets/profile_image_picker.dart - FIXED
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/constants/app_constants.dart';
@@ -22,7 +21,6 @@ class ProfileImagePicker extends StatelessWidget {
         return Center(
           child: Stack(
             children: [
-              // Main profile image container
               AnimatedContainer(
                 duration: const Duration(milliseconds: 300),
                 width: 120,
@@ -63,8 +61,6 @@ class ProfileImagePicker extends StatelessWidget {
                         ),
                 ),
               ),
-
-              // Upload progress overlay
               if (authProvider.isUploadingImage)
                 Positioned.fill(
                   child: Container(
@@ -103,8 +99,6 @@ class ProfileImagePicker extends StatelessWidget {
                     ),
                   ),
                 ),
-
-              // Camera/Add Button
               Positioned(
                 bottom: 0,
                 right: 0,
@@ -155,8 +149,6 @@ class ProfileImagePicker extends StatelessWidget {
                   ),
                 ),
               ),
-
-              // Remove Button (if image is selected and not uploading)
               if (authProvider.profileImage != null &&
                   !authProvider.isUploadingImage)
                 Positioned(
@@ -179,8 +171,6 @@ class ProfileImagePicker extends StatelessWidget {
                     ),
                   ),
                 ),
-
-              // Success indicator
               if (authProvider.uploadedImageUrl != null &&
                   !authProvider.isUploadingImage)
                 const Positioned(
@@ -204,35 +194,21 @@ class ProfileImagePicker extends StatelessWidget {
     AuthProvider authProvider,
   ) async {
     try {
-      // Check permission first
-      PermissionStatus permission = await Permission.photos.request();
-
-      if (permission.isGranted) {
-        final ImagePicker picker = ImagePicker();
-        final XFile? image = await picker.pickImage(
-          source: ImageSource.gallery,
-          imageQuality: 80,
-          maxWidth: 1024,
-          maxHeight: 1024,
-        );
-
-        if (image != null) {
-          final File imageFile = File(image.path);
-          authProvider.setProfileImage(imageFile);
-          onImageSelected?.call(imageFile);
-
-          // Show success message
-          _showSuccessSnackBar(
-            context,
-            'Profile picture selected successfully!',
-          );
-        }
-      } else if (permission.isDenied) {
-        _showPermissionDialog(context, 'Photo Library');
-      } else if (permission.isPermanentlyDenied) {
-        _showPermissionDialog(context, 'Photo Library');
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 80,
+        maxWidth: 1024,
+        maxHeight: 1024,
+      );
+      if (image != null) {
+        final File imageFile = File(image.path);
+        authProvider.setProfileImage(imageFile);
+        onImageSelected?.call(imageFile);
+        _showSuccessSnackBar(context, 'Profile picture selected successfully!');
       }
     } catch (e) {
+      debugPrint('Error picking image: $e');
       _showErrorSnackBar(context, 'Failed to pick image: $e');
     }
   }
@@ -278,50 +254,6 @@ class ProfileImagePicker extends StatelessWidget {
         backgroundColor: Colors.green,
         behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 2),
-      ),
-    );
-  }
-
-  void _showPermissionDialog(BuildContext context, String permissionType) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppConstants.black,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: CommonTextWidget(
-          text: '$permissionType Permission Required',
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-          color: AppConstants.white,
-        ),
-        content: CommonTextWidget(
-          text:
-              'Please grant $permissionType permission to select profile picture from your gallery.',
-          fontSize: 14,
-          color: AppConstants.white.withOpacity(0.8),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: CommonTextWidget(
-              text: 'Cancel',
-              fontSize: 14,
-              color: AppConstants.white.withOpacity(0.6),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              openAppSettings();
-            },
-            child: const CommonTextWidget(
-              text: 'Open Settings',
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppConstants.appPrimaryColor,
-            ),
-          ),
-        ],
       ),
     );
   }
