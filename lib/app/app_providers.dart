@@ -62,6 +62,16 @@ import '../features/vizzle/domain/usecases/get_sub_categories_usecase.dart';
 import '../features/vizzle/domain/usecases/get_sub_items_usecase.dart';
 import '../features/vizzle/domain/usecases/get_sub_sub_categories_usecase.dart';
 import '../features/vizzle/domain/usecases/get_vizzle_home_usecase.dart';
+// Vizzle Edit Ad Providers
+import '../features/vizzle/edit_ad/data/datasources/edit_ad_local_datasource.dart';
+import '../features/vizzle/edit_ad/data/datasources/edit_ad_remote_datasource.dart';
+import '../features/vizzle/edit_ad/data/repositories/edit_ad_repository_impl.dart';
+import '../features/vizzle/edit_ad/domain/repositories/edit_ad_repository.dart';
+import '../features/vizzle/edit_ad/domain/usecases/edit_ad_usecase.dart';
+import '../features/vizzle/edit_ad/domain/usecases/get_ad_details_usecase.dart'
+    as edit_ad_get;
+import '../features/vizzle/edit_ad/domain/usecases/upload_ad_images_usecase.dart';
+import '../features/vizzle/edit_ad/presentation/providers/edit_ad_provider.dart';
 import '../features/vizzle/home/presentation/providers/vizzle_home_provider.dart';
 import '../features/vizzle/place_add/data/datasources/place_add_remote_datasource.dart';
 import '../features/vizzle/place_add/data/repositories/place_add_repository_impl.dart';
@@ -546,6 +556,72 @@ class AppProviders {
                 getAdsUseCase: getAdsUseCase,
                 getFilterOptionsUseCase: getFilterOptionsUseCase,
                 toggleFavoriteUseCase: toggleFavoriteUseCase,
+              ),
+    ),
+
+    // ========================================
+    // VIZZLE EDIT AD PROVIDERS
+    // ========================================
+
+    // Edit Ad Data Sources
+    ProxyProvider<ApiClient, EditAdRemoteDataSource>(
+      update: (_, apiClient, __) =>
+          EditAdRemoteDataSourceImpl(apiClient: apiClient),
+    ),
+    Provider<EditAdLocalDataSource>(create: (_) => EditAdLocalDataSourceImpl()),
+
+    // Edit Ad Repository
+    ProxyProvider3<
+      EditAdRemoteDataSource,
+      EditAdLocalDataSource,
+      NetworkInfo,
+      EditAdRepository
+    >(
+      update: (_, remoteDataSource, localDataSource, networkInfo, __) =>
+          EditAdRepositoryImpl(
+            remoteDataSource: remoteDataSource,
+            localDataSource: localDataSource,
+            networkInfo: networkInfo,
+          ),
+    ),
+
+    // Edit Ad Use Cases
+    ProxyProvider<EditAdRepository, edit_ad_get.GetAdDetailsUseCase>(
+      update: (_, repository, __) =>
+          edit_ad_get.GetAdDetailsUseCase(repository),
+    ),
+    ProxyProvider<EditAdRepository, EditAdUseCase>(
+      update: (_, repository, __) => EditAdUseCase(repository),
+    ),
+    ProxyProvider<EditAdRepository, UploadAdImagesUseCase>(
+      update: (_, repository, __) => UploadAdImagesUseCase(repository),
+    ),
+
+    // Edit Ad Provider
+    ChangeNotifierProxyProvider3<
+      edit_ad_get.GetAdDetailsUseCase,
+      EditAdUseCase,
+      UploadAdImagesUseCase,
+      EditAdProvider
+    >(
+      create: (context) => EditAdProvider(
+        getAdDetailsUseCase: context.read<edit_ad_get.GetAdDetailsUseCase>(),
+        editAdUseCase: context.read<EditAdUseCase>(),
+        uploadAdImagesUseCase: context.read<UploadAdImagesUseCase>(),
+      ),
+      update:
+          (
+            _,
+            getAdDetailsUseCase,
+            editAdUseCase,
+            uploadAdImagesUseCase,
+            previous,
+          ) =>
+              previous ??
+              EditAdProvider(
+                getAdDetailsUseCase: getAdDetailsUseCase,
+                editAdUseCase: editAdUseCase,
+                uploadAdImagesUseCase: uploadAdImagesUseCase,
               ),
     ),
 

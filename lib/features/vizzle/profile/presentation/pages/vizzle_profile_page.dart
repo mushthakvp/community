@@ -78,32 +78,6 @@ class _VizzleProfilePageState extends State<VizzleProfilePage> {
         onPressed: () => Navigator.of(context).pop(),
         icon: const Icon(Icons.arrow_back_ios, color: AppConstants.white),
       ),
-      actions: [
-        Container(
-          margin: const EdgeInsets.only(right: 16),
-          child: ElevatedButton.icon(
-            onPressed: () {
-              // Navigate to create ad
-              debugPrint('Navigate to create ad');
-            },
-            icon: const Icon(Icons.add, size: 16),
-            label: const Text('Create ad'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.transparent,
-              foregroundColor: AppConstants.appPrimaryColor,
-              side: const BorderSide(
-                color: AppConstants.appPrimaryColor,
-                width: 1,
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              elevation: 0,
-            ),
-          ),
-        ),
-      ],
     );
   }
 
@@ -228,44 +202,142 @@ class _VizzleProfilePageState extends State<VizzleProfilePage> {
   }
 
   Future<void> _handleDeleteAd(ProfileProvider provider, String adId) async {
-    final success = await provider.deleteAd(adId);
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            success ? 'Ad deleted successfully' : 'Failed to delete ad',
-          ),
-          backgroundColor: success ? Colors.green : Colors.red,
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 3),
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF2A2A2A),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const CommonTextWidget(
+          text: 'Delete Ad?',
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: AppConstants.white,
         ),
-      );
+        content: const CommonTextWidget(
+          text:
+              'Are you sure you want to delete this ad? This action cannot be undone.',
+          fontSize: 14,
+          color: AppConstants.white,
+          maxLines: 3,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const CommonTextWidget(
+              text: 'Cancel',
+              fontSize: 14,
+              color: AppConstants.white,
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const CommonTextWidget(
+              text: 'Delete',
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppConstants.white,
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      final success = await provider.deleteAd(adId);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              success ? 'Ad deleted successfully' : 'Failed to delete ad',
+            ),
+            backgroundColor: success ? Colors.green : Colors.red,
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
     }
   }
 
   Future<void> _handleMarkAsSold(ProfileProvider provider, String adId) async {
-    final success = await provider.markAsSold(adId);
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            success ? 'Status updated successfully' : 'Failed to update status',
-          ),
-          backgroundColor: success ? Colors.green : Colors.red,
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 3),
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF2A2A2A),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const CommonTextWidget(
+          text: 'Mark as Sold?',
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: AppConstants.white,
         ),
-      );
+        content: const CommonTextWidget(
+          text:
+              'Are you sure you want to mark this ad as sold? This will update the ad status.',
+          fontSize: 14,
+          color: AppConstants.white,
+          maxLines: 3,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const CommonTextWidget(
+              text: 'Cancel',
+              fontSize: 14,
+              color: AppConstants.white,
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const CommonTextWidget(
+              text: 'Mark as Sold',
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppConstants.white,
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      final success = await provider.markAsSold(adId);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              success
+                  ? 'Status updated successfully'
+                  : 'Failed to update status',
+            ),
+            backgroundColor: success ? Colors.green : Colors.red,
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
     }
   }
 
   void _handleEditAd(String adId) {
-    // Navigate to edit ad screen
-    debugPrint('Edit ad: $adId');
+    // Navigate to edit ad screen using the helper method from AppRouter
+    context.push(RouteConstants.editAdWithIdRoute(adId));
   }
 
   void _handleAdTap(String adId, String shareLink) {

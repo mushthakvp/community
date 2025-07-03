@@ -1,7 +1,7 @@
 class ApiConstants {
   // Base URLs
-  String baseUrlPro = 'https://api.app.liveraapp.com/';
-  String baseUrlDev = 'http://192.168.3.115:3553/';
+  String baseUrlPro = 'https://api.prod.liveraapp.com/';
+  String baseUrlDev = 'http://192.168.3.6:3553/';
   static String baseUrl = 'http://192.168.3.6:3553/';
 
   // Request Configuration

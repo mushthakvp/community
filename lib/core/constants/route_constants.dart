@@ -37,6 +37,9 @@ class RouteConstants {
   static const String productDetail = '/product-detail';
   static const String reportProduct = '/report-product';
 
+  // ========== EDIT AD ROUTES ==========
+  static const String editAd = '/edit-ad';
+
   // ========== SEARCH ROUTES ==========
   static const String vizzleSearch = '/vizzle/search';
   static const String vizzleAdvancedSearch = '/vizzle/search/advanced';
@@ -107,7 +110,7 @@ class RouteConstants {
   // ==================== HELPER METHODS ====================
 
   static String editAdWithId(String adId) {
-    return '$vizzleEditAd/$adId';
+    return '$editAd/$adId';
   }
 
   /// Check if route is protected (requires authentication)
@@ -125,6 +128,7 @@ class RouteConstants {
       selectCity,
       selectCategory,
       createAd,
+      editAd,
       coupons,
       redemption,
       walletRecharge,
@@ -143,12 +147,16 @@ class RouteConstants {
 
   /// Check if route is a Vizzle route
   static bool isVizzleRoute(String route) {
-    return route.startsWith('/vizzle') || route.startsWith('/place-add');
+    return route.startsWith('/vizzle') ||
+        route.startsWith('/place-add') ||
+        route.startsWith('/edit-ad');
   }
 
   /// Get route category for analytics
   static String getRouteCategory(String route) {
-    if (route.startsWith('/vizzle') || route.startsWith('/place-add')) {
+    if (route.startsWith('/vizzle') ||
+        route.startsWith('/place-add') ||
+        route.startsWith('/edit-ad')) {
       return 'Vizzle';
     } else if (isAuthRoute(route)) {
       return 'Auth';
@@ -160,6 +168,11 @@ class RouteConstants {
   }
 
   // ==================== DYNAMIC ROUTE BUILDERS ====================
+
+  /// Navigate to edit ad with ID
+  static String editAdWithIdRoute(String adId) {
+    return '$editAd/$adId';
+  }
 
   /// Build seller details route with ID
   static String sellerDetailsWithId(String sellerId) {

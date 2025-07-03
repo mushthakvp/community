@@ -24,6 +24,7 @@ import '../../features/redemption/presentation/pages/wallet_recharge_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
 // Vizzle Feature Imports
 import '../../features/vizzle/ads_listing/presentation/pages/ads_listing_page.dart';
+import '../../features/vizzle/edit_ad/presentation/pages/edit_ad_page.dart';
 import '../../features/vizzle/home/presentation/pages/vizzle_home_page.dart';
 import '../../features/vizzle/place_add/presentation/pages/create_ad_page.dart';
 import '../../features/vizzle/place_add/presentation/pages/location_picker_page.dart';
@@ -131,6 +132,35 @@ class AppRouter {
             initialLatitude: double.tryParse(queryParams['lat'] ?? ''),
             initialLongitude: double.tryParse(queryParams['lng'] ?? ''),
           );
+        },
+      ),
+
+      // ========== EDIT AD ROUTES ==========
+      GoRoute(
+        path: '${RouteConstants.editAd}/:adId',
+        builder: (context, state) {
+          final adId = state.pathParameters['adId'];
+
+          if (adId == null || adId.isEmpty) {
+            return const Scaffold(
+              backgroundColor: AppConstants.black,
+              body: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.error_outline, color: Colors.red, size: 64),
+                    SizedBox(height: 16),
+                    Text(
+                      'Invalid ad ID',
+                      style: TextStyle(color: Colors.white, fontSize: 18),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          return EditAdPage(adId: adId);
         },
       ),
 
@@ -623,6 +653,11 @@ class AppRouter {
   /// Navigate to create ad flow
   static void navigateToCreateAd(BuildContext context) {
     context.push(RouteConstants.selectCity);
+  }
+
+  /// Navigate to edit ad page
+  static void navigateToEditAd(BuildContext context, String adId) {
+    context.push(RouteConstants.editAdWithIdRoute(adId));
   }
 
   /// Navigate to product details with share URL

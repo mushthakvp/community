@@ -215,23 +215,22 @@ class ProfileAdCardWidget extends StatelessWidget {
                 ),
         ),
         itemBuilder: (context) => [
-          PopupMenuItem(
-            value: 'edit',
-            child: Row(
-              children: [
-                Icon(
-                  Icons.edit_outlined,
-                  color: AppConstants.appPrimaryColor,
-                  size: 18,
-                ),
-                const SizedBox(width: 12),
-                const Text(
-                  'Edit listing',
-                  style: TextStyle(color: AppConstants.white),
-                ),
-              ],
-            ),
-          ),
+          // PopupMenuItem(
+          //   value: 'edit',
+          //     children: [
+          //       Icon(
+          //         Icons.edit_outlined,
+          //         color: AppConstants.appPrimaryColor,
+          //         size: 18,
+          //       ),
+          //       const SizedBox(width: 12),
+          //       const Text(
+          //         'Edit listing',
+          //         style: TextStyle(color: AppConstants.white),
+          //       ),
+          //     ],
+          //   ),
+          // ),
           if (!ad.isSold)
             PopupMenuItem(
               value: 'sold',
