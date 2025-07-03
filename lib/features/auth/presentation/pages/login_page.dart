@@ -10,7 +10,6 @@ import '../../../../core/error/failures.dart';
 import '../../../../core/widgets/loading/loading_widget.dart';
 import '../../../promos/presentation/animation/animated_promos_background.dart';
 import '../providers/auth_provider.dart';
-import '../widgets/login/guest_mode_button.dart';
 import '../widgets/login/login_form.dart';
 import '../widgets/login/login_header.dart';
 
@@ -93,7 +92,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     return SafeArea(
       child: Stack(
         children: [
-          const Positioned(top: 16, right: 16, child: GuestModeButton()),
           SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: Column(
