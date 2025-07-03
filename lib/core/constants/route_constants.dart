@@ -106,6 +106,10 @@ class RouteConstants {
 
   // ==================== HELPER METHODS ====================
 
+  static String editAdWithId(String adId) {
+    return '$vizzleEditAd/$adId';
+  }
+
   /// Check if route is protected (requires authentication)
   static bool isProtectedRoute(String route) {
     const protectedRoutes = [
