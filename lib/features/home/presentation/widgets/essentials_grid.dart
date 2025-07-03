@@ -209,7 +209,7 @@ class EssentialsGrid extends StatelessWidget {
     if (item.isExternal) {
       _launchExternalApp(context, item);
     } else if (item.isNavigationRoute) {
-      context.go(item.route);
+      context.push(item.route);
     } else {
       _navigateToRoute(context, item.route);
     }
