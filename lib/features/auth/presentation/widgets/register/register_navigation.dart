@@ -1,16 +1,16 @@
+import 'package:fittor/fittor.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../../core/constants/app_constants.dart';
-import '../../../../../core/widgets/common/text_widget.dart';
 import '../../providers/auth_provider.dart';
-import 'register_validator.dart';
 
 class RegisterNavigation extends StatefulWidget {
   final int currentPage;
   final PageController pageController;
   final Function(int) onPageChanged;
   final VoidCallback? onRegisterPressed;
+  final VoidCallback? onForceReset;
   final bool isLoading;
 
   const RegisterNavigation({
@@ -19,6 +19,7 @@ class RegisterNavigation extends StatefulWidget {
     required this.pageController,
     required this.onPageChanged,
     this.onRegisterPressed,
+    this.onForceReset,
     this.isLoading = false,
   });
 
@@ -32,7 +33,7 @@ class _RegisterNavigationState extends State<RegisterNavigation> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
         color: AppConstants.black,
         border: Border(
@@ -42,15 +43,21 @@ class _RegisterNavigationState extends State<RegisterNavigation> {
       child: SafeArea(
         child: Consumer<AuthProvider>(
           builder: (context, authProvider, child) {
-            return Row(
+            return Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                if (widget.currentPage > 0) ...[
-                  Expanded(flex: 2, child: _buildBackButton(authProvider)),
-                  const SizedBox(width: 16),
-                ],
-                Expanded(
-                  flex: 3,
-                  child: _buildNextButton(context, authProvider),
+                10.h,
+                Row(
+                  children: [
+                    if (widget.currentPage > 0) ...[
+                      Expanded(flex: 2, child: _buildBackButton(authProvider)),
+                      const SizedBox(width: 16),
+                    ],
+                    Expanded(
+                      flex: 3,
+                      child: _buildNextButton(context, authProvider),
+                    ),
+                  ],
                 ),
               ],
             );
@@ -79,7 +86,7 @@ class _RegisterNavigationState extends State<RegisterNavigation> {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
-          onTap: isDisabled ? null : _safePreviousPage,
+          onTap: isDisabled ? null : _handleBack,
           child: Container(
             alignment: Alignment.center,
             child: Row(
@@ -93,13 +100,15 @@ class _RegisterNavigationState extends State<RegisterNavigation> {
                   size: 16,
                 ),
                 const SizedBox(width: 8),
-                CommonTextWidget(
-                  text: 'Back',
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: isDisabled
-                      ? AppConstants.appPrimaryColor.withOpacity(0.5)
-                      : AppConstants.appPrimaryColor,
+                Text(
+                  'Back',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: isDisabled
+                        ? AppConstants.appPrimaryColor.withOpacity(0.5)
+                        : AppConstants.appPrimaryColor,
+                  ),
                 ),
               ],
             ),
@@ -110,9 +119,14 @@ class _RegisterNavigationState extends State<RegisterNavigation> {
   }
 
   Widget _buildNextButton(BuildContext context, AuthProvider authProvider) {
-    final isLastPage = widget.currentPage == 2;
+    final isLastPage =
+        widget.currentPage == 2; // Page 2 is the last page (0, 1, 2)
     final isDisabled =
         widget.isLoading || authProvider.isLoading || _isNavigating;
+
+    debugPrint(
+      '_buildNextButton - currentPage: ${widget.currentPage}, isLastPage: $isLastPage',
+    );
 
     return Container(
       height: 56,
@@ -146,7 +160,7 @@ class _RegisterNavigationState extends State<RegisterNavigation> {
               ? null
               : () => isLastPage
                     ? _handleRegister(context, authProvider)
-                    : _safeNextPage(context, authProvider),
+                    : _handleNext(context, authProvider),
           child: Container(
             alignment: Alignment.center,
             child: (widget.isLoading || authProvider.isLoading) && isLastPage
@@ -161,11 +175,13 @@ class _RegisterNavigationState extends State<RegisterNavigation> {
                 : Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      CommonTextWidget(
-                        text: isLastPage ? 'Create Account' : 'Next',
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: AppConstants.black,
+                      Text(
+                        isLastPage ? 'Create Account' : 'Next',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: AppConstants.black,
+                        ),
                       ),
                       if (!isLastPage) ...[
                         const SizedBox(width: 8),
@@ -183,52 +199,28 @@ class _RegisterNavigationState extends State<RegisterNavigation> {
     );
   }
 
-  Future<void> _safeNextPage(
+  Future<void> _handleNext(
     BuildContext context,
     AuthProvider authProvider,
   ) async {
     if (_isNavigating) return;
 
-    if (RegisterValidator.validateCurrentPage(
-      context,
-      widget.currentPage,
-      authProvider,
-    )) {
-      setState(() {
-        _isNavigating = true;
-      });
-
-      try {
-        await _safePageNavigation(() async {
-          await widget.pageController.nextPage(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-          );
-        });
-      } finally {
-        if (mounted) {
-          setState(() {
-            _isNavigating = false;
-          });
-        }
-      }
-    }
-  }
-
-  Future<void> _safePreviousPage() async {
-    if (_isNavigating) return;
+    // Validate current page
+    if (!_validateCurrentPage(context, authProvider)) return;
 
     setState(() {
       _isNavigating = true;
     });
 
     try {
-      await _safePageNavigation(() async {
-        await widget.pageController.previousPage(
+      if (widget.pageController.hasClients) {
+        await widget.pageController.nextPage(
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeInOut,
         );
-      });
+      }
+    } catch (e) {
+      debugPrint('Navigation error: $e');
     } finally {
       if (mounted) {
         setState(() {
@@ -238,27 +230,111 @@ class _RegisterNavigationState extends State<RegisterNavigation> {
     }
   }
 
-  Future<void> _safePageNavigation(
-    Future<void> Function() navigationAction,
-  ) async {
-    if (widget.pageController.hasClients) {
-      try {
-        await navigationAction();
-      } catch (e) {
-        debugPrint('Navigation error: $e');
+  Future<void> _handleBack() async {
+    if (_isNavigating) return;
+
+    setState(() {
+      _isNavigating = true;
+    });
+
+    try {
+      if (widget.pageController.hasClients) {
+        await widget.pageController.previousPage(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
       }
-    } else {
-      debugPrint('PageController is not attached to PageView');
+    } catch (e) {
+      debugPrint('Navigation error: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isNavigating = false;
+        });
+      }
     }
   }
 
   void _handleRegister(BuildContext context, AuthProvider authProvider) {
-    if (RegisterValidator.validateCurrentPage(
-      context,
-      widget.currentPage,
-      authProvider,
-    )) {
+    if (_validateCurrentPage(context, authProvider)) {
       widget.onRegisterPressed?.call();
     }
+  }
+
+  bool _validateCurrentPage(BuildContext context, AuthProvider authProvider) {
+    // Add validation logic here based on current page
+    switch (widget.currentPage) {
+      case 0:
+        return _validateBasicInfo(context, authProvider);
+      case 1:
+        return _validatePersonalInfo(context, authProvider);
+      case 2:
+        return _validateAccountSetup(context, authProvider);
+      default:
+        return true;
+    }
+  }
+
+  bool _validateBasicInfo(BuildContext context, AuthProvider authProvider) {
+    if (authProvider.nameController.text.trim().isEmpty) {
+      _showError(context, 'Please enter your full name');
+      return false;
+    }
+    if (authProvider.emailController.text.trim().isEmpty) {
+      _showError(context, 'Please enter your email address');
+      return false;
+    }
+    if (authProvider.phoneController.text.trim().isEmpty) {
+      _showError(context, 'Please enter your phone number');
+      return false;
+    }
+    return true;
+  }
+
+  bool _validatePersonalInfo(BuildContext context, AuthProvider authProvider) {
+    if (authProvider.selectedGender.isEmpty) {
+      _showError(context, 'Please select your gender');
+      return false;
+    }
+    if (authProvider.selectedDateOfBirth == null) {
+      _showError(context, 'Please select your date of birth');
+      return false;
+    }
+    if (authProvider.selectedProfession.isEmpty) {
+      _showError(context, 'Please select your profession');
+      return false;
+    }
+    if (authProvider.selectedCountry.isEmpty) {
+      _showError(context, 'Please select your country');
+      return false;
+    }
+    if (authProvider.selectedState.isEmpty) {
+      _showError(context, 'Please select your state');
+      return false;
+    }
+    return true;
+  }
+
+  bool _validateAccountSetup(BuildContext context, AuthProvider authProvider) {
+    if (authProvider.passwordController.text.trim().length < 8) {
+      _showError(context, 'Password must be at least 8 characters long');
+      return false;
+    }
+    if (authProvider.passwordController.text.trim() !=
+        authProvider.confirmPasswordController.text.trim()) {
+      _showError(context, 'Passwords do not match');
+      return false;
+    }
+    if (!authProvider.agreeToTerms) {
+      _showError(context, 'Please agree to the terms and conditions');
+      return false;
+    }
+    return true;
+  }
+
+  void _showError(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
+    );
   }
 }

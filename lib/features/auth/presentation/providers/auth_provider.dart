@@ -277,15 +277,16 @@ class AuthProvider extends ChangeNotifier {
           : null,
       firebaseId: _firebaseToken ?? "empty token",
     );
-
     result.fold(
       (failure) {
-        debugPrint('failure: ${failure.message}');
+        debugPrint('Registration failed: ${failure.message}');
         _setError(failure.message);
       },
       (success) {
         if (success) {
           _setOtpRequired();
+        } else {
+          _setError('Registration failed. Please try again.');
         }
       },
     );
@@ -374,10 +375,18 @@ class AuthProvider extends ChangeNotifier {
     _successMessage = null;
     resetNavigationFlags();
     if (_status == AuthStatus.error || _status == AuthStatus.success) {
-      _status = _status == AuthStatus.authenticated
-          ? AuthStatus.authenticated
-          : AuthStatus.initial;
+      _status = _user != null ? AuthStatus.authenticated : AuthStatus.initial;
     }
+    notifyListeners();
+  }
+
+  void resetRegistrationState() {
+    _errorMessage = null;
+    _successMessage = null;
+    _status = AuthStatus.initial;
+    _isUploadingImage = false;
+    _uploadProgress = 0.0;
+    resetNavigationFlags();
     notifyListeners();
   }
 
