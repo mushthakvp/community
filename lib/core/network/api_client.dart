@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:developer';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
@@ -36,7 +35,6 @@ class ApiClient {
     String? countryName = StorageService.getCountryName();
     if (countryName != null) {
       headers['country'] = countryName;
-      log('Country header added: $countryName');
     }
 
     if (additionalHeaders != null) {

@@ -11,6 +11,12 @@ class RouteConstants {
   static const String redemption = '/redemption';
   static const String profile = '/profile';
 
+  // ==================== SPIN GAME ROUTES ====================
+  static const String spinMain = '/spin';
+  static const String dailySpin = '/daily-spin';
+  static const String spinAndWin = '/spin-and-win';
+  static const String spinHistory = '/spin-history';
+
   // ==================== VIZZLE MARKETPLACE ROUTES ====================
   static const String vizzleHome = '/vizzle';
 
@@ -122,6 +128,10 @@ class RouteConstants {
       loyaltyPoints,
       changePassword,
       notifications,
+      spinMain,
+      dailySpin,
+      spinAndWin,
+      spinHistory,
       vizzleHome,
       vizzleProfile,
       vizzleMyProfile,
@@ -152,6 +162,14 @@ class RouteConstants {
         route.startsWith('/edit-ad');
   }
 
+  /// Check if route is a Spin route
+  static bool isSpinRoute(String route) {
+    return route.startsWith('/spin') ||
+        route == dailySpin ||
+        route == spinAndWin ||
+        route == spinHistory;
+  }
+
   /// Get route category for analytics
   static String getRouteCategory(String route) {
     if (route.startsWith('/vizzle') ||
@@ -160,6 +178,8 @@ class RouteConstants {
       return 'Vizzle';
     } else if (isAuthRoute(route)) {
       return 'Auth';
+    } else if (isSpinRoute(route)) {
+      return 'Spin';
     } else if (route.startsWith('/profile') || route == editProfile) {
       return 'Profile';
     } else {

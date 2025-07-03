@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/otp_verification_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
-import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/coupons/presentation/pages/coupon_home_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/profile/presentation/pages/about_app_page.dart';
@@ -21,6 +19,11 @@ import '../../features/profile/presentation/pages/terms_conditions_page.dart';
 import '../../features/promos/presentation/pages/promos_page.dart';
 import '../../features/redemption/presentation/pages/redemption_page.dart';
 import '../../features/redemption/presentation/pages/wallet_recharge_page.dart';
+// Spin Feature Imports
+import '../../features/spin/presentation/pages/daily_spin_page.dart';
+import '../../features/spin/presentation/pages/spin_and_win_page.dart';
+import '../../features/spin/presentation/pages/spin_history_page.dart';
+import '../../features/spin/presentation/pages/spin_main_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
 // Vizzle Feature Imports
 import '../../features/vizzle/ads_listing/presentation/pages/ads_listing_page.dart';
@@ -44,6 +47,7 @@ import '../../features/vizzle/sub_sub_category_list_view/presentation/pages/sub_
 import '../constants/app_constants.dart';
 import '../constants/route_constants.dart';
 import '../widgets/navigation/bottom_navigation.dart';
+import 'route_helper.dart';
 
 class AppRouter {
   static final GlobalKey<NavigatorState> _rootNavigatorKey =
@@ -54,7 +58,7 @@ class AppRouter {
   static GoRouter router = GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: RouteConstants.splash,
-    redirect: _redirect,
+    redirect: RouteHelper.redirect,
     routes: [
       // ==================== SPLASH ROUTE ====================
       GoRoute(
@@ -105,6 +109,24 @@ class AppRouter {
             builder: (context, state) => const VizzleHomePage(),
           ),
         ],
+      ),
+
+      // ==================== SPIN GAME ROUTES ====================
+      GoRoute(
+        path: RouteConstants.spinMain,
+        builder: (context, state) => const SpinMainPage(),
+      ),
+      GoRoute(
+        path: RouteConstants.dailySpin,
+        builder: (context, state) => const DailySpinPage(),
+      ),
+      GoRoute(
+        path: RouteConstants.spinAndWin,
+        builder: (context, state) => const SpinAndWinPage(),
+      ),
+      GoRoute(
+        path: RouteConstants.spinHistory,
+        builder: (context, state) => const SpinHistoryPage(),
       ),
 
       // ==================== PLACE ADD FLOW ROUTES ====================
@@ -622,189 +644,4 @@ class AppRouter {
       // ========== VIZZLE ADS EDIT ROUTES ==========
     ],
   );
-
-  // ==================== NAVIGATION REDIRECT LOGIC ====================
-  static String? _redirect(BuildContext context, GoRouterState state) {
-    final location = state.uri.toString();
-
-    // Allow splash screen
-    if (location == RouteConstants.splash) {
-      return null;
-    }
-
-    final authProvider = context.read<AuthProvider>();
-
-    // Redirect to login if not authenticated and accessing protected route
-    if (!authProvider.isAuthenticated &&
-        RouteConstants.isProtectedRoute(location)) {
-      return RouteConstants.login;
-    }
-
-    // Redirect to home if authenticated and accessing auth route
-    if (authProvider.isAuthenticated && RouteConstants.isAuthRoute(location)) {
-      return RouteConstants.home;
-    }
-
-    return null;
-  }
-
-  // ==================== NAVIGATION HELPER METHODS ====================
-
-  /// Navigate to create ad flow
-  static void navigateToCreateAd(BuildContext context) {
-    context.push(RouteConstants.selectCity);
-  }
-
-  /// Navigate to edit ad page
-  static void navigateToEditAd(BuildContext context, String adId) {
-    context.push(RouteConstants.editAdWithIdRoute(adId));
-  }
-
-  /// Navigate to product details with share URL
-  static void navigateToProductDetail(
-    BuildContext context,
-    String shareUrl, {
-    bool isPersonal = false,
-  }) {
-    final encodedUrl = Uri.encodeComponent(shareUrl);
-    context.push(
-      '${RouteConstants.productDetail}?shareUrl=$encodedUrl&isPersonal=$isPersonal',
-    );
-  }
-
-  /// Navigate to report product
-  static void navigateToReportProduct(
-    BuildContext context,
-    String productId,
-    String productTitle,
-  ) {
-    final encodedTitle = Uri.encodeComponent(productTitle);
-    context.push(
-      '${RouteConstants.reportProduct}?productId=$productId&title=$encodedTitle',
-    );
-  }
-
-  static void navigateToAdsListing(
-    BuildContext context, {
-    String? categoryId,
-    String? subCategoryId,
-    String? subSubCategoryId,
-    String? subItemId,
-    String? categoryName,
-    String? subCategoryName,
-    String? subSubCategoryName,
-    String? subItemName,
-    Map<String, dynamic>? initialFilter,
-  }) {
-    final extra = <String, dynamic>{};
-
-    if (categoryId != null) extra['categoryId'] = categoryId;
-    if (subCategoryId != null) extra['subCategoryId'] = subCategoryId;
-    if (subSubCategoryId != null) extra['subSubCategoryId'] = subSubCategoryId;
-    if (subItemId != null) extra['subItemId'] = subItemId;
-    if (categoryName != null) extra['categoryName'] = categoryName;
-    if (subCategoryName != null) extra['subCategoryName'] = subCategoryName;
-    if (subSubCategoryName != null) {
-      extra['subSubCategoryName'] = subSubCategoryName;
-    }
-    if (subItemName != null) extra['subItemName'] = subItemName;
-    if (initialFilter != null) extra['initialFilter'] = initialFilter;
-
-    context.push(RouteConstants.vizzleAdsListing, extra: extra);
-  }
-
-  /// Navigate to search with query
-  static void navigateToSearch(
-    BuildContext context, {
-    String? query,
-    String? categoryId,
-    String? location,
-    double? minPrice,
-    double? maxPrice,
-  }) {
-    final queryParams = <String, String>{};
-
-    if (query != null && query.isNotEmpty) {
-      queryParams['q'] = Uri.encodeComponent(query);
-    }
-    if (categoryId != null) queryParams['categoryId'] = categoryId;
-    if (location != null) {
-      queryParams['location'] = Uri.encodeComponent(location);
-    }
-    if (minPrice != null) queryParams['minPrice'] = minPrice.toString();
-    if (maxPrice != null) queryParams['maxPrice'] = maxPrice.toString();
-
-    String route = RouteConstants.vizzleSearch;
-    if (queryParams.isNotEmpty) {
-      final queryString = queryParams.entries
-          .map((e) => '${e.key}=${e.value}')
-          .join('&');
-      route += '?$queryString';
-    }
-
-    context.push(route);
-  }
-
-  // ==================== LEGACY UTILITY METHODS ====================
-
-  /// Navigate to a specific route with optional parameters
-  static void navigateTo(
-    BuildContext context,
-    String route, {
-    Map<String, String>? pathParameters,
-    Map<String, String>? queryParameters,
-    Object? extra,
-  }) {
-    String finalRoute = route;
-
-    // Replace path parameters
-    if (pathParameters != null) {
-      pathParameters.forEach((key, value) {
-        finalRoute = finalRoute.replaceAll(':$key', value);
-      });
-    }
-
-    // Add query parameters
-    if (queryParameters != null && queryParameters.isNotEmpty) {
-      final query = queryParameters.entries
-          .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
-          .join('&');
-      finalRoute += '?$query';
-    }
-
-    if (extra != null) {
-      context.push(finalRoute, extra: extra);
-    } else {
-      context.push(finalRoute);
-    }
-  }
-
-  /// Navigate to seller details with seller ID
-  static void navigateToSellerDetails(BuildContext context, String sellerId) {
-    context.push(RouteConstants.sellerDetailsWithId(sellerId));
-  }
-
-  /// Navigate to product details with product ID (legacy method)
-  static void navigateToProductDetails(
-    BuildContext context,
-    String productId, {
-    String? shareUrl,
-  }) {
-    final extra = shareUrl != null ? {'shareUrl': shareUrl} : null;
-    context.push(RouteConstants.productDetailsWithId(productId), extra: extra);
-  }
-
-  // ==================== ROUTE ANALYSIS METHODS ====================
-
-  /// Check if current route is a Vizzle route
-  static bool isCurrentRouteVizzle(BuildContext context) {
-    final location = GoRouterState.of(context).uri.toString();
-    return RouteConstants.isVizzleRoute(location);
-  }
-
-  /// Get current route category for analytics
-  static String getCurrentRouteCategory(BuildContext context) {
-    final location = GoRouterState.of(context).uri.toString();
-    return RouteConstants.getRouteCategory(location);
-  }
 }
