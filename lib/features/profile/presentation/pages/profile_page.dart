@@ -7,6 +7,7 @@ import '../../../../core/constants/route_constants.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../core/widgets/common/app_bar.dart';
 import '../../../../core/widgets/common/text_widget.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/profile_provider.dart';
 import '../widgets/ios_settings_item.dart';
 import '../widgets/ios_settings_section.dart';
@@ -184,10 +185,7 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ),
           TextButton(
-            onPressed: () async {
-              await StorageService.clearSecureStorage();
-              context.go(RouteConstants.login);
-            },
+            onPressed: () => _handleSignOut(context),
             child: const CommonTextWidget(
               text: 'Sign Out',
               fontSize: 16,
@@ -198,5 +196,41 @@ class _ProfilePageState extends State<ProfilePage> {
         ],
       ),
     );
+  }
+
+  Future<void> _handleSignOut(BuildContext context) async {
+    try {
+      Navigator.of(context).pop();
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(color: AppConstants.appPrimaryColor),
+        ),
+      );
+      await StorageService.clear();
+      if (context.mounted) {
+        final authProvider = context.read<AuthProvider>();
+        await authProvider.logout();
+      }
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+      if (context.mounted) {
+        context.go(RouteConstants.splash);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Error signing out. Please try again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }

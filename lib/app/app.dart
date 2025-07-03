@@ -73,23 +73,6 @@ class _AppState extends State<App> with WidgetsBindingObserver {
         elevation: 0,
         centerTitle: true,
       ),
-      datePickerTheme: DatePickerThemeData(
-        backgroundColor: Colors.white,
-        headerBackgroundColor: AppConstants.appPrimaryColor,
-        headerForegroundColor: AppConstants.black,
-        dayForegroundColor: MaterialStateProperty.resolveWith((states) {
-          if (states.contains(MaterialState.selected)) {
-            return AppConstants.black;
-          }
-          return AppConstants.black;
-        }),
-        dayBackgroundColor: MaterialStateProperty.resolveWith((states) {
-          if (states.contains(MaterialState.selected)) {
-            return AppConstants.appPrimaryColor;
-          }
-          return null;
-        }),
-      ),
     );
   }
 }
