@@ -72,18 +72,30 @@ class SpinProviders {
       update: (_, repository, __) => GetUserLoyaltyPointsUseCase(repository),
     ),
 
-    // Spin Provider - Direct instantiation to avoid ChangeNotifierProxyProvider7
+    // Spin Provider - Create after all dependencies are available
     ChangeNotifierProvider<SpinProvider>(
-      create: (context) => SpinProvider(
-        getSpinConfigUseCase: context.read<GetSpinConfigUseCase>(),
-        getSpinOptionsUseCase: context.read<GetSpinOptionsUseCase>(),
-        performSpinUseCase: context.read<PerformSpinUseCase>(),
-        getSpinHistoryUseCase: context.read<GetSpinHistoryUseCase>(),
-        checkCanSpinUseCase: context.read<CheckCanSpinUseCase>(),
-        getRemainingSpinsUseCase: context.read<GetRemainingSpinsUseCase>(),
-        getUserLoyaltyPointsUseCase: context
-            .read<GetUserLoyaltyPointsUseCase>(),
-      ),
+      create: (context) {
+        // Read all required dependencies from context
+        final getSpinConfigUseCase = context.read<GetSpinConfigUseCase>();
+        final getSpinOptionsUseCase = context.read<GetSpinOptionsUseCase>();
+        final performSpinUseCase = context.read<PerformSpinUseCase>();
+        final getSpinHistoryUseCase = context.read<GetSpinHistoryUseCase>();
+        final checkCanSpinUseCase = context.read<CheckCanSpinUseCase>();
+        final getRemainingSpinsUseCase = context
+            .read<GetRemainingSpinsUseCase>();
+        final getUserLoyaltyPointsUseCase = context
+            .read<GetUserLoyaltyPointsUseCase>();
+
+        return SpinProvider(
+          getSpinConfigUseCase: getSpinConfigUseCase,
+          getSpinOptionsUseCase: getSpinOptionsUseCase,
+          performSpinUseCase: performSpinUseCase,
+          getSpinHistoryUseCase: getSpinHistoryUseCase,
+          checkCanSpinUseCase: checkCanSpinUseCase,
+          getRemainingSpinsUseCase: getRemainingSpinsUseCase,
+          getUserLoyaltyPointsUseCase: getUserLoyaltyPointsUseCase,
+        );
+      },
     ),
   ];
 }

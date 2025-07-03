@@ -31,9 +31,6 @@ class AppCoreProviders {
     ),
 
     // SharedPreferences Provider
-    FutureProvider<SharedPreferences?>(
-      create: (_) => SharedPreferences.getInstance(),
-      initialData: null,
-    ),
+    Provider<SharedPreferences?>(create: (_) => null, lazy: false),
   ];
 }
