@@ -324,7 +324,7 @@ class EssentialItem {
   final String route;
   final String description;
   final bool isExternal;
-  final bool isNavigationRoute; // New field to indicate navigation routes
+  final bool isNavigationRoute;
   final String? appPackageName;
   final String? appStoreId;
 

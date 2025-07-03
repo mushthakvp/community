@@ -9,6 +9,7 @@ import '../widgets/essentials_grid.dart';
 import '../widgets/home_shimmer.dart';
 import '../widgets/loyalty_card.dart';
 import '../widgets/marquee_text.dart';
+import '../widgets/spin_games_section.dart';
 import '../widgets/sticky_home_appbar.dart';
 
 class HomePage extends StatefulWidget {
@@ -56,27 +57,19 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       backgroundColor: const Color(0xFF0A0A0A),
       body: Stack(
         children: [
-          // Animated Background
           const AnimatedPromosBackground(child: SizedBox()),
-
-          // Main Content with sticky app bar
           Column(
             children: [
-              // Sticky App Bar
               const StickyHomeAppBar(),
-
-              // Scrollable Content
               Expanded(
                 child: Consumer<HomeProvider>(
                   builder: (context, provider, child) {
                     if (provider.isLoading) {
                       return const HomeShimmer();
                     }
-
                     if (provider.hasError) {
                       return _buildErrorState(provider);
                     }
-
                     return FadeTransition(
                       opacity: _fadeAnimation,
                       child: RefreshIndicator(
@@ -95,6 +88,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                               const MarqueeText(),
                               const SizedBox(height: 24),
                               const EnhancedBannerCarousel(),
+                              const SizedBox(height: 32),
+                              // New Spin Games Section
+                              _buildSpinGamesSection(),
                               const SizedBox(height: 32),
                               _buildEssentialsSection(),
                               const SizedBox(height: 60),
@@ -187,6 +183,19 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildSpinGamesSection() {
+    return SlideTransition(
+      position: Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero)
+          .animate(
+            CurvedAnimation(
+              parent: _fadeController,
+              curve: const Interval(0.4, 1.0, curve: Curves.easeOutBack),
+            ),
+          ),
+      child: const SpinGamesSection(),
     );
   }
 

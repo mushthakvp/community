@@ -3,9 +3,9 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
+import 'package:vivera/core/utils/extensions.dart';
 
 import '../../../../core/constants/app_constants.dart';
-import '../../../../core/utils/extensions.dart';
 import '../../../../core/widgets/common/text_widget.dart';
 import '../providers/home_provider.dart';
 
@@ -104,26 +104,9 @@ class _StickyHomeAppBarState extends State<StickyHomeAppBar>
         final userName =
             provider.userDetails?.name.capitalizeFirstLetter() ??
             "Community User";
-
         return Row(
           children: [
-            Container(
-              decoration: BoxDecoration(
-                color: AppConstants.white.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: IconButton(
-                onPressed: () {
-                  // Open drawer or menu
-                },
-                icon: const Icon(
-                  Icons.menu,
-                  color: AppConstants.white,
-                  size: 24,
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 6),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
