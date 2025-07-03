@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../../core/constants/app_constants.dart';
+import '../../../../../core/constants/route_constants.dart';
 import '../../../../../core/widgets/common/text_widget.dart';
 
 class ProfileActionButtonsWidget extends StatelessWidget {
@@ -17,9 +19,18 @@ class ProfileActionButtonsWidget extends StatelessWidget {
               context: context,
               icon: Icons.favorite_outline,
               label: 'Saved',
+              gradient: LinearGradient(
+                colors: [
+                  Colors.pink.withOpacity(0.2),
+                  Colors.pink.withOpacity(0.1),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderColor: Colors.pink.withOpacity(0.3),
+              iconColor: Colors.pink,
               onTap: () {
-                // Navigate to saved ads
-                debugPrint('Navigate to saved ads');
+                context.push(RouteConstants.vizzleSavedAds);
               },
             ),
           ),
@@ -29,9 +40,18 @@ class ProfileActionButtonsWidget extends StatelessWidget {
               context: context,
               icon: Icons.history,
               label: 'Recently viewed',
+              gradient: LinearGradient(
+                colors: [
+                  Colors.blue.withOpacity(0.2),
+                  Colors.blue.withOpacity(0.1),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderColor: Colors.blue.withOpacity(0.3),
+              iconColor: Colors.blue,
               onTap: () {
-                // Navigate to recently viewed
-                debugPrint('Navigate to recently viewed');
+                context.push(RouteConstants.vizzleRecentlyViewed);
               },
             ),
           ),
@@ -44,33 +64,51 @@ class ProfileActionButtonsWidget extends StatelessWidget {
     required BuildContext context,
     required IconData icon,
     required String label,
+    required LinearGradient gradient,
+    required Color borderColor,
+    required Color iconColor,
     required VoidCallback onTap,
   }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        height: 60,
-        decoration: BoxDecoration(
-          color: AppConstants.white.withOpacity(0.05),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: AppConstants.white.withOpacity(0.1),
-            width: 1,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          height: 70,
+          decoration: BoxDecoration(
+            gradient: gradient,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: borderColor, width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: iconColor.withOpacity(0.1),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: AppConstants.white, size: 20),
-            const SizedBox(width: 8),
-            CommonTextWidget(
-              text: label,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: AppConstants.white,
-            ),
-          ],
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: iconColor.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: iconColor, size: 20),
+              ),
+              const SizedBox(height: 8),
+              CommonTextWidget(
+                text: label,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: AppConstants.white,
+                align: TextAlign.center,
+              ),
+            ],
+          ),
         ),
       ),
     );

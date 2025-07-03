@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../../core/constants/app_constants.dart';
+import '../../../../../core/constants/route_constants.dart';
 import '../../../../../core/widgets/common/text_widget.dart';
 import '../../../../../core/widgets/loading/loading_widget.dart';
 import '../providers/profile_provider.dart';
@@ -144,12 +146,7 @@ class _VizzleProfilePageState extends State<VizzleProfilePage> {
         const SizedBox(height: 24),
 
         // Stats Section
-        ProfileStatsWidget(
-          activeAdsCount: profile.activeAdsCount,
-          renewAdsCount: profile.renewAdsCount,
-          jobsCount: profile.jobsCount,
-          chatToAnswer: profile.chatToAnswer,
-        ),
+        ProfileStatsWidget(totalAdsCount: profile.activeAdsCount),
 
         const SizedBox(height: 24),
 
@@ -220,7 +217,7 @@ class _VizzleProfilePageState extends State<VizzleProfilePage> {
                 onDelete: () => _handleDeleteAd(provider, ad.id),
                 onMarkAsSold: () => _handleMarkAsSold(provider, ad.id),
                 onEdit: () => _handleEditAd(ad.id),
-                onTap: () => _handleAdTap(ad.id),
+                onTap: () => _handleAdTap(ad.id, ad.shareLink),
               ),
             ),
           ),
@@ -271,8 +268,9 @@ class _VizzleProfilePageState extends State<VizzleProfilePage> {
     debugPrint('Edit ad: $adId');
   }
 
-  void _handleAdTap(String adId) {
-    // Navigate to ad details
-    debugPrint('View ad: $adId');
+  void _handleAdTap(String adId, String shareLink) {
+    context.push(
+      '${RouteConstants.productDetail}?shareUrl=${Uri.encodeComponent(shareLink)}&isPersonal=false',
+    );
   }
 }

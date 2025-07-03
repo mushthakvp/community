@@ -4,118 +4,102 @@ import '../../../../../core/constants/app_constants.dart';
 import '../../../../../core/widgets/common/text_widget.dart';
 
 class ProfileStatsWidget extends StatelessWidget {
-  final int activeAdsCount;
-  final int renewAdsCount;
-  final int jobsCount;
-  final int chatToAnswer;
+  final int totalAdsCount;
 
-  const ProfileStatsWidget({
-    super.key,
-    required this.activeAdsCount,
-    required this.renewAdsCount,
-    required this.jobsCount,
-    required this.chatToAnswer,
-  });
+  const ProfileStatsWidget({super.key, required this.totalAdsCount});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: _buildStatCard(
-                  icon: Icons.chat_bubble_outline,
-                  title: 'Chat to answer',
-                  count: chatToAnswer,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildStatCard(
-                  icon: Icons.inventory_2_outlined,
-                  title: 'Active listings',
-                  count: activeAdsCount,
-                ),
-              ),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              const Color(0xFF1A1A1A),
+              const Color(0xFF2A2A2A).withOpacity(0.3),
             ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-          const SizedBox(width: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _buildStatCard(
-                  icon: Icons.refresh,
-                  title: 'List to renew',
-                  count: renewAdsCount,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildStatCard(
-                  icon: Icons.work_outline,
-                  title: 'Jobs',
-                  count: jobsCount,
-                ),
-              ),
-            ],
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: AppConstants.appPrimaryColor.withOpacity(0.2),
+            width: 1,
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatCard({
-    required IconData icon,
-    required String title,
-    required int count,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      height: 100,
-      decoration: BoxDecoration(
-        color: const Color(0xFF262626),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppConstants.white.withOpacity(0.1),
-          width: 1,
+          boxShadow: [
+            BoxShadow(
+              color: AppConstants.appPrimaryColor.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: AppConstants.appPrimaryColor,
-                  borderRadius: BorderRadius.circular(8),
+        child: Row(
+          children: [
+            Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppConstants.appPrimaryColor,
+                    AppConstants.appPrimaryColor.withOpacity(0.8),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-                child: Icon(icon, color: AppConstants.black, size: 20),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppConstants.appPrimaryColor.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-              CommonTextWidget(
-                text: count.toString(),
-                fontSize: 24,
-                fontWeight: FontWeight.w600,
-                color: AppConstants.white,
+              child: const Icon(
+                Icons.inventory_2_outlined,
+                color: AppConstants.black,
+                size: 28,
               ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          CommonTextWidget(
-            text: title,
-            fontSize: 12,
-            fontWeight: FontWeight.w400,
-            color: AppConstants.white.withOpacity(0.8),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CommonTextWidget(
+                    text: totalAdsCount.toString(),
+                    fontSize: 32,
+                    fontWeight: FontWeight.w700,
+                    color: AppConstants.white,
+                  ),
+                  const SizedBox(height: 4),
+                  CommonTextWidget(
+                    text: 'Total ${totalAdsCount == 1 ? 'Ad' : 'Ads'} Posted',
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: AppConstants.white.withOpacity(0.8),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppConstants.appPrimaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                Icons.trending_up,
+                color: AppConstants.appPrimaryColor,
+                size: 20,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
