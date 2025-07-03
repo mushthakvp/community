@@ -31,4 +31,18 @@ class AudioService {
   static void dispose() {
     _audioPlayer.dispose();
   }
+
+  static Future<void> playSpinSound() async {
+    await playSound('sounds/spinner_sound.mp3');
+    await HapticFeedback.mediumImpact();
+  }
+
+  static Future<void> stopSpinSound() async {
+    await _audioPlayer.stop();
+  }
+
+  static Future<void> playWinSound() async {
+    await playSound('sounds/winning_sound.mp3');
+    await HapticFeedback.mediumImpact();
+  }
 }

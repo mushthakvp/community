@@ -106,6 +106,13 @@ class ApiConstants {
   static const String getSearchFilters = 'user/getSearchFilters';
   static const String getSearchLocations = 'user/getSearchLocations';
 
+  // Spin Wheel
+
+  static const String getSpinAndEarnData = '/user/getSpinOptions?type=';
+  static const String userDialySpin = '/user/userSpin';
+  static const String getSpinAndEarnHistory = '/user/getUserSpinHistory';
+  static const String userDetailsEndPoint = '/user/getHome';
+
   // ========== DYNAMIC ENDPOINT BUILDERS ==========
 
   // Community Management
