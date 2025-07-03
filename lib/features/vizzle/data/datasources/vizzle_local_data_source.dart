@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:developer' as dev;
 
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/services/storage_service.dart';
@@ -51,7 +50,6 @@ class VizzleLocalDataSourceImpl implements VizzleLocalDataSource {
         throw const CacheException('No cached vizzle home data');
       }
     } catch (e) {
-      dev.log('Error getting cached vizzle home: $e');
       throw const CacheException('Failed to get cached vizzle home data');
     }
   }
@@ -65,9 +63,7 @@ class VizzleLocalDataSourceImpl implements VizzleLocalDataSource {
         _vizzleHomeCacheTimeKey,
         DateTime.now().toIso8601String(),
       );
-      dev.log('Vizzle home data cached successfully');
     } catch (e) {
-      dev.log('Error caching vizzle home: $e');
       throw const CacheException('Failed to cache vizzle home data');
     }
   }
@@ -96,7 +92,6 @@ class VizzleLocalDataSourceImpl implements VizzleLocalDataSource {
         throw const CacheException('No cached categories data');
       }
     } catch (e) {
-      dev.log('Error getting cached categories: $e');
       throw const CacheException('Failed to get cached categories data');
     }
   }
@@ -112,9 +107,7 @@ class VizzleLocalDataSourceImpl implements VizzleLocalDataSource {
         _categoriesCacheTimeKey,
         DateTime.now().toIso8601String(),
       );
-      dev.log('Categories data cached successfully');
     } catch (e) {
-      dev.log('Error caching categories: $e');
       throw const CacheException('Failed to cache categories data');
     }
   }
@@ -130,7 +123,6 @@ class VizzleLocalDataSourceImpl implements VizzleLocalDataSource {
         return [];
       }
     } catch (e) {
-      dev.log('Error getting favorite ads: $e');
       return [];
     }
   }
@@ -139,22 +131,16 @@ class VizzleLocalDataSourceImpl implements VizzleLocalDataSource {
   Future<void> addToFavorites(String adId) async {
     try {
       final favoriteAds = await getFavoriteAds();
-
-      // Check if ad is already in favorites
       final existingIndex = favoriteAds.indexWhere((ad) => ad.id == adId);
       if (existingIndex == -1) {
-        // Create a simple ad model with just the ID for local storage
         final adModel = AdModel(id: adId, title: '', shareLink: '', images: []);
         favoriteAds.add(adModel);
-
         final jsonData = json.encode(
           favoriteAds.map((ad) => ad.toJson()).toList(),
         );
         await StorageService.setString(_favoriteAdsCacheKey, jsonData);
-        dev.log('Ad added to favorites locally: $adId');
       }
     } catch (e) {
-      dev.log('Error adding to favorites locally: $e');
       throw const CacheException('Failed to add to favorites locally');
     }
   }
@@ -169,9 +155,7 @@ class VizzleLocalDataSourceImpl implements VizzleLocalDataSource {
         favoriteAds.map((ad) => ad.toJson()).toList(),
       );
       await StorageService.setString(_favoriteAdsCacheKey, jsonData);
-      dev.log('Ad removed from favorites locally: $adId');
     } catch (e) {
-      dev.log('Error removing from favorites locally: $e');
       throw const CacheException('Failed to remove from favorites locally');
     }
   }
@@ -187,7 +171,6 @@ class VizzleLocalDataSourceImpl implements VizzleLocalDataSource {
         return [];
       }
     } catch (e) {
-      dev.log('Error getting recently viewed ads: $e');
       return [];
     }
   }
@@ -195,31 +178,19 @@ class VizzleLocalDataSourceImpl implements VizzleLocalDataSource {
   @override
   Future<void> addToRecentlyViewed(String adId) async {
     try {
-      const maxRecentlyViewed = 20; // Limit to 20 recent items
-
+      const maxRecentlyViewed = 20;
       final recentlyViewed = await getRecentlyViewedAds();
-
-      // Remove if already exists to move it to front
       recentlyViewed.removeWhere((ad) => ad.id == adId);
-
-      // Create a simple ad model with just the ID for local storage
       final adModel = AdModel(id: adId, title: '', shareLink: '', images: []);
-
-      // Add to front
       recentlyViewed.insert(0, adModel);
-
-      // Limit to max items
       if (recentlyViewed.length > maxRecentlyViewed) {
         recentlyViewed.removeRange(maxRecentlyViewed, recentlyViewed.length);
       }
-
       final jsonData = json.encode(
         recentlyViewed.map((ad) => ad.toJson()).toList(),
       );
       await StorageService.setString(_recentlyViewedCacheKey, jsonData);
-      dev.log('Ad added to recently viewed: $adId');
     } catch (e) {
-      dev.log('Error adding to recently viewed: $e');
       throw const CacheException('Failed to add to recently viewed');
     }
   }
@@ -233,9 +204,7 @@ class VizzleLocalDataSourceImpl implements VizzleLocalDataSource {
       await StorageService.remove(_recentlyViewedCacheKey);
       await StorageService.remove(_vizzleHomeCacheTimeKey);
       await StorageService.remove(_categoriesCacheTimeKey);
-      dev.log('Vizzle cache cleared successfully');
     } catch (e) {
-      dev.log('Error clearing vizzle cache: $e');
       throw const CacheException('Failed to clear vizzle cache');
     }
   }

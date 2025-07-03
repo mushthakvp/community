@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -23,10 +24,33 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
   late AnimationController _textController;
   late AnimationController _fadeController;
   late AnimationController _moonController;
+  late AnimationController _cyclingTextController;
   late Animation<double> _textOpacity;
   late Animation<Offset> _textSlide;
   late Animation<double> _fadeAnimation;
   late Animation<double> _moonAnimation;
+
+  // Cycling text data - Multiple language support for better readability
+  final List<Map<String, String>> _cyclingTexts = [
+    {
+      // Malayalam: കുടുംബശ്രീ • സമുദായം • ശാക്തീകരണം
+      'text': 'കുടുംബശ്രീ • സമുദായം • ശാക്തീകരണം',
+      'language': 'Malayalam',
+    },
+    {
+      // English: Kudumbashree • Community • Empowerment
+      'text': 'Kudumbashree • Community • Empowerment',
+      'language': 'English',
+    },
+    {
+      // Arabic: كودومباشري • المجتمع • التمكين
+      'text': 'كودومباشري • المجتمع • التمكين',
+      'language': 'Arabic',
+    },
+  ];
+
+  int _currentTextIndex = 0;
+  bool _isTextVisible = true;
 
   @override
   void initState() {
@@ -43,21 +67,30 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
       duration: const Duration(seconds: 4),
       vsync: this,
     );
+    _cyclingTextController = AnimationController(
+      duration: const Duration(milliseconds: 500), // Increased transition time
+      vsync: this,
+    );
+
     _textOpacity = Tween<double>(
       begin: 0.0,
       end: 1.0,
     ).animate(CurvedAnimation(parent: _textController, curve: Curves.easeIn));
+
     _textSlide = Tween<Offset>(
       begin: const Offset(0, 0.5),
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _textController, curve: Curves.easeOut));
+
     _fadeAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
     ).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeIn));
+
     _moonAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _moonController, curve: Curves.easeInOut),
     );
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final provider = context.read<SplashProvider>();
       provider.initializeApp().then((_) {
@@ -69,6 +102,43 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
 
     _fadeController.forward();
     _moonController.repeat(reverse: true);
+
+    // Start cycling text animation after text animation begins
+    Future.delayed(const Duration(milliseconds: 2000), () {
+      _startTextCycling();
+    });
+  }
+
+  void _startTextCycling() {
+    Timer.periodic(const Duration(milliseconds: 2000), (timer) {
+      // Increased from 600ms to 2000ms
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+
+      setState(() {
+        _isTextVisible = false;
+      });
+
+      _cyclingTextController.forward().then((_) {
+        if (mounted) {
+          setState(() {
+            _currentTextIndex = (_currentTextIndex + 1) % _cyclingTexts.length;
+            _isTextVisible = true;
+          });
+          _cyclingTextController.reverse();
+        }
+      });
+
+      // Stop cycling after showing all texts and wait for walking animation
+      if (_currentTextIndex == _cyclingTexts.length - 1) {
+        Future.delayed(const Duration(milliseconds: 2000), () {
+          // Increased delay
+          timer.cancel();
+        });
+      }
+    });
   }
 
   void _navigateToNextScreen() {
@@ -89,6 +159,7 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
     _textController.dispose();
     _fadeController.dispose();
     _moonController.dispose();
+    _cyclingTextController.dispose();
     super.dispose();
   }
 
@@ -226,11 +297,30 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
                                     width: 1,
                                   ),
                                 ),
-                                child: const CommonTextWidget(
-                                  text: 'കുടുംബശ്രീ • സമുദായം • ശാക്തീകരണം',
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w400,
-                                  color: Color(0xFFFFD700),
+                                child: AnimatedBuilder(
+                                  animation: _cyclingTextController,
+                                  builder: (context, child) {
+                                    return AnimatedOpacity(
+                                      opacity: _isTextVisible ? 1.0 : 0.0,
+                                      duration: const Duration(
+                                        milliseconds: 300,
+                                      ),
+                                      child: Transform.translate(
+                                        offset: Offset(
+                                          0,
+                                          _cyclingTextController.value * 10,
+                                        ),
+                                        child: CommonTextWidget(
+                                          text:
+                                              _cyclingTexts[_currentTextIndex]['text']!,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w400,
+                                          color: const Color(0xFFFFD700),
+                                          align: TextAlign.center,
+                                        ),
+                                      ),
+                                    );
+                                  },
                                 ),
                               ),
                             ],

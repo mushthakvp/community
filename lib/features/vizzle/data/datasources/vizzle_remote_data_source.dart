@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:developer' as dev;
 
 import 'package:vivera/core/constants/api_constants.dart';
 
@@ -51,12 +50,9 @@ class VizzleRemoteDataSourceImpl implements VizzleRemoteDataSource {
   Future<VizzleHomeModel> getVizzleHome() async {
     try {
       final response = await apiClient.get(ApiConstants.vizzleHome);
-      dev.log('Vizzle Home Response Status: ${response.statusCode}');
       final responseData = json.decode(response.body);
-      dev.log('Vizzle Home Response Data: $responseData');
       return VizzleHomeModel.fromJson(responseData);
     } catch (e) {
-      dev.log('Error getting vizzle home: $e');
       throw const ServerException('Failed to get vizzle home data');
     }
   }
@@ -65,9 +61,7 @@ class VizzleRemoteDataSourceImpl implements VizzleRemoteDataSource {
   Future<List<CategoryModel>> getCategories() async {
     try {
       final response = await apiClient.get('user/getCities');
-      dev.log('Categories Response Status: ${response.statusCode}');
       final responseData = json.decode(response.body);
-      dev.log('Categories Response Data: $responseData');
       if (responseData['categories'] != null) {
         return (responseData['categories'] as List)
             .map((category) => CategoryModel.fromJson(category))
@@ -75,7 +69,6 @@ class VizzleRemoteDataSourceImpl implements VizzleRemoteDataSource {
       }
       return [];
     } catch (e) {
-      dev.log('Error getting categories: $e');
       throw const ServerException('Failed to get categories');
     }
   }
@@ -87,7 +80,6 @@ class VizzleRemoteDataSourceImpl implements VizzleRemoteDataSource {
       final responseData = json.decode(response.body);
       return CategoryModel.fromJson(responseData);
     } catch (e) {
-      dev.log('Error getting category by id: $e');
       throw const ServerException('Failed to get category');
     }
   }
@@ -95,17 +87,12 @@ class VizzleRemoteDataSourceImpl implements VizzleRemoteDataSource {
   @override
   Future<List<SubCategoryModel>> getSubCategories(String categoryId) async {
     try {
-      // Since your original code uses getCities, we'll work with that endpoint
       final response = await apiClient.get('user/getCities');
       final responseData = json.decode(response.body);
-      dev.log('Sub Categories Response Data: $responseData');
-
       if (responseData['categories'] != null) {
         final categories = (responseData['categories'] as List)
             .map((category) => CategoryModel.fromJson(category))
             .toList();
-
-        // Find the specific category and return its subcategories
         final targetCategory = categories.firstWhere(
           (cat) => cat.id == categoryId,
           orElse: () => CategoryModel(id: '', name: '', subcategories: []),
@@ -115,7 +102,6 @@ class VizzleRemoteDataSourceImpl implements VizzleRemoteDataSource {
       }
       return [];
     } catch (e) {
-      dev.log('Error getting subcategories: $e');
       throw const ServerException('Failed to get subcategories');
     }
   }
@@ -129,7 +115,6 @@ class VizzleRemoteDataSourceImpl implements VizzleRemoteDataSource {
       final responseData = json.decode(response.body);
       return SubCategoryModel.fromJson(responseData);
     } catch (e) {
-      dev.log('Error getting subcategory by id: $e');
       throw const ServerException('Failed to get subcategory');
     }
   }
@@ -143,8 +128,6 @@ class VizzleRemoteDataSourceImpl implements VizzleRemoteDataSource {
         'user/getSubSubCategories/$subCategoryId',
       );
       final responseData = json.decode(response.body);
-      dev.log('Sub Sub Categories Response Data: $responseData');
-
       if (responseData['categories'] != null) {
         return (responseData['categories'] as List)
             .map(
@@ -154,7 +137,6 @@ class VizzleRemoteDataSourceImpl implements VizzleRemoteDataSource {
       }
       return [];
     } catch (e) {
-      dev.log('Error getting sub-subcategories: $e');
       throw const ServerException('Failed to get sub-subcategories');
     }
   }
@@ -170,7 +152,6 @@ class VizzleRemoteDataSourceImpl implements VizzleRemoteDataSource {
       final responseData = json.decode(response.body);
       return SubSubCategoryModel.fromJson(responseData);
     } catch (e) {
-      dev.log('Error getting sub-subcategory by id: $e');
       throw const ServerException('Failed to get sub-subcategory');
     }
   }
@@ -195,7 +176,6 @@ class VizzleRemoteDataSourceImpl implements VizzleRemoteDataSource {
       }
       return [];
     } catch (e) {
-      dev.log('Error getting sub items: $e');
       throw ServerException('Failed to get sub items');
     }
   }
@@ -207,7 +187,6 @@ class VizzleRemoteDataSourceImpl implements VizzleRemoteDataSource {
       final responseData = json.decode(response.body);
       return SubItemModel.fromJson(responseData);
     } catch (e) {
-      dev.log('Error getting sub item by id: $e');
       throw const ServerException('Failed to get sub item');
     }
   }
@@ -245,7 +224,6 @@ class VizzleRemoteDataSourceImpl implements VizzleRemoteDataSource {
       );
 
       final responseData = json.decode(response.body);
-      dev.log('Ads Response Data: $responseData');
 
       if (responseData['ads'] != null) {
         return (responseData['ads'] as List)
@@ -254,7 +232,6 @@ class VizzleRemoteDataSourceImpl implements VizzleRemoteDataSource {
       }
       return [];
     } catch (e) {
-      dev.log('Error getting ads: $e');
       throw const ServerException('Failed to get ads');
     }
   }
@@ -266,7 +243,6 @@ class VizzleRemoteDataSourceImpl implements VizzleRemoteDataSource {
       final responseData = json.decode(response.body);
       return AdModel.fromJson(responseData);
     } catch (e) {
-      dev.log('Error getting ad by id: $e');
       throw const ServerException('Failed to get ad');
     }
   }
@@ -288,15 +264,11 @@ class VizzleRemoteDataSourceImpl implements VizzleRemoteDataSource {
       if (maxPrice != null) queryParams['maxPrice'] = maxPrice.toString();
       if (page != null) queryParams['page'] = page.toString();
       if (limit != null) queryParams['limit'] = limit.toString();
-
       final response = await apiClient.get(
         'user/searchAll',
         queryParameters: queryParams,
       );
-
       final responseData = json.decode(response.body);
-      dev.log('Search Response Data: $responseData');
-
       if (responseData['ads'] != null) {
         return (responseData['ads'] as List)
             .map((ad) => AdModel.fromJson(ad))
@@ -304,7 +276,6 @@ class VizzleRemoteDataSourceImpl implements VizzleRemoteDataSource {
       }
       return [];
     } catch (e) {
-      dev.log('Error searching ads: $e');
       throw const ServerException('Failed to search ads');
     }
   }
@@ -316,11 +287,9 @@ class VizzleRemoteDataSourceImpl implements VizzleRemoteDataSource {
         'user/saveFeed/$adId',
         body: {'adId': adId},
       );
-
       final responseData = json.decode(response.body);
       return responseData['success'] ?? false;
     } catch (e) {
-      dev.log('Error adding to favorites: $e');
       throw const ServerException('Failed to add to favorites');
     }
   }
@@ -332,7 +301,6 @@ class VizzleRemoteDataSourceImpl implements VizzleRemoteDataSource {
       final responseData = json.decode(response.body);
       return responseData['success'] ?? false;
     } catch (e) {
-      dev.log('Error removing from favorites: $e');
       throw const ServerException('Failed to remove from favorites');
     }
   }
@@ -350,7 +318,6 @@ class VizzleRemoteDataSourceImpl implements VizzleRemoteDataSource {
       }
       return [];
     } catch (e) {
-      dev.log('Error getting favorite ads: $e');
       throw const ServerException('Failed to get favorite ads');
     }
   }
