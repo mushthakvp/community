@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
-import '../../../../../core/constants/app_constants.dart';
 import '../../../../../core/widgets/common/image_widget.dart';
 import '../../domain/entities/product_detail.dart';
 
@@ -19,7 +17,7 @@ class SellerProfileSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () {
-        context.go('/seller-details?sellerId=${user.id}');
+        // context.go('/seller-details?sellerId=${user.id}');
       },
       borderRadius: BorderRadius.circular(8),
       child: Container(
@@ -30,17 +28,13 @@ class SellerProfileSection extends StatelessWidget {
         ),
         child: Row(
           children: [
-            // Profile Image
             CommonImageWidget(
               imageUrl: user.profileImage,
               width: 50,
               height: 50,
               borderRadius: BorderRadius.circular(25),
             ),
-
             const SizedBox(width: 12),
-
-            // User Info
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -60,22 +54,6 @@ class SellerProfileSection extends StatelessWidget {
                   ),
                 ],
               ),
-            ),
-
-            // See More
-            const Text(
-              'See More',
-              style: TextStyle(
-                color: AppConstants.appPrimaryColor,
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(width: 4),
-            const Icon(
-              Icons.arrow_forward_ios,
-              color: AppConstants.appPrimaryColor,
-              size: 14,
             ),
           ],
         ),
