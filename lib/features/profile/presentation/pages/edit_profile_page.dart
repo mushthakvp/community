@@ -31,17 +31,66 @@ class _EditProfilePageState extends State<EditProfilePage> {
   @override
   void initState() {
     super.initState();
-    _initializeForm();
+    debugPrint('EditProfile: initState called');
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadProfileData();
+    });
+  }
+
+  Future<void> _loadProfileData() async {
+    final provider = context.read<ProfileProvider>();
+    debugPrint('EditProfile: Loading profile data...');
+    debugPrint('EditProfile: Current profile: ${provider.profile}');
+    debugPrint('EditProfile: Profile state: ${provider.profileState}');
+
+    // Try to use existing profile first
+    if (provider.profile != null) {
+      debugPrint('EditProfile: Using existing profile');
+      _initializeForm();
+      return;
+    }
+
+    // If no profile exists, try to load it
+    try {
+      debugPrint('EditProfile: Fetching profile from API...');
+      await provider.getProfile();
+      debugPrint(
+        'EditProfile: Profile fetch completed. State: ${provider.profileState}',
+      );
+      debugPrint('EditProfile: Profile data: ${provider.profile}');
+      debugPrint('EditProfile: Profile error: ${provider.profileError}');
+
+      if (mounted) {
+        _initializeForm();
+      }
+    } catch (e) {
+      debugPrint('EditProfile: Exception during profile fetch: $e');
+      if (mounted) {
+        context.showErrorSnackBar('Failed to load profile data: $e');
+      }
+    }
   }
 
   void _initializeForm() {
     final provider = context.read<ProfileProvider>();
     final profile = provider.profile;
 
-    if (profile != null) {
-      _nameController.text = profile.name;
-      _emailController.text = profile.email;
-      _phoneController.text = profile.phone;
+    debugPrint('EditProfile: Initializing form with profile: $profile');
+
+    if (profile != null && mounted) {
+      setState(() {
+        _nameController.text = profile.name;
+        _emailController.text = profile.email;
+        _phoneController.text = profile.phone;
+      });
+      debugPrint(
+        'EditProfile: Form initialized - Name: ${profile.name}, Email: ${profile.email}, Phone: ${profile.phone}',
+      );
+    } else {
+      debugPrint(
+        'EditProfile: Cannot initialize form - profile is null or widget not mounted',
+      );
     }
   }
 
@@ -55,17 +104,76 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('EditProfile: Building widget');
+
     return Scaffold(
       backgroundColor: AppConstants.black,
       appBar: const CommonAppBar(title: 'Edit Profile'),
       body: Consumer<ProfileProvider>(
         builder: (context, provider, child) {
-          if (provider.updateProfileState == ProfileState.loading) {
+          debugPrint(
+            'EditProfile: Consumer builder - State: ${provider.profileState}, Profile: ${provider.profile != null}',
+          );
+
+          // Show loading if profile is being fetched or updated
+          if (provider.profileState == ProfileState.loading ||
+              provider.updateProfileState == ProfileState.loading) {
             return const Center(
-              child: LoadingWidget(message: 'Updating profile...'),
+              child: LoadingWidget(message: 'Loading profile...'),
             );
           }
 
+          // Show error state if profile failed to load
+          if (provider.profileState == ProfileState.error) {
+            debugPrint(
+              'EditProfile: Showing error state: ${provider.profileError}',
+            );
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 64,
+                    color: Colors.red.withOpacity(0.7),
+                  ),
+                  const SizedBox(height: 16),
+                  const CommonTextWidget(
+                    text: 'Failed to load profile',
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: AppConstants.white,
+                  ),
+                  const SizedBox(height: 8),
+                  CommonTextWidget(
+                    text: provider.profileError ?? 'Unknown error occurred',
+                    fontSize: 14,
+                    color: AppConstants.white.withOpacity(0.7),
+                    align: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: () => _loadProfileData(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppConstants.appPrimaryColor,
+                      foregroundColor: AppConstants.black,
+                    ),
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          // If profile is null but no error, show loading
+          if (provider.profile == null) {
+            debugPrint('EditProfile: Profile is null, showing loading');
+            return const Center(
+              child: LoadingWidget(message: 'Loading profile...'),
+            );
+          }
+
+          debugPrint('EditProfile: Showing main content');
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Form(
@@ -74,7 +182,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 children: [
                   _buildProfileImageSection(provider),
                   const SizedBox(height: 32),
-                  _buildFormFields(),
+                  _buildFormFields(provider),
                   const SizedBox(height: 32),
                   _buildSaveButton(provider),
                 ],
@@ -153,6 +261,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
               ),
             ),
 
+          // Camera button
           Positioned(
             bottom: 0,
             right: 0,
@@ -244,7 +353,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
         width: 120,
         height: 120,
       );
-    } else if (provider.profile?.profileImage != null) {
+    } else if (provider.profile?.profileImage != null &&
+        provider.profile!.profileImage.isNotEmpty) {
       return Image.network(
         provider.profile!.profileImage,
         fit: BoxFit.cover,
@@ -279,29 +389,101 @@ class _EditProfilePageState extends State<EditProfilePage> {
     }
   }
 
-  Widget _buildFormFields() {
+  Widget _buildFormFields(ProfileProvider provider) {
     return Column(
       children: [
+        // Debug info
+        if (provider.profile != null)
+          Container(
+            padding: const EdgeInsets.all(8),
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              color: Colors.green.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: CommonTextWidget(
+              text: 'Profile loaded: ${provider.profile!.name}',
+              fontSize: 12,
+              color: Colors.green,
+            ),
+          ),
+
+        // Editable Name Field
         CommonTextField(
           controller: _nameController,
           labelText: 'Full Name',
           validator: (value) => Validators.required(value, 'full name'),
         ),
         const SizedBox(height: 16),
+
+        // Non-editable Email Field
         CommonTextField(
           controller: _emailController,
           labelText: 'Email',
           keyboardType: TextInputType.emailAddress,
-          validator: Validators.email,
           enabled: false,
+          suffixIcon: Icon(
+            Icons.lock_outline,
+            color: AppConstants.white.withOpacity(0.5),
+            size: 20,
+          ),
         ),
+        const SizedBox(height: 8),
+        Padding(
+          padding: const EdgeInsets.only(left: 16),
+          child: Row(
+            children: [
+              Icon(
+                Icons.info_outline,
+                size: 14,
+                color: AppConstants.white.withOpacity(0.6),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: CommonTextWidget(
+                  text: 'Email cannot be changed for security reasons',
+                  fontSize: 12,
+                  color: AppConstants.white.withOpacity(0.6),
+                ),
+              ),
+            ],
+          ),
+        ),
+
         const SizedBox(height: 16),
+
+        // Non-editable Phone Field
         CommonTextField(
           controller: _phoneController,
           labelText: 'Phone Number',
           keyboardType: TextInputType.phone,
-          validator: Validators.phone,
           enabled: false,
+          suffixIcon: Icon(
+            Icons.lock_outline,
+            color: AppConstants.white.withOpacity(0.5),
+            size: 20,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Padding(
+          padding: const EdgeInsets.only(left: 16),
+          child: Row(
+            children: [
+              Icon(
+                Icons.info_outline,
+                size: 14,
+                color: AppConstants.white.withOpacity(0.6),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: CommonTextWidget(
+                  text: 'Phone number cannot be changed for security reasons',
+                  fontSize: 12,
+                  color: AppConstants.white.withOpacity(0.6),
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );

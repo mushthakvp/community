@@ -110,9 +110,7 @@ class ProfileProvider extends ChangeNotifier {
     _profileState = ProfileState.loading;
     _profileError = null;
     notifyListeners();
-
     final result = await getProfileUseCase();
-
     if (result is Success<ProfileEntity>) {
       _profile = result.data;
       _profileState = ProfileState.success;
