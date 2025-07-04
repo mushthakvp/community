@@ -18,7 +18,7 @@ class SpinAndWinPage extends StatefulWidget {
 }
 
 class _SpinAndWinPageState extends State<SpinAndWinPage> {
-  static const String spinType = 'spin_and_win';
+  static const String spinType = 'spin_and_earn';
 
   @override
   void initState() {

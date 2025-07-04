@@ -20,39 +20,54 @@ class SpinOptionModel extends SpinOptionEntity {
 
   factory SpinOptionModel.fromJson(Map<String, dynamic> json) {
     return SpinOptionModel(
-      id: json['id'] ?? json['_id'] ?? '',
+      id: json['_id'] ?? json['id'] ?? '',
       title: json['title'] ?? '',
-      description: json['description'] ?? '',
-      rewardType: _parseRewardType(json['rewardType'] ?? json['type']),
-      loyaltyPoints: json['loyaltyPoints'] ?? json['loyaltyPoint'],
+      description: json['description'] ?? json['title'] ?? '',
+      rewardType: _parseRewardType(json),
+      loyaltyPoints: json['loyaltyPoint'] ?? json['loyaltyPoints'],
       couponCode: json['couponCode'],
       giftDescription: json['giftDescription'],
       discountPercentage: json['discountPercentage']?.toDouble(),
-      isWinningOption: json['isWinningOption'] ?? json['isBetterLuck'] != true,
+      isWinningOption:
+          json['isWinningOption'] ?? !(json['isBetterLuck'] == true),
       backgroundColor: _parseColor(json['backgroundColor']),
       icon: _parseIcon(json['icon']),
       probability: json['probability'] ?? 10,
     );
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'title': title,
-      'description': description,
-      'rewardType': rewardType.name,
-      'loyaltyPoints': loyaltyPoints,
-      'couponCode': couponCode,
-      'giftDescription': giftDescription,
-      'discountPercentage': discountPercentage,
-      'isWinningOption': isWinningOption,
-      'backgroundColor': backgroundColor.value,
-      'icon': _iconToString(icon),
-      'probability': probability,
-    };
-  }
+  static SpinRewardType _parseRewardType(Map<String, dynamic> json) {
+    // Check for specific flags first
+    if (json['isBetterLuck'] == true) {
+      return SpinRewardType.betterLuck;
+    }
 
-  static SpinRewardType _parseRewardType(String? type) {
+    if (json['isSpinAgain'] == true) {
+      return SpinRewardType.extraSpin;
+    }
+
+    // Check for loyalty points
+    if (json['loyaltyPoint'] != null || json['loyaltyPoints'] != null) {
+      return SpinRewardType.loyaltyPoints;
+    }
+
+    // Check for coupon
+    if (json['couponCode'] != null) {
+      return SpinRewardType.coupon;
+    }
+
+    // Check for gift/image
+    if (json['image'] != null || json['giftDescription'] != null) {
+      return SpinRewardType.gift;
+    }
+
+    // Check for discount
+    if (json['discountPercentage'] != null) {
+      return SpinRewardType.discount;
+    }
+
+    // Parse from type field if available
+    final type = json['rewardType'] ?? json['type'];
     switch (type?.toLowerCase()) {
       case 'loyalty_points':
       case 'loyaltypoints':
@@ -144,6 +159,23 @@ class SpinOptionModel extends SpinOptionEntity {
     if (icon == Icons.percent) return 'discount';
     if (icon == Icons.sentiment_neutral) return 'better_luck';
     return 'casino'; // default
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'description': description,
+      'rewardType': rewardType.name,
+      'loyaltyPoints': loyaltyPoints,
+      'couponCode': couponCode,
+      'giftDescription': giftDescription,
+      'discountPercentage': discountPercentage,
+      'isWinningOption': isWinningOption,
+      'backgroundColor': backgroundColor.value,
+      'icon': _iconToString(icon),
+      'probability': probability,
+    };
   }
 
   SpinOptionEntity toEntity() {

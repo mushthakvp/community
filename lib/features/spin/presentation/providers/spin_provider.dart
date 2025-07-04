@@ -152,7 +152,7 @@ class SpinProvider extends ChangeNotifier {
         PerformSpinParams(
           optionId: selectedOption.id,
           spinType: spinType,
-          isUnlimited: spinType == 'spin_and_win',
+          isUnlimited: spinType == 'spin_and_earn',
         ),
       );
 
