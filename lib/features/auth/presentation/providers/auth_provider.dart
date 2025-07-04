@@ -73,7 +73,6 @@ class AuthProvider extends ChangeNotifier {
   DateTime? _selectedDateOfBirth;
   String _selectedProfession = '';
   String _selectedCountry = '';
-  String _selectedCountryCode = '';
   String _selectedState = '';
   String _selectedStateCode = '';
   String _selectedDistrict = '';
@@ -151,6 +150,37 @@ class AuthProvider extends ChangeNotifier {
 
   void setProfession(String profession) {
     _selectedProfession = profession;
+    notifyListeners();
+  }
+
+  String _selectedCountryCode = 'IN';
+  String _selectedDialCode = '+91';
+
+  // 2. Add these getters in the form getters section (around line 65):
+  String get selectedCountryCode => _selectedCountryCode;
+  String get selectedDialCode => _selectedDialCode;
+
+  // 3. Add this method after the setLocation method (around line 150):
+  void setCountryCode({
+    required String countryCode,
+    required String dialCode,
+    String? countryName,
+  }) {
+    _selectedCountryCode = countryCode;
+    _selectedDialCode = dialCode;
+
+    // Auto-set country in location if provided
+    if (countryName != null) {
+      // Only set country if it's not already set or different
+      if (_selectedCountry.isEmpty || _selectedCountry != countryName) {
+        _selectedCountry = countryName;
+        // Clear state and district when country changes
+        _selectedState = '';
+        _selectedDistrict = '';
+        _selectedStateCode = '';
+      }
+    }
+
     notifyListeners();
   }
 
@@ -246,6 +276,8 @@ class AuthProvider extends ChangeNotifier {
     }, (user) => _setAuthenticated(user));
   }
 
+  // In AuthProvider.register() method, update the repository call:
+
   Future<void> register() async {
     if (!_validateRegisterForm()) return;
     _setLoading();
@@ -262,7 +294,7 @@ class AuthProvider extends ChangeNotifier {
       email: emailController.text.trim(),
       phone: phoneController.text.trim(),
       password: passwordController.text.trim(),
-      dialCode: _selectedCountryCode,
+      dialCode: _selectedDialCode,
       gender: _selectedGender.toLowerCase(),
       dateOfBirth: _selectedDateOfBirth!.toIso8601String(),
       profession: _selectedProfession,
@@ -304,7 +336,7 @@ class AuthProvider extends ChangeNotifier {
       otp: otpController.text.trim(),
       email: emailController.text.trim(),
       phone: phoneController.text.trim(),
-      dialCode: _selectedCountryCode,
+      dialCode: _selectedDialCode,
       method: _verificationMethod,
       firebaseId: _firebaseToken ?? "empty token",
     );
@@ -326,6 +358,21 @@ class AuthProvider extends ChangeNotifier {
         _handleOtpSuccess(user);
       },
     );
+  }
+
+  Future<void> resendOtp() async {
+    _setLoading();
+    final result = await _repository.resendOtp(
+      email: emailController.text.trim(),
+      phone: phoneController.text.trim(),
+      dialCode: _selectedCountryCode,
+      method: _verificationMethod,
+    );
+    result.fold((failure) => _setError(failure.message), (success) {
+      if (success) {
+        _setStatus(AuthStatus.otpRequired);
+      }
+    });
   }
 
   void _handleOtpSuccess([UserEntity? user]) async {
@@ -396,20 +443,20 @@ class AuthProvider extends ChangeNotifier {
   bool get shouldShowSuccess =>
       _successMessage != null && _status == AuthStatus.authenticated;
 
-  Future<void> resendOtp() async {
-    _setLoading();
-    final result = await _repository.resendOtp(
-      email: emailController.text.trim(),
-      phone: phoneController.text.trim(),
-      dialCode: _selectedCountryCode,
-      method: _verificationMethod,
-    );
-    result.fold((failure) => _setError(failure.message), (success) {
-      if (success) {
-        _setStatus(AuthStatus.otpRequired);
-      }
-    });
-  }
+  // Future<void> resendOtp() async {
+  //   _setLoading();
+  //   final result = await _repository.resendOtp(
+  //     email: emailController.text.trim(),
+  //     phone: phoneController.text.trim(),
+  //     dialCode: _selectedCountryCode,
+  //     method: _verificationMethod,
+  //   );
+  //   result.fold((failure) => _setError(failure.message), (success) {
+  //     if (success) {
+  //       _setStatus(AuthStatus.otpRequired);
+  //     }
+  //   });
+  // }
 
   Future<void> forgotPassword(String email) async {
     _setLoading();

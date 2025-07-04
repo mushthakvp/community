@@ -6,6 +6,7 @@ import '../../../../../../core/utils/validators.dart';
 import '../../../../../../core/widgets/common/text_widget.dart';
 import '../../../../../../core/widgets/inputs/text_field.dart';
 import '../../../providers/auth_provider.dart';
+import '../../phone_number_field.dart';
 import '../../profile_image_picker.dart';
 
 class BasicInfoPage extends StatelessWidget {
@@ -60,16 +61,7 @@ class BasicInfoPage extends StatelessWidget {
                 validator: Validators.email,
               ),
               const SizedBox(height: 20),
-              CommonTextField(
-                controller: authProvider.phoneController,
-                hintText: 'Phone Number *',
-                keyboardType: TextInputType.phone,
-                prefixIcon: const Icon(
-                  Icons.phone_outlined,
-                  color: AppConstants.white,
-                ),
-                validator: Validators.phone,
-              ),
+              PhoneNumberField(validator: Validators.phone),
             ],
           );
         },

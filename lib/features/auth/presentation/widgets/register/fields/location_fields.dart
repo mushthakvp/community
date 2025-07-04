@@ -19,6 +19,49 @@ class _LocationFieldsState extends State<LocationFields> {
   List<Map<String, dynamic>> _districts = [];
 
   @override
+  void initState() {
+    super.initState();
+    // Auto-select country based on phone country code when widget initializes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _autoSelectCountryFromPhoneCode();
+    });
+  }
+
+  void _autoSelectCountryFromPhoneCode() {
+    final authProvider = context.read<AuthProvider>();
+    final dataProvider = RegisterDataProvider.of(context);
+
+    if (dataProvider == null) return;
+
+    // If country is already selected, don't override
+    if (authProvider.selectedCountry.isNotEmpty) return;
+
+    // Map country codes to country names in the data
+    final countryCodeToName = {'IN': 'India', 'AE': 'United Arab Emirates'};
+
+    final phoneCountryCode = authProvider.selectedCountryCode;
+    final countryName = countryCodeToName[phoneCountryCode];
+
+    if (countryName != null) {
+      // Find the country in the data and auto-select it
+      final countries = dataProvider.countries;
+      final matchingCountry = countries.firstWhere(
+        (country) => country['country'] == countryName,
+        orElse: () => <String, dynamic>{},
+      );
+
+      if (matchingCountry.isNotEmpty) {
+        authProvider.setLocation(
+          country: countryName,
+          countryCode:
+              matchingCountry['countryCode'] as String? ?? phoneCountryCode,
+        );
+        _loadStatesForCountry(matchingCountry);
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Consumer<AuthProvider>(
       builder: (context, authProvider, child) {
@@ -87,10 +130,12 @@ class _LocationFieldsState extends State<LocationFields> {
   void _showCountryPicker(AuthProvider authProvider) {
     final dataProvider = RegisterDataProvider.of(context);
     if (dataProvider == null) return;
-
-    final countries = dataProvider.countries;
+    final allowedCountries = <String>{'India', 'United Arab Emirates'};
+    final countries = dataProvider.countries.where((country) {
+      final countryName = country['country'] as String;
+      return allowedCountries.contains(countryName);
+    }).toList();
     final searchController = TextEditingController();
-
     _showLocationPicker(
       context: context,
       title: 'Select Country',
@@ -112,9 +157,7 @@ class _LocationFieldsState extends State<LocationFields> {
 
   void _showStatePicker(AuthProvider authProvider) {
     if (_states.isEmpty) return;
-
     final searchController = TextEditingController();
-
     _showLocationPicker(
       context: context,
       title: 'Select State',
@@ -134,9 +177,7 @@ class _LocationFieldsState extends State<LocationFields> {
 
   void _showDistrictPicker(AuthProvider authProvider) {
     if (_districts.isEmpty) return;
-
     final searchController = TextEditingController();
-
     _showLocationPicker(
       context: context,
       title: 'Select District',
@@ -179,7 +220,6 @@ class _LocationFieldsState extends State<LocationFields> {
                   ),
                 )
                 .toList();
-
             return Container(
               height: MediaQuery.of(context).size.height * 0.7,
               padding: const EdgeInsets.all(20),
@@ -194,16 +234,18 @@ class _LocationFieldsState extends State<LocationFields> {
                     color: AppConstants.white,
                   ),
                   const SizedBox(height: 20),
-                  CommonTextField(
-                    controller: searchController,
-                    hintText: searchHint,
-                    prefixIcon: const Icon(
-                      Icons.search,
-                      color: AppConstants.white,
+                  if (items.length > 5) ...[
+                    CommonTextField(
+                      controller: searchController,
+                      hintText: searchHint,
+                      prefixIcon: const Icon(
+                        Icons.search,
+                        color: AppConstants.white,
+                      ),
+                      onChanged: (value) => setState(() {}),
                     ),
-                    onChanged: (value) => setState(() {}),
-                  ),
-                  const SizedBox(height: 20),
+                    const SizedBox(height: 20),
+                  ],
                   Expanded(
                     child: ListView.builder(
                       itemCount: filteredItems.length,
