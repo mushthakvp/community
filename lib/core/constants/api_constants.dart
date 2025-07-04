@@ -108,10 +108,10 @@ class ApiConstants {
 
   // Spin Wheel
 
-  static const String getSpinAndEarnData = '/user/getSpinOptions?type=';
-  static const String userDialySpin = '/user/userSpin';
-  static const String getSpinAndEarnHistory = '/user/getUserSpinHistory';
-  static const String userDetailsEndPoint = '/user/getHome';
+  static const String getSpinAndEarnData = 'user/getSpinOptions?type=';
+  static const String userDialySpin = 'user/userSpin';
+  static const String getSpinAndEarnHistory = 'user/getUserSpinHistory';
+  static const String userDetailsEndPoint = 'user/getHome';
 
   // ========== DYNAMIC ENDPOINT BUILDERS ==========
 

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/error/exceptions.dart';
@@ -38,7 +39,7 @@ class SpinRemoteDataSourceImpl implements SpinRemoteDataSource {
       final response = await apiClient.get(
         '${ApiConstants.getSpinAndEarnData}$spinType',
       );
-
+      log("spin data ${response.body}");
       final responseData = json.decode(response.body);
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
