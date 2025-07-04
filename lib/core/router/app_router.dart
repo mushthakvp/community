@@ -641,7 +641,11 @@ class AppRouter {
         builder: (context, state) => const VizzleProfilePage(),
       ),
 
-      // ========== VIZZLE ADS EDIT ROUTES ==========
+      // ========== SPIN ROUTES ==========
+      GoRoute(
+        path: RouteConstants.spinHistory,
+        builder: (context, state) => const SpinHistoryPage(),
+      ),
     ],
   );
 }
