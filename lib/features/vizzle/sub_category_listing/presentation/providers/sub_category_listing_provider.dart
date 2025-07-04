@@ -23,10 +23,13 @@ class SubCategoryListingProvider extends ChangeNotifier {
   SubCategoryListingStatus _status = SubCategoryListingStatus.initial;
   List<SubCategoryEntity> _subCategories = [];
   String _categoryId = '';
+  String _currentCategoryName = ''; // Track current category
   String? _errorMessage;
 
-  // Cache
-  DateTime? _lastLoadTime;
+  // Cache with category-specific keys
+  final Map<String, List<SubCategoryEntity>> _categoryCache = {};
+  final Map<String, String> _categoryIdCache = {};
+  final Map<String, DateTime> _cacheTimestamps = {};
   static const Duration _cacheValidDuration = Duration(minutes: 5);
 
   // Getters
@@ -44,23 +47,58 @@ class SubCategoryListingProvider extends ChangeNotifier {
     required String categoryName,
     bool forceRefresh = false,
   }) async {
-    if (_status == SubCategoryListingStatus.loading) return;
-
-    if (forceRefresh || !_shouldUseCachedData()) {
-      _setLoading();
-      await _fetchSubCategories(categoryName);
-    } else if (_subCategories.isNotEmpty) {
-      _setLoaded();
+    // If we're already loading the same category, don't start another request
+    if (_status == SubCategoryListingStatus.loading &&
+        _currentCategoryName == categoryName) {
+      return;
     }
+
+    // If this is a different category, always force refresh
+    if (_currentCategoryName != categoryName) {
+      forceRefresh = true;
+      _currentCategoryName = categoryName;
+    }
+
+    // Check if we have valid cached data for this category
+    if (!forceRefresh && _shouldUseCachedData(categoryName)) {
+      _loadFromCache(categoryName);
+      return;
+    }
+
+    // Load fresh data
+    _setLoading();
+    await _fetchSubCategories(categoryName);
   }
 
   Future<void> refreshData(String categoryName) async {
+    _currentCategoryName = categoryName;
     await loadSubCategories(categoryName: categoryName, forceRefresh: true);
   }
 
+  // Clear cache when needed (e.g., on app restart or manual cache clear)
+  void clearCache() {
+    _categoryCache.clear();
+    _categoryIdCache.clear();
+    _cacheTimestamps.clear();
+  }
+
   // Private methods
+  void _loadFromCache(String categoryName) {
+    final cachedData = _categoryCache[categoryName];
+    final cachedCategoryId = _categoryIdCache[categoryName];
+
+    if (cachedData != null && cachedCategoryId != null) {
+      _subCategories = cachedData;
+      _categoryId = cachedCategoryId;
+      _setLoaded();
+      dev.log('Loaded subcategories from cache for: $categoryName');
+    }
+  }
+
   Future<void> _fetchSubCategories(String categoryName) async {
     try {
+      dev.log('Fetching subcategories for: $categoryName');
+
       // First get all categories to find the category ID
       final categoriesResult = await _getCategoriesUseCase();
 
@@ -68,17 +106,19 @@ class SubCategoryListingProvider extends ChangeNotifier {
         (failure) async => _setError(_getErrorMessage(failure)),
         (categories) async {
           final category = categories.firstWhere(
-            (cat) => cat.name == categoryName,
+            (cat) => cat.name.toLowerCase() == categoryName.toLowerCase(),
             orElse: () =>
                 const CategoryEntity(id: '', name: '', subcategories: []),
           );
 
           if (category.id.isEmpty) {
-            _setError('Category not found');
+            _setError('Category "$categoryName" not found');
             return;
           }
 
           _categoryId = category.id;
+
+          dev.log('Found category ID: ${category.id} for: $categoryName');
 
           // Now get subcategories for this category
           final subCategoriesResult = await _getSubCategoriesUseCase(
@@ -89,7 +129,15 @@ class SubCategoryListingProvider extends ChangeNotifier {
             (failure) => _setError(_getErrorMessage(failure)),
             (subCategories) {
               _subCategories = subCategories;
-              _lastLoadTime = DateTime.now();
+
+              // Cache the results
+              _categoryCache[categoryName] = subCategories;
+              _categoryIdCache[categoryName] = category.id;
+              _cacheTimestamps[categoryName] = DateTime.now();
+
+              dev.log(
+                'Loaded ${subCategories.length} subcategories for: $categoryName',
+              );
               _setLoaded();
             },
           );
@@ -120,13 +168,21 @@ class SubCategoryListingProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  bool _shouldUseCachedData() {
-    return _subCategories.isNotEmpty &&
-        _lastLoadTime != null &&
-        DateTime.now().difference(_lastLoadTime!) < _cacheValidDuration;
+  bool _shouldUseCachedData(String categoryName) {
+    final cacheTime = _cacheTimestamps[categoryName];
+    final cachedData = _categoryCache[categoryName];
+
+    return cachedData != null &&
+        cachedData.isNotEmpty &&
+        cacheTime != null &&
+        DateTime.now().difference(cacheTime) < _cacheValidDuration;
   }
 
   String _getErrorMessage(Failure failure) {
     return failure.userFriendlyMessage;
+  }
+
+  void navigateToSubCategory(String subCategoryName) {
+    dev.log('Navigating to subcategory: $subCategoryName');
   }
 }

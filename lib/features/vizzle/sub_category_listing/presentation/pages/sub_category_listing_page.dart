@@ -22,11 +22,17 @@ class _SubCategoryListingPageState extends State<SubCategoryListingPage> {
   @override
   void initState() {
     super.initState();
+    // Always load data when the page initializes
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<SubCategoryListingProvider>().loadSubCategories(
-        categoryName: widget.categoryName,
-      );
+      _loadSubCategories();
     });
+  }
+
+  void _loadSubCategories() {
+    context.read<SubCategoryListingProvider>().loadSubCategories(
+      categoryName: widget.categoryName,
+      forceRefresh: true, // Always force refresh on page load
+    );
   }
 
   @override
@@ -36,14 +42,17 @@ class _SubCategoryListingPageState extends State<SubCategoryListingPage> {
       appBar: CommonAppBar(title: widget.categoryName, showBackButton: true),
       body: Consumer<SubCategoryListingProvider>(
         builder: (context, provider, child) {
-          if (provider.isLoading && !provider.hasData) {
-            return const Center(child: LoadingWidget());
+          // Show loading indicator
+          if (provider.isLoading) {
+            return _buildLoadingWidget();
           }
 
+          // Show error state
           if (provider.hasError && !provider.hasData) {
             return _buildErrorWidget(provider);
           }
 
+          // Show content with pull-to-refresh
           return RefreshIndicator(
             onRefresh: () => provider.refreshData(widget.categoryName),
             child: SubCategoryList(
@@ -59,6 +68,24 @@ class _SubCategoryListingPageState extends State<SubCategoryListingPage> {
     );
   }
 
+  Widget _buildLoadingWidget() {
+    return SizedBox(
+      width: double.infinity,
+      height: double.infinity,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const LoadingWidget(),
+          const SizedBox(height: 16),
+          Text(
+            'Loading ${widget.categoryName}...',
+            style: const TextStyle(color: AppConstants.white, fontSize: 14),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildErrorWidget(SubCategoryListingProvider provider) {
     return Center(
       child: Column(
@@ -70,15 +97,24 @@ class _SubCategoryListingPageState extends State<SubCategoryListingPage> {
             color: Colors.red.withOpacity(0.7),
           ),
           const SizedBox(height: 16),
-          Text(
-            provider.errorMessage ?? 'Something went wrong',
-            style: const TextStyle(color: AppConstants.white, fontSize: 16),
-            textAlign: TextAlign.center,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Text(
+              provider.errorMessage ?? 'Something went wrong',
+              style: const TextStyle(color: AppConstants.white, fontSize: 16),
+              textAlign: TextAlign.center,
+            ),
           ),
           const SizedBox(height: 24),
-          ElevatedButton(
+          ElevatedButton.icon(
             onPressed: () => provider.refreshData(widget.categoryName),
-            child: const Text('Retry'),
+            icon: const Icon(Icons.refresh),
+            label: const Text('Retry'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppConstants.appPrimaryColor,
+              foregroundColor: AppConstants.black,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
           ),
         ],
       ),
@@ -89,6 +125,7 @@ class _SubCategoryListingPageState extends State<SubCategoryListingPage> {
     final subCategoryName = subCategory.name ?? '';
     final subCategoryId = subCategory.id ?? '';
     final categoryId = context.read<SubCategoryListingProvider>().categoryId;
+
     if (widget.categoryName == 'Freshly Grown') {
       context.push(
         RouteConstants.vizzleAdsListing,
