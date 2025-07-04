@@ -31,18 +31,11 @@ class _LocationFieldsState extends State<LocationFields> {
   void _autoSelectCountryFromPhoneCode() {
     final authProvider = context.read<AuthProvider>();
     final dataProvider = RegisterDataProvider.of(context);
-
     if (dataProvider == null) return;
-
-    // If country is already selected, don't override
     if (authProvider.selectedCountry.isNotEmpty) return;
-
-    // Map country codes to country names in the data
     final countryCodeToName = {'IN': 'India', 'AE': 'United Arab Emirates'};
-
     final phoneCountryCode = authProvider.selectedCountryCode;
     final countryName = countryCodeToName[phoneCountryCode];
-
     if (countryName != null) {
       final countries = dataProvider.countries;
       final matchingCountry = countries.firstWhere(
