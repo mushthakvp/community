@@ -157,12 +157,10 @@ class AuthProvider extends ChangeNotifier {
   String _selectedDialCode = '+91';
   int _selectedCountryLength = 10;
 
-  // 2. Add these getters in the form getters section (around line 65):
   String get selectedCountryCode => _selectedCountryCode;
   String get selectedDialCode => _selectedDialCode;
   int get selectedCountryLength => _selectedCountryLength;
 
-  // 3. Add this method after the setLocation method (around line 150):
   void setCountryCode({
     required String countryCode,
     required String dialCode,
@@ -171,23 +169,23 @@ class AuthProvider extends ChangeNotifier {
   }) {
     _selectedCountryCode = countryCode;
     _selectedDialCode = dialCode;
-    setLocation(
-      country: countryName,
-      countryCode: countryCode,
-      onSuccess: (p0) {
-        debugPrint('Location set successfully');
-        notifyListeners();
-      },
-    );
+    _selectedCountryLength = length;
     if (countryName != null) {
       if (_selectedCountry.isEmpty || _selectedCountry != countryName) {
         _selectedCountry = countryName;
-        _selectedCountryLength = length;
         _selectedState = '';
         _selectedDistrict = '';
         _selectedStateCode = '';
       }
     }
+    setLocation(
+      country: countryName,
+      countryCode: countryCode,
+      onSuccess: (String name) {
+        debugPrint('Country set successfully from phone code: $name');
+      },
+    );
+
     notifyListeners();
   }
 

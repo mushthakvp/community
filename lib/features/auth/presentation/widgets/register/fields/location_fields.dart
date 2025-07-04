@@ -19,6 +19,7 @@ class LocationFields extends StatefulWidget {
 class _LocationFieldsState extends State<LocationFields> {
   List<Map<String, dynamic>> _states = [];
   List<Map<String, dynamic>> _districts = [];
+  String _lastProcessedCountry = '';
 
   @override
   void initState() {
@@ -28,31 +29,70 @@ class _LocationFieldsState extends State<LocationFields> {
     });
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Listen for country changes from phone code selection
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkForCountryChanges();
+    });
+  }
+
+  void _checkForCountryChanges() {
+    final authProvider = context.read<AuthProvider>();
+    final currentCountry = authProvider.selectedCountry;
+
+    // If country changed and it's different from last processed
+    if (currentCountry.isNotEmpty && currentCountry != _lastProcessedCountry) {
+      _lastProcessedCountry = currentCountry;
+      _loadStatesForSelectedCountry(currentCountry);
+    }
+  }
+
+  void _loadStatesForSelectedCountry(String countryName) {
+    final dataProvider = RegisterDataProvider.of(context);
+    if (dataProvider == null) return;
+
+    final countries = dataProvider.countries;
+    final matchingCountry = countries.firstWhere(
+      (country) => country['country'] == countryName,
+      orElse: () => <String, dynamic>{},
+    );
+
+    if (matchingCountry.isNotEmpty) {
+      _loadStatesForCountry(matchingCountry);
+    }
+  }
+
   void _autoSelectCountryFromPhoneCode() {
     final authProvider = context.read<AuthProvider>();
     final dataProvider = RegisterDataProvider.of(context);
     if (dataProvider == null) return;
-    if (authProvider.selectedCountry.isNotEmpty) return;
+    if (authProvider.selectedCountry.isNotEmpty) {
+      // Country already selected, just load states
+      _loadStatesForSelectedCountry(authProvider.selectedCountry);
+      return;
+    }
+
     final countryCodeToName = {'IN': 'India', 'AE': 'United Arab Emirates'};
     final phoneCountryCode = authProvider.selectedCountryCode;
     final countryName = countryCodeToName[phoneCountryCode];
+
     if (countryName != null) {
       final countries = dataProvider.countries;
       final matchingCountry = countries.firstWhere(
         (country) => country['country'] == countryName,
         orElse: () => <String, dynamic>{},
       );
+
       if (matchingCountry.isNotEmpty) {
         authProvider.setLocation(
           country: countryName,
           countryCode:
               matchingCountry['countryCode'] as String? ?? phoneCountryCode,
           onSuccess: (String name) {
-            log("Selected country: $name");
-            final matchingCountry = countries.firstWhere(
-              (country) => country['country'] == name,
-              orElse: () => <String, dynamic>{},
-            );
+            log("Auto-selected country: $name");
+            _lastProcessedCountry = name;
             _loadStatesForCountry(matchingCountry);
           },
         );
@@ -64,6 +104,11 @@ class _LocationFieldsState extends State<LocationFields> {
   Widget build(BuildContext context) {
     return Consumer<AuthProvider>(
       builder: (context, authProvider, child) {
+        // Check for country changes in the build method as well
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _checkForCountryChanges();
+        });
+
         return Column(
           children: [
             _buildCountryField(authProvider),
@@ -129,11 +174,13 @@ class _LocationFieldsState extends State<LocationFields> {
   void _showCountryPicker(AuthProvider authProvider) {
     final dataProvider = RegisterDataProvider.of(context);
     if (dataProvider == null) return;
+
     final allowedCountries = <String>{'India', 'United Arab Emirates'};
     final countries = dataProvider.countries.where((country) {
       final countryName = country['country'] as String;
       return allowedCountries.contains(countryName);
     }).toList();
+
     final searchController = TextEditingController();
     _showLocationPicker(
       context: context,
@@ -148,6 +195,7 @@ class _LocationFieldsState extends State<LocationFields> {
           country: countryName,
           countryCode: country['countryCode'] as String,
         );
+        _lastProcessedCountry = countryName;
         _loadStatesForCountry(country);
       },
       selectedValue: authProvider.selectedCountry,
@@ -156,6 +204,7 @@ class _LocationFieldsState extends State<LocationFields> {
 
   void _showStatePicker(AuthProvider authProvider) {
     if (_states.isEmpty) return;
+
     final searchController = TextEditingController();
     _showLocationPicker(
       context: context,
@@ -176,6 +225,7 @@ class _LocationFieldsState extends State<LocationFields> {
 
   void _showDistrictPicker(AuthProvider authProvider) {
     if (_districts.isEmpty) return;
+
     final searchController = TextEditingController();
     _showLocationPicker(
       context: context,
@@ -219,6 +269,7 @@ class _LocationFieldsState extends State<LocationFields> {
                   ),
                 )
                 .toList();
+
             return Container(
               height: MediaQuery.of(context).size.height * 0.7,
               padding: const EdgeInsets.all(20),
@@ -292,17 +343,23 @@ class _LocationFieldsState extends State<LocationFields> {
   }
 
   void _loadStatesForCountry(Map<String, dynamic> country) {
-    setState(() {
-      _states = (country['states'] as List<dynamic>)
-          .cast<Map<String, dynamic>>();
-      _districts.clear();
-    });
+    if (mounted) {
+      setState(() {
+        _states = (country['states'] as List<dynamic>)
+            .cast<Map<String, dynamic>>();
+        _districts.clear();
+      });
+      log("Loaded ${_states.length} states for ${country['country']}");
+    }
   }
 
   void _loadDistrictsForState(Map<String, dynamic> state) {
-    setState(() {
-      _districts = (state['district'] as List<dynamic>)
-          .cast<Map<String, dynamic>>();
-    });
+    if (mounted) {
+      setState(() {
+        _districts = (state['district'] as List<dynamic>)
+            .cast<Map<String, dynamic>>();
+      });
+      log("Loaded ${_districts.length} districts for ${state['state']}");
+    }
   }
 }
