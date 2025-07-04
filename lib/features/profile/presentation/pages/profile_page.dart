@@ -149,48 +149,6 @@ class _ProfilePageState extends State<ProfilePage> {
                   ],
                 ),
 
-                // Debug info to show what data we have
-                if (homeProvider.userDetails != null) ...[
-                  const SizedBox(height: 20),
-                  Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 16),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.blue.withOpacity(0.3)),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const CommonTextWidget(
-                          text: 'Debug Info:',
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.blue,
-                        ),
-                        const SizedBox(height: 4),
-                        CommonTextWidget(
-                          text: 'Name: ${homeProvider.userDetails!.name}',
-                          fontSize: 11,
-                          color: Colors.blue,
-                        ),
-                        CommonTextWidget(
-                          text:
-                              'Loyalty Points: ${homeProvider.userDetails!.loyaltyPoints}',
-                          fontSize: 11,
-                          color: Colors.blue,
-                        ),
-                        CommonTextWidget(
-                          text: 'Email: ${homeProvider.userDetails!.email}',
-                          fontSize: 11,
-                          color: Colors.blue,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-
                 const SizedBox(height: 100),
               ],
             ),

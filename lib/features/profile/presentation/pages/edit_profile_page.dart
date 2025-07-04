@@ -379,23 +379,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Widget _buildFormFields(HomeProvider homeProvider) {
     return Column(
       children: [
-        // Debug info
-        if (homeProvider.userDetails != null)
-          Container(
-            padding: const EdgeInsets.all(8),
-            margin: const EdgeInsets.only(bottom: 16),
-            decoration: BoxDecoration(
-              color: Colors.green.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: CommonTextWidget(
-              text: 'Profile loaded: ${homeProvider.userDetails!.name}',
-              fontSize: 12,
-              color: Colors.green,
-            ),
-          ),
-
-        // Editable Name Field
         CommonTextField(
           controller: _nameController,
           labelText: 'Full Name',
