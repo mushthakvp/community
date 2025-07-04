@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../../core/constants/app_constants.dart';
+import '../../../../../core/constants/route_constants.dart';
 import '../../../../../core/widgets/common/app_bar.dart';
 import '../../../../../core/widgets/common/text_widget.dart';
 import '../../../../../core/widgets/loading/loading_widget.dart';
@@ -149,7 +151,7 @@ class _SavedAdsPageState extends State<SavedAdsPage> {
               ad: ad,
               isToggling: provider.isAdToggling(ad.id),
               onToggleFavorite: () => _handleToggleFavorite(provider, ad.id),
-              onTap: () => _handleAdTap(ad.id),
+              onTap: () => _handleAdTap(ad.id, ad.shareLink ?? ""),
             ),
           );
         }, childCount: provider.savedAds.length),
@@ -180,9 +182,9 @@ class _SavedAdsPageState extends State<SavedAdsPage> {
     }
   }
 
-  void _handleAdTap(String adId) {
-    // Navigate to ad details
-    // context.push('/vizzle/ad/$adId');
-    debugPrint('Navigate to ad: $adId');
+  void _handleAdTap(String adId, String shareLink) {
+    context.push(
+      '${RouteConstants.productDetail}?shareUrl=${Uri.encodeComponent(shareLink)}&isPersonal=false',
+    );
   }
 }
