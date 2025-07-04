@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/constants/app_constants.dart';
@@ -294,7 +293,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           labelText: 'Email',
           keyboardType: TextInputType.emailAddress,
           validator: Validators.email,
-          enabled: false, // Email usually shouldn't be editable
+          enabled: false,
         ),
         const SizedBox(height: 16),
         CommonTextField(
@@ -302,7 +301,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           labelText: 'Phone Number',
           keyboardType: TextInputType.phone,
           validator: Validators.phone,
-          enabled: false, // Phone usually shouldn't be editable in edit profile
+          enabled: false,
         ),
       ],
     );
@@ -316,79 +315,29 @@ class _EditProfilePageState extends State<EditProfilePage> {
           provider.isUploadingImage,
       onPressed: _saveProfile,
       height: 56,
+      width: double.infinity,
     );
   }
 
   Future<void> _pickImage() async {
     try {
-      // Check permission first
-      PermissionStatus permission = await Permission.photos.request();
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 80,
+        maxWidth: 1024,
+        maxHeight: 1024,
+      );
 
-      if (permission.isGranted) {
-        final picker = ImagePicker();
-        final pickedFile = await picker.pickImage(
-          source: ImageSource.gallery,
-          imageQuality: 80,
-          maxWidth: 1024,
-          maxHeight: 1024,
+      if (pickedFile != null) {
+        context.read<ProfileProvider>().selectProfileImage(
+          File(pickedFile.path),
         );
-
-        if (pickedFile != null) {
-          context.read<ProfileProvider>().selectProfileImage(
-            File(pickedFile.path),
-          );
-          context.showSuccessSnackBar('Profile picture selected successfully!');
-        }
-      } else if (permission.isDenied || permission.isPermanentlyDenied) {
-        _showPermissionDialog();
+        context.showSuccessSnackBar('Profile picture selected successfully!');
       }
     } catch (e) {
       context.showErrorSnackBar('Failed to pick image: $e');
     }
-  }
-
-  void _showPermissionDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppConstants.black,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const CommonTextWidget(
-          text: 'Photo Library Permission Required',
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-          color: AppConstants.white,
-        ),
-        content: CommonTextWidget(
-          text:
-              'Please grant photo library permission to select profile picture from your gallery.',
-          fontSize: 14,
-          color: AppConstants.white.withOpacity(0.8),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: CommonTextWidget(
-              text: 'Cancel',
-              fontSize: 14,
-              color: AppConstants.white.withOpacity(0.6),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              openAppSettings();
-            },
-            child: const CommonTextWidget(
-              text: 'Open Settings',
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppConstants.appPrimaryColor,
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   void _saveProfile() {

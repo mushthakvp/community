@@ -168,7 +168,6 @@ class ProfileProvider extends ChangeNotifier {
     _updateProfileError = null;
     notifyListeners();
 
-    // Upload profile image first if selected
     if (_selectedProfileImage != null && _uploadedImageUrl == null) {
       await uploadProfileImage();
       if (_uploadedImageUrl == null) {
