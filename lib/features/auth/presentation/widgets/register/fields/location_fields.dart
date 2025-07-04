@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -47,14 +49,20 @@ class _LocationFieldsState extends State<LocationFields> {
         (country) => country['country'] == countryName,
         orElse: () => <String, dynamic>{},
       );
-
       if (matchingCountry.isNotEmpty) {
         authProvider.setLocation(
           country: countryName,
           countryCode:
               matchingCountry['countryCode'] as String? ?? phoneCountryCode,
+          onSuccess: (String name) {
+            log("Selected country: $name");
+            final matchingCountry = countries.firstWhere(
+              (country) => country['country'] == name,
+              orElse: () => <String, dynamic>{},
+            );
+            _loadStatesForCountry(matchingCountry);
+          },
         );
-        _loadStatesForCountry(matchingCountry);
       }
     }
   }

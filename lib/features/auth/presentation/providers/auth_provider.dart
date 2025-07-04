@@ -171,7 +171,14 @@ class AuthProvider extends ChangeNotifier {
   }) {
     _selectedCountryCode = countryCode;
     _selectedDialCode = dialCode;
-    setLocation(country: countryName, countryCode: countryCode);
+    setLocation(
+      country: countryName,
+      countryCode: countryCode,
+      onSuccess: (p0) {
+        debugPrint('Location set successfully');
+        notifyListeners();
+      },
+    );
     if (countryName != null) {
       if (_selectedCountry.isEmpty || _selectedCountry != countryName) {
         _selectedCountry = countryName;
@@ -190,10 +197,12 @@ class AuthProvider extends ChangeNotifier {
     String? district,
     String? stateCode,
     String? countryCode,
+    Function(String)? onSuccess,
   }) {
     if (country != null) {
       _selectedCountry = country;
       _selectedCountryCode = countryCode ?? '';
+      onSuccess?.call(country);
       if (_selectedCountry != country) {
         _selectedState = '';
         _selectedDistrict = '';
