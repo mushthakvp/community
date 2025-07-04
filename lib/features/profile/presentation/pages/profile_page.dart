@@ -8,7 +8,7 @@ import '../../../../core/services/storage_service.dart';
 import '../../../../core/widgets/common/app_bar.dart';
 import '../../../../core/widgets/common/text_widget.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
-import '../providers/profile_provider.dart';
+import '../../../home/presentation/providers/home_provider.dart';
 import '../widgets/ios_settings_item.dart';
 import '../widgets/ios_settings_section.dart';
 
@@ -23,9 +23,8 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ProfileProvider>().getProfile();
-    });
+    // No need to fetch profile data separately since we use home data
+    // The home data should already be loaded when this page is accessed
   }
 
   @override
@@ -37,8 +36,8 @@ class _ProfilePageState extends State<ProfilePage> {
         showBackButton: false,
         centerTitle: false,
       ),
-      body: Consumer<ProfileProvider>(
-        builder: (context, provider, child) {
+      body: Consumer<HomeProvider>(
+        builder: (context, homeProvider, child) {
           return SingleChildScrollView(
             child: Column(
               children: [
@@ -72,7 +71,9 @@ class _ProfilePageState extends State<ProfilePage> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: CommonTextWidget(
-                          text: '${provider.profile?.loyaltyPoints ?? 0}',
+                          // Use home provider data instead of profile provider
+                          text:
+                              '${homeProvider.userDetails?.loyaltyPoints ?? 0}',
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                           color: AppConstants.appPrimaryColor,
@@ -147,6 +148,48 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   ],
                 ),
+
+                // Debug info to show what data we have
+                if (homeProvider.userDetails != null) ...[
+                  const SizedBox(height: 20),
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const CommonTextWidget(
+                          text: 'Debug Info:',
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.blue,
+                        ),
+                        const SizedBox(height: 4),
+                        CommonTextWidget(
+                          text: 'Name: ${homeProvider.userDetails!.name}',
+                          fontSize: 11,
+                          color: Colors.blue,
+                        ),
+                        CommonTextWidget(
+                          text:
+                              'Loyalty Points: ${homeProvider.userDetails!.loyaltyPoints}',
+                          fontSize: 11,
+                          color: Colors.blue,
+                        ),
+                        CommonTextWidget(
+                          text: 'Email: ${homeProvider.userDetails!.email}',
+                          fontSize: 11,
+                          color: Colors.blue,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
 
                 const SizedBox(height: 100),
               ],
