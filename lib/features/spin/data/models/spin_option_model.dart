@@ -47,7 +47,7 @@ class SpinOptionModel extends SpinOptionEntity {
       'discountPercentage': discountPercentage,
       'isWinningOption': isWinningOption,
       'backgroundColor': backgroundColor.value,
-      'icon': icon.codePoint,
+      'icon': _iconToString(icon),
       'probability': probability,
     };
   }
@@ -107,6 +107,8 @@ class SpinOptionModel extends SpinOptionEntity {
     return Colors.grey;
   }
 
+  static const IconData _defaultIcon = Icons.casino;
+
   static IconData _parseIcon(dynamic iconValue) {
     if (iconValue is String) {
       switch (iconValue.toLowerCase()) {
@@ -125,12 +127,23 @@ class SpinOptionModel extends SpinOptionEntity {
         case 'better_luck':
           return Icons.sentiment_neutral;
         default:
-          return Icons.casino;
+          return _defaultIcon;
       }
-    } else if (iconValue is int) {
-      return IconData(iconValue, fontFamily: 'MaterialIcons');
     }
-    return Icons.casino;
+    // For any non-string values, return default icon
+    return _defaultIcon;
+  }
+
+  static String _iconToString(IconData icon) {
+    // Map common icons back to strings for serialization
+    if (icon == Icons.star) return 'star';
+    if (icon == Icons.card_giftcard) return 'gift';
+    if (icon == Icons.local_offer) return 'coupon';
+    if (icon == Icons.stars) return 'points';
+    if (icon == Icons.refresh) return 'spin';
+    if (icon == Icons.percent) return 'discount';
+    if (icon == Icons.sentiment_neutral) return 'better_luck';
+    return 'casino'; // default
   }
 
   SpinOptionEntity toEntity() {
