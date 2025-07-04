@@ -62,16 +62,9 @@ class CommonTextField extends StatefulWidget {
 }
 
 class _CommonTextFieldState extends State<CommonTextField> {
-  bool _isFocused = false;
-
   @override
   Widget build(BuildContext context) {
     return Focus(
-      onFocusChange: (hasFocus) {
-        setState(() {
-          _isFocused = hasFocus;
-        });
-      },
       child: TextFormField(
         onTapOutside: (event) => FocusManager.instance.primaryFocus?.unfocus(),
         controller: widget.controller,
@@ -106,9 +99,7 @@ class _CommonTextFieldState extends State<CommonTextField> {
             fontSize: 16,
           ),
           labelStyle: TextStyle(
-            color: _isFocused
-                ? AppConstants.appPrimaryColor
-                : AppConstants.white.withOpacity(0.6),
+            color: AppConstants.white.withOpacity(0.6),
             fontSize: 16,
           ),
           border: OutlineInputBorder(
@@ -133,8 +124,8 @@ class _CommonTextFieldState extends State<CommonTextField> {
             borderRadius: BorderRadius.circular(
               widget.borderRadius ?? AppConstants.defaultBorderRadius,
             ),
-            borderSide: const BorderSide(
-              color: AppConstants.appPrimaryColor,
+            borderSide: BorderSide(
+              color: AppConstants.white.withOpacity(0.3),
               width: 2,
             ),
           ),
