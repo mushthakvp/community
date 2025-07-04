@@ -10,8 +10,6 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.8
-  firebase_auth: ^5.6.0
-  firebase_messaging: ^15.2.7
   go_router: 
   google_sign_in: ^6.3.0
   image_picker: ^1.1.2

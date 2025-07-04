@@ -135,45 +135,6 @@ class _TermsCheckboxState extends State<TermsCheckbox>
                                   ),
                                 ),
                               ),
-
-                              TextSpan(
-                                text: ' and ',
-                                style: TextStyle(
-                                  color: AppConstants.white.withOpacity(0.8),
-                                  fontSize: 14,
-                                ),
-                              ),
-
-                              // Privacy Policy Link
-                              WidgetSpan(
-                                child: GestureDetector(
-                                  onTap: widget.onPrivacyPressed,
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 2,
-                                      vertical: 1,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      border: Border(
-                                        bottom: BorderSide(
-                                          color: AppConstants.appPrimaryColor
-                                              .withOpacity(0.7),
-                                          width: 1,
-                                        ),
-                                      ),
-                                    ),
-                                    child: Text(
-                                      'Privacy Policy',
-                                      style: TextStyle(
-                                        color: AppConstants.appPrimaryColor,
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-
                               TextSpan(
                                 text: ' *',
                                 style: TextStyle(

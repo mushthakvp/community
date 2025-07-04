@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../../../core/constants/app_constants.dart';
+import '../../../../../../core/constants/route_constants.dart';
 import '../../../../../../core/utils/validators.dart';
 import '../../../../../../core/widgets/common/text_widget.dart';
 import '../../../../../../core/widgets/inputs/text_field.dart';
@@ -65,7 +67,8 @@ class AccountSetupPage extends StatelessWidget {
               ),
               const SizedBox(height: 32),
               TermsCheckbox(
-                onTermsPressed: () => _openUrl('https://vivera.com/terms'),
+                onTermsPressed: () =>
+                    context.push(RouteConstants.termsConditions),
                 onPrivacyPressed: () => _openUrl('https://vivera.com/privacy'),
               ),
             ],
