@@ -21,7 +21,6 @@ class _LocationFieldsState extends State<LocationFields> {
   @override
   void initState() {
     super.initState();
-    // Auto-select country based on phone country code when widget initializes
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _autoSelectCountryFromPhoneCode();
     });
@@ -43,7 +42,6 @@ class _LocationFieldsState extends State<LocationFields> {
     final countryName = countryCodeToName[phoneCountryCode];
 
     if (countryName != null) {
-      // Find the country in the data and auto-select it
       final countries = dataProvider.countries;
       final matchingCountry = countries.firstWhere(
         (country) => country['country'] == countryName,

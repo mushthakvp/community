@@ -29,16 +29,19 @@ class PhoneNumberField extends StatelessWidget {
               CountryCodeSelector(
                 selectedCountryCode: authProvider.selectedCountryCode,
                 selectedDialCode: authProvider.selectedDialCode,
-                onCountrySelected: (countryCode, dialCode, countryName) {
-                  authProvider.setCountryCode(
-                    countryCode: countryCode,
-                    dialCode: dialCode,
-                    countryName: countryName,
-                  );
-                },
+                onCountrySelected:
+                    (countryCode, dialCode, countryName, length) {
+                      authProvider.setCountryCode(
+                        countryCode: countryCode,
+                        dialCode: dialCode,
+                        countryName: countryName,
+                        length: length,
+                      );
+                    },
               ),
               Expanded(
                 child: CommonTextField(
+                  maxLength: authProvider.selectedCountryLength,
                   contentPadding: const EdgeInsets.symmetric(vertical: 16),
                   controller: authProvider.phoneController,
                   hintText: 'Phone Number *',

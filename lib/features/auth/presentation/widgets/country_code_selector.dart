@@ -6,7 +6,12 @@ import '../../../../core/widgets/common/text_widget.dart';
 class CountryCodeSelector extends StatelessWidget {
   final String selectedCountryCode;
   final String selectedDialCode;
-  final Function(String countryCode, String dialCode, String countryName)
+  final Function(
+    String countryCode,
+    String dialCode,
+    String countryName,
+    int length,
+  )
   onCountrySelected;
 
   const CountryCodeSelector({
@@ -16,13 +21,20 @@ class CountryCodeSelector extends StatelessWidget {
     required this.onCountrySelected,
   });
 
-  static const List<Map<String, String>> countries = [
-    {'name': 'India', 'code': 'IN', 'dialCode': '+91', 'flag': '🇮🇳'},
+  static const List<Map<String, dynamic>> countries = [
+    {
+      'name': 'India',
+      'code': 'IN',
+      'dialCode': '+91',
+      'flag': '🇮🇳',
+      'length': 10,
+    },
     {
       'name': 'United Arab Emirates',
       'code': 'AE',
       'dialCode': '+971',
       'flag': '🇦🇪',
+      'length': 9,
     },
   ];
 
@@ -103,7 +115,7 @@ class CountryCodeSelector extends StatelessWidget {
     );
   }
 
-  Widget _buildCountryItem(BuildContext context, Map<String, String> country) {
+  Widget _buildCountryItem(BuildContext context, Map<String, dynamic> country) {
     final isSelected = country['code'] == selectedCountryCode;
 
     return InkWell(
@@ -112,6 +124,7 @@ class CountryCodeSelector extends StatelessWidget {
           country['code']!,
           country['dialCode']!,
           country['name']!,
+          country['length']!,
         );
         Navigator.pop(context);
       },

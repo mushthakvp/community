@@ -155,32 +155,32 @@ class AuthProvider extends ChangeNotifier {
 
   String _selectedCountryCode = 'IN';
   String _selectedDialCode = '+91';
+  int _selectedCountryLength = 10;
 
   // 2. Add these getters in the form getters section (around line 65):
   String get selectedCountryCode => _selectedCountryCode;
   String get selectedDialCode => _selectedDialCode;
+  int get selectedCountryLength => _selectedCountryLength;
 
   // 3. Add this method after the setLocation method (around line 150):
   void setCountryCode({
     required String countryCode,
     required String dialCode,
     String? countryName,
+    required int length,
   }) {
     _selectedCountryCode = countryCode;
     _selectedDialCode = dialCode;
-
-    // Auto-set country in location if provided
+    setLocation(country: countryName, countryCode: countryCode);
     if (countryName != null) {
-      // Only set country if it's not already set or different
       if (_selectedCountry.isEmpty || _selectedCountry != countryName) {
         _selectedCountry = countryName;
-        // Clear state and district when country changes
+        _selectedCountryLength = length;
         _selectedState = '';
         _selectedDistrict = '';
         _selectedStateCode = '';
       }
     }
-
     notifyListeners();
   }
 

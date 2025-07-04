@@ -90,6 +90,7 @@ class _CommonTextFieldState extends State<CommonTextField> {
           prefixIcon: widget.prefixIcon,
           suffixIcon: widget.suffixIcon,
           filled: true,
+          counter: SizedBox.shrink(),
           fillColor: widget.backgroundColor ?? AppConstants.textFieldColor,
           contentPadding:
               widget.contentPadding ??
@@ -124,10 +125,7 @@ class _CommonTextFieldState extends State<CommonTextField> {
             borderRadius: BorderRadius.circular(
               widget.borderRadius ?? AppConstants.defaultBorderRadius,
             ),
-            borderSide: BorderSide(
-              color: AppConstants.white.withOpacity(0.3),
-              width: 2,
-            ),
+            borderSide: BorderSide(color: AppConstants.transparent, width: 2),
           ),
           errorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(
