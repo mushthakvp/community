@@ -1,72 +1,63 @@
 import 'package:equatable/equatable.dart';
 
-import 'spin_result_entity.dart';
+import 'spin_option_entity.dart';
 
 class SpinHistoryEntity extends Equatable {
   final String id;
-  final List<SpinResultEntity> results;
+  final String userId;
+  final SpinOptionEntity? spinOption;
+  final String spinType;
+  final String resultType;
+  final int? loyaltyPoint;
+  final String? couponCode;
   final DateTime date;
-  final int totalSpins;
-  final int winningSpins;
-  final int loyaltyPointsEarned;
-  final List<String> couponsEarned;
 
   const SpinHistoryEntity({
     required this.id,
-    required this.results,
+    required this.userId,
+    this.spinOption,
+    required this.spinType,
+    required this.resultType,
+    this.loyaltyPoint,
+    this.couponCode,
     required this.date,
-    required this.totalSpins,
-    required this.winningSpins,
-    required this.loyaltyPointsEarned,
-    required this.couponsEarned,
   });
 
   SpinHistoryEntity copyWith({
     String? id,
-    List<SpinResultEntity>? results,
+    String? userId,
+    SpinOptionEntity? spinOption,
+    String? spinType,
+    String? resultType,
+    int? loyaltyPoint,
+    String? couponCode,
     DateTime? date,
-    int? totalSpins,
-    int? winningSpins,
-    int? loyaltyPointsEarned,
-    List<String>? couponsEarned,
   }) {
     return SpinHistoryEntity(
       id: id ?? this.id,
-      results: results ?? this.results,
+      userId: userId ?? this.userId,
+      spinOption: spinOption ?? this.spinOption,
+      spinType: spinType ?? this.spinType,
+      resultType: resultType ?? this.resultType,
+      loyaltyPoint: loyaltyPoint ?? this.loyaltyPoint,
+      couponCode: couponCode ?? this.couponCode,
       date: date ?? this.date,
-      totalSpins: totalSpins ?? this.totalSpins,
-      winningSpins: winningSpins ?? this.winningSpins,
-      loyaltyPointsEarned: loyaltyPointsEarned ?? this.loyaltyPointsEarned,
-      couponsEarned: couponsEarned ?? this.couponsEarned,
     );
   }
 
-  // Helper methods
-  double get winningPercentage =>
-      totalSpins > 0 ? (winningSpins / totalSpins) * 100 : 0;
-
-  String get formattedDate {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final targetDate = DateTime(date.year, date.month, date.day);
-
-    if (targetDate == today) {
-      return 'Today';
-    } else if (targetDate == today.subtract(const Duration(days: 1))) {
-      return 'Yesterday';
-    } else {
-      return '${date.day}/${date.month}/${date.year}';
-    }
-  }
+  bool get hasReward => loyaltyPoint != null || couponCode != null;
+  bool get isWin => !resultType.toLowerCase().contains('better luck');
+  String get displayResult => spinOption?.title ?? 'Unknown';
 
   @override
   List<Object?> get props => [
     id,
-    results,
+    userId,
+    spinOption,
+    spinType,
+    resultType,
+    loyaltyPoint,
+    couponCode,
     date,
-    totalSpins,
-    winningSpins,
-    loyaltyPointsEarned,
-    couponsEarned,
   ];
 }

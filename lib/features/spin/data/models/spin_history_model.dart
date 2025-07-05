@@ -1,68 +1,139 @@
 import '../../domain/entities/spin_history_entity.dart';
-import 'spin_result_model.dart';
+import '../../domain/entities/spin_option_entity.dart';
 
-class SpinHistoryModel extends SpinHistoryEntity {
-  const SpinHistoryModel({
-    required super.id,
-    required super.results,
-    required super.date,
-    required super.totalSpins,
-    required super.winningSpins,
-    required super.loyaltyPointsEarned,
-    required super.couponsEarned,
+class SpinHistoryResponseModel {
+  final bool? success;
+  final List<SpinHistoryItemModel>? data;
+  final int? totalRecords;
+  final int? totalPages;
+
+  const SpinHistoryResponseModel({
+    this.success,
+    this.data,
+    this.totalRecords,
+    this.totalPages,
   });
 
-  factory SpinHistoryModel.fromJson(Map<String, dynamic> json) {
-    return SpinHistoryModel(
-      id: json['id'] ?? json['_id'] ?? '',
-      results:
-          (json['results'] as List<dynamic>?)
-              ?.map((result) => SpinResultModel.fromJson(result))
-              .toList() ??
-          [],
-      date: DateTime.parse(json['date'] ?? DateTime.now().toIso8601String()),
-      totalSpins: json['totalSpins'] ?? 0,
-      winningSpins: json['winningSpins'] ?? 0,
-      loyaltyPointsEarned: json['loyaltyPointsEarned'] ?? 0,
-      couponsEarned: List<String>.from(json['couponsEarned'] ?? []),
-    );
+  factory SpinHistoryResponseModel.fromJson(Map<String, dynamic> json) {
+    try {
+      return SpinHistoryResponseModel(
+        success: json["success"] as bool?,
+        data: json["data"] != null
+            ? List<SpinHistoryItemModel>.from(
+                (json["data"] as List).map(
+                  (x) => SpinHistoryItemModel.fromJson(x),
+                ),
+              )
+            : null,
+        totalRecords: json["totalRecords"] as int?,
+        totalPages: json["totalPages"] as int?,
+      );
+    } catch (e) {
+      return const SpinHistoryResponseModel();
+    }
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'results': results
-          .map((result) => SpinResultModel.fromEntity(result).toJson())
-          .toList(),
-      'date': date.toIso8601String(),
-      'totalSpins': totalSpins,
-      'winningSpins': winningSpins,
-      'loyaltyPointsEarned': loyaltyPointsEarned,
-      'couponsEarned': couponsEarned,
-    };
+  Map<String, dynamic> toJson() => {
+    "success": success,
+    "data": data?.map((x) => x.toJson()).toList(),
+    "totalRecords": totalRecords,
+    "totalPages": totalPages,
+  };
+}
+
+class SpinHistoryItemModel {
+  final String? id;
+  final String? userId;
+  final SpinOptionModel? spinOptionId;
+  final String? spinType;
+  final String? resultType;
+  final int? loyaltyPoint;
+  final String? couponCode;
+  final DateTime? date;
+  final int? v;
+
+  const SpinHistoryItemModel({
+    this.id,
+    this.userId,
+    this.spinOptionId,
+    this.spinType,
+    this.resultType,
+    this.loyaltyPoint,
+    this.couponCode,
+    this.date,
+    this.v,
+  });
+
+  factory SpinHistoryItemModel.fromJson(Map<String, dynamic> json) {
+    try {
+      return SpinHistoryItemModel(
+        id: json["_id"] as String?,
+        userId: json["userId"] as String?,
+        spinOptionId: json["spinOptionId"] != null
+            ? SpinOptionModel.fromJson(json["spinOptionId"])
+            : null,
+        spinType: json["spinType"] as String?,
+        resultType: json["resultType"] as String?,
+        loyaltyPoint: json["loyaltyPoint"] as int?,
+        couponCode: json["couponCode"] as String?,
+        date: json["date"] != null ? DateTime.tryParse(json["date"]) : null,
+        v: json["__v"] as int?,
+      );
+    } catch (e) {
+      return const SpinHistoryItemModel();
+    }
   }
 
+  Map<String, dynamic> toJson() => {
+    "_id": id,
+    "userId": userId,
+    "spinOptionId": spinOptionId?.toJson(),
+    "spinType": spinType,
+    "resultType": resultType,
+    "loyaltyPoint": loyaltyPoint,
+    "couponCode": couponCode,
+    "date": date?.toIso8601String(),
+    "__v": v,
+  };
+
+  // Convert to entity
   SpinHistoryEntity toEntity() {
     return SpinHistoryEntity(
-      id: id,
-      results: results,
-      date: date,
-      totalSpins: totalSpins,
-      winningSpins: winningSpins,
-      loyaltyPointsEarned: loyaltyPointsEarned,
-      couponsEarned: couponsEarned,
+      id: id ?? '',
+      userId: userId ?? '',
+      spinOption: spinOptionId?.toEntity(),
+      spinType: spinType ?? '',
+      resultType: resultType ?? '',
+      loyaltyPoint: loyaltyPoint,
+      couponCode: couponCode,
+      date: date ?? DateTime.now(),
     );
   }
+}
 
-  factory SpinHistoryModel.fromEntity(SpinHistoryEntity entity) {
-    return SpinHistoryModel(
-      id: entity.id,
-      results: entity.results,
-      date: entity.date,
-      totalSpins: entity.totalSpins,
-      winningSpins: entity.winningSpins,
-      loyaltyPointsEarned: entity.loyaltyPointsEarned,
-      couponsEarned: entity.couponsEarned,
-    );
+class SpinOptionModel {
+  final String? id;
+  final String? type;
+  final String? title;
+
+  const SpinOptionModel({this.id, this.type, this.title});
+
+  factory SpinOptionModel.fromJson(Map<String, dynamic> json) {
+    try {
+      return SpinOptionModel(
+        id: json["_id"] as String?,
+        type: json["type"] as String?,
+        title: json["title"] as String?,
+      );
+    } catch (e) {
+      return const SpinOptionModel();
+    }
+  }
+
+  Map<String, dynamic> toJson() => {"_id": id, "type": type, "title": title};
+
+  // Convert to entity
+  SpinOptionEntity toEntity() {
+    return SpinOptionEntity(id: id ?? '', type: type ?? '', title: title ?? '');
   }
 }

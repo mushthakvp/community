@@ -2,28 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/constants/app_constants.dart';
-import '../../../../core/widgets/common/app_bar.dart';
 import '../../../../core/widgets/common/text_widget.dart';
 import '../../../../core/widgets/loading/loading_widget.dart';
 import '../providers/spin_provider.dart';
 import '../widgets/spin_error_widget.dart';
-import '../widgets/spin_exhausted_widget.dart';
 import '../widgets/spin_result_dialog.dart';
 import '../widgets/spin_wheel_widget.dart';
 
-class DailySpinPage extends StatefulWidget {
-  const DailySpinPage({super.key});
+class SpinAndEarnPage extends StatefulWidget {
+  const SpinAndEarnPage({super.key});
 
   @override
-  State<DailySpinPage> createState() => _DailySpinPageState();
+  State<SpinAndEarnPage> createState() => _SpinAndEarnPageState();
 }
 
-class _DailySpinPageState extends State<DailySpinPage> {
+class _SpinAndEarnPageState extends State<SpinAndEarnPage> {
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<SpinProvider>().initializeSpin(SpinType.daily);
+      context.read<SpinProvider>().initializeSpin(SpinType.unlimited);
     });
   }
 
@@ -35,11 +33,7 @@ class _DailySpinPageState extends State<DailySpinPage> {
         child: SafeArea(
           child: Column(
             children: [
-              const CommonAppBar(
-                title: 'Daily Spin',
-                showBackButton: true,
-                backgroundColor: Colors.transparent,
-              ),
+              _buildAppBar(),
               Expanded(
                 child: Consumer<SpinProvider>(
                   builder: (context, provider, child) {
@@ -56,13 +50,6 @@ class _DailySpinPageState extends State<DailySpinPage> {
                       );
                     }
 
-                    if (!provider.canSpin) {
-                      return const SpinExhaustedWidget(
-                        title: 'Daily Spin Completed',
-                        message: 'Come back tomorrow for more rewards!',
-                      );
-                    }
-
                     return _buildSpinContent(provider);
                   },
                 ),
@@ -74,32 +61,90 @@ class _DailySpinPageState extends State<DailySpinPage> {
     );
   }
 
+  Widget _buildAppBar() {
+    return Consumer<SpinProvider>(
+      builder: (context, provider, child) {
+        return Container(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              IconButton(
+                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(Icons.arrow_back, color: AppConstants.white),
+              ),
+              const Expanded(
+                child: CommonTextWidget(
+                  text: 'Spin & Earn',
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: AppConstants.white,
+                  align: TextAlign.center,
+                ),
+              ),
+              // Points Display
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: AppConstants.black.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: AppConstants.appPrimaryColor.withOpacity(0.5),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.stars,
+                      color: AppConstants.appPrimaryColor,
+                      size: 16,
+                    ),
+                    const SizedBox(width: 4),
+                    CommonTextWidget(
+                      text: '${provider.userLoyaltyPoints}',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppConstants.white,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildSpinContent(SpinProvider provider) {
-    return Padding(
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          const SizedBox(height: 40),
-          // Title
+          // Header
           const CommonTextWidget(
-            text: 'Try Your Luck!',
-            fontSize: 28,
+            text: 'Try Your Luck and Win Big!',
+            fontSize: 24,
             fontWeight: FontWeight.w700,
             color: AppConstants.white,
             align: TextAlign.center,
           ),
           const SizedBox(height: 8),
           const CommonTextWidget(
-            text: 'Spin the wheel and win exciting rewards',
+            text: 'Earn more loyalty points and exciting rewards',
             fontSize: 16,
             fontWeight: FontWeight.w400,
             color: Colors.white70,
             align: TextAlign.center,
           ),
-          const SizedBox(height: 40),
+          const SizedBox(height: 32),
 
           // Spin Wheel
-          Expanded(
+          SizedBox(
+            height: 400,
             child: SpinWheelWidget(
               options: provider.spinOptions,
               selectedStream: provider.spinStream,
@@ -109,31 +154,53 @@ class _DailySpinPageState extends State<DailySpinPage> {
             ),
           ),
 
-          const SizedBox(height: 40),
+          const SizedBox(height: 32),
+
+          // Points Requirement
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppConstants.black.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppConstants.appPrimaryColor.withOpacity(0.3),
+              ),
+            ),
+            child: CommonTextWidget(
+              text:
+                  'You need at least ${provider.requiredPoints} loyalty points to spin',
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: AppConstants.white,
+              align: TextAlign.center,
+            ),
+          ),
+
+          const SizedBox(height: 24),
 
           // Spin Button
           _buildSpinButton(provider),
-          const SizedBox(height: 20),
         ],
       ),
     );
   }
 
   Widget _buildSpinButton(SpinProvider provider) {
+    final canSpin = provider.canSpin && !provider.isSpinning;
+
     return SizedBox(
       width: double.infinity,
       height: 56,
       child: ElevatedButton(
-        onPressed: provider.canSpin && !provider.isSpinning
-            ? provider.spinWheel
-            : null,
+        onPressed: canSpin ? provider.spinWheel : null,
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppConstants.appPrimaryColor,
-          disabledBackgroundColor: Colors.grey.shade800,
+          backgroundColor: canSpin
+              ? AppConstants.appPrimaryColor
+              : Colors.grey.shade800,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          elevation: 8,
+          elevation: canSpin ? 8 : 0,
         ),
         child: provider.isSpinning
             ? const Row(
@@ -156,11 +223,11 @@ class _DailySpinPageState extends State<DailySpinPage> {
                   ),
                 ],
               )
-            : const CommonTextWidget(
-                text: 'Spin Now',
+            : CommonTextWidget(
+                text: canSpin ? 'Play' : 'Not enough points to spin',
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
-                color: AppConstants.black,
+                color: canSpin ? AppConstants.black : Colors.white54,
               ),
       ),
     );
@@ -171,17 +238,22 @@ class _DailySpinPageState extends State<DailySpinPage> {
     SpinProvider provider,
     int index,
   ) {
-    // Show result dialog
     final option = provider.spinOptions[index];
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => SpinResultDialog(
         option: option,
+        isUnlimited: true,
         onContinue: () {
           Navigator.of(context).pop();
-          // Refresh data
           provider.loadSpinData(forceRefresh: true);
+        },
+        onSpinAgain: () {
+          Navigator.of(context).pop();
+          if (provider.canSpin) {
+            provider.spinWheel();
+          }
         },
       ),
     );
@@ -192,7 +264,7 @@ class _DailySpinPageState extends State<DailySpinPage> {
       gradient: LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [Color(0xFF1A1A2E), Color(0xFF16213E), Color(0xFF0F3460)],
+        colors: [Color(0xFF2E1A47), Color(0xFF3E2162), Color(0xFF4F287A)],
         stops: [0.0, 0.5, 1.0],
       ),
     );

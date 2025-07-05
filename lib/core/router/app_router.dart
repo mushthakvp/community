@@ -21,9 +21,8 @@ import '../../features/redemption/presentation/pages/redemption_page.dart';
 import '../../features/redemption/presentation/pages/wallet_recharge_page.dart';
 // Spin Feature Imports
 import '../../features/spin/presentation/pages/daily_spin_page.dart';
-import '../../features/spin/presentation/pages/spin_and_win_page.dart';
+import '../../features/spin/presentation/pages/spin_and_earn_page.dart';
 import '../../features/spin/presentation/pages/spin_history_page.dart';
-import '../../features/spin/presentation/pages/spin_main_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
 // Vizzle Feature Imports
 import '../../features/vizzle/ads_listing/presentation/pages/ads_listing_page.dart';
@@ -113,16 +112,12 @@ class AppRouter {
 
       // ==================== SPIN GAME ROUTES ====================
       GoRoute(
-        path: RouteConstants.spinMain,
-        builder: (context, state) => const SpinMainPage(),
-      ),
-      GoRoute(
         path: RouteConstants.dailySpin,
         builder: (context, state) => const DailySpinPage(),
       ),
       GoRoute(
         path: RouteConstants.spinAndWin,
-        builder: (context, state) => const SpinAndWinPage(),
+        builder: (context, state) => const SpinAndEarnPage(),
       ),
       GoRoute(
         path: RouteConstants.spinHistory,
