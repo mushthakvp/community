@@ -6,7 +6,7 @@ class AppConstants {
   static const Color green = Colors.green;
 
   // Colors - Modern UI Palette
-  static const Color primary = Color(0xFFFF6B35);
+  static const Color primary = Color(0xFFFFD700);
   static const Color primaryLight = Color(0xFFFF8A65);
   static const Color primaryDark = Color(0xFFE65100);
 
