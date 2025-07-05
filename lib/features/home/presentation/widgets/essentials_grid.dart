@@ -1,4 +1,3 @@
-// features/home/presentation/widgets/essentials_grid.dart
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -16,7 +15,7 @@ class EssentialsGrid extends StatelessWidget {
     final items = _getEssentialItems();
 
     return GridView.builder(
-      padding: EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       physics: const NeverScrollableScrollPhysics(),
       shrinkWrap: true,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -47,9 +46,10 @@ class EssentialsGrid extends StatelessWidget {
         image:
             "https://res.cloudinary.com/fouvtycloud/image/upload/v1751012822/Vivera-New/v-hub.gif",
         name: "V - Hub",
-        route: '/v-hub',
+        route: RouteConstants.vhubHome,
         description: "Business and startup support",
         isExternal: false,
+        isNavigationRoute: true, // This will use context.push
       ),
       EssentialItem(
         image:
@@ -209,6 +209,7 @@ class EssentialsGrid extends StatelessWidget {
     if (item.isExternal) {
       _launchExternalApp(context, item);
     } else if (item.isNavigationRoute) {
+      // Navigate to the route using GoRouter
       context.push(item.route);
     } else {
       _navigateToRoute(context, item.route);
@@ -221,10 +222,6 @@ class EssentialsGrid extends StatelessWidget {
       case '/v-cart':
         // Navigate to ecommerce section
         _showComingSoon(context, "V-Cart");
-        break;
-      case '/v-hub':
-        // Navigate to business hub
-        _showComingSoon(context, "V-Hub");
         break;
       case '/v-job':
         // Navigate to job portal

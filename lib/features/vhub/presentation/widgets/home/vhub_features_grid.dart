@@ -1,3 +1,4 @@
+import 'package:fittor/fittor.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../../core/constants/app_constants.dart';
@@ -50,11 +51,11 @@ class VHubFeaturesGrid extends StatelessWidget {
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
-              childAspectRatio: 1.1,
+              childAspectRatio: context.height * .12,
             ),
             itemCount: _features.length,
             itemBuilder: (context, index) {

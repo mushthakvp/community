@@ -1,3 +1,4 @@
+import 'package:fittor/fittor.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
@@ -18,10 +19,11 @@ Future<void> _initializeServices() async {
   CloudinaryService().initialize();
 }
 
-class CommunityApp extends StatelessWidget {
+class CommunityApp extends StatelessWidget with FittorAppMixin {
   const CommunityApp({super.key});
+
   @override
-  Widget build(BuildContext context) {
+  Widget responsive(BuildContext context) {
     return FutureBuilder<List<SingleChildWidget>>(
       future: AppProviders.getInitializedProviders(),
       builder: (context, snapshot) {

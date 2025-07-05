@@ -9,20 +9,20 @@ class IdeasFilterTabs extends StatelessWidget {
   const IdeasFilterTabs({super.key});
 
   final List<FilterTab> _tabs = const [
-    FilterTab(title: 'All', status: 'all', icon: Icons.apps),
+    FilterTab(title: 'All', status: 'All', icon: Icons.apps),
     FilterTab(
       title: 'Accepted',
-      status: 'accepted',
+      status: 'Accepted',
       icon: Icons.check_circle_outline,
     ),
     FilterTab(
       title: 'Requested',
-      status: 'requested',
+      status: 'Requested',
       icon: Icons.pending_outlined,
     ),
     FilterTab(
       title: 'Rejected',
-      status: 'rejected',
+      status: 'Rejected',
       icon: Icons.cancel_outlined,
     ),
   ];
