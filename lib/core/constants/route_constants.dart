@@ -17,6 +17,15 @@ class RouteConstants {
   static const String spinAndWin = '/spin-and-win';
   static const String spinHistory = '/spin-history';
 
+  // ==================== VHUB BUSINESS STARTUP ROUTES ====================
+  static const String vhubHome = '/vhub';
+  static const String vhubIdeas = '/vhub/ideas';
+  static const String vhubCreateIdea = '/vhub/create-idea';
+  static const String vhubIdeaDetails = '/vhub/idea-details';
+  static const String vhubFaq = '/vhub/faq';
+  static const String vhubMyProfile = '/vhub/my-profile';
+  static const String vhubEditIdea = '/vhub/edit-idea';
+
   // ==================== VIZZLE MARKETPLACE ROUTES ====================
   static const String vizzleHome = '/vizzle';
 
@@ -119,6 +128,15 @@ class RouteConstants {
     return '$editAd/$adId';
   }
 
+  /// VHub dynamic routes
+  static String vhubIdeaDetailsWithId(String ideaId) {
+    return '$vhubIdeaDetails/$ideaId';
+  }
+
+  static String vhubEditIdeaWithId(String ideaId) {
+    return '$vhubEditIdea/$ideaId';
+  }
+
   /// Check if route is protected (requires authentication)
   static bool isProtectedRoute(String route) {
     const protectedRoutes = [
@@ -135,6 +153,12 @@ class RouteConstants {
       vizzleHome,
       vizzleProfile,
       vizzleMyProfile,
+      vhubHome, // Added VHub routes
+      vhubIdeas,
+      vhubCreateIdea,
+      vhubIdeaDetails,
+      vhubFaq,
+      vhubMyProfile,
       selectCity,
       selectCategory,
       createAd,
@@ -162,6 +186,11 @@ class RouteConstants {
         route.startsWith('/edit-ad');
   }
 
+  /// Check if route is a VHub route
+  static bool isVHubRoute(String route) {
+    return route.startsWith('/vhub');
+  }
+
   /// Check if route is a Spin route
   static bool isSpinRoute(String route) {
     return route.startsWith('/spin') ||
@@ -176,6 +205,8 @@ class RouteConstants {
         route.startsWith('/place-add') ||
         route.startsWith('/edit-ad')) {
       return 'Vizzle';
+    } else if (route.startsWith('/vhub')) {
+      return 'VHub';
     } else if (isAuthRoute(route)) {
       return 'Auth';
     } else if (isSpinRoute(route)) {

@@ -7,6 +7,7 @@ import 'providers/home_providers.dart';
 import 'providers/profile_providers.dart';
 import 'providers/redemption_providers.dart';
 import 'providers/spin_providers.dart';
+import 'providers/vhub_providers.dart';
 import 'providers/vizzle_providers.dart';
 
 class AppProviders {
@@ -19,6 +20,7 @@ class AppProviders {
     ...CouponPromoProviders.providers,
     ...RedemptionProviders.providers,
     ...VizzleProviders.providers,
+    ...VHubProviders.providers,
   ];
 
   /// Get properly initialized providers with SharedPreferences
@@ -34,6 +36,7 @@ class AppProviders {
       ...CouponPromoProviders.providers,
       ...RedemptionProviders.providers,
       ...VizzleProviders.providers,
+      ...VHubProviders.providers,
     ];
   }
 
@@ -50,6 +53,8 @@ class AppProviders {
       RedemptionProviders.providers;
   static List<SingleChildWidget> getVizzleProviders() =>
       VizzleProviders.providers;
+  static List<SingleChildWidget> getVHubProviders() =>
+      VHubProviders.providers; // Added getter
 
   /// Get essential providers only (for minimal app startup)
   static List<SingleChildWidget> getEssentialProviders() => [
@@ -71,5 +76,6 @@ class AppProviders {
     'Coupon/Promo': CouponPromoProviders.providers.length,
     'Redemption': RedemptionProviders.providers.length,
     'Vizzle': VizzleProviders.providers.length,
+    'VHub': VHubProviders.providers.length,
   };
 }

@@ -20,7 +20,6 @@ Future<void> _initializeServices() async {
 
 class CommunityApp extends StatelessWidget {
   const CommunityApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<SingleChildWidget>>(

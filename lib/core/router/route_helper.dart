@@ -33,6 +33,31 @@ class RouteHelper {
 
   // ==================== NAVIGATION HELPER METHODS ====================
 
+  /// Navigate to VHub home
+  static void navigateToVHub(BuildContext context) {
+    context.push(RouteConstants.vhubHome);
+  }
+
+  /// Navigate to VHub ideas
+  static void navigateToVHubIdeas(BuildContext context) {
+    context.push(RouteConstants.vhubIdeas);
+  }
+
+  /// Navigate to VHub create idea
+  static void navigateToVHubCreateIdea(BuildContext context) {
+    context.push(RouteConstants.vhubCreateIdea);
+  }
+
+  /// Navigate to VHub FAQ
+  static void navigateToVHubFaq(BuildContext context) {
+    context.push(RouteConstants.vhubFaq);
+  }
+
+  /// Navigate to VHub idea details
+  static void navigateToVHubIdeaDetails(BuildContext context, String ideaId) {
+    context.push(RouteConstants.vhubIdeaDetailsWithId(ideaId));
+  }
+
   /// Navigate to spin games
   static void navigateToSpinGames(BuildContext context) {
     context.push(RouteConstants.spinMain);
@@ -203,6 +228,12 @@ class RouteHelper {
   static bool isCurrentRouteVizzle(BuildContext context) {
     final location = GoRouterState.of(context).uri.toString();
     return RouteConstants.isVizzleRoute(location);
+  }
+
+  /// Check if current route is a VHub route
+  static bool isCurrentRouteVHub(BuildContext context) {
+    final location = GoRouterState.of(context).uri.toString();
+    return RouteConstants.isVHubRoute(location);
   }
 
   /// Check if current route is a Spin route

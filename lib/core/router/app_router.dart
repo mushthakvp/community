@@ -25,6 +25,10 @@ import '../../features/spin/presentation/pages/spin_and_earn_page.dart';
 import '../../features/spin/presentation/pages/spin_history_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
 // Vizzle Feature Imports
+import '../../features/vhub/presentation/pages/vhub_home_page.dart';
+import '../../features/vhub/presentation/widgets/create_idea/create_idea_page.dart';
+import '../../features/vhub/presentation/widgets/faq/faq_page.dart';
+import '../../features/vhub/presentation/widgets/ideas/ideas_page.dart';
 import '../../features/vizzle/ads_listing/presentation/pages/ads_listing_page.dart';
 import '../../features/vizzle/edit_ad/presentation/pages/edit_ad_page.dart';
 import '../../features/vizzle/home/presentation/pages/vizzle_home_page.dart';
@@ -640,6 +644,24 @@ class AppRouter {
       GoRoute(
         path: RouteConstants.spinHistory,
         builder: (context, state) => const SpinHistoryPage(),
+      ),
+
+      // ==================== VHUB BUSINESS STARTUP ROUTES ====================
+      GoRoute(
+        path: RouteConstants.vhubHome,
+        builder: (context, state) => const VHubHomePage(),
+      ),
+      GoRoute(
+        path: RouteConstants.vhubIdeas,
+        builder: (context, state) => const IdeasPage(),
+      ),
+      GoRoute(
+        path: RouteConstants.vhubCreateIdea,
+        builder: (context, state) => const CreateIdeaPage(),
+      ),
+      GoRoute(
+        path: RouteConstants.vhubFaq,
+        builder: (context, state) => const FaqPage(),
       ),
     ],
   );
