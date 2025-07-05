@@ -114,15 +114,7 @@ class SpinProvider extends ChangeNotifier {
   }
 
   Future<void> spinWheel() async {
-    debugPrint('🎯 spinWheel() called');
-    debugPrint('  - isSpinning: $_isSpinning');
-    debugPrint('  - canSpin: $canSpin');
-    debugPrint('  - hasSpinOptions: $hasSpinOptions');
-    debugPrint('  - options count: ${spinOptions.length}');
     if (_isSpinning || !canSpin || !hasSpinOptions) {
-      debugPrint(
-        '🎯 Cannot spin: isSpinning=$_isSpinning, canSpin=$canSpin, hasOptions=$hasSpinOptions',
-      );
       _showError('Cannot spin at this time. Please try again.');
       return;
     }
@@ -131,16 +123,12 @@ class SpinProvider extends ChangeNotifier {
       _clearLastResult();
       final randomIndex = Random().nextInt(spinOptions.length);
       _selectedIndex = randomIndex;
-      debugPrint('🎯 Generated random index: $randomIndex');
-      debugPrint('🎯 Selected option: ${spinOptions[randomIndex].title}');
       _spinController.add(randomIndex);
       await _playSpinSound();
       await Future.delayed(const Duration(seconds: 4));
       await AudioService.stopSpinSound();
       await _executeSpin(spinOptions[randomIndex].id);
-    } catch (e, stackTrace) {
-      debugPrint('🎯 Error during spin: $e');
-      debugPrint('🎯 Stack trace: $stackTrace');
+    } catch (e) {
       _showError('Failed to spin. Please try again.');
     } finally {
       _setSpinning(false);
@@ -161,13 +149,11 @@ class SpinProvider extends ChangeNotifier {
 
     _isLoadingHistory = true;
     notifyListeners();
-
     try {
       final result = await _getSpinHistoryUseCase(
         page: _currentPage,
         limit: 10,
       );
-
       result.fold(
         (failure) {
           _showError(_getErrorMessage(failure));
@@ -179,8 +165,6 @@ class SpinProvider extends ChangeNotifier {
           if (history.isNotEmpty) {
             _spinHistory.addAll(history);
             _currentPage++;
-
-            // If we got less than the limit, we've reached the end
             if (history.length < 10) {
               _hasMoreHistory = false;
             }
@@ -226,31 +210,23 @@ class SpinProvider extends ChangeNotifier {
   String formatDateCategory(DateTime date) {
     final today = DateTime.now();
     final yesterday = today.subtract(const Duration(days: 1));
-
     if (_isSameDay(date, today)) return 'Today';
     if (_isSameDay(date, yesterday)) return 'Yesterday';
-
-    // Direct formatting without extension
     return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
   }
 
   Map<String, List<SpinHistoryEntity>> groupSpinHistoryByDate() {
     Map<String, List<SpinHistoryEntity>> groupedData = {};
-
     for (var spin in _spinHistory) {
       final category = formatDateCategory(spin.date.toLocal());
       groupedData.putIfAbsent(category, () => []).add(spin);
     }
-
-    // Sort the groups by date (most recent first)
     final sortedEntries = groupedData.entries.toList()
       ..sort((a, b) {
         if (a.key == 'Today') return -1;
         if (b.key == 'Today') return 1;
         if (a.key == 'Yesterday') return -1;
         if (b.key == 'Yesterday') return 1;
-
-        // Parse dates and compare
         try {
           final dateA = _parseGroupDate(a.key);
           final dateB = _parseGroupDate(b.key);
@@ -259,11 +235,9 @@ class SpinProvider extends ChangeNotifier {
           return 0;
         }
       });
-
     return Map.fromEntries(sortedEntries);
   }
 
-  // Daily spin specific methods
   void checkDailySpinStatus() {
     _checkDailySpinStatus();
   }
@@ -273,17 +247,12 @@ class SpinProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Result handling
   void handleSpinResult(SpinResultEntity result, {VoidCallback? onSpinAgain}) {
     _lastSpinResult = result;
-
     if (_currentSpinType == SpinType.daily) {
       markDailySpinCompleted();
     }
-
-    // Refresh spin data to update user points and spin availability
     loadSpinData(forceRefresh: true);
-
     notifyListeners();
   }
 
@@ -301,7 +270,6 @@ class SpinProvider extends ChangeNotifier {
           ? 'daily_spin'
           : 'spin_and_earn';
       final result = await _getSpinDataUseCase(spinTypeString);
-
       result.fold((failure) => _setError(_getErrorMessage(failure)), (
         spinData,
       ) {
@@ -310,18 +278,15 @@ class SpinProvider extends ChangeNotifier {
         _setLoaded();
       });
     } catch (e) {
-      dev.log('Error fetching spin data: $e');
       _setError('Failed to load spin data. Please try again.');
     }
   }
 
   Future<void> _executeSpin(String optionId) async {
     try {
-      debugPrint('🎯 Executing spin for option ID: $optionId');
       final result = await _executeSpinUseCase(optionId);
       result.fold(
         (failure) {
-          debugPrint('🎯 Spin execution failed: ${failure.message}');
           if (failure.message.toLowerCase().contains('already spun')) {
             _setError('You already spun today. Come back tomorrow!');
             if (_spinData != null) {
@@ -332,11 +297,6 @@ class SpinProvider extends ChangeNotifier {
           }
         },
         (spinResult) {
-          debugPrint('🎯 Spin executed successfully:');
-          debugPrint('  - Success: ${spinResult.success}');
-          debugPrint('  - Message: ${spinResult.message}');
-          debugPrint('  - Loyalty Points: ${spinResult.loyaltyPointsEarned}');
-          debugPrint('  - Coupon Code: ${spinResult.couponCodeEarned}');
           _lastSpinResult = spinResult;
           if (_currentSpinType == SpinType.daily) {
             markDailySpinCompleted();
@@ -344,9 +304,7 @@ class SpinProvider extends ChangeNotifier {
           notifyListeners();
         },
       );
-    } catch (e, stackTrace) {
-      debugPrint('🎯 Error executing spin: $e');
-      debugPrint('🎯 Stack trace: $stackTrace');
+    } catch (e) {
       _showError('Failed to execute spin. Please try again.');
     }
   }
@@ -379,8 +337,6 @@ class SpinProvider extends ChangeNotifier {
   void _showError(String message) {
     _errorMessage = message;
     notifyListeners();
-
-    // Clear error after some time
     Timer(const Duration(seconds: 3), () {
       if (_errorMessage == message) {
         _errorMessage = null;
@@ -425,7 +381,6 @@ class SpinProvider extends ChangeNotifier {
   void _checkDailySpinStatus() {
     final currentDate = _getCurrentDateString();
     if (_lastSpinDate == currentDate) {
-      // Already spun today
       if (_spinData != null) {
         _spinData = _spinData!.copyWith(canSpin: false);
         notifyListeners();
@@ -446,7 +401,6 @@ class SpinProvider extends ChangeNotifier {
   }
 
   DateTime _parseGroupDate(String dateString) {
-    // Parse format: DD/MM/YYYY
     final parts = dateString.split('/');
     if (parts.length == 3) {
       final day = int.parse(parts[0]);
@@ -455,51 +409,5 @@ class SpinProvider extends ChangeNotifier {
       return DateTime(year, month, day);
     }
     return DateTime.now();
-  }
-
-  // Debug methods (for development)
-  void debugPrintState() {
-    dev.log('=== Spin Provider State ===');
-    dev.log('Status: $_status');
-    dev.log('Spin Type: $_currentSpinType');
-    dev.log('Can Spin: $canSpin');
-    dev.log('Has Options: $hasSpinOptions');
-    dev.log('User Points: $userLoyaltyPoints');
-    dev.log('Required Points: $requiredPoints');
-    dev.log('Options Count: ${spinOptions.length}');
-    dev.log('Is Spinning: $_isSpinning');
-    dev.log('Selected Index: $_selectedIndex');
-    dev.log('History Count: ${_spinHistory.length}');
-    dev.log('Has More History: $_hasMoreHistory');
-    dev.log('Last Spin Date: $_lastSpinDate');
-    dev.log('Current Date: ${_getCurrentDateString()}');
-    dev.log('Daily Spin Completed: $isDailySpinCompleted');
-    dev.log('===========================');
-  }
-
-  void debugPrintSpinOptions() {
-    dev.log('=== Spin Options ===');
-    for (int i = 0; i < spinOptions.length; i++) {
-      final option = spinOptions[i];
-      dev.log('[$i] ${option.title} - ${option.id}');
-      dev.log('    Type: ${option.type}');
-      dev.log('    Better Luck: ${option.isBetterLuck}');
-      dev.log('    Spin Again: ${option.isSpinAgain}');
-      dev.log('    Loyalty Points: ${option.loyaltyPoint}');
-      dev.log('    Coupon Code: ${option.couponCode}');
-    }
-    dev.log('==================');
-  }
-
-  void debugPrintHistory() {
-    dev.log('=== Spin History ===');
-    final grouped = groupSpinHistoryByDate();
-    grouped.forEach((date, spins) {
-      dev.log('$date: ${spins.length} spins');
-      for (var spin in spins) {
-        dev.log('  - ${spin.displayResult} (${spin.date})');
-      }
-    });
-    dev.log('==================');
   }
 }
