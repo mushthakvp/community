@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:developer' as dev;
 
-import 'package:vivera/core/constants/api_constants.dart';
+import 'package:livera/core/constants/api_constants.dart';
 
 import '../../../../../core/error/exceptions.dart';
 import '../../../../../core/network/api_client.dart';

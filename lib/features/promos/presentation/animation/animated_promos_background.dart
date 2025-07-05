@@ -1,11 +1,11 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:vivera/features/promos/presentation/animation/clouds_painter.dart';
-import 'package:vivera/features/promos/presentation/animation/enhanced_moon_painter.dart';
-import 'package:vivera/features/promos/presentation/animation/enhanced_particles_painter.dart';
-import 'package:vivera/features/promos/presentation/animation/enhanced_stars_painter.dart';
-import 'package:vivera/features/promos/presentation/animation/shooting_stars_painter.dart';
+import 'package:livera/features/promos/presentation/animation/clouds_painter.dart';
+import 'package:livera/features/promos/presentation/animation/enhanced_moon_painter.dart';
+import 'package:livera/features/promos/presentation/animation/enhanced_particles_painter.dart';
+import 'package:livera/features/promos/presentation/animation/enhanced_stars_painter.dart';
+import 'package:livera/features/promos/presentation/animation/shooting_stars_painter.dart';
 
 class AnimatedPromosBackground extends StatefulWidget {
   final Widget child;

@@ -4,8 +4,8 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:livera/core/services/audio_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:vivera/core/services/audio_service.dart';
 
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/spin_data_entity.dart';

@@ -2,8 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_custom_tabs/flutter_custom_tabs.dart';
+import 'package:livera/core/constants/app_constants.dart';
 import 'package:url_launcher/url_launcher.dart' as url_launcher;
-import 'package:vivera/core/constants/app_constants.dart';
 
 class CustomTabService {
   static Future<void> openUrl(String url) async {

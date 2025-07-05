@@ -1,7 +1,7 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:vivera/core/constants/app_constants.dart';
+import 'package:livera/core/constants/app_constants.dart';
 
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/promo_entity.dart';

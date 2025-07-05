@@ -2,8 +2,8 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:livera/core/utils/extensions.dart';
 import 'package:provider/provider.dart';
-import 'package:vivera/core/utils/extensions.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/widgets/common/text_widget.dart';
