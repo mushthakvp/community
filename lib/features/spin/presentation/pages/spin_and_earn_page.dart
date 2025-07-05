@@ -135,24 +135,7 @@ class _SpinAndEarnPageState extends State<SpinAndEarnPage> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // Header
-            const CommonTextWidget(
-              text: 'Try Your Luck and Win Big!',
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
-              color: AppConstants.white,
-              align: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            const CommonTextWidget(
-              text: 'Earn more loyalty points and exciting rewards',
-              fontSize: 16,
-              fontWeight: FontWeight.w400,
-              color: Colors.white70,
-              align: TextAlign.center,
-            ),
             const SizedBox(height: 32),
-
             // Spin Wheel
             SizedBox(
               height: 400,
