@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_fortune_wheel/flutter_fortune_wheel.dart';
@@ -6,7 +8,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/widgets/common/text_widget.dart';
 import '../../domain/entities/spin_entity.dart';
 
-class SpinWheelWidget extends StatelessWidget {
+class SpinWheelWidget extends StatefulWidget {
   final List<SpinEntity> options;
   final Stream<int> selectedStream;
   final bool isSpinning;
@@ -21,14 +23,33 @@ class SpinWheelWidget extends StatelessWidget {
   });
 
   @override
+  State<SpinWheelWidget> createState() => _SpinWheelWidgetState();
+}
+
+class _SpinWheelWidgetState extends State<SpinWheelWidget> {
+  int? _lastSelectedIndex;
+
+  @override
   Widget build(BuildContext context) {
-    if (options.isEmpty) {
+    if (widget.options.isEmpty) {
       return const Center(
         child: CommonTextWidget(
           text: 'No spin options available',
           color: AppConstants.white,
           fontSize: 16,
         ),
+      );
+    }
+
+    print(
+      '🎯 Spin Wheel Widget - Building with ${widget.options.length} options',
+    );
+
+    // Debug print options
+    for (int i = 0; i < widget.options.length; i++) {
+      final option = widget.options[i];
+      print(
+        '[$i] ${option.title} - Points: ${option.loyaltyPoint} - Coupon: ${option.couponCode}',
       );
     }
 
@@ -51,33 +72,40 @@ class SpinWheelWidget extends StatelessWidget {
             height: 350,
             width: 350,
             child: FortuneWheel(
-              selected: selectedStream,
+              selected: widget.selectedStream,
               physics: CircularPanPhysics(
-                duration: const Duration(seconds: 5),
+                duration: const Duration(seconds: 4),
                 curve: Curves.decelerate,
               ),
               indicators: const [
                 FortuneIndicator(
-                  alignment: Alignment.centerRight,
+                  alignment: Alignment.topCenter,
                   child: TriangleIndicator(
                     color: AppConstants.white,
-                    width: 30.0,
-                    height: 50.0,
+                    width: 20.0,
+                    height: 30.0,
                     elevation: 8,
                   ),
                 ),
               ],
               onFocusItemChanged: (value) {
-                // Handle focus change if needed
+                // Track the currently focused item
+                _lastSelectedIndex = value;
+                print('🎯 Focus changed to index: $value');
               },
-              animateFirst: isSpinning,
+              animateFirst: false,
               onAnimationEnd: () {
-                // Get the selected index and call completion handler
-                // Note: This is a simplified approach, you might need to track the actual selected index
-                if (options.isNotEmpty) {
-                  onSpinComplete(
-                    0,
-                  ); // You'll need to implement proper index tracking
+                print(
+                  '🎯 Animation ended, selected index: $_lastSelectedIndex',
+                );
+                if (_lastSelectedIndex != null) {
+                  widget.onSpinComplete(_lastSelectedIndex!);
+                } else {
+                  // Fallback to random selection if something goes wrong
+                  final randomIndex = math.Random().nextInt(
+                    widget.options.length,
+                  );
+                  widget.onSpinComplete(randomIndex);
                 }
               },
               items: _buildWheelItems(),
@@ -108,59 +136,110 @@ class SpinWheelWidget extends StatelessWidget {
   }
 
   List<FortuneItem> _buildWheelItems() {
-    return options.asMap().entries.map((entry) {
+    print('🎯 Building ${widget.options.length} wheel items');
+
+    return widget.options.asMap().entries.map((entry) {
       final index = entry.key;
       final option = entry.value;
-      final isEven = index % 2 == 0;
+
+      // Create alternating colors for better visibility
+      final colors = [
+        const Color(0xFFFDDC57), // Yellow
+        const Color(0xFF4ECDC4), // Teal
+        const Color(0xFFFF6B6B), // Red
+        const Color(0xFF45B7D1), // Blue
+        const Color(0xFF96CEB4), // Green
+        const Color(0xFFFFA726), // Orange
+        const Color(0xFF9C27B0), // Purple
+        const Color(0xFF26A69A), // Cyan
+      ];
+
+      final backgroundColor = colors[index % colors.length];
+      final textColor = _getContrastColor(backgroundColor);
+
+      print('[$index] Creating wheel item: ${option.title}');
+      print('  - Background: $backgroundColor');
+      print('  - Text Color: $textColor');
+      print('  - Has Image: ${option.image?.isNotEmpty == true}');
+      print('  - Loyalty Points: ${option.loyaltyPoint}');
 
       return FortuneItem(
         style: FortuneItemStyle(
-          color: isEven ? const Color(0xFFFDDC57) : AppConstants.black,
-          borderColor: AppConstants.white.withOpacity(0.2),
-          borderWidth: 1,
+          color: backgroundColor,
+          borderColor: AppConstants.white,
+          borderWidth: 2,
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(width: 40),
-            if (option.safeImageUrl.isNotEmpty)
-              CachedNetworkImage(
-                imageUrl: option.safeImageUrl,
-                width: 20,
-                height: 20,
-                placeholder: (context, url) => const Icon(
-                  Icons.stars,
-                  color: AppConstants.appPrimaryColor,
-                  size: 16,
-                ),
-                errorWidget: (context, url, error) => const Icon(
-                  Icons.stars,
-                  color: AppConstants.appPrimaryColor,
-                  size: 16,
-                ),
-              )
-            else
-              Icon(
-                Icons.stars,
-                color: isEven
-                    ? AppConstants.black
-                    : AppConstants.appPrimaryColor,
-                size: 16,
-              ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: CommonTextWidget(
-                text: option.displayTitle,
-                color: isEven ? AppConstants.black : AppConstants.white,
-                fontSize: option.title.length > 10 ? 10 : 12,
-                fontWeight: FontWeight.w500,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Icon or Image
+              if (option.image?.isNotEmpty == true)
+                CachedNetworkImage(
+                  imageUrl: option.image!,
+                  width: 24,
+                  height: 24,
+                  placeholder: (context, url) =>
+                      Icon(_getItemIcon(option), color: textColor, size: 20),
+                  errorWidget: (context, url, error) =>
+                      Icon(_getItemIcon(option), color: textColor, size: 20),
+                )
+              else
+                Icon(_getItemIcon(option), color: textColor, size: 20),
+
+              const SizedBox(height: 4),
+
+              // Title
+              CommonTextWidget(
+                text: _getDisplayText(option),
+                color: textColor,
+                fontSize: _getTextSize(option.title),
+                fontWeight: FontWeight.w600,
                 maxLines: 2,
-                align: TextAlign.start,
+                align: TextAlign.center,
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       );
     }).toList();
+  }
+
+  IconData _getItemIcon(SpinEntity option) {
+    if (option.hasLoyaltyPoints) return Icons.stars;
+    if (option.hasCouponCode) return Icons.local_offer;
+    if (option.isBetterLuck) return Icons.sentiment_neutral;
+    if (option.isSpinAgain) return Icons.refresh;
+    return Icons.emoji_events;
+  }
+
+  String _getDisplayText(SpinEntity option) {
+    if (option.hasLoyaltyPoints) {
+      return '${option.loyaltyPoint}\nPoints';
+    }
+    if (option.title.isNotEmpty) {
+      return option.title;
+    }
+    return 'Prize';
+  }
+
+  double _getTextSize(String text) {
+    if (text.length > 15) return 10;
+    if (text.length > 10) return 11;
+    return 12;
+  }
+
+  Color _getContrastColor(Color backgroundColor) {
+    // Calculate the relative luminance
+    final luminance =
+        (0.299 * backgroundColor.red +
+            0.587 * backgroundColor.green +
+            0.114 * backgroundColor.blue) /
+        255;
+
+    // Return black for light backgrounds, white for dark backgrounds
+    return luminance > 0.5 ? Colors.black : Colors.white;
   }
 }

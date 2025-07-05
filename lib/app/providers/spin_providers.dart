@@ -1,6 +1,8 @@
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 
+import '../../core/network/api_client.dart';
+import '../../features/spin/data/repositories/spin_repository_impl.dart';
 import '../../features/spin/domain/repositories/spin_repository.dart';
 import '../../features/spin/domain/usecases/execute_spin_usecase.dart';
 import '../../features/spin/domain/usecases/get_spin_data_usecase.dart';
@@ -13,6 +15,11 @@ class SpinProviders {
     // ========================================
     // SPIN FEATURE PROVIDERS
     // ========================================
+
+    // Spin Repository Implementation
+    ProxyProvider<ApiClient, SpinRepository>(
+      update: (_, apiClient, __) => SpinRepositoryImpl(apiClient: apiClient),
+    ),
 
     // Spin Use Cases
     ProxyProvider<SpinRepository, GetSpinDataUseCase>(

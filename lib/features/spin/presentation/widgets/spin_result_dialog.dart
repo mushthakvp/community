@@ -24,127 +24,160 @@ class SpinResultDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return Dialog(
       backgroundColor: Colors.transparent,
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF1A1A2E), Color(0xFF16213E)],
-          ),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: AppConstants.appPrimaryColor.withOpacity(0.3),
-            width: 2,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: AppConstants.black.withOpacity(0.5),
-              blurRadius: 20,
-              spreadRadius: 5,
+      // Allow dismissing by tapping outside
+      child: GestureDetector(
+        onTap: () {}, // Prevent dismissing when tapping the dialog content
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF1A1A2E), Color(0xFF16213E)],
             ),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Success Icon
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    AppConstants.appPrimaryColor.withOpacity(0.3),
-                    AppConstants.appPrimaryColor.withOpacity(0.1),
-                  ],
-                ),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: AppConstants.appPrimaryColor.withOpacity(0.3),
+              width: 2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppConstants.black.withOpacity(0.5),
+                blurRadius: 20,
+                spreadRadius: 5,
               ),
-              child: Icon(_getResultIcon(), color: _getResultColor(), size: 40),
-            ),
-            const SizedBox(height: 20),
-
-            // Title
-            CommonTextWidget(
-              text: _getResultTitle(),
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: AppConstants.white,
-              align: TextAlign.center,
-            ),
-            const SizedBox(height: 12),
-
-            // Subtitle
-            if (_getResultSubtitle().isNotEmpty) ...[
-              CommonTextWidget(
-                text: _getResultSubtitle(),
-                fontSize: 16,
-                fontWeight: FontWeight.w400,
-                color: Colors.white70,
-                align: TextAlign.center,
-                maxLines: 3,
-              ),
-              const SizedBox(height: 20),
             ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Close Button
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  IconButton(
+                    onPressed: onContinue,
+                    icon: const Icon(
+                      Icons.close,
+                      color: AppConstants.white,
+                      size: 24,
+                    ),
+                  ),
+                ],
+              ),
 
-            // Coupon Code Display
-            if (option.hasCouponCode) ...[
+              // Success Icon
               Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
+                width: 80,
+                height: 80,
                 decoration: BoxDecoration(
-                  color: AppConstants.black.withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: AppConstants.appPrimaryColor.withOpacity(0.5),
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      AppConstants.appPrimaryColor.withOpacity(0.3),
+                      AppConstants.appPrimaryColor.withOpacity(0.1),
+                    ],
                   ),
                 ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: CommonTextWidget(
-                        text: option.couponCode!,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: AppConstants.appPrimaryColor,
-                        align: TextAlign.center,
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () => _copyCouponCode(context),
-                      icon: const Icon(
-                        Icons.copy,
-                        color: AppConstants.appPrimaryColor,
-                        size: 20,
-                      ),
-                    ),
-                  ],
+                child: Icon(
+                  _getResultIcon(),
+                  color: _getResultColor(),
+                  size: 40,
                 ),
               ),
               const SizedBox(height: 20),
-            ],
 
-            // Action Buttons
-            if (isUnlimited && onSpinAgain != null)
-              PrimaryButton(
-                text: 'Spin Again',
-                onPressed: onSpinAgain!,
-                backgroundColor: AppConstants.appPrimaryColor,
-                textColor: AppConstants.black,
-                height: 48,
-                width: double.infinity,
-              )
-            else
-              PrimaryButton(
-                text: 'Continue',
-                onPressed: onContinue,
-                backgroundColor: AppConstants.appPrimaryColor,
-                textColor: AppConstants.black,
-                height: 48,
-                width: double.infinity,
+              // Title
+              CommonTextWidget(
+                text: _getResultTitle(),
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: AppConstants.white,
+                align: TextAlign.center,
               ),
-          ],
+              const SizedBox(height: 12),
+
+              // Subtitle
+              if (_getResultSubtitle().isNotEmpty) ...[
+                CommonTextWidget(
+                  text: _getResultSubtitle(),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w400,
+                  color: Colors.white70,
+                  align: TextAlign.center,
+                  maxLines: 3,
+                ),
+                const SizedBox(height: 20),
+              ],
+
+              // Coupon Code Display
+              if (option.hasCouponCode) ...[
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppConstants.black.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppConstants.appPrimaryColor.withOpacity(0.5),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: CommonTextWidget(
+                          text: option.couponCode!,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: AppConstants.appPrimaryColor,
+                          align: TextAlign.center,
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => _copyCouponCode(context),
+                        icon: const Icon(
+                          Icons.copy,
+                          color: AppConstants.appPrimaryColor,
+                          size: 20,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+              ],
+
+              // Action Buttons
+              Row(
+                children: [
+                  // Continue/Close Button
+                  Expanded(
+                    child: PrimaryButton(
+                      text: 'Close',
+                      onPressed: onContinue,
+                      backgroundColor: Colors.grey.shade700,
+                      textColor: AppConstants.white,
+                      height: 48,
+                    ),
+                  ),
+
+                  // Spin Again Button (for unlimited spins)
+                  if (isUnlimited && onSpinAgain != null) ...[
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: PrimaryButton(
+                        text: 'Spin Again',
+                        onPressed: onSpinAgain!,
+                        backgroundColor: AppConstants.appPrimaryColor,
+                        textColor: AppConstants.black,
+                        height: 48,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

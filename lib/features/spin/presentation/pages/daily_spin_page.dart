@@ -23,7 +23,8 @@ class _DailySpinPageState extends State<DailySpinPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<SpinProvider>().initializeSpin(SpinType.daily);
+      final provider = context.read<SpinProvider>();
+      provider.initializeSpin(SpinType.daily);
     });
   }
 
@@ -51,15 +52,27 @@ class _DailySpinPageState extends State<DailySpinPage> {
                       return SpinErrorWidget(
                         message:
                             provider.errorMessage ?? 'Something went wrong',
-                        onRetry: () =>
-                            provider.loadSpinData(forceRefresh: true),
+                        onRetry: () {
+                          provider.loadSpinData(forceRefresh: true);
+                        },
                       );
                     }
 
-                    if (!provider.canSpin) {
+                    // Check if daily spin is completed (already spun today)
+                    if (provider.errorMessage?.contains('already spun today') ==
+                        true) {
                       return const SpinExhaustedWidget(
                         title: 'Daily Spin Completed',
-                        message: 'Come back tomorrow for more rewards!',
+                        message:
+                            'You have already used your daily spin. Come back tomorrow for more rewards!',
+                      );
+                    }
+
+                    if (!provider.hasSpinOptions) {
+                      return SpinErrorWidget(
+                        message: 'No spin options available',
+                        onRetry: () =>
+                            provider.loadSpinData(forceRefresh: true),
                       );
                     }
 
@@ -79,10 +92,11 @@ class _DailySpinPageState extends State<DailySpinPage> {
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          const SizedBox(height: 40),
-          // Title
+          const SizedBox(height: 20),
+
+          // Header
           const CommonTextWidget(
-            text: 'Try Your Luck!',
+            text: 'Daily Spin Challenge!',
             fontSize: 28,
             fontWeight: FontWeight.w700,
             color: AppConstants.white,
@@ -90,13 +104,44 @@ class _DailySpinPageState extends State<DailySpinPage> {
           ),
           const SizedBox(height: 8),
           const CommonTextWidget(
-            text: 'Spin the wheel and win exciting rewards',
+            text: 'Spin once per day and win exciting rewards',
             fontSize: 16,
             fontWeight: FontWeight.w400,
             color: Colors.white70,
             align: TextAlign.center,
           ),
-          const SizedBox(height: 40),
+          const SizedBox(height: 12),
+
+          // User Points Display
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: AppConstants.black.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: AppConstants.appPrimaryColor.withOpacity(0.5),
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.stars,
+                  color: AppConstants.appPrimaryColor,
+                  size: 16,
+                ),
+                const SizedBox(width: 8),
+                CommonTextWidget(
+                  text: 'Your Points: ${provider.userLoyaltyPoints}',
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppConstants.white,
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 30),
 
           // Spin Wheel
           Expanded(
@@ -109,7 +154,7 @@ class _DailySpinPageState extends State<DailySpinPage> {
             ),
           ),
 
-          const SizedBox(height: 40),
+          const SizedBox(height: 30),
 
           // Spin Button
           _buildSpinButton(provider),
@@ -120,20 +165,22 @@ class _DailySpinPageState extends State<DailySpinPage> {
   }
 
   Widget _buildSpinButton(SpinProvider provider) {
+    final canSpinNow = !provider.isSpinning && provider.hasSpinOptions;
+
     return SizedBox(
       width: double.infinity,
       height: 56,
       child: ElevatedButton(
-        onPressed: provider.canSpin && !provider.isSpinning
-            ? provider.spinWheel
-            : null,
+        onPressed: canSpinNow ? () => _handleSpinButtonPressed(provider) : null,
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppConstants.appPrimaryColor,
+          backgroundColor: canSpinNow
+              ? AppConstants.appPrimaryColor
+              : Colors.grey.shade800,
           disabledBackgroundColor: Colors.grey.shade800,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          elevation: 8,
+          elevation: canSpinNow ? 8 : 0,
         ),
         child: provider.isSpinning
             ? const Row(
@@ -156,14 +203,22 @@ class _DailySpinPageState extends State<DailySpinPage> {
                   ),
                 ],
               )
-            : const CommonTextWidget(
-                text: 'Spin Now',
+            : CommonTextWidget(
+                text: canSpinNow ? 'Spin Now' : 'Spin Unavailable',
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
-                color: AppConstants.black,
+                color: canSpinNow ? AppConstants.black : Colors.white54,
               ),
       ),
     );
+  }
+
+  void _handleSpinButtonPressed(SpinProvider provider) {
+    if (provider.errorMessage?.contains('already spun today') == true) {
+      _showAlreadySpunMessage();
+      return;
+    }
+    provider.spinWheel();
   }
 
   void _handleSpinComplete(
@@ -171,18 +226,40 @@ class _DailySpinPageState extends State<DailySpinPage> {
     SpinProvider provider,
     int index,
   ) {
-    // Show result dialog
-    final option = provider.spinOptions[index];
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => SpinResultDialog(
-        option: option,
-        onContinue: () {
-          Navigator.of(context).pop();
-          // Refresh data
-          provider.loadSpinData(forceRefresh: true);
-        },
+    if (index >= 0 && index < provider.spinOptions.length) {
+      final option = provider.spinOptions[index];
+      showDialog(
+        context: context,
+        barrierDismissible: true,
+        builder: (context) => SpinResultDialog(
+          option: option,
+          onContinue: () {
+            Navigator.of(context).pop();
+            provider.loadSpinData(forceRefresh: true);
+          },
+        ),
+      );
+    } else {
+      _showErrorMessage('Spin result error. Please try again.');
+    }
+  }
+
+  void _showAlreadySpunMessage() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('You have already spun today. Come back tomorrow!'),
+        backgroundColor: Colors.orange,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  void _showErrorMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
       ),
     );
   }

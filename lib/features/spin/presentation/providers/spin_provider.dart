@@ -114,38 +114,33 @@ class SpinProvider extends ChangeNotifier {
   }
 
   Future<void> spinWheel() async {
+    debugPrint('🎯 spinWheel() called');
+    debugPrint('  - isSpinning: $_isSpinning');
+    debugPrint('  - canSpin: $canSpin');
+    debugPrint('  - hasSpinOptions: $hasSpinOptions');
+    debugPrint('  - options count: ${spinOptions.length}');
     if (_isSpinning || !canSpin || !hasSpinOptions) {
-      dev.log(
-        'Cannot spin: isSpinning=$_isSpinning, canSpin=$canSpin, hasOptions=$hasSpinOptions',
+      debugPrint(
+        '🎯 Cannot spin: isSpinning=$_isSpinning, canSpin=$canSpin, hasOptions=$hasSpinOptions',
       );
       _showError('Cannot spin at this time. Please try again.');
       return;
     }
-
     try {
       _setSpinning(true);
       _clearLastResult();
-
-      // Generate random selection
       final randomIndex = Random().nextInt(spinOptions.length);
       _selectedIndex = randomIndex;
-
-      // Add to stream for wheel animation
+      debugPrint('🎯 Generated random index: $randomIndex');
+      debugPrint('🎯 Selected option: ${spinOptions[randomIndex].title}');
       _spinController.add(randomIndex);
-
-      // Play spin sound
       await _playSpinSound();
-
-      // Wait for animation duration
-      await Future.delayed(const Duration(seconds: 5));
-
-      // Stop sound
+      await Future.delayed(const Duration(seconds: 4));
       await AudioService.stopSpinSound();
-
-      // Execute the actual spin API call
       await _executeSpin(spinOptions[randomIndex].id);
-    } catch (e) {
-      dev.log('Error during spin: $e');
+    } catch (e, stackTrace) {
+      debugPrint('🎯 Error during spin: $e');
+      debugPrint('🎯 Stack trace: $stackTrace');
       _showError('Failed to spin. Please try again.');
     } finally {
       _setSpinning(false);
@@ -322,22 +317,36 @@ class SpinProvider extends ChangeNotifier {
 
   Future<void> _executeSpin(String optionId) async {
     try {
+      debugPrint('🎯 Executing spin for option ID: $optionId');
       final result = await _executeSpinUseCase(optionId);
-
-      result.fold((failure) => _showError(_getErrorMessage(failure)), (
-        spinResult,
-      ) {
-        _lastSpinResult = spinResult;
-
-        if (_currentSpinType == SpinType.daily) {
-          markDailySpinCompleted();
-        }
-
-        // Don't refresh data immediately, let the UI handle it
-        notifyListeners();
-      });
-    } catch (e) {
-      dev.log('Error executing spin: $e');
+      result.fold(
+        (failure) {
+          debugPrint('🎯 Spin execution failed: ${failure.message}');
+          if (failure.message.toLowerCase().contains('already spun')) {
+            _setError('You already spun today. Come back tomorrow!');
+            if (_spinData != null) {
+              _spinData = _spinData!.copyWith(canSpin: false);
+            }
+          } else {
+            _setError(_getErrorMessage(failure));
+          }
+        },
+        (spinResult) {
+          debugPrint('🎯 Spin executed successfully:');
+          debugPrint('  - Success: ${spinResult.success}');
+          debugPrint('  - Message: ${spinResult.message}');
+          debugPrint('  - Loyalty Points: ${spinResult.loyaltyPointsEarned}');
+          debugPrint('  - Coupon Code: ${spinResult.couponCodeEarned}');
+          _lastSpinResult = spinResult;
+          if (_currentSpinType == SpinType.daily) {
+            markDailySpinCompleted();
+          }
+          notifyListeners();
+        },
+      );
+    } catch (e, stackTrace) {
+      debugPrint('🎯 Error executing spin: $e');
+      debugPrint('🎯 Stack trace: $stackTrace');
       _showError('Failed to execute spin. Please try again.');
     }
   }
@@ -398,7 +407,18 @@ class SpinProvider extends ChangeNotifier {
   }
 
   String _getErrorMessage(Failure failure) {
-    return failure.userFriendlyMessage;
+    if (failure.message.toLowerCase().contains('already spun')) {
+      return 'You have already used your daily spin. Come back tomorrow for more rewards!';
+    }
+    if (failure.message.toLowerCase().contains('network')) {
+      return 'Network error. Please check your connection and try again.';
+    }
+    if (failure.message.toLowerCase().contains('server')) {
+      return 'Server error. Please try again later.';
+    }
+    return failure.message.isNotEmpty
+        ? failure.message
+        : 'Something went wrong. Please try again.';
   }
 
   // Daily spin specific private methods
