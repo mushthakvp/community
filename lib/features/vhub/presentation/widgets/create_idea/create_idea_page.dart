@@ -10,7 +10,9 @@ import 'create_idea_navigation.dart';
 import 'create_idea_stepper.dart';
 
 class CreateIdeaPage extends StatefulWidget {
-  const CreateIdeaPage({super.key});
+  final VoidCallback? onNavigateToHome;
+
+  const CreateIdeaPage({super.key, this.onNavigateToHome});
 
   @override
   State<CreateIdeaPage> createState() => _CreateIdeaPageState();
@@ -19,8 +21,11 @@ class CreateIdeaPage extends StatefulWidget {
 class _CreateIdeaPageState extends State<CreateIdeaPage> {
   @override
   Widget build(BuildContext context) {
+    final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
+
     return Scaffold(
       backgroundColor: AppConstants.black,
+      resizeToAvoidBottomInset: true,
       body: Consumer2<CreateIdeaProvider, VHubProvider>(
         builder: (context, createProvider, vhubProvider, child) {
           return Column(
@@ -81,8 +86,9 @@ class _CreateIdeaPageState extends State<CreateIdeaPage> {
               // Content
               Expanded(child: const CreateIdeaStepper()),
 
-              // Navigation
-              const CreateIdeaNavigation(),
+              // Navigation - Hide when keyboard is open
+              if (!isKeyboardOpen)
+                CreateIdeaNavigation(onNavigateToHome: widget.onNavigateToHome),
             ],
           );
         },

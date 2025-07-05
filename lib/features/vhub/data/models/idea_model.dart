@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 import '../../domain/entities/idea_entity.dart';
 
 class IdeaModel extends IdeaEntity {
@@ -21,37 +23,124 @@ class IdeaModel extends IdeaEntity {
     required super.updatedAt,
   });
 
-  factory IdeaModel.fromJson(Map<String, dynamic> json) {
-    return IdeaModel(
-      id: json['_id'] ?? '',
-      projectName: json['projectName'] ?? '',
-      founders:
-          (json['founders'] as List<dynamic>?)
-              ?.map((e) => FounderModel.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          [],
-      summaryOfIdea: json['summaryOfIdea'] ?? '',
-      longOfDevelopmentProgress: json['longOfDevelopmentProgress'] ?? '',
-      helpNeed: json['helpNeed'] ?? '',
-      aboutProject: json['aboutProject'] ?? '',
-      reasonForDoingProject: json['reasonForDoingProject'] ?? '',
-      whoWillBuy: json['whoWillBuy'] ?? '',
-      isConnectedWithFoundersWork: json['isConnectedWithFoundersWork'] ?? false,
-      foundersSignature:
-          (json['foundersSignature'] as List<dynamic>?)
-              ?.map(
-                (e) =>
-                    FounderSignatureModel.fromJson(e as Map<String, dynamic>),
-              )
-              .toList() ??
-          [],
-      currentStatus: json['currentStatus'] ?? 'Requested',
-      rejectReason: json['rejectReason'],
-      rejectCount: json['rejectCount'] ?? 0,
-      reApplyCount: json['reApplyCount'] ?? 0,
-      createdAt: DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
-      updatedAt: DateTime.tryParse(json['updatedAt'] ?? '') ?? DateTime.now(),
-    );
+  factory IdeaModel.fromJson(Map<String, dynamic>? json) {
+    if (json == null) {
+      throw ArgumentError('JSON data cannot be null');
+    }
+
+    try {
+      // Handle different possible ID field names
+      String id = '';
+      if (json.containsKey('_id')) {
+        final idValue = json['_id'];
+        if (idValue is Map && idValue.containsKey('\$oid')) {
+          id = idValue['\$oid'].toString();
+        } else {
+          id = idValue?.toString() ?? '';
+        }
+      } else if (json.containsKey('id')) {
+        id = json['id']?.toString() ?? '';
+      }
+
+      // If still no ID, generate a temporary one
+      if (id.isEmpty) {
+        id = DateTime.now().millisecondsSinceEpoch.toString();
+      }
+
+      // Determine current status from the API response
+      String currentStatus = 'Requested';
+      if (json.containsKey('currentStatus')) {
+        currentStatus = json['currentStatus']?.toString() ?? 'Requested';
+      } else {
+        // Fallback to checking boolean flags
+        if (json['isAccepted'] == true) {
+          currentStatus = 'Accepted';
+        } else if (json['isRejected'] == true) {
+          currentStatus = 'Rejected';
+        }
+      }
+
+      return IdeaModel(
+        id: id,
+        projectName: json['projectName']?.toString() ?? '',
+        founders: _parseFounders(json['founders']),
+        summaryOfIdea: json['summaryOfIdea']?.toString() ?? '',
+        longOfDevelopmentProgress:
+            json['longOfDevelopmentProgress']?.toString() ?? '',
+        helpNeed: json['helpNeed']?.toString() ?? '',
+        aboutProject: json['aboutProject']?.toString() ?? '',
+        reasonForDoingProject: json['reasonForDoingProject']?.toString() ?? '',
+        whoWillBuy: json['whoWillBuy']?.toString() ?? '',
+        isConnectedWithFoundersWork:
+            json['isConnectedWithFoundersWork'] == true,
+        foundersSignature: _parseFounderSignatures(json['foundersSignature']),
+        currentStatus: currentStatus,
+        rejectReason: json['rejectReason']?.toString(),
+        rejectCount: _parseInt(json['rejectCount']) ?? 0,
+        reApplyCount: _parseInt(json['reApplyCount']) ?? 0,
+        createdAt: _parseDateTime(json['createdAt']) ?? DateTime.now(),
+        updatedAt: _parseDateTime(json['updatedAt']) ?? DateTime.now(),
+      );
+    } catch (e) {
+      debugPrint('Error parsing IdeaModel from JSON: $e');
+      debugPrint('JSON data: $json');
+      rethrow;
+    }
+  }
+
+  static List<FounderModel> _parseFounders(dynamic foundersData) {
+    if (foundersData == null) return [];
+
+    try {
+      if (foundersData is List) {
+        return foundersData
+            .where((e) => e != null)
+            .map((e) => FounderModel.fromJson(e as Map<String, dynamic>))
+            .toList();
+      }
+    } catch (e) {
+      debugPrint('Error parsing founders: $e');
+    }
+
+    return [];
+  }
+
+  static List<FounderSignatureModel> _parseFounderSignatures(
+    dynamic signaturesData,
+  ) {
+    if (signaturesData == null) return [];
+
+    try {
+      if (signaturesData is List) {
+        return signaturesData
+            .where((e) => e != null)
+            .map(
+              (e) => FounderSignatureModel.fromJson(e as Map<String, dynamic>),
+            )
+            .toList();
+      }
+    } catch (e) {
+      debugPrint('Error parsing founder signatures: $e');
+    }
+
+    return [];
+  }
+
+  static int? _parseInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is String) {
+      return int.tryParse(value);
+    }
+    return null;
+  }
+
+  static DateTime? _parseDateTime(dynamic value) {
+    if (value == null) return null;
+    if (value is String) {
+      return DateTime.tryParse(value);
+    }
+    return null;
   }
 
   Map<String, dynamic> toJson() {
@@ -88,13 +177,30 @@ class FounderModel extends FounderEntity {
     required super.affiliation,
   });
 
-  factory FounderModel.fromJson(Map<String, dynamic> json) {
+  factory FounderModel.fromJson(Map<String, dynamic>? json) {
+    if (json == null) {
+      throw ArgumentError('Founder JSON data cannot be null');
+    }
+
+    // Handle different possible ID field names
+    String id = '';
+    if (json.containsKey('_id')) {
+      final idValue = json['_id'];
+      if (idValue is Map && idValue.containsKey('\$oid')) {
+        id = idValue['\$oid'].toString();
+      } else {
+        id = idValue?.toString() ?? '';
+      }
+    } else if (json.containsKey('id')) {
+      id = json['id']?.toString() ?? '';
+    }
+
     return FounderModel(
-      id: json['_id'] ?? '',
-      name: json['name'] ?? '',
-      email: json['email'] ?? '',
-      contact: json['contact'] ?? '',
-      affiliation: json['affiliation'] ?? '',
+      id: id,
+      name: json['name']?.toString() ?? '',
+      email: json['email']?.toString() ?? '',
+      contact: json['contact']?.toString() ?? '',
+      affiliation: json['affiliation']?.toString() ?? '',
     );
   }
 
@@ -116,11 +222,28 @@ class FounderSignatureModel extends FounderSignatureEntity {
     required super.signature,
   });
 
-  factory FounderSignatureModel.fromJson(Map<String, dynamic> json) {
+  factory FounderSignatureModel.fromJson(Map<String, dynamic>? json) {
+    if (json == null) {
+      throw ArgumentError('Founder signature JSON data cannot be null');
+    }
+
+    // Handle different possible ID field names
+    String id = '';
+    if (json.containsKey('_id')) {
+      final idValue = json['_id'];
+      if (idValue is Map && idValue.containsKey('\$oid')) {
+        id = idValue['\$oid'].toString();
+      } else {
+        id = idValue?.toString() ?? '';
+      }
+    } else if (json.containsKey('id')) {
+      id = json['id']?.toString() ?? '';
+    }
+
     return FounderSignatureModel(
-      id: json['_id'] ?? '',
-      name: json['name'] ?? '',
-      signature: json['signature'] ?? '',
+      id: id,
+      name: json['name']?.toString() ?? '',
+      signature: json['signature']?.toString() ?? '',
     );
   }
 
@@ -138,13 +261,29 @@ class FaqModel extends FaqEntity {
     required super.updatedAt,
   });
 
-  factory FaqModel.fromJson(Map<String, dynamic> json) {
+  factory FaqModel.fromJson(Map<String, dynamic>? json) {
+    if (json == null) {
+      throw ArgumentError('FAQ JSON data cannot be null');
+    }
+
+    // Handle different possible ID field names
+    String id = '';
+    if (json.containsKey('_id')) {
+      id = json['_id']?.toString() ?? '';
+    } else if (json.containsKey('id')) {
+      id = json['id']?.toString() ?? '';
+    }
+
     return FaqModel(
-      id: json['_id'] ?? '',
-      question: json['question'] ?? '',
-      answer: json['answer'] ?? '',
-      createdAt: DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
-      updatedAt: DateTime.tryParse(json['updatedAt'] ?? '') ?? DateTime.now(),
+      id: id,
+      question: json['question']?.toString() ?? '',
+      answer: json['answer']?.toString() ?? '',
+      createdAt:
+          DateTime.tryParse(json['createdAt']?.toString() ?? '') ??
+          DateTime.now(),
+      updatedAt:
+          DateTime.tryParse(json['updatedAt']?.toString() ?? '') ??
+          DateTime.now(),
     );
   }
 

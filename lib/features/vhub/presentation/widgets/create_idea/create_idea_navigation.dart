@@ -1,13 +1,19 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../../core/constants/app_constants.dart';
+import '../../../../../core/services/cloudinary_service.dart';
 import '../../../../../core/widgets/buttons/primary_button.dart';
+import '../../../domain/repositories/vhub_repository.dart';
 import '../../providers/create_idea_provider.dart';
 import '../../providers/vhub_provider.dart';
 
 class CreateIdeaNavigation extends StatelessWidget {
-  const CreateIdeaNavigation({super.key});
+  final VoidCallback? onNavigateToHome;
+
+  const CreateIdeaNavigation({super.key, this.onNavigateToHome});
 
   @override
   Widget build(BuildContext context) {
@@ -115,11 +121,23 @@ class CreateIdeaNavigation extends StatelessWidget {
       // Show loading dialog
       _showLoadingDialog(context);
 
-      // Build parameters
-      final params = createProvider.buildCreateIdeaParams();
+      // Upload signatures to Cloudinary first
+      final updatedParams = await _uploadSignaturesToCloudinary(createProvider);
 
-      // Submit the idea
-      final success = await vhubProvider.createIdea(params);
+      if (updatedParams == null) {
+        // Hide loading dialog
+        if (context.mounted) {
+          Navigator.of(context).pop();
+        }
+        _showErrorMessage(
+          context,
+          'Failed to upload signature documents. Please try again.',
+        );
+        return;
+      }
+
+      // Submit the idea with uploaded signature URLs
+      final success = await vhubProvider.createIdea(updatedParams);
 
       // Hide loading dialog
       if (context.mounted) {
@@ -131,7 +149,9 @@ class CreateIdeaNavigation extends StatelessWidget {
         createProvider.reset();
 
         if (context.mounted) {
-          _showSuccessDialog(context);
+          await _showSuccessDialog(context);
+          // Navigate back to home using the callback
+          onNavigateToHome?.call();
         }
       } else {
         // Show error from provider
@@ -144,6 +164,7 @@ class CreateIdeaNavigation extends StatelessWidget {
         }
       }
     } catch (e) {
+      debugPrint('Error in _submitIdea: $e');
       // Hide loading dialog if still showing
       if (context.mounted) {
         Navigator.of(context).pop();
@@ -152,6 +173,59 @@ class CreateIdeaNavigation extends StatelessWidget {
           'An unexpected error occurred. Please try again.',
         );
       }
+    }
+  }
+
+  Future<CreateIdeaParams?> _uploadSignaturesToCloudinary(
+    CreateIdeaProvider createProvider,
+  ) async {
+    try {
+      final params = createProvider.buildCreateIdeaParams();
+      final List<SignatureParams> updatedSignatures = [];
+
+      for (final signature in params.foundersSignature) {
+        String signatureUrl = signature.signature;
+
+        // Check if the signature is a local file path (needs to be uploaded)
+        if (signature.signature.isNotEmpty &&
+            !signature.signature.startsWith('http')) {
+          final file = File(signature.signature);
+          if (await file.exists()) {
+            final uploadedUrl = await CloudinaryService.uploadSingleImage(
+              file: file,
+              folder: 'vhub_signatures',
+            );
+
+            if (uploadedUrl != null) {
+              signatureUrl = uploadedUrl;
+            } else {
+              throw Exception(
+                'Failed to upload signature for ${signature.name}',
+              );
+            }
+          }
+        }
+
+        updatedSignatures.add(
+          SignatureParams(name: signature.name, signature: signatureUrl),
+        );
+      }
+
+      return CreateIdeaParams(
+        projectName: params.projectName,
+        founders: params.founders,
+        summaryOfIdea: params.summaryOfIdea,
+        longOfDevelopmentProgress: params.longOfDevelopmentProgress,
+        helpNeed: params.helpNeed,
+        aboutProject: params.aboutProject,
+        reasonForDoingProject: params.reasonForDoingProject,
+        whoWillBuy: params.whoWillBuy,
+        isConnectedWithFoundersWork: params.isConnectedWithFoundersWork,
+        foundersSignature: updatedSignatures,
+      );
+    } catch (e) {
+      debugPrint('Error uploading signatures: $e');
+      return null;
     }
   }
 
@@ -182,8 +256,8 @@ class CreateIdeaNavigation extends StatelessWidget {
     );
   }
 
-  void _showSuccessDialog(BuildContext context) {
-    showDialog(
+  Future<void> _showSuccessDialog(BuildContext context) async {
+    await showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => Dialog(
@@ -222,10 +296,9 @@ class CreateIdeaNavigation extends StatelessWidget {
               ),
               const SizedBox(height: 20),
               PrimaryButton(
-                text: 'Done',
+                text: 'Go to Home',
                 onPressed: () {
                   Navigator.of(context).pop();
-                  // Optionally navigate back to ideas list
                 },
                 backgroundColor: AppConstants.appPrimaryColor,
                 textColor: AppConstants.black,

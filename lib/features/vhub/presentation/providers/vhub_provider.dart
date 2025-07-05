@@ -182,6 +182,7 @@ class VHubProvider extends ChangeNotifier {
   }
 
   // Create/Update Idea
+  // Create/Update Idea
   Future<bool> createIdea(CreateIdeaParams params) async {
     try {
       _setCreating();
@@ -192,23 +193,26 @@ class VHubProvider extends ChangeNotifier {
         return false;
       }
 
+      dev.log('Creating idea with params: ${params.projectName}');
       final result = await _createIdeaUseCase(params);
 
       return result.fold(
         (failure) {
+          dev.log('Create idea failed: ${failure.message}');
           _setError(_getErrorMessage(failure));
           return false;
         },
         (idea) {
+          dev.log('Idea created successfully: ${idea.id}');
+          // Add the new idea to the beginning of the list
           _allIdeas.insert(0, idea);
           _applyFilters();
           _setLoaded();
-          dev.log('Idea created successfully: ${idea.id}');
           return true;
         },
       );
-    } catch (e) {
-      dev.log('Error creating idea: $e');
+    } catch (e, stackTrace) {
+      dev.log('Error creating idea: $e', error: e, stackTrace: stackTrace);
       _setError('Failed to create idea. Please try again.');
       return false;
     }

@@ -129,12 +129,10 @@ class CreateIdeaProvider extends ChangeNotifier {
     try {
       _isUploading = true;
       notifyListeners();
-
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['pdf'],
       );
-
       if (result != null && result.files.isNotEmpty) {
         final file = File(result.files.first.path!);
         if (index < _signatureControllers.length) {
@@ -143,7 +141,7 @@ class CreateIdeaProvider extends ChangeNotifier {
         }
       }
     } catch (e) {
-      // Handle error
+      debugPrint('Error uploading document: $e');
     } finally {
       _isUploading = false;
       notifyListeners();

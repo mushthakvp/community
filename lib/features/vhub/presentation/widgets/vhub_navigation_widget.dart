@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../providers/create_idea_provider.dart';
 import '../providers/vhub_provider.dart';
 import 'create_idea/create_idea_page.dart';
 import 'faq/faq_page.dart';
@@ -22,7 +23,7 @@ class _VHubNavigationWidgetState extends State<VHubNavigationWidget> {
     const VHubHomeContent(),
     const IdeasPage(),
     const FaqPage(),
-    const CreateIdeaPage(),
+    const CreateIdeaPageWrapper(), // Wrapper to provide navigation callback
   ];
 
   final List<String> _titles = ['Home', 'Ideas', 'FAQ', 'Create Idea'];
@@ -41,63 +42,82 @@ class _VHubNavigationWidgetState extends State<VHubNavigationWidget> {
     Icons.add_circle,
   ];
 
+  // Method to navigate to home (can be called from child widgets)
+  void navigateToHome() {
+    setState(() {
+      _selectedIndex = 0;
+    });
+    // Also refresh ideas when going back to home
+    context.read<VHubProvider>().loadIdeas(forceRefresh: true);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
+    final isCreateIdeaPage = _selectedIndex == 3;
+
     return Scaffold(
       backgroundColor: AppConstants.black,
       body: IndexedStack(index: _selectedIndex, children: _pages),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [AppConstants.black, AppConstants.black.withOpacity(0.8)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
-          ),
-        ),
-        child: BottomNavigationBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          type: BottomNavigationBarType.fixed,
-          currentIndex: _selectedIndex,
-          onTap: _onItemTapped,
-          selectedItemColor: AppConstants.appPrimaryColor,
-          unselectedItemColor: AppConstants.white.withOpacity(0.6),
-          showSelectedLabels: true,
-          showUnselectedLabels: true,
-          selectedLabelStyle: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-          ),
-          unselectedLabelStyle: const TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w400,
-          ),
-          items: List.generate(_titles.length, (index) {
-            final isSelected = _selectedIndex == index;
-            return BottomNavigationBarItem(
-              icon: AnimatedContainer(
-                duration: AppConstants.defaultAnimationDuration,
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? AppConstants.appPrimaryColor.withOpacity(0.2)
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(12),
+      bottomNavigationBar:
+          // Hide bottom navigation when keyboard is open and on create idea page
+          (isKeyboardOpen && isCreateIdeaPage)
+          ? null
+          : Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppConstants.black,
+                    AppConstants.black.withOpacity(0.8),
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
                 ),
-                child: Icon(
-                  isSelected ? _selectedIcons[index] : _icons[index],
-                  size: 24,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
                 ),
               ),
-              label: _titles[index],
-            );
-          }),
-        ),
-      ),
+              child: BottomNavigationBar(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                type: BottomNavigationBarType.fixed,
+                currentIndex: _selectedIndex,
+                onTap: _onItemTapped,
+                selectedItemColor: AppConstants.appPrimaryColor,
+                unselectedItemColor: AppConstants.white.withOpacity(0.6),
+                showSelectedLabels: true,
+                showUnselectedLabels: true,
+                selectedLabelStyle: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+                unselectedLabelStyle: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w400,
+                ),
+                items: List.generate(_titles.length, (index) {
+                  final isSelected = _selectedIndex == index;
+                  return BottomNavigationBarItem(
+                    icon: AnimatedContainer(
+                      duration: AppConstants.defaultAnimationDuration,
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? AppConstants.appPrimaryColor.withOpacity(0.2)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        isSelected ? _selectedIcons[index] : _icons[index],
+                        size: 24,
+                      ),
+                    ),
+                    label: _titles[index],
+                  );
+                }),
+              ),
+            ),
     );
   }
 
@@ -114,6 +134,25 @@ class _VHubNavigationWidgetState extends State<VHubNavigationWidget> {
       case 2: // FAQ
         context.read<VHubProvider>().loadFaqs();
         break;
+      case 3: // Create Idea - reset the provider
+        context.read<CreateIdeaProvider>().reset();
+        break;
     }
+  }
+}
+
+// Wrapper widget to provide navigation callback to CreateIdeaPage
+class CreateIdeaPageWrapper extends StatelessWidget {
+  const CreateIdeaPageWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return CreateIdeaPage(
+      onNavigateToHome: () {
+        final parentState = context
+            .findAncestorStateOfType<_VHubNavigationWidgetState>();
+        parentState?.navigateToHome();
+      },
+    );
   }
 }
