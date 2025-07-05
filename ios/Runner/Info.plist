@@ -26,20 +26,29 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<key>NSCameraUsageDescription</key>
-	<string>This app needs access to camera to take profile pictures</string>
+
+	<!-- Location Permissions -->
 	<key>NSLocationAlwaysUsageDescription</key>
-	<string>This app needs access to location to upload your product on market place</string>
+	<string>This app needs access to your location to upload your product on the marketplace.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>This app needs access to location to upload your product on market place</string>
+	<string>This app needs access to your location to upload your product on the marketplace.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>This app needs access to your location to upload your product on the marketplace.</string>
+
+	<!-- Other Permissions -->
+	<key>NSCameraUsageDescription</key>
+	<string>This app needs access to the camera to take profile pictures.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>This app needs access to photo library to select profile pictures</string>
+	<string>This app needs access to the photo library to select profile pictures.</string>
+
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
+
+	<!-- Supported Orientations -->
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
@@ -51,10 +60,9 @@
 		<string>UIInterfaceOrientationPortrait</string>
 		<string>UIInterfaceOrientationPortraitUpsideDown</string>
 	</array>
-	<key>com.apple.developer.siri</key>
-	<true/>
-	<!-- auto test fliht -->
+
+	<!-- Export Compliance -->
 	<key>ITSAppUsesNonExemptEncryption</key>
-	<true/>
+	<false/>
 </dict>
 </plist>
