@@ -4,6 +4,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vivera/core/services/audio_service.dart';
 
 import '../../../../core/error/failures.dart';
@@ -55,8 +56,9 @@ class SpinProvider extends ChangeNotifier {
   DateTime? _lastLoadTime;
   static const Duration _cacheValidDuration = Duration(minutes: 2);
 
-  // Date tracking for daily spin
-  String? _lastSpinDate;
+  // Daily spin tracking
+  SharedPreferences? _prefs;
+  bool _isDailySpinUsed = false;
 
   // Getters
   SpinStatus get status => _status;
@@ -69,19 +71,28 @@ class SpinProvider extends ChangeNotifier {
   Stream<int> get spinStream => _spinController.stream;
   bool get isLoading => _status == SpinStatus.loading;
   bool get hasError => _status == SpinStatus.error;
-  bool get canSpin => _spinData?.canSpin ?? false;
+
+  // Fixed canSpin logic
+  bool get canSpin {
+    if (_currentSpinType == SpinType.daily) {
+      return !_isDailySpinUsed && (_spinData?.canSpin ?? false);
+    } else {
+      // For unlimited spins, check if user has enough points
+      return hasEnoughPoints && (_spinData?.canSpin ?? false);
+    }
+  }
+
   bool get hasSpinOptions => _spinData?.hasOptions ?? false;
   int get userLoyaltyPoints => _spinData?.userLoyaltyPoints ?? 0;
   int get requiredPoints => _spinData?.requiredPoints ?? 0;
-  bool get hasEnoughPoints => _spinData?.hasEnoughPoints ?? false;
+  bool get hasEnoughPoints => userLoyaltyPoints >= requiredPoints;
   List<SpinEntity> get spinOptions => _spinData?.options ?? [];
   bool get hasMoreHistory => _hasMoreHistory;
   bool get isLoadingHistory => _isLoadingHistory;
   SpinResultEntity? get lastSpinResult => _lastSpinResult;
 
   // Daily spin specific getters
-  bool get isDailySpinCompleted => _isDailySpinCompleted();
-  String? get lastSpinDate => _lastSpinDate;
+  bool get isDailySpinCompleted => _isDailySpinUsed;
 
   @override
   void dispose() {
@@ -89,13 +100,62 @@ class SpinProvider extends ChangeNotifier {
     super.dispose();
   }
 
+  // Initialize SharedPreferences
+  Future<void> _initializePrefs() async {
+    _prefs ??= await SharedPreferences.getInstance();
+  }
+
+  // Check if daily spin was used today
+  Future<void> _checkDailySpinStatus() async {
+    await _initializePrefs();
+
+    final today = DateTime.now();
+    final todayString = '${today.year}-${today.month}-${today.day}';
+    final lastSpinDate = _prefs?.getString('last_daily_spin_date');
+
+    _isDailySpinUsed = lastSpinDate == todayString;
+    dev.log(
+      'Daily spin status: used=$_isDailySpinUsed, lastDate=$lastSpinDate, today=$todayString',
+    );
+  }
+
+  // Mark daily spin as used
+  Future<void> _markDailySpinAsUsed() async {
+    await _initializePrefs();
+
+    final today = DateTime.now();
+    final todayString = '${today.year}-${today.month}-${today.day}';
+    await _prefs?.setString('last_daily_spin_date', todayString);
+
+    _isDailySpinUsed = true;
+    dev.log('Marked daily spin as used for: $todayString');
+  }
+
+  // Reset spin wheel state
+  void _resetSpinState() {
+    _selectedIndex = null;
+    _lastSpinResult = null;
+    _isSpinning = false;
+    _status = SpinStatus.initial;
+    dev.log('Spin state reset');
+  }
+
   // Public Methods
   Future<void> initializeSpin(SpinType spinType) async {
-    _currentSpinType = spinType;
-    await loadSpinData();
-    if (spinType == SpinType.daily) {
-      _checkDailySpinStatus();
+    dev.log('Initializing spin with type: $spinType');
+
+    // Reset state when switching spin types or reinitializing
+    if (_currentSpinType != spinType) {
+      _resetSpinState();
     }
+
+    _currentSpinType = spinType;
+
+    if (spinType == SpinType.daily) {
+      await _checkDailySpinStatus();
+    }
+
+    await loadSpinData(forceRefresh: true);
   }
 
   Future<void> loadSpinData({bool forceRefresh = false}) async {
@@ -110,14 +170,30 @@ class SpinProvider extends ChangeNotifier {
   }
 
   Future<void> refreshSpinData() async {
+    _resetSpinState();
     await loadSpinData(forceRefresh: true);
   }
 
   Future<void> spinWheel() async {
+    dev.log(
+      'Spin wheel requested - canSpin: $canSpin, isSpinning: $_isSpinning, hasOptions: $hasSpinOptions',
+    );
+
     if (_isSpinning || !canSpin || !hasSpinOptions) {
-      _showError('Cannot spin at this time. Please try again.');
+      String reason = '';
+      if (_isSpinning) {
+        reason = 'Already spinning';
+      } else if (!canSpin) {
+        reason = _currentSpinType == SpinType.daily
+            ? 'Daily spin already used'
+            : 'Not enough points';
+      } else if (!hasSpinOptions) {
+        reason = 'No spin options';
+      }
+      _showError('Cannot spin: $reason');
       return;
     }
+
     try {
       _setSpinning(true);
       _clearLastResult();
@@ -140,13 +216,11 @@ class SpinProvider extends ChangeNotifier {
         (!_hasMoreHistory && !isInitialLoad)) {
       return;
     }
-
     if (isInitialLoad) {
       _spinHistory.clear();
       _currentPage = 1;
       _hasMoreHistory = true;
     }
-
     _isLoadingHistory = true;
     notifyListeners();
     try {
@@ -174,7 +248,6 @@ class SpinProvider extends ChangeNotifier {
         },
       );
     } catch (e) {
-      dev.log('Error loading spin history: $e');
       _showError('Failed to load spin history');
       if (isInitialLoad) {
         _hasMoreHistory = false;
@@ -238,19 +311,10 @@ class SpinProvider extends ChangeNotifier {
     return Map.fromEntries(sortedEntries);
   }
 
-  void checkDailySpinStatus() {
-    _checkDailySpinStatus();
-  }
-
-  void markDailySpinCompleted() {
-    _lastSpinDate = _getCurrentDateString();
-    notifyListeners();
-  }
-
   void handleSpinResult(SpinResultEntity result, {VoidCallback? onSpinAgain}) {
     _lastSpinResult = result;
     if (_currentSpinType == SpinType.daily) {
-      markDailySpinCompleted();
+      _markDailySpinAsUsed();
     }
     loadSpinData(forceRefresh: true);
     notifyListeners();
@@ -289,8 +353,8 @@ class SpinProvider extends ChangeNotifier {
         (failure) {
           if (failure.message.toLowerCase().contains('already spun')) {
             _setError('You already spun today. Come back tomorrow!');
-            if (_spinData != null) {
-              _spinData = _spinData!.copyWith(canSpin: false);
+            if (_currentSpinType == SpinType.daily) {
+              _markDailySpinAsUsed();
             }
           } else {
             _setError(_getErrorMessage(failure));
@@ -299,7 +363,7 @@ class SpinProvider extends ChangeNotifier {
         (spinResult) {
           _lastSpinResult = spinResult;
           if (_currentSpinType == SpinType.daily) {
-            markDailySpinCompleted();
+            _markDailySpinAsUsed();
           }
           notifyListeners();
         },
@@ -375,29 +439,6 @@ class SpinProvider extends ChangeNotifier {
     return failure.message.isNotEmpty
         ? failure.message
         : 'Something went wrong. Please try again.';
-  }
-
-  // Daily spin specific private methods
-  void _checkDailySpinStatus() {
-    final currentDate = _getCurrentDateString();
-    if (_lastSpinDate == currentDate) {
-      if (_spinData != null) {
-        _spinData = _spinData!.copyWith(canSpin: false);
-        notifyListeners();
-      }
-    }
-  }
-
-  bool _isDailySpinCompleted() {
-    if (_currentSpinType != SpinType.daily) return false;
-
-    final currentDate = _getCurrentDateString();
-    return _lastSpinDate == currentDate;
-  }
-
-  String _getCurrentDateString() {
-    final now = DateTime.now();
-    return '${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year}';
   }
 
   DateTime _parseGroupDate(String dateString) {

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/constants/route_constants.dart';
 import '../../../../core/widgets/common/text_widget.dart';
 import '../../../../core/widgets/loading/loading_widget.dart';
 import '../providers/spin_provider.dart';
@@ -81,6 +83,12 @@ class _SpinAndEarnPageState extends State<SpinAndEarnPage> {
                   align: TextAlign.center,
                 ),
               ),
+              IconButton(
+                onPressed: () => context.push(RouteConstants.spinHistory),
+                icon: const Icon(Icons.history, color: AppConstants.white),
+                tooltip: 'Spin History',
+              ),
+              const SizedBox(width: 8),
               // Points Display
               Container(
                 padding: const EdgeInsets.symmetric(
@@ -120,66 +128,115 @@ class _SpinAndEarnPageState extends State<SpinAndEarnPage> {
   }
 
   Widget _buildSpinContent(SpinProvider provider) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          // Header
-          const CommonTextWidget(
-            text: 'Try Your Luck and Win Big!',
-            fontSize: 24,
-            fontWeight: FontWeight.w700,
-            color: AppConstants.white,
-            align: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          const CommonTextWidget(
-            text: 'Earn more loyalty points and exciting rewards',
-            fontSize: 16,
-            fontWeight: FontWeight.w400,
-            color: Colors.white70,
-            align: TextAlign.center,
-          ),
-          const SizedBox(height: 32),
-
-          // Spin Wheel
-          SizedBox(
-            height: 400,
-            child: SpinWheelWidget(
-              options: provider.spinOptions,
-              selectedStream: provider.spinStream,
-              isSpinning: provider.isSpinning,
-              onSpinComplete: (index) =>
-                  _handleSpinComplete(context, provider, index),
-            ),
-          ),
-
-          const SizedBox(height: 32),
-
-          // Points Requirement
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppConstants.black.withOpacity(0.3),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: AppConstants.appPrimaryColor.withOpacity(0.3),
-              ),
-            ),
-            child: CommonTextWidget(
-              text:
-                  'You need at least ${provider.requiredPoints} loyalty points to spin',
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
+    return RefreshIndicator(
+      onRefresh: () => provider.refreshSpinData(),
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            // Header
+            const CommonTextWidget(
+              text: 'Try Your Luck and Win Big!',
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
               color: AppConstants.white,
               align: TextAlign.center,
             ),
+            const SizedBox(height: 8),
+            const CommonTextWidget(
+              text: 'Earn more loyalty points and exciting rewards',
+              fontSize: 16,
+              fontWeight: FontWeight.w400,
+              color: Colors.white70,
+              align: TextAlign.center,
+            ),
+            const SizedBox(height: 32),
+
+            // Spin Wheel
+            SizedBox(
+              height: 400,
+              child: SpinWheelWidget(
+                options: provider.spinOptions,
+                selectedStream: provider.spinStream,
+                isSpinning: provider.isSpinning,
+                onSpinComplete: (index) =>
+                    _handleSpinComplete(context, provider, index),
+              ),
+            ),
+
+            const SizedBox(height: 32),
+
+            // Points Status
+            _buildPointsStatus(provider),
+
+            const SizedBox(height: 24),
+
+            // Spin Button
+            _buildSpinButton(provider),
+
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPointsStatus(SpinProvider provider) {
+    final hasEnoughPoints = provider.hasEnoughPoints;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppConstants.black.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: hasEnoughPoints
+              ? AppConstants.appPrimaryColor.withOpacity(0.3)
+              : Colors.orange.withOpacity(0.3),
+        ),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                hasEnoughPoints ? Icons.check_circle : Icons.warning,
+                color: hasEnoughPoints
+                    ? AppConstants.appPrimaryColor
+                    : Colors.orange,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              CommonTextWidget(
+                text: hasEnoughPoints
+                    ? 'You have enough points to spin!'
+                    : 'Not enough points to spin',
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppConstants.white,
+              ),
+            ],
           ),
-
-          const SizedBox(height: 24),
-
-          // Spin Button
-          _buildSpinButton(provider),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              CommonTextWidget(
+                text: 'Your Points: ${provider.userLoyaltyPoints}',
+                fontSize: 12,
+                fontWeight: FontWeight.w400,
+                color: Colors.white70,
+              ),
+              CommonTextWidget(
+                text: 'Required: ${provider.requiredPoints}',
+                fontSize: 12,
+                fontWeight: FontWeight.w400,
+                color: Colors.white70,
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -187,6 +244,15 @@ class _SpinAndEarnPageState extends State<SpinAndEarnPage> {
 
   Widget _buildSpinButton(SpinProvider provider) {
     final canSpin = provider.canSpin && !provider.isSpinning;
+
+    String buttonText = 'Play Now';
+    if (provider.isSpinning) {
+      buttonText = 'Spinning...';
+    } else if (!provider.hasEnoughPoints) {
+      buttonText = 'Not enough points to spin';
+    } else if (!provider.hasSpinOptions) {
+      buttonText = 'No spin options available';
+    }
 
     return SizedBox(
       width: double.infinity,
@@ -224,7 +290,7 @@ class _SpinAndEarnPageState extends State<SpinAndEarnPage> {
                 ],
               )
             : CommonTextWidget(
-                text: canSpin ? 'Play' : 'Not enough points to spin',
+                text: buttonText,
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
                 color: canSpin ? AppConstants.black : Colors.white54,
@@ -247,7 +313,7 @@ class _SpinAndEarnPageState extends State<SpinAndEarnPage> {
         isUnlimited: true,
         onContinue: () {
           Navigator.of(context).pop();
-          provider.loadSpinData(forceRefresh: true);
+          provider.refreshSpinData();
         },
         onSpinAgain: () {
           Navigator.of(context).pop();

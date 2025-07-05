@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/constants/app_constants.dart';
-import '../../../../core/widgets/common/app_bar.dart';
 import '../../../../core/widgets/common/text_widget.dart';
 import '../../../../core/widgets/loading/loading_widget.dart';
 import '../providers/spin_provider.dart';
@@ -36,11 +35,7 @@ class _DailySpinPageState extends State<DailySpinPage> {
         child: SafeArea(
           child: Column(
             children: [
-              const CommonAppBar(
-                title: 'Daily Spin',
-                showBackButton: true,
-                backgroundColor: Colors.transparent,
-              ),
+              _buildCustomAppBar(),
               Expanded(
                 child: Consumer<SpinProvider>(
                   builder: (context, provider, child) {
@@ -58,9 +53,8 @@ class _DailySpinPageState extends State<DailySpinPage> {
                       );
                     }
 
-                    // Check if daily spin is completed (already spun today)
-                    if (provider.errorMessage?.contains('already spun today') ==
-                        true) {
+                    // Check if daily spin is completed
+                    if (provider.isDailySpinCompleted) {
                       return const SpinExhaustedWidget(
                         title: 'Daily Spin Completed',
                         message:
@@ -87,85 +81,154 @@ class _DailySpinPageState extends State<DailySpinPage> {
     );
   }
 
-  Widget _buildSpinContent(SpinProvider provider) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          const SizedBox(height: 20),
-
-          // Header
-          const CommonTextWidget(
-            text: 'Daily Spin Challenge!',
-            fontSize: 28,
-            fontWeight: FontWeight.w700,
-            color: AppConstants.white,
-            align: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          const CommonTextWidget(
-            text: 'Spin once per day and win exciting rewards',
-            fontSize: 16,
-            fontWeight: FontWeight.w400,
-            color: Colors.white70,
-            align: TextAlign.center,
-          ),
-          const SizedBox(height: 12),
-
-          // User Points Display
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: AppConstants.black.withOpacity(0.3),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: AppConstants.appPrimaryColor.withOpacity(0.5),
+  Widget _buildCustomAppBar() {
+    return Consumer<SpinProvider>(
+      builder: (context, provider, child) {
+        return Container(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              IconButton(
+                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(Icons.arrow_back, color: AppConstants.white),
               ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.stars,
-                  color: AppConstants.appPrimaryColor,
-                  size: 16,
-                ),
-                const SizedBox(width: 8),
-                CommonTextWidget(
-                  text: 'Your Points: ${provider.userLoyaltyPoints}',
-                  fontSize: 14,
+              const Expanded(
+                child: CommonTextWidget(
+                  text: 'Daily Spin',
+                  fontSize: 20,
                   fontWeight: FontWeight.w600,
                   color: AppConstants.white,
+                  align: TextAlign.center,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
+        );
+      },
+    );
+  }
 
-          const SizedBox(height: 30),
+  Widget _buildSpinContent(SpinProvider provider) {
+    return RefreshIndicator(
+      onRefresh: () => provider.refreshSpinData(),
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            const SizedBox(height: 20),
 
-          // Spin Wheel
-          Expanded(
-            child: SpinWheelWidget(
-              options: provider.spinOptions,
-              selectedStream: provider.spinStream,
-              isSpinning: provider.isSpinning,
-              onSpinComplete: (index) =>
-                  _handleSpinComplete(context, provider, index),
+            // Header
+            const CommonTextWidget(
+              text: 'Daily Spin Challenge!',
+              fontSize: 28,
+              fontWeight: FontWeight.w700,
+              color: AppConstants.white,
+              align: TextAlign.center,
             ),
-          ),
+            const SizedBox(height: 8),
+            const CommonTextWidget(
+              text: 'Spin once per day and win exciting rewards',
+              fontSize: 16,
+              fontWeight: FontWeight.w400,
+              color: Colors.white70,
+              align: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
 
-          const SizedBox(height: 30),
+            // User Points Display
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppConstants.black.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: AppConstants.appPrimaryColor.withOpacity(0.5),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.stars,
+                    color: AppConstants.appPrimaryColor,
+                    size: 16,
+                  ),
+                  const SizedBox(width: 8),
+                  CommonTextWidget(
+                    text: 'Your Points: ${provider.userLoyaltyPoints}',
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppConstants.white,
+                  ),
+                ],
+              ),
+            ),
 
-          // Spin Button
-          _buildSpinButton(provider),
-          const SizedBox(height: 20),
-        ],
+            const SizedBox(height: 30),
+
+            // Spin Wheel
+            SizedBox(
+              height: 400,
+              child: SpinWheelWidget(
+                options: provider.spinOptions,
+                selectedStream: provider.spinStream,
+                isSpinning: provider.isSpinning,
+                onSpinComplete: (index) =>
+                    _handleSpinComplete(context, provider, index),
+              ),
+            ),
+
+            const SizedBox(height: 30),
+
+            // Daily Spin Status
+            if (provider.isDailySpinCompleted)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.check_circle, color: Colors.orange, size: 20),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: CommonTextWidget(
+                        text:
+                            'Daily spin completed! Come back tomorrow for more rewards.',
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: AppConstants.white,
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else
+              // Spin Button
+              _buildSpinButton(provider),
+
+            const SizedBox(height: 20),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildSpinButton(SpinProvider provider) {
-    final canSpinNow = !provider.isSpinning && provider.hasSpinOptions;
+    final canSpinNow =
+        provider.canSpin && !provider.isSpinning && provider.hasSpinOptions;
+
+    String buttonText = 'Spin Now';
+    if (provider.isDailySpinCompleted) {
+      buttonText = 'Already Spun Today';
+    } else if (provider.isSpinning) {
+      buttonText = 'Spinning...';
+    } else if (!provider.hasSpinOptions) {
+      buttonText = 'No Options Available';
+    }
 
     return SizedBox(
       width: double.infinity,
@@ -204,7 +267,7 @@ class _DailySpinPageState extends State<DailySpinPage> {
                 ],
               )
             : CommonTextWidget(
-                text: canSpinNow ? 'Spin Now' : 'Spin Unavailable',
+                text: buttonText,
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
                 color: canSpinNow ? AppConstants.black : Colors.white54,
@@ -214,7 +277,7 @@ class _DailySpinPageState extends State<DailySpinPage> {
   }
 
   void _handleSpinButtonPressed(SpinProvider provider) {
-    if (provider.errorMessage?.contains('already spun today') == true) {
+    if (provider.isDailySpinCompleted) {
       _showAlreadySpunMessage();
       return;
     }
@@ -230,12 +293,12 @@ class _DailySpinPageState extends State<DailySpinPage> {
       final option = provider.spinOptions[index];
       showDialog(
         context: context,
-        barrierDismissible: true,
+        barrierDismissible: false,
         builder: (context) => SpinResultDialog(
           option: option,
           onContinue: () {
             Navigator.of(context).pop();
-            provider.loadSpinData(forceRefresh: true);
+            provider.refreshSpinData();
           },
         ),
       );
