@@ -1,3 +1,4 @@
+// lib/features/vhub/presentation/widgets/vhub_navigation_widget.dart (Updated)
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -19,13 +20,6 @@ class VHubNavigationWidget extends StatefulWidget {
 class _VHubNavigationWidgetState extends State<VHubNavigationWidget> {
   int _selectedIndex = 0;
 
-  final List<Widget> _pages = [
-    const VHubHomeContent(),
-    const IdeasPage(),
-    const FaqPage(),
-    const CreateIdeaPageWrapper(), // Wrapper to provide navigation callback
-  ];
-
   final List<String> _titles = ['Home', 'Ideas', 'FAQ', 'Create Idea'];
 
   final List<IconData> _icons = [
@@ -42,14 +36,44 @@ class _VHubNavigationWidgetState extends State<VHubNavigationWidget> {
     Icons.add_circle,
   ];
 
+  // Method to navigate to specific tab (can be called from child widgets)
+  void navigateToTab(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+
+    // Load data based on selected tab
+    switch (index) {
+      case 0: // Home
+        context.read<VHubProvider>().loadIdeas(forceRefresh: true);
+        break;
+      case 1: // Ideas
+        context.read<VHubProvider>().loadIdeas();
+        break;
+      case 2: // FAQ
+        context.read<VHubProvider>().loadFaqs();
+        break;
+      case 3: // Create Idea - don't reset if it's already set up for editing
+        // Only reset if not in editing mode
+        final createProvider = context.read<CreateIdeaProvider>();
+        if (!createProvider.isReapply) {
+          createProvider.reset();
+        }
+        break;
+    }
+  }
+
   // Method to navigate to home (can be called from child widgets)
   void navigateToHome() {
-    setState(() {
-      _selectedIndex = 0;
-    });
-    // Also refresh ideas when going back to home
-    context.read<VHubProvider>().loadIdeas(forceRefresh: true);
+    navigateToTab(0);
   }
+
+  List<Widget> get _pages => [
+    const VHubHomeContent(),
+    IdeasPageWrapper(onNavigateToTab: navigateToTab),
+    const FaqPage(),
+    CreateIdeaPageWrapper(onNavigateToHome: navigateToHome),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -122,37 +146,30 @@ class _VHubNavigationWidgetState extends State<VHubNavigationWidget> {
   }
 
   void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
+    navigateToTab(index);
+  }
+}
 
-    // Load data based on selected tab
-    switch (index) {
-      case 1: // Ideas
-        context.read<VHubProvider>().loadIdeas();
-        break;
-      case 2: // FAQ
-        context.read<VHubProvider>().loadFaqs();
-        break;
-      case 3: // Create Idea - reset the provider
-        context.read<CreateIdeaProvider>().reset();
-        break;
-    }
+// Wrapper widget to provide navigation callback to IdeasPage
+class IdeasPageWrapper extends StatelessWidget {
+  final Function(int) onNavigateToTab;
+
+  const IdeasPageWrapper({super.key, required this.onNavigateToTab});
+
+  @override
+  Widget build(BuildContext context) {
+    return IdeasPage(onNavigateToTab: onNavigateToTab);
   }
 }
 
 // Wrapper widget to provide navigation callback to CreateIdeaPage
 class CreateIdeaPageWrapper extends StatelessWidget {
-  const CreateIdeaPageWrapper({super.key});
+  final VoidCallback onNavigateToHome;
+
+  const CreateIdeaPageWrapper({super.key, required this.onNavigateToHome});
 
   @override
   Widget build(BuildContext context) {
-    return CreateIdeaPage(
-      onNavigateToHome: () {
-        final parentState = context
-            .findAncestorStateOfType<_VHubNavigationWidgetState>();
-        parentState?.navigateToHome();
-      },
-    );
+    return CreateIdeaPage(onNavigateToHome: onNavigateToHome);
   }
 }

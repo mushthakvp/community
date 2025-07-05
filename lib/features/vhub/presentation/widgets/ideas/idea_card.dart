@@ -9,12 +9,14 @@ class IdeaCard extends StatelessWidget {
   final IdeaEntity idea;
   final VoidCallback onTap;
   final VoidCallback? onDelete;
+  final VoidCallback? onEdit;
 
   const IdeaCard({
     super.key,
     required this.idea,
     required this.onTap,
     this.onDelete,
+    this.onEdit,
   });
 
   @override
@@ -27,12 +29,16 @@ class IdeaCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppConstants.white.withOpacity(0.05),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppConstants.white.withOpacity(0.1)),
+          border: Border.all(
+            color: idea.isRejected
+                ? Colors.red.withOpacity(0.3)
+                : AppConstants.white.withOpacity(0.1),
+          ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header with title and status
+            // Header with title and actions
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -49,7 +55,28 @@ class IdeaCard extends StatelessWidget {
                 Row(
                   children: [
                     _buildStatusBadge(idea.currentStatus),
-                    if (onDelete != null) ...[
+                    if (idea.isRejected && onEdit != null) ...[
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: onEdit,
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: AppConstants.appPrimaryColor.withOpacity(
+                              0.2,
+                            ),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Icon(
+                            Icons.edit,
+                            size: 16,
+                            color: AppConstants.appPrimaryColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                    if (onDelete != null &&
+                        (idea.isRequested || idea.isRejected)) ...[
                       const SizedBox(width: 8),
                       GestureDetector(
                         onTap: onDelete,
@@ -73,6 +100,48 @@ class IdeaCard extends StatelessWidget {
             ),
 
             const SizedBox(height: 12),
+
+            // Rejection reason (if rejected)
+            if (idea.isRejected && idea.rejectReason != null) ...[
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.red.withOpacity(0.3)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.error_outline,
+                          color: Colors.red,
+                          size: 16,
+                        ),
+                        const SizedBox(width: 6),
+                        const CommonTextWidget(
+                          text: 'Rejection Reason:',
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.red,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    CommonTextWidget(
+                      text: idea.rejectReason!,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w400,
+                      color: AppConstants.white.withOpacity(0.9),
+                      maxLines: 2,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
 
             // Founders section
             Row(
@@ -102,7 +171,7 @@ class IdeaCard extends StatelessWidget {
 
             const SizedBox(height: 12),
 
-            // Footer with date
+            // Footer with date and stats
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -112,16 +181,110 @@ class IdeaCard extends StatelessWidget {
                   fontWeight: FontWeight.w400,
                   color: AppConstants.white.withOpacity(0.6),
                 ),
-                if (idea.isRejected && idea.rejectCount > 0)
-                  CommonTextWidget(
-                    text:
-                        'Rejected ${idea.rejectCount} time${idea.rejectCount > 1 ? 's' : ''}',
-                    fontSize: 11,
-                    fontWeight: FontWeight.w400,
-                    color: Colors.red.withOpacity(0.8),
-                  ),
+                Row(
+                  children: [
+                    if (idea.isRejected && idea.rejectCount > 0) ...[
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: CommonTextWidget(
+                          text: 'Rejected ${idea.rejectCount}x',
+                          fontSize: 10,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.red,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                    ],
+                    if (idea.reApplyCount > 0)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: CommonTextWidget(
+                          text: 'Reapplied ${idea.reApplyCount}x',
+                          fontSize: 10,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.blue,
+                        ),
+                      ),
+                  ],
+                ),
               ],
             ),
+
+            // Action buttons for rejected ideas
+            if (idea.isRejected) ...[
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: onEdit,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        decoration: BoxDecoration(
+                          color: AppConstants.appPrimaryColor.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: AppConstants.appPrimaryColor.withOpacity(
+                              0.5,
+                            ),
+                          ),
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.edit,
+                              size: 16,
+                              color: AppConstants.appPrimaryColor,
+                            ),
+                            SizedBox(width: 6),
+                            CommonTextWidget(
+                              text: 'Edit & Resubmit',
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: AppConstants.appPrimaryColor,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  GestureDetector(
+                    onTap: onTap,
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppConstants.white.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: AppConstants.white.withOpacity(0.3),
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.visibility,
+                        size: 16,
+                        color: AppConstants.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),

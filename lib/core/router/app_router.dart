@@ -28,6 +28,7 @@ import '../../features/splash/presentation/pages/splash_page.dart';
 import '../../features/vhub/presentation/pages/vhub_home_page.dart';
 import '../../features/vhub/presentation/widgets/create_idea/create_idea_page.dart';
 import '../../features/vhub/presentation/widgets/faq/faq_page.dart';
+import '../../features/vhub/presentation/widgets/ideas/idea_details_page.dart';
 import '../../features/vhub/presentation/widgets/ideas/ideas_page.dart';
 import '../../features/vizzle/ads_listing/presentation/pages/ads_listing_page.dart';
 import '../../features/vizzle/edit_ad/presentation/pages/edit_ad_page.dart';
@@ -662,6 +663,14 @@ class AppRouter {
       GoRoute(
         path: RouteConstants.vhubFaq,
         builder: (context, state) => const FaqPage(),
+      ),
+
+      GoRoute(
+        path: '${RouteConstants.vhubIdeaDetails}/:ideaId',
+        builder: (context, state) {
+          final ideaId = state.pathParameters['ideaId']!;
+          return IdeaDetailsPage(ideaId: ideaId);
+        },
       ),
     ],
   );
