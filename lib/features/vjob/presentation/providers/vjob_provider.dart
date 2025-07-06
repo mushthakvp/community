@@ -23,7 +23,6 @@ class VJobProvider extends ChangeNotifier {
 
   // Pagination
   int _currentPage = 1;
-  final int _totalPages = 1;
   bool _hasMoreData = true;
   static const int _pageSize = 10;
 

@@ -653,7 +653,6 @@ class VJobRepositoryImpl implements VJobRepository {
 
   @override
   Future<Either<Failure, JobEntity>> createJob(CreateJobParams params) {
-    // TODO: implement createJob
     throw UnimplementedError();
   }
 }
