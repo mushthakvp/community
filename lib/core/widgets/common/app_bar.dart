@@ -15,6 +15,7 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
   final Color? foregroundColor;
   final double? elevation;
   final bool? centerTitle;
+  final Function()? onBackPressed;
 
   const CommonAppBar({
     super.key,
@@ -26,6 +27,7 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.foregroundColor,
     this.elevation,
     this.centerTitle,
+    this.onBackPressed,
   });
 
   @override
@@ -46,6 +48,7 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
           (showBackButton
               ? IconButton(
                   onPressed: () {
+                    onBackPressed?.call();
                     // FIXED: Handle back button properly
                     if (title == "Create Account") {
                       context.go(RouteConstants.login);
