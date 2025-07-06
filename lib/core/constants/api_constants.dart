@@ -131,6 +131,9 @@ class ApiConstants {
   static const String updatePost = 'user/job-post-action';
   static const String deletePost = 'user/job-post-action';
   static const String likePost = 'user/like-job-post';
+  static const String getTitles = '/user/get-job-titles';
+  static const String createJobTitle = '/user/create-title';
+  static const String getMyCompany = '/user/get-my-companies';
 
   // ========== DYNAMIC ENDPOINT BUILDERS ==========
 

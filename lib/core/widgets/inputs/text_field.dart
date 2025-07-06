@@ -28,6 +28,7 @@ class CommonTextField extends StatefulWidget {
   final Color? borderColor;
   final double? borderRadius;
   final EdgeInsets? contentPadding;
+  final void Function(String?)? onSaved;
 
   const CommonTextField({
     super.key,
@@ -55,6 +56,7 @@ class CommonTextField extends StatefulWidget {
     this.borderColor,
     this.borderRadius,
     this.contentPadding,
+    this.onSaved,
   });
 
   @override
@@ -66,6 +68,7 @@ class _CommonTextFieldState extends State<CommonTextField> {
   Widget build(BuildContext context) {
     return Focus(
       child: TextFormField(
+        onSaved: widget.onSaved,
         onTapOutside: (event) => FocusManager.instance.primaryFocus?.unfocus(),
         controller: widget.controller,
         obscureText: widget.obscureText,

@@ -6,7 +6,6 @@ class CompanySelectionEntity extends Equatable {
   final String image;
   final String? email;
   final String? website;
-  final bool isSelected;
 
   const CompanySelectionEntity({
     required this.id,
@@ -14,7 +13,6 @@ class CompanySelectionEntity extends Equatable {
     required this.image,
     this.email,
     this.website,
-    this.isSelected = false,
   });
 
   CompanySelectionEntity copyWith({
@@ -23,7 +21,6 @@ class CompanySelectionEntity extends Equatable {
     String? image,
     String? email,
     String? website,
-    bool? isSelected,
   }) {
     return CompanySelectionEntity(
       id: id ?? this.id,
@@ -31,10 +28,9 @@ class CompanySelectionEntity extends Equatable {
       image: image ?? this.image,
       email: email ?? this.email,
       website: website ?? this.website,
-      isSelected: isSelected ?? this.isSelected,
     );
   }
 
   @override
-  List<Object?> get props => [id, name, image, email, website, isSelected];
+  List<Object?> get props => [id, name, image, email, website];
 }
