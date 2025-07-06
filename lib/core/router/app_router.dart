@@ -672,6 +672,8 @@ class AppRouter {
           return IdeaDetailsPage(ideaId: ideaId);
         },
       ),
+
+      // ==================== VJOB ROUTES ====================
     ],
   );
 }

@@ -9,6 +9,7 @@ import 'providers/redemption_providers.dart';
 import 'providers/spin_providers.dart';
 import 'providers/vhub_providers.dart';
 import 'providers/vizzle_providers.dart';
+import 'providers/vjob_provider.dart';
 
 class AppProviders {
   static List<SingleChildWidget> get providers => [
@@ -21,9 +22,9 @@ class AppProviders {
     ...RedemptionProviders.providers,
     ...VizzleProviders.providers,
     ...VHubProviders.providers,
+    ...VJobProviders.providers,
   ];
 
-  /// Get properly initialized providers with SharedPreferences
   static Future<List<SingleChildWidget>> getInitializedProviders() async {
     final coreProviders = await AppCoreProviders.getInitializedProviders();
 
@@ -37,6 +38,7 @@ class AppProviders {
       ...RedemptionProviders.providers,
       ...VizzleProviders.providers,
       ...VHubProviders.providers,
+      ...VJobProviders.providers,
     ];
   }
 
@@ -53,20 +55,17 @@ class AppProviders {
       RedemptionProviders.providers;
   static List<SingleChildWidget> getVizzleProviders() =>
       VizzleProviders.providers;
-  static List<SingleChildWidget> getVHubProviders() =>
-      VHubProviders.providers; // Added getter
+  static List<SingleChildWidget> getVHubProviders() => VHubProviders.providers;
+  static List<SingleChildWidget> getVJobProviders() => VJobProviders.providers;
 
-  /// Get essential providers only (for minimal app startup)
   static List<SingleChildWidget> getEssentialProviders() => [
     ...AppCoreProviders.providers,
     ...AuthProviders.providers,
     ...HomeProviders.providers,
   ];
 
-  /// Get providers count for debugging/monitoring
   static int get totalProvidersCount => providers.length;
 
-  /// Get providers count by category
   static Map<String, int> get providersCountByCategory => {
     'Core': AppCoreProviders.providers.length,
     'Auth': AuthProviders.providers.length,
@@ -77,5 +76,6 @@ class AppProviders {
     'Redemption': RedemptionProviders.providers.length,
     'Vizzle': VizzleProviders.providers.length,
     'VHub': VHubProviders.providers.length,
+    'VJob': VJobProviders.providers.length,
   };
 }

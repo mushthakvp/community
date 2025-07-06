@@ -247,4 +247,91 @@ class RouteHelper {
     final location = GoRouterState.of(context).uri.toString();
     return RouteConstants.getRouteCategory(location);
   }
+
+  // ==================== VJOB NAVIGATION HELPER METHODS ====================
+
+  /// Navigate to VJob home
+  static void navigateToVJob(BuildContext context) {
+    context.push(RouteConstants.vjobHome);
+  }
+
+  /// Navigate to VJob job details
+
+  /// Navigate to VJob create job
+  static void navigateToVJobCreateJob(BuildContext context) {
+    context.push(RouteConstants.vjobCreateJob);
+  }
+
+  /// Navigate to VJob my jobs
+  static void navigateToVJobMyJobs(BuildContext context) {
+    context.push(RouteConstants.vjobMyJobs);
+  }
+
+  /// Navigate to VJob applications
+  static void navigateToVJobApplications(BuildContext context) {
+    context.push(RouteConstants.vjobApplications);
+  }
+
+  /// Navigate to VJob saved jobs
+  static void navigateToVJobSavedJobs(BuildContext context) {
+    context.push(RouteConstants.vjobSavedJobs);
+  }
+
+  /// Navigate to VJob search with optional parameters
+  static void navigateToVJobSearch(
+    BuildContext context, {
+    String? query,
+    String? location,
+    String? workStyle,
+  }) {
+    final queryParams = <String, String>{};
+
+    if (query != null && query.isNotEmpty) {
+      queryParams['q'] = Uri.encodeComponent(query);
+    }
+    if (location != null) {
+      queryParams['location'] = Uri.encodeComponent(location);
+    }
+    if (workStyle != null) {
+      queryParams['workStyle'] = Uri.encodeComponent(workStyle);
+    }
+
+    String route = RouteConstants.vjobSearch;
+    if (queryParams.isNotEmpty) {
+      final queryString = queryParams.entries
+          .map((e) => '${e.key}=${e.value}')
+          .join('&');
+      route += '?$queryString';
+    }
+
+    context.push(route);
+  }
+
+  /// Navigate to VJob companies
+  static void navigateToVJobCompanies(BuildContext context) {
+    context.push(RouteConstants.vjobCompanies);
+  }
+
+  /// Navigate to VJob create company
+  static void navigateToVJobCreateCompany(BuildContext context) {
+    context.push(RouteConstants.vjobCreateCompany);
+  }
+
+  /// Navigate to VJob posts
+  static void navigateToVJobPosts(BuildContext context) {
+    context.push(RouteConstants.vjobPosts);
+  }
+
+  /// Navigate to VJob create post
+  static void navigateToVJobCreatePost(BuildContext context) {
+    context.push(RouteConstants.vjobCreatePost);
+  }
+
+  // ==================== VJOB ROUTE ANALYSIS METHODS ====================
+
+  /// Check if current route is a VJob route
+  static bool isCurrentRouteVJob(BuildContext context) {
+    final location = GoRouterState.of(context).uri.toString();
+    return RouteConstants.isVJobRoute(location);
+  }
 }

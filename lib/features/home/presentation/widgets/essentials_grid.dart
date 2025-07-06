@@ -49,15 +49,16 @@ class EssentialsGrid extends StatelessWidget {
         route: RouteConstants.vhubHome,
         description: "Business and startup support",
         isExternal: false,
-        isNavigationRoute: true, // This will use context.push
+        isNavigationRoute: true,
       ),
       EssentialItem(
         image:
             "https://res.cloudinary.com/fouvtycloud/image/upload/v1751012835/Vivera-New/vjob_ukw0w9.gif",
         name: "V - Job",
-        route: '/v-job',
+        route: RouteConstants.vjobHome,
         description: "Find your dream job",
         isExternal: false,
+        isNavigationRoute: true,
       ),
       EssentialItem(
         image:
@@ -222,14 +223,6 @@ class EssentialsGrid extends StatelessWidget {
       case '/v-cart':
         // Navigate to ecommerce section
         _showComingSoon(context, "V-Cart");
-        break;
-      case '/v-job':
-        // Navigate to job portal
-        _showComingSoon(context, "V-Job");
-        break;
-      case '/wallet':
-        // Navigate to wallet section
-        _showComingSoon(context, "V-Cash");
         break;
       default:
         _showComingSoon(context, "Feature");

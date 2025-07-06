@@ -122,6 +122,19 @@ class RouteConstants {
   static const String helpSupport = '/help-support';
   static const String contactUs = '/contact-us';
 
+  // ==================== VJOB ROUTES ====================
+  static const String vjobHome = '/v-job';
+  static const String vjobJobDetails = '/v-job/job-details';
+  static const String vjobCreateJob = '/v-job/create-job';
+  static const String vjobMyJobs = '/v-job/my-jobs';
+  static const String vjobApplications = '/v-job/applications';
+  static const String vjobSavedJobs = '/v-job/saved-jobs';
+  static const String vjobSearch = '/v-job/search';
+  static const String vjobCompanies = '/v-job/companies';
+  static const String vjobCreateCompany = '/v-job/create-company';
+  static const String vjobPosts = '/v-job/posts';
+  static const String vjobCreatePost = '/v-job/create-post';
+
   // ==================== HELPER METHODS ====================
 
   static String editAdWithId(String adId) {
@@ -135,6 +148,10 @@ class RouteConstants {
 
   static String vhubEditIdeaWithId(String ideaId) {
     return '$vhubEditIdea/$ideaId';
+  }
+
+  static bool isVJobRoute(String route) {
+    return route.startsWith('/v-job');
   }
 
   /// Check if route is protected (requires authentication)
@@ -152,8 +169,9 @@ class RouteConstants {
       spinHistory,
       vizzleHome,
       vizzleProfile,
+      vjobHome,
       vizzleMyProfile,
-      vhubHome, // Added VHub routes
+      vhubHome,
       vhubIdeas,
       vhubCreateIdea,
       vhubIdeaDetails,
@@ -207,6 +225,8 @@ class RouteConstants {
       return 'Vizzle';
     } else if (route.startsWith('/vhub')) {
       return 'VHub';
+    } else if (route.startsWith('/v-job')) {
+      return 'VJob';
     } else if (isAuthRoute(route)) {
       return 'Auth';
     } else if (isSpinRoute(route)) {
