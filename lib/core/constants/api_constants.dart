@@ -113,6 +113,25 @@ class ApiConstants {
   static const String getSpinAndEarnHistory = 'user/getUserSpinHistory';
   static const String userDetailsEndPoint = 'user/getHome';
 
+  // VJob endpoints
+  static const String getJobs = 'user/get-job';
+  static const String getJobDetails = 'user/get-job-detail?id=';
+  static const String createJob = 'user/create-job';
+  static const String updateJob = 'user/edit-job/';
+  static const String deleteJob = 'user/delete-job/';
+  static const String applyJob = 'user/apply-job';
+  static const String saveJob = 'user/save-job?id=';
+  static const String getMyApplications = 'user/get-saved-applied-jobs';
+  static const String getSavedJobs = 'user/get-saved-applied-jobs';
+  static const String createCompany = 'user/company';
+  static const String updateCompany = 'user/company';
+  static const String getMyCompanies = 'user/get-my-companies';
+  static const String getPosts = 'user/get-job-post?type=';
+  static const String createPost = 'user/create-job-post';
+  static const String updatePost = 'user/job-post-action';
+  static const String deletePost = 'user/job-post-action';
+  static const String likePost = 'user/like-job-post';
+
   // ========== DYNAMIC ENDPOINT BUILDERS ==========
 
   // Community Management

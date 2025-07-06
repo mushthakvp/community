@@ -139,6 +139,7 @@ class ApiClient {
   Future<http.Response> delete(
     String endpoint, {
     Map<String, String>? headers,
+    Map<String, dynamic>? body,
   }) async {
     try {
       await _checkConnectivity();
@@ -147,7 +148,11 @@ class ApiClient {
       final requestHeaders = await _getHeaders(additionalHeaders: headers);
 
       final response = await _client
-          .delete(uri, headers: requestHeaders)
+          .delete(
+            uri,
+            headers: requestHeaders,
+            body: body != null ? json.encode(body) : null,
+          )
           .timeout(Duration(seconds: ApiConstants.timeoutDuration));
 
       return _handleResponse(response);
