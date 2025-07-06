@@ -114,26 +114,32 @@ class ApiConstants {
   static const String userDetailsEndPoint = 'user/getHome';
 
   // VJob endpoints
-  static const String getJobs = 'user/get-job';
-  static const String getJobDetails = 'user/get-job-detail?id=';
-  static const String createJob = 'user/create-job';
-  static const String updateJob = 'user/edit-job/';
-  static const String deleteJob = 'user/delete-job/';
-  static const String applyJob = 'user/apply-job';
-  static const String saveJob = 'user/save-job?id=';
-  static const String getMyApplications = 'user/get-saved-applied-jobs';
-  static const String getSavedJobs = 'user/get-saved-applied-jobs';
-  static const String createCompany = 'user/company';
-  static const String updateCompany = 'user/company';
-  static const String getMyCompanies = 'user/get-my-companies';
-  static const String getPosts = 'user/get-job-post?type=';
-  static const String createPost = 'user/create-job-post';
-  static const String updatePost = 'user/job-post-action';
-  static const String deletePost = 'user/job-post-action';
-  static const String likePost = 'user/like-job-post';
-  static const String getTitles = '/user/get-job-titles';
-  static const String createJobTitle = '/user/create-title';
-  static const String getMyCompany = '/user/get-my-companies';
+  // Job Related Endpoints
+  static const String getSearchJobs = "user/get-job";
+  static const String getJobDetails = "user/get-job-detail?id=";
+  static const String saveJobCandidate = "user/save-job?id=";
+  static const String applyJobCandidate = "user/apply-job";
+  static const String getSavedAdsUrl = "user/savedAds";
+  static const String searchAll = "user/searchAll?keyword=";
+  static const String getRecentSearchJobs = "user/get-recent-search";
+  static const String getJobProfile = "user/get-job-profilePage";
+  static const String getMyCompany = "user/get-my-companies?limit=10&page=1";
+  static const String getCreatedCompanyJobs = "user/get-posted-companyJobs?";
+  static const String getCompanyJobCandidates = "user/get-applied-candidates?";
+  static const String reApplyJobUrl = "user/re-apply-jobPost";
+  static const String markAsClosedurl = "user/mark-as-closed";
+  static const String createOrUpdateCompany = "user/company";
+  static const String getTitles = "user/get-job-titles";
+  static const String createJob = "user/create-job";
+  static const String createJobTitle = "user/create-title";
+
+  // Post Related Endpoints
+  static const String createPostJob = "user/create-job-post";
+  static const String getPost = "user/get-job-post?type=";
+  static const String likePost = "user/like-job-post";
+  static const String jobPostAction = "user/job-post-action";
+  static const String reportPostUrl = "user/reportPost";
+  static const String shareFeedUrl = "user/shareFeed/";
 
   // ========== DYNAMIC ENDPOINT BUILDERS ==========
 
