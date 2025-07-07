@@ -48,6 +48,8 @@ import '../../features/vizzle/seller_details/presentation/pages/seller_details_p
 import '../../features/vizzle/sub_category_listing/presentation/pages/sub_category_listing_page.dart';
 import '../../features/vizzle/sub_items_view/presentation/pages/sub_items_page.dart';
 import '../../features/vizzle/sub_sub_category_list_view/presentation/pages/sub_sub_category_page.dart';
+import '../../features/vjob/my_company/presentation/pages/empty_company_page.dart';
+import '../../features/vjob/my_company/presentation/pages/success_company_page.dart';
 import '../constants/app_constants.dart';
 import '../constants/route_constants.dart';
 import '../widgets/navigation/bottom_navigation.dart';
@@ -674,6 +676,14 @@ class AppRouter {
       ),
 
       // ==================== VJOB ROUTES ====================
+      GoRoute(
+        path: '/vjob/empty-company',
+        builder: (context, state) => const EmptyCompanyPage(),
+      ),
+      GoRoute(
+        path: '/vjob/success-company',
+        builder: (context, state) => const SuccessCompanyPage(),
+      ),
     ],
   );
 }
