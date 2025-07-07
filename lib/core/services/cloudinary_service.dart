@@ -176,4 +176,32 @@ class CloudinaryService {
       rethrow;
     }
   }
+
+  static Future<String?> uploadDoc({
+    required File file,
+    String? folder,
+    Function(double)? onProgress,
+  }) async {
+    try {
+      String fileName = file.path.split('/').last;
+
+      final response = await _cloudinary.upload(
+        file: file.path,
+        fileBytes: file.readAsBytesSync(),
+        resourceType: CloudinaryResourceType.auto,
+        folder: folder ?? 'vivera_uploads',
+        fileName: fileName,
+        progressCallback: (count, total) {
+          if (onProgress != null) {
+            double progress = count / total;
+            onProgress(progress);
+          }
+        },
+      );
+      return response.secureUrl;
+    } catch (e) {
+      debugPrint("Cloudinary upload error: $e");
+      return null;
+    }
+  }
 }
