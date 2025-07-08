@@ -25,7 +25,7 @@ class CompanyJobRemoteDataSourceImpl implements CompanyJobRemoteDataSource {
   Future<JobDetailsResponseModel> getJobDetails(String jobId) async {
     try {
       final response = await apiClient.get(
-        '/user/get-job-detail',
+        'user/get-job-detail',
         queryParameters: {'id': jobId},
       );
 
@@ -44,7 +44,7 @@ class CompanyJobRemoteDataSourceImpl implements CompanyJobRemoteDataSource {
   }) async {
     try {
       final response = await apiClient.get(
-        '/user/get-applied-candidates',
+        'user/get-applied-candidates',
         queryParameters: {
           'page': page.toString(),
           'limit': limit.toString(),
@@ -63,7 +63,7 @@ class CompanyJobRemoteDataSourceImpl implements CompanyJobRemoteDataSource {
   Future<bool> markJobAsClosed(String jobId) async {
     try {
       final response = await apiClient.post(
-        '/user/mark-as-closed',
+        'user/mark-as-closed',
         body: {'jobId': jobId},
       );
 
@@ -78,7 +78,7 @@ class CompanyJobRemoteDataSourceImpl implements CompanyJobRemoteDataSource {
   Future<bool> reapplyJob(String jobId) async {
     try {
       final response = await apiClient.post(
-        '/user/re-apply-jobPost',
+        'user/re-apply-jobPost',
         body: {'jobId': jobId},
       );
 
@@ -92,10 +92,10 @@ class CompanyJobRemoteDataSourceImpl implements CompanyJobRemoteDataSource {
   @override
   Future<String> downloadCandidateCV(String candidateId) async {
     try {
-      final response = await apiClient.get('/user/download-cv/$candidateId');
+      final response = await apiClient.get('user/download-cv/$candidateId');
 
       if (response.statusCode == 200) {
-        return response.body; // This could be a file URL or base64 data
+        return response.body;
       } else {
         throw ServerException('Failed to download CV');
       }

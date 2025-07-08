@@ -22,7 +22,7 @@ class JobDetailsRemoteDataSourceImpl implements JobDetailsRemoteDataSource {
   @override
   Future<JobDetailsModel> getJobDetails(String jobId) async {
     try {
-      final response = await apiClient.get('/user/get-job-detail?id=$jobId');
+      final response = await apiClient.get('user/get-job-detail?id=$jobId');
       final data = json.decode(response.body);
       return JobDetailsModel.fromJson(data);
     } catch (e) {
@@ -37,7 +37,7 @@ class JobDetailsRemoteDataSourceImpl implements JobDetailsRemoteDataSource {
   }) async {
     try {
       final response = await apiClient.post(
-        '/user/apply-job',
+        'user/apply-job',
         body: {'id': jobId, 'resume': resumeUrl},
       );
 
@@ -52,7 +52,7 @@ class JobDetailsRemoteDataSourceImpl implements JobDetailsRemoteDataSource {
   Future<bool> saveJob(String jobId) async {
     try {
       final response = await apiClient.post(
-        '/user/save-job',
+        'user/save-job',
         body: {'id': jobId},
       );
 

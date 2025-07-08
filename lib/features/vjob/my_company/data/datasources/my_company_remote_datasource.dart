@@ -32,7 +32,7 @@ class MyCompanyRemoteDataSourceImpl implements MyCompanyRemoteDataSource {
   Future<CompanyResponseModel> getMyCompany() async {
     try {
       final response = await apiClient.get(
-        '/user/get-my-companies?limit=10&page=1',
+        'user/get-my-companies?limit=10&page=1',
       );
       final data = json.decode(response.body);
       return CompanyResponseModel.fromJson(data);
@@ -50,7 +50,7 @@ class MyCompanyRemoteDataSourceImpl implements MyCompanyRemoteDataSource {
   }) async {
     try {
       final response = await apiClient.get(
-        '/user/get-posted-companyJobs?company=$companyId&status=$status&limit=$limit&page=$page',
+        'user/get-posted-companyJobs?company=$companyId&status=$status&limit=$limit&page=$page',
       );
       final data = json.decode(response.body);
       return CreatedJobsResponseModel.fromJson(data);
@@ -67,7 +67,7 @@ class MyCompanyRemoteDataSourceImpl implements MyCompanyRemoteDataSource {
   }) async {
     try {
       final response = await apiClient.get(
-        '/user/get-applied-candidates?jobId=$jobId&page=$page&limit=$limit',
+        'user/get-applied-candidates?jobId=$jobId&page=$page&limit=$limit',
       );
       final data = json.decode(response.body);
       return JobCandidatesResponseModel.fromJson(data);
@@ -80,7 +80,7 @@ class MyCompanyRemoteDataSourceImpl implements MyCompanyRemoteDataSource {
   Future<bool> reapplyJob(String jobId) async {
     try {
       final response = await apiClient.post(
-        '/user/re-apply-jobPost',
+        'user/re-apply-jobPost',
         body: {'id': jobId},
       );
       final data = json.decode(response.body);
@@ -94,7 +94,7 @@ class MyCompanyRemoteDataSourceImpl implements MyCompanyRemoteDataSource {
   Future<bool> markJobAsClosed(String jobId) async {
     try {
       final response = await apiClient.post(
-        '/user/mark-as-closed',
+        'user/mark-as-closed',
         body: {'jobId': jobId},
       );
       final data = json.decode(response.body);

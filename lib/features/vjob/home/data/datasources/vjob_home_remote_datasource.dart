@@ -24,7 +24,7 @@ class VJobHomeRemoteDataSourceImpl implements VJobHomeRemoteDataSource {
   Future<JobsResponseModel> getJobs({int page = 1, int limit = 10}) async {
     try {
       final response = await apiClient.get(
-        '/api/jobs/search',
+        'api/jobs/search',
         queryParameters: {'page': page.toString(), 'limit': limit.toString()},
       );
 
@@ -39,7 +39,7 @@ class VJobHomeRemoteDataSourceImpl implements VJobHomeRemoteDataSource {
   Future<bool> saveJob(String jobId) async {
     try {
       final response = await apiClient.post(
-        '/api/jobs/save',
+        'api/jobs/save',
         body: {'id': jobId},
       );
 
@@ -54,7 +54,7 @@ class VJobHomeRemoteDataSourceImpl implements VJobHomeRemoteDataSource {
   Future<bool> applyJob(String jobId) async {
     try {
       final response = await apiClient.post(
-        '/api/jobs/apply',
+        'api/jobs/apply',
         body: {'id': jobId},
       );
 
@@ -68,7 +68,7 @@ class VJobHomeRemoteDataSourceImpl implements VJobHomeRemoteDataSource {
   @override
   Future<PostsResponseModel> getPosts({int page = 1, int limit = 10}) async {
     try {
-      final response = await apiClient.get('/api/posts/all');
+      final response = await apiClient.get('api/posts/all');
       final data = json.decode(response.body);
       return PostsResponseModel.fromJson(data);
     } catch (e) {
@@ -79,7 +79,7 @@ class VJobHomeRemoteDataSourceImpl implements VJobHomeRemoteDataSource {
   @override
   Future<PostsResponseModel> getMyPosts() async {
     try {
-      final response = await apiClient.get('/api/posts/myPosts');
+      final response = await apiClient.get('api/posts/myPosts');
       final data = json.decode(response.body);
       return PostsResponseModel.fromJson(data);
     } catch (e) {
@@ -91,7 +91,7 @@ class VJobHomeRemoteDataSourceImpl implements VJobHomeRemoteDataSource {
   Future<bool> likePost(String postId) async {
     try {
       final response = await apiClient.post(
-        '/api/posts/like',
+        'api/posts/like',
         body: {'postId': postId},
       );
 
@@ -106,7 +106,7 @@ class VJobHomeRemoteDataSourceImpl implements VJobHomeRemoteDataSource {
   Future<bool> deletePost(String postId) async {
     try {
       final response = await apiClient.post(
-        '/api/posts/action',
+        'api/posts/action',
         body: {'postId': postId, 'action': 'delete'},
       );
 
