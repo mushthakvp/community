@@ -3,6 +3,37 @@ import 'package:provider/single_child_widget.dart';
 
 import '../../core/network/api_client.dart';
 import '../../core/network/network_info.dart';
+import '../../core/services/cloudinary_service.dart';
+// Company Job Details
+import '../../features/vjob/company_job_details/data/datasources/company_job_local_datasource.dart';
+import '../../features/vjob/company_job_details/data/datasources/company_job_remote_datasource.dart';
+import '../../features/vjob/company_job_details/data/repositories/company_job_repository_impl.dart';
+import '../../features/vjob/company_job_details/domain/repositories/company_job_repository.dart';
+import '../../features/vjob/company_job_details/domain/usecases/get_job_candidates_usecase.dart';
+import '../../features/vjob/company_job_details/domain/usecases/mark_job_as_closed_usecase.dart';
+import '../../features/vjob/company_job_details/domain/usecases/reapply_job_usecase.dart'
+    as company_job_reapply;
+import '../../features/vjob/company_job_details/presentation/providers/company_job_provider.dart';
+// Create Company
+import '../../features/vjob/create_company/data/datasources/create_company_local_datasource.dart';
+import '../../features/vjob/create_company/data/datasources/create_company_remote_datasource.dart';
+import '../../features/vjob/create_company/data/repositories/create_company_repository_impl.dart';
+import '../../features/vjob/create_company/domain/repositories/create_company_repository.dart';
+import '../../features/vjob/create_company/domain/usecases/create_company_usecase.dart';
+import '../../features/vjob/create_company/domain/usecases/update_company_usecase.dart';
+import '../../features/vjob/create_company/domain/usecases/upload_image_usecase.dart';
+import '../../features/vjob/create_company/presentation/providers/create_company_provider.dart';
+// Create Job
+import '../../features/vjob/create_job/data/datasources/create_job_local_datasource.dart';
+import '../../features/vjob/create_job/data/datasources/create_job_remote_datasource.dart';
+import '../../features/vjob/create_job/data/repositories/create_job_repository_impl.dart';
+import '../../features/vjob/create_job/domain/repositories/create_job_repository.dart';
+import '../../features/vjob/create_job/domain/usecases/create_job_title_usecase.dart';
+import '../../features/vjob/create_job/domain/usecases/create_job_usecase.dart';
+import '../../features/vjob/create_job/domain/usecases/get_job_titles_usecase.dart';
+import '../../features/vjob/create_job/domain/usecases/update_job_usecase.dart';
+import '../../features/vjob/create_job/presentation/providers/create_job_provider.dart';
+// VJob Home
 import '../../features/vjob/home/data/datasources/vjob_home_local_datasource.dart';
 import '../../features/vjob/home/data/datasources/vjob_home_remote_datasource.dart';
 import '../../features/vjob/home/data/repositories/vjob_home_repository_impl.dart';
@@ -13,11 +44,39 @@ import '../../features/vjob/home/domain/usecases/like_post_usecase.dart';
 import '../../features/vjob/home/domain/usecases/save_job_usecase.dart';
 import '../../features/vjob/home/presentation/providers/jobs_provider.dart';
 import '../../features/vjob/home/presentation/providers/posts_provider.dart';
+// Job Details
+import '../../features/vjob/job_details/data/datasources/job_details_local_datasource.dart';
+import '../../features/vjob/job_details/data/datasources/job_details_remote_datasource.dart';
+import '../../features/vjob/job_details/data/repositories/job_details_repository_impl.dart';
+import '../../features/vjob/job_details/domain/repositories/job_details_repository.dart';
+import '../../features/vjob/job_details/domain/usecases/apply_job_usecase.dart';
+import '../../features/vjob/job_details/domain/usecases/get_job_details_usecase.dart';
+import '../../features/vjob/job_details/domain/usecases/save_job_usecase.dart'
+    as job_details_save;
+import '../../features/vjob/job_details/presentation/providers/job_details_provider.dart';
+// My Company
+import '../../features/vjob/my_company/data/datasources/my_company_local_datasource.dart';
+import '../../features/vjob/my_company/data/datasources/my_company_remote_datasource.dart';
+import '../../features/vjob/my_company/data/repositories/my_company_repository_impl.dart';
+import '../../features/vjob/my_company/domain/repositories/my_company_repository.dart';
+import '../../features/vjob/my_company/domain/usecases/get_company_usecase.dart';
+import '../../features/vjob/my_company/domain/usecases/get_created_jobs_usecase.dart';
+import '../../features/vjob/my_company/domain/usecases/mark_job_closed_usecase.dart';
+import '../../features/vjob/my_company/domain/usecases/reapply_job_usecase.dart';
+import '../../features/vjob/my_company/presentation/providers/my_company_provider.dart';
+// My Jobs
+import '../../features/vjob/my_jobs/data/datasources/my_jobs_local_datasource.dart';
+import '../../features/vjob/my_jobs/data/datasources/my_jobs_remote_datasource.dart';
+import '../../features/vjob/my_jobs/data/repositories/my_jobs_repository_impl.dart';
+import '../../features/vjob/my_jobs/domain/repositories/my_jobs_repository.dart';
+import '../../features/vjob/my_jobs/domain/usecases/get_my_jobs_usecase.dart';
+import '../../features/vjob/my_jobs/domain/usecases/update_job_status_usecase.dart';
+import '../../features/vjob/my_jobs/presentation/providers/my_jobs_provider.dart';
 
 /// VJob feature providers for job portal functionality
 class VJobProviders {
   static List<SingleChildWidget> get providers => [
-    // Data Sources
+    // ==================== VJOB HOME DATA SOURCES ====================
     Provider<VJobHomeRemoteDataSource>(
       create: (context) =>
           VJobHomeRemoteDataSourceImpl(apiClient: context.read<ApiClient>()),
@@ -26,7 +85,7 @@ class VJobProviders {
       create: (context) => VJobHomeLocalDataSourceImpl(),
     ),
 
-    // Repository
+    // ==================== VJOB HOME REPOSITORY ====================
     Provider<VJobHomeRepository>(
       create: (context) => VJobHomeRepositoryImpl(
         remoteDataSource: context.read<VJobHomeRemoteDataSource>(),
@@ -35,7 +94,7 @@ class VJobProviders {
       ),
     ),
 
-    // Use Cases
+    // ==================== VJOB HOME USE CASES ====================
     Provider<GetJobsUseCase>(
       create: (context) => GetJobsUseCase(context.read<VJobHomeRepository>()),
     ),
@@ -49,7 +108,7 @@ class VJobProviders {
       create: (context) => LikePostUseCase(context.read<VJobHomeRepository>()),
     ),
 
-    // Providers
+    // ==================== VJOB HOME PROVIDERS ====================
     ChangeNotifierProvider<JobsProvider>(
       create: (context) => JobsProvider(
         getJobsUseCase: context.read<GetJobsUseCase>(),
@@ -60,6 +119,260 @@ class VJobProviders {
       create: (context) => PostsProvider(
         getPostsUseCase: context.read<GetPostsUseCase>(),
         likePostUseCase: context.read<LikePostUseCase>(),
+      ),
+    ),
+
+    // ==================== JOB DETAILS DATA SOURCES ====================
+    Provider<JobDetailsRemoteDataSource>(
+      create: (context) =>
+          JobDetailsRemoteDataSourceImpl(apiClient: context.read<ApiClient>()),
+    ),
+    Provider<JobDetailsLocalDataSource>(
+      create: (context) => JobDetailsLocalDataSourceImpl(),
+    ),
+
+    // ==================== JOB DETAILS REPOSITORY ====================
+    Provider<JobDetailsRepository>(
+      create: (context) => JobDetailsRepositoryImpl(
+        remoteDataSource: context.read<JobDetailsRemoteDataSource>(),
+        localDataSource: context.read<JobDetailsLocalDataSource>(),
+        networkInfo: context.read<NetworkInfo>(),
+      ),
+    ),
+
+    // ==================== JOB DETAILS USE CASES ====================
+    Provider<GetJobDetailsUseCase>(
+      create: (context) =>
+          GetJobDetailsUseCase(context.read<JobDetailsRepository>()),
+    ),
+    Provider<ApplyJobUseCase>(
+      create: (context) =>
+          ApplyJobUseCase(context.read<JobDetailsRepository>()),
+    ),
+    Provider<job_details_save.SaveJobUseCase>(
+      create: (context) =>
+          job_details_save.SaveJobUseCase(context.read<JobDetailsRepository>()),
+    ),
+
+    // ==================== JOB DETAILS PROVIDER ====================
+    ChangeNotifierProvider<JobDetailsProvider>(
+      create: (context) => JobDetailsProvider(
+        getJobDetailsUseCase: context.read<GetJobDetailsUseCase>(),
+        applyJobUseCase: context.read<ApplyJobUseCase>(),
+        saveJobUseCase: context.read<job_details_save.SaveJobUseCase>(),
+        fileUploadService: CloudinaryService(),
+      ),
+    ),
+
+    // ==================== CREATE JOB DATA SOURCES ====================
+    Provider<CreateJobRemoteDataSource>(
+      create: (context) =>
+          CreateJobRemoteDataSourceImpl(apiClient: context.read<ApiClient>()),
+    ),
+    Provider<CreateJobLocalDataSource>(
+      create: (context) => CreateJobLocalDataSourceImpl(),
+    ),
+
+    // ==================== CREATE JOB REPOSITORY ====================
+    Provider<CreateJobRepository>(
+      create: (context) => CreateJobRepositoryImpl(
+        remoteDataSource: context.read<CreateJobRemoteDataSource>(),
+        localDataSource: context.read<CreateJobLocalDataSource>(),
+        networkInfo: context.read<NetworkInfo>(),
+      ),
+    ),
+
+    // ==================== CREATE JOB USE CASES ====================
+    Provider<GetJobTitlesUseCase>(
+      create: (context) =>
+          GetJobTitlesUseCase(context.read<CreateJobRepository>()),
+    ),
+    Provider<CreateJobTitleUseCase>(
+      create: (context) =>
+          CreateJobTitleUseCase(context.read<CreateJobRepository>()),
+    ),
+    Provider<CreateJobUseCase>(
+      create: (context) =>
+          CreateJobUseCase(context.read<CreateJobRepository>()),
+    ),
+    Provider<UpdateJobUseCase>(
+      create: (context) =>
+          UpdateJobUseCase(context.read<CreateJobRepository>()),
+    ),
+
+    // ==================== CREATE JOB PROVIDER ====================
+    ChangeNotifierProvider<CreateJobProvider>(
+      create: (context) => CreateJobProvider(
+        getJobTitlesUseCase: context.read<GetJobTitlesUseCase>(),
+        createJobTitleUseCase: context.read<CreateJobTitleUseCase>(),
+        createJobUseCase: context.read<CreateJobUseCase>(),
+        updateJobUseCase: context.read<UpdateJobUseCase>(),
+      ),
+    ),
+
+    // ==================== CREATE COMPANY DATA SOURCES ====================
+    Provider<CreateCompanyRemoteDataSource>(
+      create: (context) => CreateCompanyRemoteDataSourceImpl(
+        apiClient: context.read<ApiClient>(),
+      ),
+    ),
+    Provider<CreateCompanyLocalDataSource>(
+      create: (context) => CreateCompanyLocalDataSourceImpl(),
+    ),
+
+    // ==================== CREATE COMPANY REPOSITORY ====================
+    Provider<CreateCompanyRepository>(
+      create: (context) => CreateCompanyRepositoryImpl(
+        remoteDataSource: context.read<CreateCompanyRemoteDataSource>(),
+        localDataSource: context.read<CreateCompanyLocalDataSource>(),
+        networkInfo: context.read<NetworkInfo>(),
+      ),
+    ),
+
+    // ==================== CREATE COMPANY USE CASES ====================
+    Provider<CreateCompanyUseCase>(
+      create: (context) =>
+          CreateCompanyUseCase(context.read<CreateCompanyRepository>()),
+    ),
+    Provider<UpdateCompanyUseCase>(
+      create: (context) =>
+          UpdateCompanyUseCase(context.read<CreateCompanyRepository>()),
+    ),
+    Provider<UploadImageUseCase>(
+      create: (context) =>
+          UploadImageUseCase(context.read<CreateCompanyRepository>()),
+    ),
+
+    // ==================== CREATE COMPANY PROVIDER ====================
+    ChangeNotifierProvider<CreateCompanyProvider>(
+      create: (context) => CreateCompanyProvider(
+        createCompanyUseCase: context.read<CreateCompanyUseCase>(),
+        updateCompanyUseCase: context.read<UpdateCompanyUseCase>(),
+        uploadImageUseCase: context.read<UploadImageUseCase>(),
+      ),
+    ),
+
+    // ==================== MY COMPANY DATA SOURCES ====================
+    Provider<MyCompanyRemoteDataSource>(
+      create: (context) =>
+          MyCompanyRemoteDataSourceImpl(apiClient: context.read<ApiClient>()),
+    ),
+    Provider<MyCompanyLocalDataSource>(
+      create: (context) => MyCompanyLocalDataSourceImpl(),
+    ),
+
+    // ==================== MY COMPANY REPOSITORY ====================
+    Provider<MyCompanyRepository>(
+      create: (context) => MyCompanyRepositoryImpl(
+        remoteDataSource: context.read<MyCompanyRemoteDataSource>(),
+        localDataSource: context.read<MyCompanyLocalDataSource>(),
+        networkInfo: context.read<NetworkInfo>(),
+      ),
+    ),
+
+    // ==================== MY COMPANY USE CASES ====================
+    Provider<GetCompanyUseCase>(
+      create: (context) =>
+          GetCompanyUseCase(context.read<MyCompanyRepository>()),
+    ),
+    Provider<GetCreatedJobsUseCase>(
+      create: (context) =>
+          GetCreatedJobsUseCase(context.read<MyCompanyRepository>()),
+    ),
+    Provider<MarkJobClosedUseCase>(
+      create: (context) =>
+          MarkJobClosedUseCase(context.read<MyCompanyRepository>()),
+    ),
+    Provider<ReapplyJobUseCase>(
+      create: (context) =>
+          ReapplyJobUseCase(context.read<MyCompanyRepository>()),
+    ),
+
+    // ==================== MY COMPANY PROVIDER ====================
+    ChangeNotifierProvider<MyCompanyProvider>(
+      create: (context) => MyCompanyProvider(
+        getCompanyUseCase: context.read<GetCompanyUseCase>(),
+        getCreatedJobsUseCase: context.read<GetCreatedJobsUseCase>(),
+        reapplyJobUseCase: context.read<ReapplyJobUseCase>(),
+        markJobClosedUseCase: context.read<MarkJobClosedUseCase>(),
+      ),
+    ),
+
+    // ==================== COMPANY JOB DETAILS DATA SOURCES ====================
+    Provider<CompanyJobRemoteDataSource>(
+      create: (context) =>
+          CompanyJobRemoteDataSourceImpl(apiClient: context.read<ApiClient>()),
+    ),
+    Provider<CompanyJobLocalDataSource>(
+      create: (context) => CompanyJobLocalDataSourceImpl(),
+    ),
+
+    // ==================== COMPANY JOB DETAILS REPOSITORY ====================
+    Provider<CompanyJobRepository>(
+      create: (context) => CompanyJobRepositoryImpl(
+        remoteDataSource: context.read<CompanyJobRemoteDataSource>(),
+        localDataSource: context.read<CompanyJobLocalDataSource>(),
+        networkInfo: context.read<NetworkInfo>(),
+      ),
+    ),
+
+    // ==================== COMPANY JOB DETAILS USE CASES ====================
+    Provider<GetJobCandidatesUseCase>(
+      create: (context) =>
+          GetJobCandidatesUseCase(context.read<CompanyJobRepository>()),
+    ),
+    Provider<MarkJobAsClosedUseCase>(
+      create: (context) =>
+          MarkJobAsClosedUseCase(context.read<CompanyJobRepository>()),
+    ),
+    Provider<company_job_reapply.ReapplyJobUseCase>(
+      create: (context) => company_job_reapply.ReapplyJobUseCase(
+        context.read<CompanyJobRepository>(),
+      ),
+    ),
+
+    // ==================== COMPANY JOB DETAILS PROVIDER ====================
+    ChangeNotifierProvider<CompanyJobProvider>(
+      create: (context) => CompanyJobProvider(
+        getJobCandidatesUseCase: context.read<GetJobCandidatesUseCase>(),
+        markJobAsClosedUseCase: context.read<MarkJobAsClosedUseCase>(),
+        reapplyJobUseCase: context
+            .read<company_job_reapply.ReapplyJobUseCase>(),
+      ),
+    ),
+
+    // ==================== MY JOBS DATA SOURCES ====================
+    Provider<MyJobsRemoteDataSource>(
+      create: (context) =>
+          MyJobsRemoteDataSourceImpl(apiClient: context.read<ApiClient>()),
+    ),
+    Provider<MyJobsLocalDataSource>(
+      create: (context) => MyJobsLocalDataSourceImpl(),
+    ),
+
+    // ==================== MY JOBS REPOSITORY ====================
+    Provider<MyJobsRepository>(
+      create: (context) => MyJobsRepositoryImpl(
+        remoteDataSource: context.read<MyJobsRemoteDataSource>(),
+        localDataSource: context.read<MyJobsLocalDataSource>(),
+        networkInfo: context.read<NetworkInfo>(),
+      ),
+    ),
+
+    // ==================== MY JOBS USE CASES ====================
+    Provider<GetMyJobsUseCase>(
+      create: (context) => GetMyJobsUseCase(context.read<MyJobsRepository>()),
+    ),
+    Provider<UpdateJobStatusUseCase>(
+      create: (context) =>
+          UpdateJobStatusUseCase(context.read<MyJobsRepository>()),
+    ),
+
+    // ==================== MY JOBS PROVIDER ====================
+    ChangeNotifierProvider<MyJobsProvider>(
+      create: (context) => MyJobsProvider(
+        getMyJobsUseCase: context.read<GetMyJobsUseCase>(),
+        updateJobStatusUseCase: context.read<UpdateJobStatusUseCase>(),
       ),
     ),
   ];
