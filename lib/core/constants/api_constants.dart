@@ -2,7 +2,7 @@ class ApiConstants {
   // Base URLs
   String baseUrlPro = 'https://api.prod.liveraapp.com/';
   String baseUrlDev = 'http://192.168.3.6:3553/';
-  static String baseUrl = 'http://192.168.3.6:3553/';
+  static String baseUrl = 'https://api.prod.liveraapp.com/';
 
   // Request Configuration
   static const int timeoutDuration = 30;

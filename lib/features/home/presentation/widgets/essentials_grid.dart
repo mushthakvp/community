@@ -55,7 +55,7 @@ class EssentialsGrid extends StatelessWidget {
         image:
             "https://res.cloudinary.com/fouvtycloud/image/upload/v1751012835/Vivera-New/vjob_ukw0w9.gif",
         name: "V - Job",
-        route: RouteConstants.vjobHome,
+        route: RouteConstants.vjobHome, // This should point to VJob home
         description: "Find your dream job",
         isExternal: false,
         isNavigationRoute: true,
