@@ -5,12 +5,14 @@ import '../../../features/vjob/company_job_details/presentation/pages/company_jo
 import '../../../features/vjob/create_company/presentation/pages/company_success_page.dart';
 import '../../../features/vjob/create_company/presentation/pages/create_company_page.dart';
 import '../../../features/vjob/create_job/presentation/pages/create_job_page.dart';
+import '../../../features/vjob/create_post/presentation/pages/create_post_page.dart';
 import '../../../features/vjob/home/presentation/pages/vjob_home_page.dart';
 import '../../../features/vjob/job_details/presentation/pages/job_details_page.dart';
 import '../../../features/vjob/my_company/presentation/pages/empty_company_page.dart';
 import '../../../features/vjob/my_company/presentation/pages/my_company_page.dart';
 import '../../../features/vjob/my_company/presentation/pages/success_company_page.dart';
 import '../../../features/vjob/my_jobs/presentation/pages/my_jobs_page.dart';
+import '../../../features/vjob/mypost_view/presentation/pages/my_post_view_page.dart';
 import '../../constants/route_constants.dart';
 
 class VJobRouter {
@@ -157,7 +159,40 @@ class VJobRouter {
     GoRoute(
       path: RouteConstants.vjobCreatePost,
       name: 'vjobCreatePost',
-      builder: (context, state) => _buildPlaceholderPage('Create Post'),
+      builder: (context, state) => const CreatePostPage(),
+    ),
+
+    // ==================== VJOB EDIT POST ROUTE ====================
+    GoRoute(
+      path: '/vjob/edit-post/:postId',
+      name: 'vjobEditPost',
+      builder: (context, state) {
+        return CreatePostPage();
+      },
+    ),
+
+    // ==================== VJOB MY POSTS ROUTE ====================
+    GoRoute(
+      path: '/vjob/my-posts',
+      name: 'vjobMyPosts',
+      builder: (context, state) => const MyPostViewPage(),
+    ),
+
+    // ==================== VJOB POST DETAIL ROUTE ====================
+    GoRoute(
+      path: '/vjob/post-detail/:postId',
+      name: 'vjobPostDetail',
+      builder: (context, state) {
+        final postId = state.pathParameters['postId']!;
+        return _buildPlaceholderPage('Post Details: $postId');
+      },
+    ),
+
+    // ==================== VJOB POST STATS ROUTE ====================
+    GoRoute(
+      path: '/vjob/post-stats',
+      name: 'vjobPostStats',
+      builder: (context, state) => _buildPlaceholderPage('Post Statistics'),
     ),
 
     // ==================== VJOB JOB APPLICATION ROUTE ====================
@@ -371,6 +406,10 @@ class VJobRouter {
   static const String vjobCreateCompanyPath = RouteConstants.vjobCreateCompany;
   static const String vjobPostsPath = RouteConstants.vjobPosts;
   static const String vjobCreatePostPath = RouteConstants.vjobCreatePost;
+  static const String vjobMyPostsPath = '/vjob/my-posts';
+  static const String vjobPostDetailPath = '/vjob/post-detail';
+  static const String vjobEditPostPath = '/vjob/edit-post';
+  static const String vjobPostStatsPath = '/vjob/post-stats';
 
   /// Helper methods for VJob navigation
   static String buildJobDetailsRoute(String jobId) {
@@ -430,6 +469,14 @@ class VJobRouter {
     return '${RouteConstants.vjobCreateJob}/edit/$jobId';
   }
 
+  static String buildPostDetailRoute(String postId) {
+    return '/vjob/post-detail/$postId';
+  }
+
+  static String buildEditPostRoute(String postId) {
+    return '/vjob/edit-post/$postId';
+  }
+
   /// Navigation helper methods
   static void navigateToJobDetails(BuildContext context, String jobId) {
     context.push(buildJobDetailsRoute(jobId));
@@ -465,6 +512,31 @@ class VJobRouter {
 
   static void navigateToCompanyDetails(BuildContext context, String companyId) {
     context.push(buildCompanyDetailsRoute(companyId));
+  }
+
+  // Post navigation methods
+  static void navigateToCreatePost(BuildContext context) {
+    context.push(vjobCreatePostPath);
+  }
+
+  static void navigateToMyPosts(BuildContext context) {
+    context.push(vjobMyPostsPath);
+  }
+
+  static void navigateToPostDetail(BuildContext context, String postId) {
+    context.push(buildPostDetailRoute(postId));
+  }
+
+  static void navigateToEditPost(
+    BuildContext context,
+    String postId, {
+    dynamic post,
+  }) {
+    context.push(buildEditPostRoute(postId), extra: {'post': post});
+  }
+
+  static void navigateToPostStats(BuildContext context) {
+    context.push(vjobPostStatsPath);
   }
 
   static void navigateToSearch(
@@ -562,6 +634,20 @@ class VJobRouter {
     return route.startsWith('/vjob/create-job');
   }
 
+  static bool isPostRoute(String route) {
+    return route.contains('/vjob/post') ||
+        route.contains('/vjob/create-post') ||
+        route.contains('/vjob/my-posts');
+  }
+
+  static bool isCreatePostRoute(String route) {
+    return route.startsWith('/vjob/create-post');
+  }
+
+  static bool isMyPostsRoute(String route) {
+    return route == '/vjob/my-posts';
+  }
+
   /// Extract route parameters
   static String? extractJobIdFromRoute(String route) {
     final jobDetailsPattern = RegExp(r'/vjob/job-details/([^/]+)');
@@ -572,6 +658,16 @@ class VJobRouter {
   static String? extractCompanyIdFromRoute(String route) {
     final companyPattern = RegExp(r'/vjob/company/([^/]+)');
     final match = companyPattern.firstMatch(route);
+    return match?.group(1);
+  }
+
+  static String? extractPostIdFromRoute(String route) {
+    final postPattern = RegExp(r'/vjob/post-detail/([^/]+)');
+    final editPostPattern = RegExp(r'/vjob/edit-post/([^/]+)');
+
+    var match = postPattern.firstMatch(route);
+    match ??= editPostPattern.firstMatch(route);
+
     return match?.group(1);
   }
 

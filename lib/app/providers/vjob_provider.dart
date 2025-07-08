@@ -33,6 +33,17 @@ import '../../features/vjob/create_job/domain/usecases/create_job_usecase.dart';
 import '../../features/vjob/create_job/domain/usecases/get_job_titles_usecase.dart';
 import '../../features/vjob/create_job/domain/usecases/update_job_usecase.dart';
 import '../../features/vjob/create_job/presentation/providers/create_job_provider.dart';
+// Create Post
+import '../../features/vjob/create_post/data/datasources/create_post_local_datasource.dart';
+import '../../features/vjob/create_post/data/datasources/create_post_remote_datasource.dart';
+import '../../features/vjob/create_post/data/repositories/create_post_repository_impl.dart';
+import '../../features/vjob/create_post/domain/repositories/create_post_repository.dart';
+import '../../features/vjob/create_post/domain/usecases/create_post_usecase.dart';
+import '../../features/vjob/create_post/domain/usecases/delete_post_usecase.dart';
+import '../../features/vjob/create_post/domain/usecases/update_post_usecase.dart';
+import '../../features/vjob/create_post/domain/usecases/upload_image_usecase.dart'
+    as create_post_upload;
+import '../../features/vjob/create_post/presentation/providers/create_post_provider.dart';
 // VJob Home
 import '../../features/vjob/home/data/datasources/vjob_home_local_datasource.dart';
 import '../../features/vjob/home/data/datasources/vjob_home_remote_datasource.dart';
@@ -72,6 +83,20 @@ import '../../features/vjob/my_jobs/domain/repositories/my_jobs_repository.dart'
 import '../../features/vjob/my_jobs/domain/usecases/get_my_jobs_usecase.dart';
 import '../../features/vjob/my_jobs/domain/usecases/update_job_status_usecase.dart';
 import '../../features/vjob/my_jobs/presentation/providers/my_jobs_provider.dart';
+// My Post View
+import '../../features/vjob/mypost_view/data/datasources/my_post_local_datasource.dart';
+import '../../features/vjob/mypost_view/data/datasources/my_post_remote_datasource.dart';
+import '../../features/vjob/mypost_view/data/repositories/my_post_repository_impl.dart';
+import '../../features/vjob/mypost_view/domain/repositories/my_post_repository.dart';
+import '../../features/vjob/mypost_view/domain/usecases/delete_post_usecase.dart'
+    as my_post_delete;
+import '../../features/vjob/mypost_view/domain/usecases/get_my_posts_usecase.dart';
+import '../../features/vjob/mypost_view/domain/usecases/get_post_by_id_usecase.dart';
+import '../../features/vjob/mypost_view/domain/usecases/get_post_stats_usecase.dart';
+import '../../features/vjob/mypost_view/domain/usecases/like_post_usecase.dart'
+    as my_post_like;
+import '../../features/vjob/mypost_view/domain/usecases/search_my_posts_usecase.dart';
+import '../../features/vjob/mypost_view/presentation/providers/my_post_provider.dart';
 
 /// VJob feature providers for job portal functionality
 class VJobProviders {
@@ -373,6 +398,108 @@ class VJobProviders {
       create: (context) => MyJobsProvider(
         getMyJobsUseCase: context.read<GetMyJobsUseCase>(),
         updateJobStatusUseCase: context.read<UpdateJobStatusUseCase>(),
+      ),
+    ),
+
+    // ==================== CREATE POST DATA SOURCES ====================
+    Provider<CreatePostRemoteDataSource>(
+      create: (context) =>
+          CreatePostRemoteDataSourceImpl(apiClient: context.read<ApiClient>()),
+    ),
+    Provider<CreatePostLocalDataSource>(
+      create: (context) => CreatePostLocalDataSourceImpl(),
+    ),
+
+    // ==================== CREATE POST REPOSITORY ====================
+    Provider<CreatePostRepository>(
+      create: (context) => CreatePostRepositoryImpl(
+        remoteDataSource: context.read<CreatePostRemoteDataSource>(),
+        localDataSource: context.read<CreatePostLocalDataSource>(),
+        networkInfo: context.read<NetworkInfo>(),
+      ),
+    ),
+
+    // ==================== CREATE POST USE CASES ====================
+    Provider<CreatePostUseCase>(
+      create: (context) =>
+          CreatePostUseCase(context.read<CreatePostRepository>()),
+    ),
+    Provider<UpdatePostUseCase>(
+      create: (context) =>
+          UpdatePostUseCase(context.read<CreatePostRepository>()),
+    ),
+    Provider<DeletePostUseCase>(
+      create: (context) =>
+          DeletePostUseCase(context.read<CreatePostRepository>()),
+    ),
+    Provider<create_post_upload.UploadImageUseCase>(
+      create: (context) => create_post_upload.UploadImageUseCase(
+        context.read<CreatePostRepository>(),
+      ),
+    ),
+
+    // ==================== CREATE POST PROVIDER ====================
+    ChangeNotifierProvider<CreatePostProvider>(
+      create: (context) => CreatePostProvider(
+        createPostUseCase: context.read<CreatePostUseCase>(),
+        updatePostUseCase: context.read<UpdatePostUseCase>(),
+        uploadImageUseCase: context
+            .read<create_post_upload.UploadImageUseCase>(),
+        deletePostUseCase: context.read<DeletePostUseCase>(),
+      ),
+    ),
+
+    // ==================== MY POST VIEW DATA SOURCES ====================
+    Provider<MyPostRemoteDataSource>(
+      create: (context) =>
+          MyPostRemoteDataSourceImpl(apiClient: context.read<ApiClient>()),
+    ),
+    Provider<MyPostLocalDataSource>(
+      create: (context) => MyPostLocalDataSourceImpl(),
+    ),
+
+    // ==================== MY POST VIEW REPOSITORY ====================
+    Provider<MyPostRepository>(
+      create: (context) => MyPostRepositoryImpl(
+        remoteDataSource: context.read<MyPostRemoteDataSource>(),
+        localDataSource: context.read<MyPostLocalDataSource>(),
+        networkInfo: context.read<NetworkInfo>(),
+      ),
+    ),
+
+    // ==================== MY POST VIEW USE CASES ====================
+    Provider<GetMyPostsUseCase>(
+      create: (context) => GetMyPostsUseCase(context.read<MyPostRepository>()),
+    ),
+    Provider<GetPostByIdUseCase>(
+      create: (context) => GetPostByIdUseCase(context.read<MyPostRepository>()),
+    ),
+    Provider<my_post_like.LikeMyPostUseCase>(
+      create: (context) =>
+          my_post_like.LikeMyPostUseCase(context.read<MyPostRepository>()),
+    ),
+    Provider<my_post_delete.DeleteMyPostUseCase>(
+      create: (context) =>
+          my_post_delete.DeleteMyPostUseCase(context.read<MyPostRepository>()),
+    ),
+    Provider<GetPostStatsUseCase>(
+      create: (context) =>
+          GetPostStatsUseCase(context.read<MyPostRepository>()),
+    ),
+    Provider<SearchMyPostsUseCase>(
+      create: (context) =>
+          SearchMyPostsUseCase(context.read<MyPostRepository>()),
+    ),
+
+    // ==================== MY POST VIEW PROVIDER ====================
+    ChangeNotifierProvider<MyPostProvider>(
+      create: (context) => MyPostProvider(
+        getMyPostsUseCase: context.read<GetMyPostsUseCase>(),
+        getPostByIdUseCase: context.read<GetPostByIdUseCase>(),
+        likePostUseCase: context.read<my_post_like.LikeMyPostUseCase>(),
+        deletePostUseCase: context.read<my_post_delete.DeleteMyPostUseCase>(),
+        getPostStatsUseCase: context.read<GetPostStatsUseCase>(),
+        searchMyPostsUseCase: context.read<SearchMyPostsUseCase>(),
       ),
     ),
   ];
