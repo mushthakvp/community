@@ -47,7 +47,7 @@ class VJobHomeAppBar extends StatelessWidget implements PreferredSizeWidget {
           child: Row(
             children: [
               Expanded(child: _buildSearchField()),
-              const SizedBox(width: 16),
+              const SizedBox(width: 12), // Reduced from 16 to 12
               _buildToggleButton(),
             ],
           ),
@@ -73,10 +73,14 @@ class VJobHomeAppBar extends StatelessWidget implements PreferredSizeWidget {
               size: 20,
             ),
             const SizedBox(width: 12),
-            CommonTextWidget(
-              text: 'Search job, company, or city',
-              color: AppConstants.white.withOpacity(0.7),
-              fontSize: 16,
+            Flexible(
+              child: CommonTextWidget(
+                text: 'Search job, company, or city',
+                color: AppConstants.white.withOpacity(0.7),
+                fontSize: 16,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ],
         ),
@@ -90,7 +94,10 @@ class VJobHomeAppBar extends StatelessWidget implements PreferredSizeWidget {
         return GestureDetector(
           onTap: onToggleView,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 12,
+            ), // Reduced horizontal padding from 16 to 14
             decoration: BoxDecoration(
               color: const Color(0xff0f0f0f),
               borderRadius: BorderRadius.circular(8),
@@ -104,7 +111,7 @@ class VJobHomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                   fontSize: 16,
                   fontWeight: FontWeight.w400,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
                 Icon(
                   Icons.keyboard_arrow_down_sharp,
                   color: AppConstants.white,

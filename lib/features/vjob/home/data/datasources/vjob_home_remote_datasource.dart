@@ -39,7 +39,7 @@ class VJobHomeRemoteDataSourceImpl implements VJobHomeRemoteDataSource {
   Future<bool> saveJob(String jobId) async {
     try {
       final response = await apiClient.post(
-        'api/jobs/save',
+        'user/save-job',
         body: {'id': jobId},
       );
 
@@ -54,7 +54,7 @@ class VJobHomeRemoteDataSourceImpl implements VJobHomeRemoteDataSource {
   Future<bool> applyJob(String jobId) async {
     try {
       final response = await apiClient.post(
-        'api/jobs/apply',
+        'user/apply-job',
         body: {'id': jobId},
       );
 
@@ -68,7 +68,7 @@ class VJobHomeRemoteDataSourceImpl implements VJobHomeRemoteDataSource {
   @override
   Future<PostsResponseModel> getPosts({int page = 1, int limit = 10}) async {
     try {
-      final response = await apiClient.get('user/get-job-post');
+      final response = await apiClient.get('user/get-job-post?type=all');
       final data = json.decode(response.body);
       return PostsResponseModel.fromJson(data);
     } catch (e) {
@@ -79,7 +79,7 @@ class VJobHomeRemoteDataSourceImpl implements VJobHomeRemoteDataSource {
   @override
   Future<PostsResponseModel> getMyPosts() async {
     try {
-      final response = await apiClient.get('api/posts/myPosts');
+      final response = await apiClient.get('user/get-job-post?type=myPosts');
       final data = json.decode(response.body);
       return PostsResponseModel.fromJson(data);
     } catch (e) {
@@ -91,7 +91,7 @@ class VJobHomeRemoteDataSourceImpl implements VJobHomeRemoteDataSource {
   Future<bool> likePost(String postId) async {
     try {
       final response = await apiClient.post(
-        'api/posts/like',
+        'user/like-job-post',
         body: {'postId': postId},
       );
 
@@ -106,7 +106,7 @@ class VJobHomeRemoteDataSourceImpl implements VJobHomeRemoteDataSource {
   Future<bool> deletePost(String postId) async {
     try {
       final response = await apiClient.post(
-        'api/posts/action',
+        'user/job-post-action',
         body: {'postId': postId, 'action': 'delete'},
       );
 
