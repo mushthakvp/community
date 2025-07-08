@@ -24,7 +24,7 @@ class VJobHomeRemoteDataSourceImpl implements VJobHomeRemoteDataSource {
   Future<JobsResponseModel> getJobs({int page = 1, int limit = 10}) async {
     try {
       final response = await apiClient.get(
-        'api/jobs/search',
+        'user/get-job',
         queryParameters: {'page': page.toString(), 'limit': limit.toString()},
       );
 
@@ -68,7 +68,7 @@ class VJobHomeRemoteDataSourceImpl implements VJobHomeRemoteDataSource {
   @override
   Future<PostsResponseModel> getPosts({int page = 1, int limit = 10}) async {
     try {
-      final response = await apiClient.get('api/posts/all');
+      final response = await apiClient.get('user/get-job-post');
       final data = json.decode(response.body);
       return PostsResponseModel.fromJson(data);
     } catch (e) {
