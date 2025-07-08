@@ -29,6 +29,7 @@ class CommonTextField extends StatefulWidget {
   final double? borderRadius;
   final EdgeInsets? contentPadding;
   final void Function(String?)? onSaved;
+  final TextInputAction textInputAction;
 
   const CommonTextField({
     super.key,
@@ -57,6 +58,7 @@ class CommonTextField extends StatefulWidget {
     this.borderRadius,
     this.contentPadding,
     this.onSaved,
+    this.textInputAction = TextInputAction.next,
   });
 
   @override
@@ -68,6 +70,7 @@ class _CommonTextFieldState extends State<CommonTextField> {
   Widget build(BuildContext context) {
     return Focus(
       child: TextFormField(
+        textInputAction: widget.textInputAction,
         onSaved: widget.onSaved,
         onTapOutside: (event) => FocusManager.instance.primaryFocus?.unfocus(),
         controller: widget.controller,
