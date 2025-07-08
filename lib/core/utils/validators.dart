@@ -69,4 +69,26 @@ class Validators {
     }
     return null;
   }
+
+  static bool isValidEmail(String email) {
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    return emailRegex.hasMatch(email);
+  }
+
+  static bool isValidPhone(String phone) {
+    final phoneRegex = RegExp(r'^\+?[\d\s\-\(\)]{10,15}$');
+    return phoneRegex.hasMatch(phone.replaceAll(RegExp(r'\s'), ''));
+  }
+
+  static bool isValidUrl(String url) {
+    final urlRegex = RegExp(
+      r'^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$',
+    );
+    return urlRegex.hasMatch(url);
+  }
+
+  static int countWords(String text) {
+    if (text.trim().isEmpty) return 0;
+    return text.trim().split(RegExp(r'\s+')).length;
+  }
 }
