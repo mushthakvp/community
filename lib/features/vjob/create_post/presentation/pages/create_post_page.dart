@@ -8,7 +8,7 @@ import '../../../../../core/utils/extensions.dart';
 import '../../../../../core/widgets/buttons/primary_button.dart';
 import '../../../../../core/widgets/common/text_widget.dart';
 import '../../../../../core/widgets/inputs/text_field.dart';
-import '../../../../../core/widgets/loading/loading_overlay.dart';
+import '../../../../../core/widgets/loading/loading_widget.dart';
 import '../providers/create_post_provider.dart';
 import '../widgets/image_picker_widget.dart';
 
@@ -69,23 +69,28 @@ class _CreatePostPageState extends State<CreatePostPage> {
   Widget _buildBody() {
     return Consumer<CreatePostProvider>(
       builder: (context, provider, _) {
-        return LoadingOverlay(
-          isLoading: provider.isLoading,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
-            child: Form(
-              key: provider.formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildTitleField(),
-                  const SizedBox(height: 16),
-                  _buildDescriptionField(),
-                  const SizedBox(height: 16),
-                  _buildImagePicker(),
-                  const SizedBox(height: 80),
-                ],
-              ),
+        if (provider.isLoading) {
+          return const LoadingWidget(
+            message: 'Processing...',
+            showMessage: true,
+          );
+        }
+
+        // Show form when not loading
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Form(
+            key: provider.formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildTitleField(),
+                const SizedBox(height: 16),
+                _buildDescriptionField(),
+                const SizedBox(height: 16),
+                _buildImagePicker(),
+                const SizedBox(height: 80),
+              ],
             ),
           ),
         );
