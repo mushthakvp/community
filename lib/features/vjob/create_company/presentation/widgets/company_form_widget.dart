@@ -54,7 +54,7 @@ class CompanyFormWidget extends StatelessWidget {
               controller: provider.phoneController,
               validator: provider.validatePhone,
               keyboardType: TextInputType.phone,
-              maxLength: 15,
+              maxLength: 10,
               hintText: 'Enter phone number',
             ),
             const SizedBox(height: 20),

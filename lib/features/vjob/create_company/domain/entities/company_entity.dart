@@ -13,6 +13,7 @@ class CompanyEntity extends Equatable {
   final String? location;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final String? action;
 
   const CompanyEntity({
     this.id,
@@ -27,6 +28,7 @@ class CompanyEntity extends Equatable {
     this.location,
     this.createdAt,
     this.updatedAt,
+    this.action,
   });
 
   CompanyEntity copyWith({
@@ -56,6 +58,7 @@ class CompanyEntity extends Equatable {
       location: location ?? this.location,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      action: action ?? action,
     );
   }
 
@@ -73,6 +76,7 @@ class CompanyEntity extends Equatable {
     location,
     createdAt,
     updatedAt,
+    action,
   ];
 }
 

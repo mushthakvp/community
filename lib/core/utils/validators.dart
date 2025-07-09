@@ -80,11 +80,37 @@ class Validators {
     return phoneRegex.hasMatch(phone.replaceAll(RegExp(r'\s'), ''));
   }
 
-  static bool isValidUrl(String url) {
-    final urlRegex = RegExp(
-      r'^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$',
-    );
-    return urlRegex.hasMatch(url);
+  static bool isValidUrl(String input) {
+    input = input.trim();
+    if (input.isEmpty) return false;
+    String url = input;
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      url = 'https://$url';
+    }
+    try {
+      final uri = Uri.parse(url);
+      if (uri.scheme != 'http' && uri.scheme != 'https') {
+        return false;
+      }
+      if (uri.host.isEmpty) {
+        return false;
+      }
+      if (!uri.host.contains('.')) {
+        return false;
+      }
+      if (uri.host.startsWith('.') || uri.host.endsWith('.')) {
+        return false;
+      }
+      final domainRegex = RegExp(
+        r'^[a-zA-Z0-9]([a-zA-Z0-9\-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]*[a-zA-Z0-9])?)*$',
+      );
+      if (!domainRegex.hasMatch(uri.host)) {
+        return false;
+      }
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 
   static int countWords(String text) {

@@ -4,6 +4,7 @@ import 'package:livera/core/utils/result.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../../core/constants/app_constants.dart';
+import '../../../../../core/constants/route_constants.dart';
 import '../../../../../core/utils/extensions.dart';
 import '../../../../../core/widgets/common/text_widget.dart';
 import '../../../../../core/widgets/loading/loading_widget.dart';
@@ -284,11 +285,11 @@ class _MyCompanyPageState extends State<MyCompanyPage> {
   }
 
   void _handleEditCompany() {
-    context.push('/vjob/create-company');
+    context.push(RouteConstants.vjobCreateCompany);
   }
 
   void _handleRegisterCompany() {
-    context.push('/vjob/create-company');
+    context.push(RouteConstants.vjobCreateCompany);
   }
 
   void _handleJobTap(CreatedJobEntity job) {

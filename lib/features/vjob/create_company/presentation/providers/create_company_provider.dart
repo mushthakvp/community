@@ -159,7 +159,7 @@ class CreateCompanyProvider extends ChangeNotifier {
       return 'Please enter company description';
     }
     final wordCount = Validators.countWords(value.trim());
-    if (wordCount < 50) {
+    if (wordCount < 20) {
       return 'Company description must be at least 50 words (currently $wordCount words)';
     }
     return null;
@@ -201,7 +201,6 @@ class CreateCompanyProvider extends ChangeNotifier {
     _status = CreateCompanyStatus.loading;
     _errorMessage = '';
     notifyListeners();
-
     final company = CompanyEntity(
       id: _companyId,
       name: nameController.text.trim(),
@@ -215,6 +214,7 @@ class CreateCompanyProvider extends ChangeNotifier {
       lat: _lat,
       lng: _lng,
       location: _placeName,
+      action: _isFromUpdate ? 'update' : 'create',
     );
 
     try {

@@ -68,7 +68,20 @@ class _MapWidgetState extends State<MapWidget> {
   void _openLocationPicker(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const LocationPickerPage()),
+      MaterialPageRoute(
+        builder: (context) {
+          return LocationSearchView(
+            googleApiKey: 'AIzaSyBOHuJ-4CqJBjmSi_RugeonwPU5cBVqbeA',
+            onLocationSelected: (PickedLocation data) {
+              context.read<PlaceAddProvider>().setLocation(
+                data.latitude,
+                data.longitude,
+                data.placeName,
+              );
+            },
+          );
+        },
+      ),
     );
   }
 }

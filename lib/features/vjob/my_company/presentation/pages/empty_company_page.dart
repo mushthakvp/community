@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../../core/constants/app_constants.dart';
+import '../../../../../core/constants/route_constants.dart';
 import '../../../../../core/widgets/common/text_widget.dart';
 
 class EmptyCompanyPage extends StatelessWidget {
@@ -62,7 +63,7 @@ class EmptyCompanyPage extends StatelessWidget {
               const SizedBox(height: 32),
               ElevatedButton(
                 onPressed: () {
-                  context.pushNamed('/vjob/create-company');
+                  context.push(RouteConstants.vjobCreateCompany);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppConstants.appPrimaryColor,

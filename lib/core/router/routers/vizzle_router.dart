@@ -57,10 +57,9 @@ class VizzleRouter {
       path: RouteConstants.locationPicker,
       name: 'locationPicker',
       builder: (context, state) {
-        final queryParams = state.uri.queryParameters;
-        return LocationPickerPage(
-          initialLatitude: double.tryParse(queryParams['lat'] ?? ''),
-          initialLongitude: double.tryParse(queryParams['lng'] ?? ''),
+        return LocationSearchView(
+          googleApiKey: 'AIzaSyBOHuJ-4CqJBjmSi_RugeonwPU5cBVqbeA',
+          onLocationSelected: (p0) {},
         );
       },
     ),

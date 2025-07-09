@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:livera/core/utils/result.dart';
@@ -8,12 +10,13 @@ import '../../../../../core/constants/app_constants.dart';
 import '../../../../../core/utils/extensions.dart';
 import '../../../../../core/widgets/common/text_widget.dart';
 import '../../../../../core/widgets/loading/loading_widget.dart';
+import '../../../../vizzle/place_add/presentation/pages/location_picker_page.dart';
 import '../../domain/entities/company_entity.dart';
 import '../providers/create_company_provider.dart';
 import '../widgets/company_form_widget.dart';
 
 class CreateCompanyPage extends StatefulWidget {
-  final CompanyEntity? company; // For update mode
+  final CompanyEntity? company;
 
   const CreateCompanyPage({super.key, this.company});
 
@@ -177,11 +180,24 @@ class _CreateCompanyPageState extends State<CreateCompanyPage> {
   }
 
   void _handleLocationTap() {
-    final provider = context.read<CreateCompanyProvider>();
-    provider.setLocation(
-      lat: 11.1203,
-      lng: 76.1199,
-      placeName: 'Kannur, Kerala, India',
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => LocationSearchView(
+          googleApiKey: 'AIzaSyBOHuJ-4CqJBjmSi_RugeonwPU5cBVqbeA',
+          onLocationSelected: (PickedLocation data) {
+            final provider = context.read<CreateCompanyProvider>();
+            log(
+              'Location selected: ${data.placeName} lat ${data.latitude} lng ${data.longitude}',
+            );
+            provider.setLocation(
+              lat: data.latitude,
+              lng: data.longitude,
+              placeName: data.placeName,
+            );
+          },
+        ),
+      ),
     );
   }
 

@@ -14,6 +14,7 @@ class CompanyModel extends CompanyEntity {
     super.location,
     super.createdAt,
     super.updatedAt,
+    super.action,
   });
 
   factory CompanyModel.fromJson(Map<String, dynamic> json) {
@@ -34,13 +35,16 @@ class CompanyModel extends CompanyEntity {
       updatedAt: json['updatedAt'] != null
           ? DateTime.parse(json['updatedAt'])
           : null,
+      action: json['action'],
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       if (id != null) '_id': id,
-      'name': name,
+      'action'
+              'name':
+          name,
       'email': email,
       'phone': phone,
       if (website != null) 'website': website,
@@ -51,6 +55,7 @@ class CompanyModel extends CompanyEntity {
       if (location != null) 'location': location,
       if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
       if (updatedAt != null) 'updatedAt': updatedAt!.toIso8601String(),
+      'action': action,
     };
   }
 

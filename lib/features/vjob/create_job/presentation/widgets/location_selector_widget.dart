@@ -34,21 +34,31 @@ class _LocationSelectorWidgetState extends State<LocationSelectorWidget> {
       );
       final List<dynamic> data = json.decode(response);
 
-      setState(() {
-        _countries = data.cast<Map<String, dynamic>>();
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _countries = data.cast<Map<String, dynamic>>();
+          _isLoading = false;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(
+            AppConstants.appPrimaryColor,
+          ),
+        ),
+      );
     }
 
     return Consumer<CreateJobProvider>(
@@ -161,6 +171,8 @@ class _LocationSelectorWidgetState extends State<LocationSelectorWidget> {
   }
 
   void _showCountrySelector(CreateJobProvider provider) {
+    if (!mounted) return;
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -178,6 +190,8 @@ class _LocationSelectorWidgetState extends State<LocationSelectorWidget> {
   }
 
   void _showStateSelector(CreateJobProvider provider) {
+    if (!mounted) return;
+
     if (_states.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -203,9 +217,11 @@ class _LocationSelectorWidgetState extends State<LocationSelectorWidget> {
   }
 
   void _loadStatesForCountry(Map<String, dynamic> country) {
-    setState(() {
-      _states = List<Map<String, dynamic>>.from(country['states'] ?? []);
-    });
+    if (mounted) {
+      setState(() {
+        _states = List<Map<String, dynamic>>.from(country['states'] ?? []);
+      });
+    }
   }
 }
 
@@ -239,19 +255,22 @@ class _CountrySelectorState extends State<_CountrySelector> {
   }
 
   void _filterCountries(String query) {
-    setState(() {
-      if (query.isEmpty) {
-        _filteredCountries = widget.countries;
-      } else {
-        _filteredCountries = widget.countries
-            .where(
-              (country) => country['country'].toString().toLowerCase().contains(
-                query.toLowerCase(),
-              ),
-            )
-            .toList();
-      }
-    });
+    if (mounted) {
+      setState(() {
+        if (query.isEmpty) {
+          _filteredCountries = widget.countries;
+        } else {
+          _filteredCountries = widget.countries
+              .where(
+                (country) => country['country']
+                    .toString()
+                    .toLowerCase()
+                    .contains(query.toLowerCase()),
+              )
+              .toList();
+        }
+      });
+    }
   }
 
   @override
@@ -377,19 +396,21 @@ class _StateSelectorState extends State<_StateSelector> {
   }
 
   void _filterStates(String query) {
-    setState(() {
-      if (query.isEmpty) {
-        _filteredStates = widget.states;
-      } else {
-        _filteredStates = widget.states
-            .where(
-              (state) => state['state'].toString().toLowerCase().contains(
-                query.toLowerCase(),
-              ),
-            )
-            .toList();
-      }
-    });
+    if (mounted) {
+      setState(() {
+        if (query.isEmpty) {
+          _filteredStates = widget.states;
+        } else {
+          _filteredStates = widget.states
+              .where(
+                (state) => state['state'].toString().toLowerCase().contains(
+                  query.toLowerCase(),
+                ),
+              )
+              .toList();
+        }
+      });
+    }
   }
 
   @override

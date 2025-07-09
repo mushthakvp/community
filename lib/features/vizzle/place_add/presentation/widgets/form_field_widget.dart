@@ -44,6 +44,7 @@ class CustomFormField extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         TextFormField(
+          onTapOutside: (event) => FocusScope.of(context).unfocus(),
           controller: controller,
           validator: validator,
           keyboardType: keyboardType,

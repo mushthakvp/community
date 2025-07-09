@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 import '../../../../../core/constants/app_constants.dart';
+import '../../../../../core/constants/route_constants.dart';
+import '../../../../../core/utils/extensions.dart';
 import '../../../../../core/widgets/common/text_widget.dart';
+import '../../../my_company/presentation/providers/my_company_provider.dart';
 
 class MenuOptionsWidget extends StatelessWidget {
   const MenuOptionsWidget({super.key});
@@ -15,7 +19,7 @@ class MenuOptionsWidget extends StatelessWidget {
           title: 'My Jobs',
           icon: Icons.work_outline,
           onTap: () {
-            context.pushNamed('vjobMyJobs');
+            context.push('/vjob/my-jobs');
           },
         ),
         const SizedBox(height: 20),
@@ -23,23 +27,21 @@ class MenuOptionsWidget extends StatelessWidget {
           title: 'My Company',
           icon: Icons.business_outlined,
           onTap: () {
-            context.pushNamed('vjobMyCompany');
+            context.push('/vjob/my-company');
           },
         ),
         const SizedBox(height: 20),
         _buildMenuTile(
           title: 'Create Job Post',
           icon: Icons.add_circle_outline,
-          onTap: () {
-            context.pushNamed('vjobCreateJob');
-          },
+          onTap: () => _handleCreateJobPost(context),
         ),
         const SizedBox(height: 20),
         _buildMenuTile(
           title: 'My Posts',
           icon: Icons.article_outlined,
           onTap: () {
-            context.pushNamed('vjobMyPosts');
+            context.push('/vjob/my-posts');
           },
         ),
         const SizedBox(height: 30),
@@ -54,7 +56,7 @@ class MenuOptionsWidget extends StatelessWidget {
             ),
             GestureDetector(
               onTap: () {
-                context.pushNamed('vjobCreatePost');
+                context.push('/vjob/create-post');
               },
               child: Container(
                 padding: const EdgeInsets.symmetric(
@@ -110,6 +112,98 @@ class MenuOptionsWidget extends StatelessWidget {
           size: 12,
           color: AppConstants.white,
         ),
+      ),
+    );
+  }
+
+  void _handleCreateJobPost(BuildContext context) async {
+    // Check if user has a company first
+    final companyProvider = context.read<MyCompanyProvider>();
+
+    // Show loading indicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(
+            AppConstants.appPrimaryColor,
+          ),
+        ),
+      ),
+    );
+
+    try {
+      await companyProvider.getMyCompany();
+
+      // Close loading dialog
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+
+      if (companyProvider.company != null) {
+        // User has a company, proceed to create job
+        context.push('/vjob/create-job');
+      } else {
+        // User doesn't have a company, show message and redirect to create company
+        if (context.mounted) {
+          _showNoCompanyDialog(context);
+        }
+      }
+    } catch (e) {
+      // Close loading dialog
+      if (context.mounted) {
+        Navigator.of(context).pop();
+        context.showErrorSnackBar('Failed to check company status');
+      }
+    }
+  }
+
+  void _showNoCompanyDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xff1A1A1A),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const CommonTextWidget(
+          text: 'Company Required',
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          color: AppConstants.white,
+        ),
+        content: const CommonTextWidget(
+          text:
+              'You need to register a company first before creating job posts. Would you like to register your company now?',
+          fontSize: 16,
+          color: AppConstants.white,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const CommonTextWidget(
+              text: 'Cancel',
+              fontSize: 16,
+              color: AppConstants.white,
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              context.push(RouteConstants.vjobCreateCompany);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppConstants.appPrimaryColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const CommonTextWidget(
+              text: 'Register Company',
+              fontSize: 16,
+              color: AppConstants.black,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
     );
   }

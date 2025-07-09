@@ -22,7 +22,7 @@ class CreateCompanyRemoteDataSourceImpl
   Future<CompanyModel> createCompany(CompanyModel company) async {
     try {
       final response = await apiClient.post(
-        'api/company/create-or-update',
+        'user/company',
         body: company.toCreateJson(),
       );
 
@@ -47,12 +47,10 @@ class CreateCompanyRemoteDataSourceImpl
   Future<CompanyModel> updateCompany(CompanyModel company) async {
     try {
       final response = await apiClient.post(
-        'api/company/create-or-update',
+        'user/company',
         body: company.toUpdateJson(),
       );
-
       final data = json.decode(response.body);
-
       if (response.statusCode >= 200 && response.statusCode < 300) {
         final responseModel = CreateCompanyResponse.fromJson(data);
         if (responseModel.company != null) {
