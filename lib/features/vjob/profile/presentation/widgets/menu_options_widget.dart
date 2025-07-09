@@ -12,10 +12,10 @@ class MenuOptionsWidget extends StatelessWidget {
     return Column(
       children: [
         _buildMenuTile(
-          title: 'Jobs',
+          title: 'My Jobs',
           icon: Icons.work_outline,
           onTap: () {
-            context.push('/vjob/my-jobs');
+            context.pushNamed('vjobMyJobs');
           },
         ),
         const SizedBox(height: 20),
@@ -23,7 +23,7 @@ class MenuOptionsWidget extends StatelessWidget {
           title: 'My Company',
           icon: Icons.business_outlined,
           onTap: () {
-            context.push('/vjob/my-company');
+            context.pushNamed('vjobMyCompany');
           },
         ),
         const SizedBox(height: 20),
@@ -31,7 +31,15 @@ class MenuOptionsWidget extends StatelessWidget {
           title: 'Create Job Post',
           icon: Icons.add_circle_outline,
           onTap: () {
-            context.push('/vjob/create-job');
+            context.pushNamed('vjobCreateJob');
+          },
+        ),
+        const SizedBox(height: 20),
+        _buildMenuTile(
+          title: 'My Posts',
+          icon: Icons.article_outlined,
+          onTap: () {
+            context.pushNamed('vjobMyPosts');
           },
         ),
         const SizedBox(height: 30),
@@ -39,14 +47,14 @@ class MenuOptionsWidget extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const CommonTextWidget(
-              text: 'My Posts',
+              text: 'Quick Actions',
               color: AppConstants.white,
               fontSize: 22,
               fontWeight: FontWeight.w400,
             ),
             GestureDetector(
               onTap: () {
-                context.push('/vjob/create-post');
+                context.pushNamed('vjobCreatePost');
               },
               child: Container(
                 padding: const EdgeInsets.symmetric(

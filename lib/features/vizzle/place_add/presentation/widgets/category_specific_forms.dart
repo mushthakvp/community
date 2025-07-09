@@ -18,6 +18,7 @@ class MotorSpecificFields extends StatelessWidget {
     return Consumer<PlaceAddProvider>(
       builder: (context, provider, child) {
         return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (category == "Cars" || category == "Motorcycles") ...[
               CustomFormField(
@@ -187,6 +188,7 @@ class ElectronicsSpecificFields extends StatelessWidget {
     return Consumer<PlaceAddProvider>(
       builder: (context, provider, child) {
         return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Age
             CustomFormField(
@@ -378,6 +380,7 @@ class MobileSpecificFields extends StatelessWidget {
     return Consumer<PlaceAddProvider>(
       builder: (context, provider, child) {
         return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Model
             CustomFormField(
@@ -482,6 +485,7 @@ class MobileSpecificFields extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
             padding: const EdgeInsets.all(12),
@@ -540,6 +544,7 @@ class MobileSpecificFields extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
             padding: const EdgeInsets.all(12),
@@ -618,6 +623,7 @@ class PropertySpecificFields extends StatelessWidget {
     return Consumer<PlaceAddProvider>(
       builder: (context, provider, child) {
         return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Size
             CustomFormField(
@@ -814,6 +820,7 @@ class RentSpecificFields extends StatelessWidget {
     return Consumer<PlaceAddProvider>(
       builder: (context, provider, child) {
         return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // YouTube URL
             CustomFormField(
@@ -1027,8 +1034,8 @@ class FarmFreshSpecificFields extends StatelessWidget {
     return Consumer<PlaceAddProvider>(
       builder: (context, provider, child) {
         return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Quantity in Kg
             CustomFormField(
               controller: provider.farmFreshQuantityController,
               labelText: 'Quantity in Kg',
@@ -1050,8 +1057,8 @@ class CommunitySpecificFields extends StatelessWidget {
     return Consumer<PlaceAddProvider>(
       builder: (context, provider, child) {
         return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Location Item
             CustomFormField(
               controller: provider.addressController1,
               labelText: 'Locate your item',
