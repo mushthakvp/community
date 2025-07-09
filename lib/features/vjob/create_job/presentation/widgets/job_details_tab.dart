@@ -123,11 +123,13 @@ class JobDetailsTab extends StatelessWidget {
               size: 20,
             ),
             const SizedBox(width: 8),
-            CommonTextWidget(
-              text:
-                  'Add responsibilities to help candidates understand the role better',
-              fontSize: 12,
-              color: AppConstants.white.withOpacity(0.6),
+            Expanded(
+              child: CommonTextWidget(
+                text:
+                    'Add responsibilities to help candidates understand the role better',
+                fontSize: 12,
+                color: AppConstants.white.withOpacity(0.6),
+              ),
             ),
           ],
         ),

@@ -30,6 +30,7 @@ class _CustomDropdownFieldState extends State<CustomDropdownField> {
   OverlayEntry? _overlayEntry;
   bool _isDropdownOpen = false;
   List<String> _filteredItems = [];
+  bool _isDisposed = false;
 
   @override
   void initState() {
@@ -52,6 +53,7 @@ class _CustomDropdownFieldState extends State<CustomDropdownField> {
 
   @override
   void dispose() {
+    _isDisposed = true;
     _focusNode.removeListener(_onFocusChanged);
     _focusNode.dispose();
     _controller.dispose();
@@ -60,6 +62,8 @@ class _CustomDropdownFieldState extends State<CustomDropdownField> {
   }
 
   void _onFocusChanged() {
+    if (_isDisposed) return;
+
     if (_focusNode.hasFocus) {
       _openDropdown();
     } else {
@@ -68,9 +72,11 @@ class _CustomDropdownFieldState extends State<CustomDropdownField> {
   }
 
   void _openDropdown() {
-    if (_isDropdownOpen) return;
+    if (_isDropdownOpen || _isDisposed) return;
 
-    final RenderBox renderBox = context.findRenderObject() as RenderBox;
+    final RenderBox? renderBox = context.findRenderObject() as RenderBox?;
+    if (renderBox == null) return;
+
     final size = renderBox.size;
 
     _overlayEntry = OverlayEntry(
@@ -98,13 +104,15 @@ class _CustomDropdownFieldState extends State<CustomDropdownField> {
     );
 
     Overlay.of(context).insert(_overlayEntry!);
-    setState(() => _isDropdownOpen = true);
+    if (!_isDisposed) {
+      setState(() => _isDropdownOpen = true);
+    }
   }
 
   void _closeDropdown() {
     _overlayEntry?.remove();
     _overlayEntry = null;
-    if (mounted) {
+    if (!_isDisposed && mounted) {
       setState(() => _isDropdownOpen = false);
     }
   }
@@ -144,6 +152,8 @@ class _CustomDropdownFieldState extends State<CustomDropdownField> {
   }
 
   void _selectItem(String item) {
+    if (_isDisposed) return;
+
     _controller.text = item;
     widget.onChanged?.call(item);
     _closeDropdown();
@@ -151,6 +161,8 @@ class _CustomDropdownFieldState extends State<CustomDropdownField> {
   }
 
   void _filterItems(String query) {
+    if (_isDisposed) return;
+
     setState(() {
       if (query.isEmpty) {
         _filteredItems = widget.items;
@@ -163,6 +175,8 @@ class _CustomDropdownFieldState extends State<CustomDropdownField> {
   }
 
   Future<void> _createNewItem() async {
+    if (_isDisposed) return;
+
     final text = _controller.text.trim();
     if (text.isNotEmpty && widget.onCreateNew != null) {
       await widget.onCreateNew!(text);

@@ -37,8 +37,10 @@ class CreateJobProvider extends ChangeNotifier {
   // Form data
   String _selectedTitle = '';
   String _companyId = '';
+  String _selectedCountry = '';
+  String _selectedCountryCode = '';
   String _selectedState = '';
-  String _selectedCity = '';
+  String _selectedStateCode = '';
   String _selectedWorkStyle = '';
   String _selectedEducation = '';
   String _description = '';
@@ -68,8 +70,10 @@ class CreateJobProvider extends ChangeNotifier {
 
   String get selectedTitle => _selectedTitle;
   String get companyId => _companyId;
+  String get selectedCountry => _selectedCountry;
+  String get selectedCountryCode => _selectedCountryCode;
   String get selectedState => _selectedState;
-  String get selectedCity => _selectedCity;
+  String get selectedStateCode => _selectedStateCode;
   String get selectedWorkStyle => _selectedWorkStyle;
   String get selectedEducation => _selectedEducation;
   String get description => _description;
@@ -198,8 +202,8 @@ class CreateJobProvider extends ChangeNotifier {
     final job = CreateJobEntity(
       title: _selectedTitle,
       companyId: _companyId,
-      state: _selectedState,
-      city: _selectedCity,
+      state: _selectedState, // This will be used as city in API
+      city: _selectedState, // Send state as city
       workStyle: _selectedWorkStyle,
       description: _description,
       position: _selectedPositions,
@@ -243,9 +247,25 @@ class CreateJobProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setCountry(String country, String countryCode) {
+    _selectedCountry = country;
+    _selectedCountryCode = countryCode;
+    // Reset state when country changes
+    _selectedState = '';
+    _selectedStateCode = '';
+    notifyListeners();
+  }
+
+  void setState(String state, String stateCode) {
+    _selectedState = state;
+    _selectedStateCode = stateCode;
+    notifyListeners();
+  }
+
+  // Deprecated methods - kept for backward compatibility
   void setLocation(String state, String city) {
     _selectedState = state;
-    _selectedCity = city;
+    // city parameter is ignored as we're only using state now
     notifyListeners();
   }
 
@@ -348,7 +368,10 @@ class CreateJobProvider extends ChangeNotifier {
     _selectedTitle = job.title;
     _companyId = job.companyId;
     _selectedState = job.state;
-    _selectedCity = job.city;
+    // For backward compatibility, if city is different from state, use city
+    if (job.city != job.state && job.city.isNotEmpty) {
+      _selectedState = job.city;
+    }
     _selectedWorkStyle = job.workStyle;
     _selectedEducation = job.education;
     _description = job.description;
@@ -371,8 +394,10 @@ class CreateJobProvider extends ChangeNotifier {
   void clearForm() {
     _selectedTitle = '';
     _companyId = '';
+    _selectedCountry = '';
+    _selectedCountryCode = '';
     _selectedState = '';
-    _selectedCity = '';
+    _selectedStateCode = '';
     _selectedWorkStyle = '';
     _selectedEducation = '';
     _description = '';
@@ -402,6 +427,14 @@ class CreateJobProvider extends ChangeNotifier {
     }
     if (_companyId.isEmpty) {
       _errorMessage = 'Company is required';
+      return false;
+    }
+    if (_selectedCountry.isEmpty) {
+      _errorMessage = 'Country is required';
+      return false;
+    }
+    if (_selectedState.isEmpty) {
+      _errorMessage = 'State is required';
       return false;
     }
     if (_selectedWorkStyle.isEmpty) {
