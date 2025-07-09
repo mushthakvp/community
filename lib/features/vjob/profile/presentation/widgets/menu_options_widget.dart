@@ -45,39 +45,6 @@ class MenuOptionsWidget extends StatelessWidget {
           },
         ),
         const SizedBox(height: 30),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const CommonTextWidget(
-              text: 'Quick Actions',
-              color: AppConstants.white,
-              fontSize: 22,
-              fontWeight: FontWeight.w400,
-            ),
-            GestureDetector(
-              onTap: () {
-                context.push('/vjob/create-post');
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppConstants.appPrimaryColor),
-                  color: AppConstants.appPrimaryColor.withOpacity(0.2),
-                ),
-                child: const CommonTextWidget(
-                  text: 'Create Post',
-                  color: AppConstants.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ],
-        ),
       ],
     );
   }

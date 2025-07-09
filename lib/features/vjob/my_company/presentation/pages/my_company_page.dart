@@ -128,7 +128,6 @@ class _MyCompanyPageState extends State<MyCompanyPage> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
                 CreatedJobsListWidget(
                   jobs: provider.createdJobs,
                   status: provider.jobsStatus,

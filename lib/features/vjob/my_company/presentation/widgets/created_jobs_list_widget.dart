@@ -46,6 +46,7 @@ class CreatedJobsListWidget extends StatelessWidget {
     return Column(
       children: [
         ListView.separated(
+          padding: const EdgeInsets.symmetric(vertical: 16),
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: jobs.length,
