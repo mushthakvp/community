@@ -234,23 +234,28 @@ class CreatedJobsListWidget extends StatelessWidget {
   }
 
   Widget _buildJobFooter(CreatedJobEntity job, String timeAgo) {
-    return Row(
+    return Column(
       children: [
-        _buildFooterItem(icon: Icons.access_time_outlined, text: timeAgo),
-        const SizedBox(width: 16),
-        _buildFooterItem(
-          icon: Icons.people_outline,
-          text: '${job.totalApply} applicants',
+        Row(
+          children: [
+            _buildFooterItem(icon: Icons.access_time_outlined, text: timeAgo),
+            const SizedBox(width: 16),
+            _buildFooterItem(
+              icon: Icons.people_outline,
+              text: '${job.totalApply} applicants',
+            ),
+          ],
         ),
-        const SizedBox(width: 16),
-        _buildFooterItem(
-          icon: Icons.visibility_outlined,
-          text: '${job.totalView} views',
-        ),
-        const Spacer(),
-        _buildFooterItem(
-          icon: Icons.attach_money,
-          text: '\${job.minimumSalary}',
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            _buildFooterItem(
+              icon: Icons.visibility_outlined,
+              text: '${job.totalView} views',
+            ),
+            const Spacer(),
+            _buildFooterItem(icon: Icons.money, text: '${job.minimumSalary}'),
+          ],
         ),
       ],
     );

@@ -19,7 +19,7 @@ class MenuOptionsWidget extends StatelessWidget {
           title: 'My Jobs',
           icon: Icons.work_outline,
           onTap: () {
-            context.push('/vjob/my-jobs');
+            context.push(RouteConstants.vjobMyJobs);
           },
         ),
         const SizedBox(height: 20),
@@ -117,10 +117,7 @@ class MenuOptionsWidget extends StatelessWidget {
   }
 
   void _handleCreateJobPost(BuildContext context) async {
-    // Check if user has a company first
     final companyProvider = context.read<MyCompanyProvider>();
-
-    // Show loading indicator
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -132,26 +129,19 @@ class MenuOptionsWidget extends StatelessWidget {
         ),
       ),
     );
-
     try {
       await companyProvider.getMyCompany();
-
-      // Close loading dialog
       if (context.mounted) {
         Navigator.of(context).pop();
       }
-
       if (companyProvider.company != null) {
-        // User has a company, proceed to create job
-        context.push('/vjob/create-job');
+        context.push(RouteConstants.vjobCreateJob);
       } else {
-        // User doesn't have a company, show message and redirect to create company
         if (context.mounted) {
           _showNoCompanyDialog(context);
         }
       }
     } catch (e) {
-      // Close loading dialog
       if (context.mounted) {
         Navigator.of(context).pop();
         context.showErrorSnackBar('Failed to check company status');
