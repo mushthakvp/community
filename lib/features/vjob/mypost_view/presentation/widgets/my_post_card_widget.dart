@@ -40,8 +40,6 @@ class MyPostCardWidget extends StatelessWidget {
             _buildImage(),
             const SizedBox(height: 16),
             _buildContent(),
-            const SizedBox(height: 16),
-            _buildFooter(),
           ],
         ),
       ),
@@ -158,53 +156,6 @@ class MyPostCardWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildFooter() {
-    return Row(
-      children: [
-        _buildFooterItem(icon: Icons.visibility, text: 'Views', count: 0),
-        const SizedBox(width: 16),
-        _buildFooterItem(icon: Icons.comment, text: 'Comments', count: 0),
-        const Spacer(),
-        _buildShareButton(),
-      ],
-    );
-  }
-
-  Widget _buildFooterItem({
-    required IconData icon,
-    required String text,
-    required int count,
-  }) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 16, color: AppConstants.white.withOpacity(0.6)),
-        const SizedBox(width: 4),
-        CommonTextWidget(
-          text: '$count',
-          fontSize: 12,
-          color: AppConstants.white.withOpacity(0.6),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildShareButton() {
-    return GestureDetector(
-      onTap: () {
-        // Handle share functionality
-      },
-      child: Container(
-        padding: const EdgeInsets.all(8),
-        child: Icon(
-          Icons.share,
-          color: AppConstants.white.withOpacity(0.6),
-          size: 18,
-        ),
-      ),
-    );
-  }
-
   bool _isPdfUrl(String url) {
     return url.toLowerCase().contains('.pdf') ||
         url.toLowerCase().contains('pdf');
@@ -314,20 +265,20 @@ class MyPostCardWidget extends StatelessWidget {
       ),
       color: const Color(0xff1A1A1A),
       itemBuilder: (context) => [
-        PopupMenuItem(
-          value: 'edit',
-          child: Row(
-            children: [
-              const Icon(Icons.edit, color: AppConstants.white, size: 18),
-              const SizedBox(width: 8),
-              const CommonTextWidget(
-                text: 'Edit',
-                color: AppConstants.white,
-                fontSize: 14,
-              ),
-            ],
-          ),
-        ),
+        // PopupMenuItem(
+        //   value: 'edit',
+        //   child: Row(
+        //     children: [
+        //       const Icon(Icons.edit, color: AppConstants.white, size: 18),
+        //       const SizedBox(width: 8),
+        //       const CommonTextWidget(
+        //         text: 'Edit',
+        //         color: AppConstants.white,
+        //         fontSize: 14,
+        //       ),
+        //     ],
+        //   ),
+        // ),
         PopupMenuItem(
           value: 'delete',
           child: Row(

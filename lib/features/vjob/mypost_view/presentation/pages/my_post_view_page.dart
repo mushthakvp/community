@@ -126,7 +126,6 @@ class _MyPostViewPageState extends State<MyPostViewPage> {
         if (provider.postStats == null || provider.isSearching) {
           return const SizedBox.shrink();
         }
-
         return MyPostStatsWidget(
           stats: provider.postStats!,
           onTap: () => _handleStatsCardTap(),
@@ -143,18 +142,15 @@ class _MyPostViewPageState extends State<MyPostViewPage> {
             child: LoadingWidget(message: 'Loading posts...'),
           );
         }
-
         if (provider.status == MyPostStatus.error) {
           return _buildErrorView(
             message: provider.errorMessage,
             onRetry: () => provider.getMyPosts(),
           );
         }
-
         if (provider.isEmpty) {
           return _buildEmptyView();
         }
-
         return _buildPostsListView();
       },
     );
@@ -184,7 +180,8 @@ class _MyPostViewPageState extends State<MyPostViewPage> {
               final post = provider.posts[index];
               return MyPostCardWidget(
                 post: post,
-                onTap: () => _handlePostTap(post, index),
+                // onTap: () => _handlePostTap(post, index),
+                onTap: () {},
                 onLike: () => _handleLikePost(post.id, index),
                 onDelete: () => _handleDeletePost(post.id, post.title),
                 onEdit: () => _handleEditPost(post),
@@ -315,10 +312,10 @@ class _MyPostViewPageState extends State<MyPostViewPage> {
     // context.push('/vjob/post-stats');
   }
 
-  void _handlePostTap(MyPostEntity post, int index) {
-    _provider.setSelectedPostIndex(index);
-    context.push('/vjob/post-detail/${post.id}');
-  }
+  // void _handlePostTap(MyPostEntity post, int index) {
+  //   _provider.setSelectedPostIndex(index);
+  //   context.push('/vjob/post-detail/${post.id}');
+  // }
 
   Future<void> _handleLikePost(String postId, int index) async {
     final result = await _provider.likePost(postId, index);
@@ -342,7 +339,7 @@ class _MyPostViewPageState extends State<MyPostViewPage> {
   }
 
   void _handleCreatePost() {
-    context.push('/vjob/create-post');
+    context.pushNamed('vjobCreatePost');
   }
 
   Future<bool> _showDeleteConfirmation(String postTitle) async {

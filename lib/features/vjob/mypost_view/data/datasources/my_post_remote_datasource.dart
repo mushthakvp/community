@@ -27,8 +27,12 @@ class MyPostRemoteDataSourceImpl implements MyPostRemoteDataSource {
   Future<List<MyPostModel>> getMyPosts({int page = 1, int limit = 10}) async {
     try {
       final response = await apiClient.get(
-        'user/get-job-post?type=myPosts',
-        queryParameters: {'page': page.toString(), 'limit': limit.toString()},
+        'user/get-job-post',
+        queryParameters: {
+          'page': page.toString(),
+          'limit': limit.toString(),
+          'type': 'myPosts',
+        },
       );
 
       final data = json.decode(response.body);
