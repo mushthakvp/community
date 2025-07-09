@@ -39,7 +39,6 @@ class _CreateJobPageState extends State<CreateJobPage> {
     try {
       // Check if user has a company
       await companyProvider.getMyCompany();
-
       if (companyProvider.company != null) {
         setState(() {
           _hasCompany = true;

@@ -8,6 +8,9 @@ import '../../../../../core/constants/route_constants.dart';
 import '../../../../../core/utils/extensions.dart';
 import '../../../../../core/widgets/common/text_widget.dart';
 import '../../../../../core/widgets/loading/loading_widget.dart';
+import '../../../company_job_details/domain/entities/company_job_entity.dart'
+    as job_entity;
+import '../../../create_company/domain/entities/company_entity.dart';
 import '../../domain/entities/created_job_entity.dart';
 import '../providers/my_company_provider.dart';
 import '../widgets/company_details_widget.dart';
@@ -285,7 +288,32 @@ class _MyCompanyPageState extends State<MyCompanyPage> {
   }
 
   void _handleEditCompany() {
-    context.push(RouteConstants.vjobCreateCompany);
+    final company = _provider.company;
+
+    if (company != null) {
+      final createCompanyEntity = CompanyEntity(
+        id: company.id,
+        name: company.name,
+        email: company.email,
+        phone: company.phone ?? '',
+        website: company.website,
+        description: company.description ?? '',
+        image: company.image,
+        lat: company.location != null
+            ? double.tryParse(company.location!.latitude)
+            : null,
+        lng: company.location != null
+            ? double.tryParse(company.location!.longitude)
+            : null,
+        location: _provider.placeName,
+        createdAt: company.createdAt,
+        updatedAt: company.updatedAt,
+      );
+      context.push(
+        '${RouteConstants.vjobCreateCompany}/edit',
+        extra: {'company': createCompanyEntity},
+      );
+    }
   }
 
   void _handleRegisterCompany() {
@@ -293,7 +321,39 @@ class _MyCompanyPageState extends State<MyCompanyPage> {
   }
 
   void _handleJobTap(CreatedJobEntity job) {
-    context.push('/vjob/company-job-details/${job.id}');
+    final companyJobEntity = job_entity.CompanyJobEntity(
+      id: job.id,
+      title: job.title,
+      description: job.description,
+      state: job.state,
+      city: job.city,
+      workStyle: job.workStyle,
+      position: job.position,
+      schedule: job.schedule,
+      benefits: job.benefits,
+      minimumSalary: job.minimumSalary,
+      education: job.education,
+      skills: job.skills,
+      languages: job.languages,
+      responsibilities: job.responsibilities,
+      isRejected: job.isRejected,
+      rejectReason: job.rejectReason,
+      totalView: job.totalView,
+      totalApplication: job.totalApply,
+      totalSave: job.totalSave,
+      company: job_entity.CompanyEntity(
+        id: job.company.id,
+        name: job.company.name,
+        image: job.company.image,
+      ),
+      createdAt: job.createdAt,
+      updatedAt: job.updatedAt,
+    );
+
+    context.push(
+      '/vjob/company-job-details/${job.id}',
+      extra: {'job': companyJobEntity},
+    );
   }
 
   Future<void> _handleReapplyJob(String jobId) async {

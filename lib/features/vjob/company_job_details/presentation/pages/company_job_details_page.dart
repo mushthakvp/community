@@ -8,6 +8,7 @@ import '../../../../../core/utils/extensions.dart';
 import '../../../../../core/utils/result.dart';
 import '../../../../../core/widgets/common/app_bar.dart';
 import '../../../../../core/widgets/common/text_widget.dart';
+import '../../../../../core/widgets/loading/loading_widget.dart';
 import '../../domain/entities/company_job_entity.dart';
 import '../providers/company_job_provider.dart';
 import 'widgets/candidate_list_widget.dart';
@@ -15,9 +16,14 @@ import 'widgets/job_overview_widget.dart';
 import 'widgets/rejected_job_widget.dart';
 
 class CompanyJobDetailsPage extends StatefulWidget {
-  final CompanyJobEntity job;
+  final CompanyJobEntity? job; // Make this nullable
+  final String? jobId; // Add jobId as backup
 
-  const CompanyJobDetailsPage({super.key, required this.job});
+  const CompanyJobDetailsPage({
+    super.key,
+    this.job, // Remove required
+    this.jobId,
+  });
 
   @override
   State<CompanyJobDetailsPage> createState() => _CompanyJobDetailsPageState();
@@ -25,16 +31,65 @@ class CompanyJobDetailsPage extends StatefulWidget {
 
 class _CompanyJobDetailsPageState extends State<CompanyJobDetailsPage> {
   late ScrollController _scrollController;
+  CompanyJobEntity? _currentJob;
+  bool _isLoadingJob = false;
 
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController();
     _setupScrollController();
+    _currentJob = widget.job;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<CompanyJobProvider>().initializeWithJob(widget.job);
+      if (_currentJob != null) {
+        // Job data is available, initialize with it
+        context.read<CompanyJobProvider>().initializeWithJob(_currentJob!);
+      } else if (widget.jobId != null) {
+        // No job data, need to fetch using jobId
+        _fetchJobDetails();
+      }
     });
+  }
+
+  Future<void> _fetchJobDetails() async {
+    if (widget.jobId == null) return;
+
+    setState(() {
+      _isLoadingJob = true;
+    });
+
+    try {
+      final provider = context.read<CompanyJobProvider>();
+      final result = await provider.getJobDetails(widget.jobId!);
+
+      result.handle(
+        onSuccess: (job) {
+          setState(() {
+            _currentJob = job;
+            _isLoadingJob = false;
+          });
+          provider.initializeWithJob(job);
+        },
+        onError: (error) {
+          setState(() {
+            _isLoadingJob = false;
+          });
+          if (mounted) {
+            context.showErrorSnackBar(error);
+            Navigator.of(context).pop();
+          }
+        },
+      );
+    } catch (e) {
+      setState(() {
+        _isLoadingJob = false;
+      });
+      if (mounted) {
+        context.showErrorSnackBar('Failed to load job details');
+        Navigator.of(context).pop();
+      }
+    }
   }
 
   @override
@@ -57,12 +112,36 @@ class _CompanyJobDetailsPageState extends State<CompanyJobDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoadingJob) {
+      return Scaffold(
+        backgroundColor: AppConstants.black,
+        appBar: CommonAppBar(title: 'Job Details'),
+        body: const Center(
+          child: LoadingWidget(message: 'Loading job details...'),
+        ),
+      );
+    }
+
+    if (_currentJob == null) {
+      return Scaffold(
+        backgroundColor: AppConstants.black,
+        appBar: CommonAppBar(title: 'Job Details'),
+        body: const Center(
+          child: CommonTextWidget(
+            text: 'Job not found',
+            fontSize: 16,
+            color: AppConstants.white,
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppConstants.black,
       appBar: CommonAppBar(
         title: 'Job Details',
         actions: [
-          if (!widget.job.isRejected)
+          if (!_currentJob!.isRejected)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: GestureDetector(
@@ -93,13 +172,13 @@ class _CompanyJobDetailsPageState extends State<CompanyJobDetailsPage> {
               children: [
                 _buildJobInfoCard(),
                 const SizedBox(height: 20),
-                if (widget.job.isRejected)
+                if (_currentJob!.isRejected)
                   RejectedJobWidget(
-                    job: widget.job,
+                    job: _currentJob!,
                     onReapply: _handleReapplyJob,
                   )
                 else ...[
-                  JobOverviewWidget(job: widget.job),
+                  JobOverviewWidget(job: _currentJob!),
                   const SizedBox(height: 20),
                   CandidateListWidget(
                     candidates: provider.candidates,
@@ -131,7 +210,7 @@ class _CompanyJobDetailsPageState extends State<CompanyJobDetailsPage> {
           Row(
             children: [
               Expanded(child: _buildJobHeader()),
-              if (!widget.job.isRejected) ...[
+              if (!_currentJob!.isRejected) ...[
                 const SizedBox(width: 16),
                 _buildMarkAsClosedButton(),
               ],
@@ -156,7 +235,7 @@ class _CompanyJobDetailsPageState extends State<CompanyJobDetailsPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               CommonTextWidget(
-                text: widget.job.title,
+                text: _currentJob!.title,
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
                 color: AppConstants.white,
@@ -164,7 +243,7 @@ class _CompanyJobDetailsPageState extends State<CompanyJobDetailsPage> {
               ),
               const SizedBox(height: 4),
               CommonTextWidget(
-                text: '${widget.job.city}, ${widget.job.state}',
+                text: '${_currentJob!.city}, ${_currentJob!.state}',
                 fontSize: 14,
                 color: AppConstants.white.withOpacity(0.7),
               ),
@@ -182,14 +261,14 @@ class _CompanyJobDetailsPageState extends State<CompanyJobDetailsPage> {
       decoration: BoxDecoration(
         color: AppConstants.white.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
-        image: widget.job.company.image != null
+        image: _currentJob!.company.image != null
             ? DecorationImage(
-                image: NetworkImage(widget.job.company.image!),
+                image: NetworkImage(_currentJob!.company.image!),
                 fit: BoxFit.cover,
               )
             : null,
       ),
-      child: widget.job.company.image == null
+      child: _currentJob!.company.image == null
           ? Icon(
               Icons.business,
               color: AppConstants.white.withOpacity(0.5),
@@ -215,7 +294,7 @@ class _CompanyJobDetailsPageState extends State<CompanyJobDetailsPage> {
     return Wrap(
       spacing: 8,
       runSpacing: 8,
-      children: widget.job.schedule
+      children: _currentJob!.schedule
           .map((schedule) => _buildDetailChip(schedule))
           .toList(),
     );
@@ -241,7 +320,7 @@ class _CompanyJobDetailsPageState extends State<CompanyJobDetailsPage> {
   }
 
   Widget _buildJobFooter() {
-    final timeAgo = timeago.format(widget.job.createdAt);
+    final timeAgo = timeago.format(_currentJob!.createdAt);
 
     return Row(
       children: [
@@ -249,7 +328,7 @@ class _CompanyJobDetailsPageState extends State<CompanyJobDetailsPage> {
         const SizedBox(width: 16),
         _buildFooterItem(
           icon: Icons.attach_money,
-          text: '\$${widget.job.minimumSalary}',
+          text: '\$${_currentJob!.minimumSalary}',
         ),
       ],
     );
@@ -271,20 +350,18 @@ class _CompanyJobDetailsPageState extends State<CompanyJobDetailsPage> {
   }
 
   void _handleEditJob() {
-    // Navigate to edit job page
-    // You can implement this based on your routing setup
-    Navigator.pushNamed(context, '/vjob/edit-job', arguments: widget.job);
+    Navigator.pushNamed(context, '/vjob/edit-job', arguments: _currentJob);
   }
 
   Future<void> _handleMarkAsClosed() async {
     final provider = context.read<CompanyJobProvider>();
-    final result = await provider.markJobAsClosed(widget.job.id);
+    final result = await provider.markJobAsClosed(_currentJob!.id);
 
     result.handle(
       onSuccess: (success) {
         if (success) {
           context.showSuccessSnackBar('Job marked as closed successfully');
-          Navigator.pop(context, true); // Return to previous screen
+          Navigator.pop(context, true);
         }
       },
       onError: (error) {
@@ -295,13 +372,12 @@ class _CompanyJobDetailsPageState extends State<CompanyJobDetailsPage> {
 
   Future<void> _handleReapplyJob() async {
     final provider = context.read<CompanyJobProvider>();
-    final result = await provider.reapplyJob(widget.job.id);
+    final result = await provider.reapplyJob(_currentJob!.id);
 
     result.handle(
       onSuccess: (success) {
         if (success) {
           context.showSuccessSnackBar('Job reapplied successfully');
-          // Refresh the page or update the UI
           setState(() {});
         }
       },
@@ -312,8 +388,6 @@ class _CompanyJobDetailsPageState extends State<CompanyJobDetailsPage> {
   }
 
   void _handleDownloadCV(String candidateId) {
-    // Implement CV download functionality
-    // This could open a URL, save file, etc.
     context.showInfoSnackBar('Downloading CV...');
   }
 }

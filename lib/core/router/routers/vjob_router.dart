@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -50,6 +52,7 @@ class VJobRouter {
       name: 'vjobEditJob',
       builder: (context, state) {
         final jobId = state.pathParameters['jobId'];
+        log('jobId: $jobId');
         return CreateJobPage(jobId: jobId);
       },
     ),
@@ -138,9 +141,10 @@ class VJobRouter {
       path: '/vjob/company-job-details/:jobId',
       name: 'vjobCompanyJobDetails',
       builder: (context, state) {
+        final jobId = state.pathParameters['jobId']!;
         final extra = state.extra as Map<String, dynamic>?;
         final job = extra?['job'];
-        return CompanyJobDetailsPage(job: job);
+        return CompanyJobDetailsPage(job: job, jobId: jobId);
       },
     ),
 

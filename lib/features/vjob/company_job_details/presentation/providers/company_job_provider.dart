@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../../../../core/error/failures.dart';
 import '../../../../../core/utils/result.dart';
+import '../../../company_job_details/domain/entities/company_job_entity.dart'
+    as company_job_entity;
+import '../../../job_details/domain/usecases/get_job_details_usecase.dart';
 import '../../domain/entities/candidate_entity.dart';
 import '../../domain/entities/company_job_entity.dart';
 import '../../domain/usecases/get_job_candidates_usecase.dart';
@@ -14,14 +17,17 @@ class CompanyJobProvider extends ChangeNotifier {
   final GetJobCandidatesUseCase _getJobCandidatesUseCase;
   final MarkJobAsClosedUseCase _markJobAsClosedUseCase;
   final ReapplyJobUseCase _reapplyJobUseCase;
+  final GetJobDetailsUseCase _getJobDetailsUseCase;
 
   CompanyJobProvider({
     required GetJobCandidatesUseCase getJobCandidatesUseCase,
     required MarkJobAsClosedUseCase markJobAsClosedUseCase,
     required ReapplyJobUseCase reapplyJobUseCase,
+    required GetJobDetailsUseCase getJobDetailsUseCase,
   }) : _getJobCandidatesUseCase = getJobCandidatesUseCase,
        _markJobAsClosedUseCase = markJobAsClosedUseCase,
-       _reapplyJobUseCase = reapplyJobUseCase;
+       _reapplyJobUseCase = reapplyJobUseCase,
+       _getJobDetailsUseCase = getJobDetailsUseCase;
 
   // State
   CompanyJobStatus _status = CompanyJobStatus.initial;
@@ -50,6 +56,26 @@ class CompanyJobProvider extends ChangeNotifier {
     _currentJobId = job.id;
     _resetCandidatesList();
     getCandidates(job.id);
+  }
+
+  Future<Result<company_job_entity.CompanyJobEntity>> getJobDetails(
+    String jobId,
+  ) async {
+    try {
+      final result = await _getJobDetailsUseCase(
+        GetJobDetailsParams(jobId: jobId),
+      );
+      return result.fold(
+        (failure) => Error(message: _getFailureMessage(failure)),
+        (job) {
+          _currentJob = job as CompanyJobEntity;
+          notifyListeners();
+          return Success(job as CompanyJobEntity);
+        },
+      );
+    } catch (e) {
+      return Error(message: 'An unexpected error occurred: $e');
+    }
   }
 
   Future<void> getCandidates(String jobId, {bool isLoadMore = false}) async {

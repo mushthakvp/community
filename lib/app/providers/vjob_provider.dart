@@ -378,6 +378,7 @@ class VJobProviders {
         markJobAsClosedUseCase: context.read<MarkJobAsClosedUseCase>(),
         reapplyJobUseCase: context
             .read<company_job_reapply.ReapplyJobUseCase>(),
+        getJobDetailsUseCase: context.read<GetJobDetailsUseCase>(),
       ),
     ),
 
