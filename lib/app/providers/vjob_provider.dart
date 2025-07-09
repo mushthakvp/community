@@ -97,6 +97,21 @@ import '../../features/vjob/mypost_view/domain/usecases/like_post_usecase.dart'
     as my_post_like;
 import '../../features/vjob/mypost_view/domain/usecases/search_my_posts_usecase.dart';
 import '../../features/vjob/mypost_view/presentation/providers/my_post_provider.dart';
+// Profile
+import '../../features/vjob/profile/data/datasources/profile_local_datasource.dart';
+import '../../features/vjob/profile/data/datasources/profile_remote_datasource.dart';
+import '../../features/vjob/profile/data/repositories/profile_repository_impl.dart';
+import '../../features/vjob/profile/domain/repositories/profile_repository.dart';
+import '../../features/vjob/profile/domain/usecases/get_profile_usecase.dart';
+import '../../features/vjob/profile/presentation/providers/profile_provider.dart';
+// Search
+import '../../features/vjob/search/data/datasources/search_local_datasource.dart';
+import '../../features/vjob/search/data/datasources/search_remote_datasource.dart';
+import '../../features/vjob/search/data/repositories/search_repository_impl.dart';
+import '../../features/vjob/search/domain/repositories/search_repository.dart';
+import '../../features/vjob/search/domain/usecases/get_recent_searches_usecase.dart';
+import '../../features/vjob/search/domain/usecases/search_jobs_usecase.dart';
+import '../../features/vjob/search/presentation/providers/search_provider.dart';
 
 /// VJob feature providers for job portal functionality
 class VJobProviders {
@@ -500,6 +515,70 @@ class VJobProviders {
         deletePostUseCase: context.read<my_post_delete.DeleteMyPostUseCase>(),
         getPostStatsUseCase: context.read<GetPostStatsUseCase>(),
         searchMyPostsUseCase: context.read<SearchMyPostsUseCase>(),
+      ),
+    ),
+
+    // ==================== PROFILE DATA SOURCES ====================
+    Provider<ProfileRemoteDataSource>(
+      create: (context) =>
+          ProfileRemoteDataSourceImpl(apiClient: context.read<ApiClient>()),
+    ),
+    Provider<ProfileLocalDataSource>(
+      create: (context) => ProfileLocalDataSourceImpl(),
+    ),
+
+    // ==================== PROFILE REPOSITORY ====================
+    Provider<ProfileRepository>(
+      create: (context) => ProfileRepositoryImpl(
+        remoteDataSource: context.read<ProfileRemoteDataSource>(),
+        localDataSource: context.read<ProfileLocalDataSource>(),
+        networkInfo: context.read<NetworkInfo>(),
+      ),
+    ),
+
+    // ==================== PROFILE USE CASES ====================
+    Provider<GetProfileUseCase>(
+      create: (context) => GetProfileUseCase(context.read<ProfileRepository>()),
+    ),
+
+    // ==================== PROFILE PROVIDER ====================
+    ChangeNotifierProvider<ProfileProvider>(
+      create: (context) =>
+          ProfileProvider(getProfileUseCase: context.read<GetProfileUseCase>()),
+    ),
+
+    // ==================== SEARCH DATA SOURCES ====================
+    Provider<SearchRemoteDataSource>(
+      create: (context) =>
+          SearchRemoteDataSourceImpl(apiClient: context.read<ApiClient>()),
+    ),
+    Provider<SearchLocalDataSource>(
+      create: (context) => SearchLocalDataSourceImpl(),
+    ),
+
+    // ==================== SEARCH REPOSITORY ====================
+    Provider<SearchRepository>(
+      create: (context) => SearchRepositoryImpl(
+        remoteDataSource: context.read<SearchRemoteDataSource>(),
+        localDataSource: context.read<SearchLocalDataSource>(),
+        networkInfo: context.read<NetworkInfo>(),
+      ),
+    ),
+
+    // ==================== SEARCH USE CASES ====================
+    Provider<GetRecentSearchesUseCase>(
+      create: (context) =>
+          GetRecentSearchesUseCase(context.read<SearchRepository>()),
+    ),
+    Provider<SearchJobsUseCase>(
+      create: (context) => SearchJobsUseCase(context.read<SearchRepository>()),
+    ),
+
+    // ==================== SEARCH PROVIDER ====================
+    ChangeNotifierProvider<SearchProvider>(
+      create: (context) => SearchProvider(
+        getRecentSearchesUseCase: context.read<GetRecentSearchesUseCase>(),
+        searchJobsUseCase: context.read<SearchJobsUseCase>(),
       ),
     ),
   ];

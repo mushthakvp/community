@@ -13,6 +13,8 @@ import '../../../features/vjob/my_company/presentation/pages/my_company_page.dar
 import '../../../features/vjob/my_company/presentation/pages/success_company_page.dart';
 import '../../../features/vjob/my_jobs/presentation/pages/my_jobs_page.dart';
 import '../../../features/vjob/mypost_view/presentation/pages/my_post_view_page.dart';
+import '../../../features/vjob/profile/presentation/pages/profile_page.dart';
+import '../../../features/vjob/search/presentation/pages/search_page.dart';
 import '../../constants/route_constants.dart';
 
 class VJobRouter {
@@ -77,13 +79,7 @@ class VJobRouter {
     GoRoute(
       path: RouteConstants.vjobSearch,
       name: 'vjobSearch',
-      builder: (context, state) {
-        final queryParams = state.uri.queryParameters;
-        final query = queryParams['q'];
-        return _buildPlaceholderPage(
-          'Job Search${query != null ? ' - $query' : ''}',
-        );
-      },
+      builder: (context, state) => const SearchPage(),
     ),
 
     // ==================== VJOB COMPANIES ROUTE ====================
@@ -205,11 +201,11 @@ class VJobRouter {
       },
     ),
 
-    // ==================== VJOB PROFILE ROUTES ====================
+    // ==================== VJOB PROFILE ROUTE ====================
     GoRoute(
       path: '/vjob/profile',
       name: 'vjobProfile',
-      builder: (context, state) => _buildPlaceholderPage('VJob Profile'),
+      builder: (context, state) => const ProfilePage(),
     ),
 
     GoRoute(
@@ -410,6 +406,7 @@ class VJobRouter {
   static const String vjobPostDetailPath = '/vjob/post-detail';
   static const String vjobEditPostPath = '/vjob/edit-post';
   static const String vjobPostStatsPath = '/vjob/post-stats';
+  static const String vjobProfilePath = '/vjob/profile';
 
   /// Helper methods for VJob navigation
   static String buildJobDetailsRoute(String jobId) {
@@ -539,6 +536,16 @@ class VJobRouter {
     context.push(vjobPostStatsPath);
   }
 
+  // Profile navigation methods
+  static void navigateToProfile(BuildContext context) {
+    context.push(vjobProfilePath);
+  }
+
+  static void navigateToEditProfile(BuildContext context) {
+    context.push('/vjob/profile/edit');
+  }
+
+  // Search navigation methods
   static void navigateToSearch(
     BuildContext context, {
     String? query,
@@ -646,6 +653,14 @@ class VJobRouter {
 
   static bool isMyPostsRoute(String route) {
     return route == '/vjob/my-posts';
+  }
+
+  static bool isProfileRoute(String route) {
+    return route.startsWith('/vjob/profile');
+  }
+
+  static bool isSearchRoute(String route) {
+    return route.startsWith('/vjob/search');
   }
 
   /// Extract route parameters

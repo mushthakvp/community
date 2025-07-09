@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../../../core/constants/app_constants.dart';
@@ -34,9 +35,12 @@ class VJobHomeAppBar extends StatelessWidget implements PreferredSizeWidget {
       actions: [
         Padding(
           padding: const EdgeInsets.only(right: 16),
-          child: CircleAvatar(
-            backgroundColor: AppConstants.appPrimaryColor,
-            child: Icon(Icons.person, color: AppConstants.black),
+          child: GestureDetector(
+            onTap: () => _handleProfileTap(context),
+            child: CircleAvatar(
+              backgroundColor: AppConstants.appPrimaryColor,
+              child: Icon(Icons.person, color: AppConstants.black),
+            ),
           ),
         ),
       ],
@@ -123,6 +127,11 @@ class VJobHomeAppBar extends StatelessWidget implements PreferredSizeWidget {
         );
       },
     );
+  }
+
+  void _handleProfileTap(BuildContext context) {
+    // Navigate to profile page
+    context.push('/vjob/profile');
   }
 
   @override
