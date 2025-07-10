@@ -7,7 +7,11 @@ import 'package:provider/provider.dart';
 import '../../../../../core/constants/app_constants.dart';
 import '../../../../../core/widgets/common/text_widget.dart';
 import '../../../../../core/widgets/loading/loading_widget.dart';
+import '../../../mypost_view/domain/entities/my_post_entity.dart'
+    as user_entity;
+import '../../../mypost_view/domain/entities/my_post_entity.dart';
 import '../../domain/entities/home_job_entity.dart';
+import '../../domain/entities/post_entity.dart';
 import '../providers/jobs_provider.dart';
 import '../providers/posts_provider.dart';
 import 'widgets/job_card_widget.dart';
@@ -174,12 +178,33 @@ class _VJobHomePageState extends State<VJobHomePage> {
               final post = provider.posts[index];
               return PostCardWidget(
                 post: post,
+                onTap: () => _handlePostTap(post, index),
                 onLike: () => _handleLikePost(post.id, index),
               );
             },
           ),
         );
       },
+    );
+  }
+
+  void _handlePostTap(PostEntity post, int index) {
+    final data = MyPostEntity(
+      id: post.id,
+      title: post.title,
+      description: post.description,
+      createdAt: post.createdAt,
+      updatedAt: post.updatedAt,
+      likes: post.likes,
+      isLiked: post.isLiked,
+      likesCount: post.likesCount,
+      image: post.image,
+      user: user_entity.UserEntity(id: post.user.id, name: post.user.name),
+    );
+    context.read<PostsProvider>().setSelectedPostIndex(index);
+    context.push(
+      '/vjob/post-detail/${post.id}',
+      extra: {'post': data, 'owner': false},
     );
   }
 

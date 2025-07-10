@@ -15,6 +15,7 @@ import '../../../features/vjob/my_company/presentation/pages/my_company_page.dar
 import '../../../features/vjob/my_company/presentation/pages/success_company_page.dart';
 import '../../../features/vjob/my_jobs/presentation/pages/my_jobs_page.dart';
 import '../../../features/vjob/mypost_view/presentation/pages/my_post_view_page.dart';
+import '../../../features/vjob/post_detail/presentation/pages/post_detail_page.dart';
 import '../../../features/vjob/profile/presentation/pages/profile_page.dart';
 import '../../../features/vjob/search/presentation/pages/search_page.dart';
 import '../../constants/route_constants.dart';
@@ -171,21 +172,23 @@ class VJobRouter {
       },
     ),
 
-    // ==================== VJOB MY POSTS ROUTE ====================
-    GoRoute(
-      path: '/vjob/my-posts',
-      name: 'vjobMyPosts',
-      builder: (context, state) => const MyPostViewPage(),
-    ),
-
-    // ==================== VJOB POST DETAIL ROUTE ====================
     GoRoute(
       path: '/vjob/post-detail/:postId',
       name: 'vjobPostDetail',
       builder: (context, state) {
         final postId = state.pathParameters['postId']!;
-        return _buildPlaceholderPage('Post Details: $postId');
+        final extra = state.extra as Map<String, dynamic>?;
+        final post = extra?['post'];
+        final owner = extra?['owner'];
+        return PostDetailPage(postId: postId, post: post, owner: owner);
       },
+    ),
+
+    // ==================== VJOB MY POSTS ROUTE ====================
+    GoRoute(
+      path: '/vjob/my-posts',
+      name: 'vjobMyPosts',
+      builder: (context, state) => const MyPostViewPage(),
     ),
 
     // ==================== VJOB POST STATS ROUTE ====================

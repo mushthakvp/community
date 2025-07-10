@@ -8,27 +8,36 @@ import '../../../domain/entities/post_entity.dart';
 class PostCardWidget extends StatelessWidget {
   final PostEntity post;
   final VoidCallback onLike;
+  final VoidCallback? onTap; // Add this parameter
 
-  const PostCardWidget({super.key, required this.post, required this.onLike});
+  const PostCardWidget({
+    super.key,
+    required this.post,
+    required this.onLike,
+    this.onTap, // Add this parameter
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: const Color(0xff0F0F0F),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppConstants.white.withOpacity(0.2)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildHeader(),
-          const SizedBox(height: 12),
-          _buildImage(),
-          const SizedBox(height: 16),
-          _buildContent(),
-        ],
+    return GestureDetector(
+      onTap: onTap, // Add this line
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: const Color(0xff0F0F0F),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppConstants.white.withOpacity(0.2)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildHeader(),
+            const SizedBox(height: 12),
+            _buildImage(),
+            const SizedBox(height: 16),
+            _buildContent(),
+          ],
+        ),
       ),
     );
   }

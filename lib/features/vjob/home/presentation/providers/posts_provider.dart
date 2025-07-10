@@ -27,6 +27,7 @@ class PostsProvider extends ChangeNotifier {
   int _currentPage = 1;
   final int _itemsPerPage = 10;
   bool _isPostViewMode = false;
+  int _selectedPostIndex = -1;
 
   // Getters
   PostsStatus get status => _status;
@@ -38,6 +39,7 @@ class PostsProvider extends ChangeNotifier {
   bool get isLoadingMore => _status == PostsStatus.loadingMore;
   bool get isEmpty => _posts.isEmpty && _status == PostsStatus.loaded;
   bool get isPostViewMode => _isPostViewMode;
+  int get selectedPostIndex => _selectedPostIndex;
 
   // Methods
   Future<void> getPosts({bool isLoadMore = false}) async {
@@ -81,6 +83,11 @@ class PostsProvider extends ChangeNotifier {
       _status = PostsStatus.error;
     }
 
+    notifyListeners();
+  }
+
+  void setSelectedPostIndex(int index) {
+    _selectedPostIndex = index;
     notifyListeners();
   }
 
@@ -132,6 +139,7 @@ class PostsProvider extends ChangeNotifier {
     _hasMoreData = true;
     _currentPage = 1;
     _isPostViewMode = false;
+    _selectedPostIndex = -1;
     notifyListeners();
   }
 

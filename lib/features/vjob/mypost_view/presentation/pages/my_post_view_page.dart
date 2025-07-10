@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:livera/core/constants/storage_constants.dart';
 import 'package:livera/core/utils/result.dart';
 import 'package:provider/provider.dart';
 
@@ -180,8 +181,7 @@ class _MyPostViewPageState extends State<MyPostViewPage> {
               final post = provider.posts[index];
               return MyPostCardWidget(
                 post: post,
-                // onTap: () => _handlePostTap(post, index),
-                onTap: () {},
+                onTap: () => _handlePostTap(post, index),
                 onLike: () => _handleLikePost(post.id, index),
                 onDelete: () => _handleDeletePost(post.id, post.title),
                 onEdit: () => _handleEditPost(post),
@@ -312,10 +312,16 @@ class _MyPostViewPageState extends State<MyPostViewPage> {
     // context.push('/vjob/post-stats');
   }
 
-  // void _handlePostTap(MyPostEntity post, int index) {
-  //   _provider.setSelectedPostIndex(index);
-  //   context.push('/vjob/post-detail/${post.id}');
-  // }
+  void _handlePostTap(MyPostEntity post, int index) {
+    _provider.setSelectedPostIndex(index);
+    context.push(
+      '/vjob/post-detail/${post.id}',
+      extra: {
+        'post': post,
+        'owner': post.user.id == StorageConstants.userId ? true : false,
+      },
+    );
+  }
 
   Future<void> _handleLikePost(String postId, int index) async {
     final result = await _provider.likePost(postId, index);
