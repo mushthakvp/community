@@ -61,7 +61,7 @@ class AppConstants {
   static const String clickSound = 'assets/sounds/click_sound.mp3';
 
   // Assets
-  static const String viveraLogo = 'assets/images/vivera_logo.png';
+  static const String viveraLogo = 'assets/animation/vivera-animation.gif';
   static const String userNotLoginedImg = 'assets/images/user_not_logined.png';
   static const String viveraAnim = 'assets/animation/vivera-animation.gif';
 
@@ -139,6 +139,11 @@ class AppConstants {
     <path d="M8 9L12 5L16 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
     <path d="M16 15L12 19L8 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
   </svg>''';
+
+  static const String homeCardBorder =
+      '''<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="240" height="16" viewBox="0 0 240 16">
+                    <image xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPAAAAAQCAYAAAAoEfIQAAAAAXNSR0IArs4c6QAABN9JREFUaEPNW11yE0cQ7t5UJZRNyvIN4AZwA3iJ4AnCCZIThJwAfAJ0g+QECW+U/SJygugG8Q0kP0Q4dtimRqtdreb3651ZYb2ppqe/r/vrnpldjZisz/LD/SdVJS+E5CURPegPMxGJPSHyXWvfuTIgZnLsg9gouGKmAyJCeAotqKKFfK7PTp9fX2JctlYJSq2eRPJSdnoumGlRJ/HweFtLg8eVvDB4ufWTzAOS26QTxADPA+LNtUn6D+rVtcnyz8mEjm/fssgvw0jkz0qGse1rzSKSZBUpgo4PWCgI/xQfJpnV6+/OTn9crVK2sXFUzyJ4TLT8w1M/YN5y4iyR8xz83dw4Ey3PkH2j172z01fLFct2nzNi89HNnIge2cFogZFkFPdZqlD6frw+LeYgblgMc6Lxji5k/e3TdBP7PTt6pnk6eBqNYvXjnqoGFHqIP6IRUpCqjUGTGRBcb9bptdmBlxfHs6+58zbrSGpfbWxwSyQrfW+IZ61PxN5vY1bak+mnX5vRCDfPUFTPQDPs4+l4l6kfXF8duwzr9MKnd46c+ACvrV68/HDvAVfVP8CcnUlOYDlzVSTvoLFyx5C6fnr6/PqjJpK+ntolqcH772N6Md0x0teP26henkidJE9MbuZcrPj5SJP7LFskXgvA6MVXF0e/idBPWnBtccT9WzuhCDFvywgMrCwfbTYi9uY5pY2lbwbExcKzk2f/bnfhfYxQvK6e+CmDiWcnUz9eKEJf/ZTSAm/sfES8scFKBvQNegLnGr14dXH8N4k4z75hmvnJKtgelqs7yA0UI5CTy8l0/RB7xGhO2qtzrZ57yFs8XH19/WgbIKJpaHEcr8CKeC5VpUx0yavzI+fhczBAXrFCyRnMDfKuNxqbz2S63rynQD8+PdG5xu6weHfwubfUlnCAXjBUvQ3cxdCRGLtMwRJTPkOiRxRtdFp7l0d8V+n/Bq5tqKvzI/G9DkQ5p/BsP6kFA8UFK2DfbHCTjMpqUChDJ5kGNi+w9i5sDHVWfp6VaEuwbjS00HhfcuDN4y5k2gizC2Uxma4fa1Az9Tw0nia0xnZw0+qhdDNArUH+oLcFX50fvxOS1yGyoKNSBw8vDYQDYqMTpLXGj3n5HPY9sNDvJ8/WP4d5u4idnkih2AtiixcJxB7a4Im8Tt6cG5b8ZF3l5xwn5sVC8oxDqCxNfZifkZ4wV/PDCBDnV1yMUkduJK0jCCl1/RC/Wtlkb6Nn9c3c/ikIya0Or0lKg1eZS0DDPiPkbRgRe1YoY0gmyzBIeTF6bV6Q7O3CxRMaDzhnNBWgbhwURpUf0KeHaM7FitSpqg/XMoTwAuHYeMOj7jED84xj4Za6uhnBGni73l3k2Kyi88mEb2/mJM1VSjxU1xKfO0LgapeHZItjMdGijl2l7Fz5fW70/P9mTrV7NTaQIuDqZpj/rn74EXQJJNScYNOqZc6egGvXQGnt1QT3r1K2TVzd3L6JPQ8nYSIvk7yXGSIOR0+Bgz0eosYzi8zqT7o/M/j8m6ZC9Oz+zPBqtUreZo3o5cWLNKQmJ8m62xoU8XkHF5F+XPafT7hdLVojczWu4uqN8Gb19lzwKJImVJPR7IZFYc0q9zPbJQu/r6rP77//4fqvkkEH9FThac5Z6frJiW6YajmIh5/rjdHVa2v2BVRjb/tOHM4XAAAAAElFTkSuQmCC" x="0" y="0" width="240" height="16"/>
+                  </svg>''';
 
   // Animation Durations
   static const Duration defaultAnimationDuration = Duration(milliseconds: 300);
