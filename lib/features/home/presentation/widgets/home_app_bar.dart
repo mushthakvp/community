@@ -1,23 +1,32 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:livera/core/utils/extensions.dart';
 import 'package:provider/provider.dart';
 
-import '../../../../core/constants/app_constants.dart';
-import '../../../../core/utils/extensions.dart';
-import '../../../../core/widgets/common/text_widget.dart';
 import '../providers/home_provider.dart';
 
-class HomeAppBar extends StatelessWidget {
-  const HomeAppBar({super.key});
+class StickyHomeAppBar extends StatefulWidget {
+  const StickyHomeAppBar({super.key});
 
   @override
+  State<StickyHomeAppBar> createState() => _StickyHomeAppBarState();
+}
+
+class _StickyHomeAppBarState extends State<StickyHomeAppBar> {
+  @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [_buildWelcomeSection(context), _buildActionIcons(context)],
+    return Container(
+      height: 100,
+      decoration: const BoxDecoration(color: Colors.transparent),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildWelcomeSection(context),
+              _buildActionIcons(context),
+            ],
+          ),
         ),
       ),
     );
@@ -31,27 +40,34 @@ class HomeAppBar extends StatelessWidget {
             "Community User";
         return Row(
           children: [
-            IconButton(
-              onPressed: () {},
-              icon: const Icon(Icons.menu, color: AppConstants.white, size: 28),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.menu, color: Colors.white, size: 24),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 12),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const CommonTextWidget(
-                  color: AppConstants.white,
-                  text: 'Welcome',
-                  align: TextAlign.start,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
+                const Text(
+                  'Welcome',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w400,
+                  ),
                 ),
-                CommonTextWidget(
-                  color: AppConstants.white,
-                  text: userName,
-                  align: TextAlign.start,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
+                Text(
+                  userName,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),
@@ -64,24 +80,31 @@ class HomeAppBar extends StatelessWidget {
   Widget _buildActionIcons(BuildContext context) {
     return Row(
       children: [
-        _buildIconButton(icon: AppConstants.chatIcon, onTap: () {}),
-        const SizedBox(width: 8),
+        _buildIconButton(
+          icon: Icons.chat_bubble_outline,
+          onTap: () {
+            // Handle chat navigation
+          },
+        ),
+        const SizedBox(width: 12),
         _buildNotificationButton(),
       ],
     );
   }
 
-  Widget _buildIconButton({required String icon, required VoidCallback onTap}) {
+  Widget _buildIconButton({
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(8),
-        child: SvgPicture.string(
-          icon,
-          height: 24,
-          width: 24,
-          color: AppConstants.white,
+        decoration: BoxDecoration(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
         ),
+        child: Icon(icon, color: Colors.white, size: 24),
       ),
     );
   }
@@ -91,29 +114,29 @@ class HomeAppBar extends StatelessWidget {
       onTap: () {
         // Navigate to notifications
       },
-      child: Stack(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            child: const Icon(
-              Icons.notifications_outlined,
-              color: AppConstants.white,
-              size: 24,
-            ),
-          ),
-          Positioned(
-            right: 6,
-            top: 6,
-            child: Container(
-              width: 8,
-              height: 8,
-              decoration: const BoxDecoration(
-                color: AppConstants.red,
-                shape: BoxShape.circle,
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Stack(
+          children: [
+            const Icon(Icons.notifications_none, color: Colors.white, size: 24),
+            Positioned(
+              right: 0,
+              top: 0,
+              child: Container(
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(
+                  color: Colors.red,
+                  shape: BoxShape.circle,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

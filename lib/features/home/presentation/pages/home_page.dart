@@ -56,25 +56,30 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       backgroundColor: const Color(0xFF0A0A0A),
       body: Stack(
         children: [
+          // Background with better clarity
           Positioned.fill(
-            child: Image.asset(
-              'assets/animation/bg.gif',
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Color(0xFF0A0A0A),
-                        Color(0xFF1A1A2E),
-                        Color(0xFF0F0F23),
-                      ],
-                    ),
-                  ),
-                );
-              },
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0xFF0F172A), // Dark slate
+                    Color(0xFF1E293B), // Slate
+                    Color(0xFF334155), // Light slate
+                  ],
+                ),
+              ),
+              child: Image.asset(
+                'assets/animation/bg.gif',
+                fit: BoxFit.cover,
+                opacity: const AlwaysStoppedAnimation(
+                  0.3,
+                ), // Reduced opacity for clarity
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(); // Just return the gradient background
+                },
+              ),
             ),
           ),
 
