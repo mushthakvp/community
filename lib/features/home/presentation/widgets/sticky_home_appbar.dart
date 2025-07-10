@@ -16,36 +16,14 @@ class StickyHomeAppBar extends StatefulWidget {
   State<StickyHomeAppBar> createState() => _StickyHomeAppBarState();
 }
 
-class _StickyHomeAppBarState extends State<StickyHomeAppBar>
-    with TickerProviderStateMixin {
-  late AnimationController _moonController;
-  late AnimationController _starsController;
-
-  late Animation<double> _starsOpacityAnimation;
-
+class _StickyHomeAppBarState extends State<StickyHomeAppBar> {
   @override
   void initState() {
     super.initState();
-    _moonController = AnimationController(
-      duration: const Duration(seconds: 20),
-      vsync: this,
-    );
-    _starsController = AnimationController(
-      duration: const Duration(seconds: 3),
-      vsync: this,
-    );
-
-    _starsOpacityAnimation = Tween<double>(begin: 0.3, end: 1.0).animate(
-      CurvedAnimation(parent: _starsController, curve: Curves.easeInOut),
-    );
-    _moonController.repeat();
-    _starsController.repeat(reverse: true);
   }
 
   @override
   void dispose() {
-    _moonController.dispose();
-    _starsController.dispose();
     super.dispose();
   }
 
@@ -65,36 +43,18 @@ class _StickyHomeAppBarState extends State<StickyHomeAppBar>
           stops: const [0.0, 0.7, 1.0],
         ),
       ),
-      child: Stack(
-        children: [
-          _buildStarsBackground(),
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _buildWelcomeSection(context),
-                  _buildActionIcons(context),
-                ],
-              ),
-            ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildWelcomeSection(context),
+              _buildActionIcons(context),
+            ],
           ),
-        ],
+        ),
       ),
-    );
-  }
-
-  Widget _buildStarsBackground() {
-    return AnimatedBuilder(
-      animation: _starsOpacityAnimation,
-      builder: (context, child) {
-        return Positioned.fill(
-          child: CustomPaint(
-            painter: StarsPainter(_starsOpacityAnimation.value),
-          ),
-        );
-      },
     );
   }
 
