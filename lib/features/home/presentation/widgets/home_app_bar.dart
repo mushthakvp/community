@@ -33,9 +33,7 @@ class HomeAppBar extends StatelessWidget {
         return Row(
           children: [
             IconButton(
-              onPressed: () {
-                // Open drawer or menu
-              },
+              onPressed: () {},
               icon: const Icon(Icons.menu, color: AppConstants.white, size: 28),
             ),
             const SizedBox(width: 8),

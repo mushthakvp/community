@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:skeleton_text/skeleton_text.dart';
 
 import '../../../../core/constants/app_constants.dart';
-import '../../../promos/presentation/animation/animated_promos_background.dart';
 
 class HomeShimmer extends StatelessWidget {
   const HomeShimmer({super.key});
@@ -13,7 +12,50 @@ class HomeShimmer extends StatelessWidget {
       backgroundColor: const Color(0xFF0A0A0A),
       body: Stack(
         children: [
-          const AnimatedPromosBackground(child: SizedBox()),
+          // Background GIF - Full screen (same as home page)
+          Positioned.fill(
+            child: Image.asset(
+              'assets/animation/bg.gif',
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                // Fallback to gradient if GIF fails to load
+                return Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Color(0xFF0A0A0A),
+                        Color(0xFF1A1A2E),
+                        Color(0xFF0F0F23),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+
+          // Semi-transparent overlay for better shimmer visibility
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withOpacity(0.2),
+                    Colors.black.withOpacity(0.3),
+                    Colors.black.withOpacity(0.4),
+                    Colors.black.withOpacity(0.5),
+                  ],
+                  stops: const [0.0, 0.3, 0.7, 1.0],
+                ),
+              ),
+            ),
+          ),
+
+          // Shimmer content
           Column(
             children: [
               // Sticky App Bar Shimmer
@@ -31,6 +73,8 @@ class HomeShimmer extends StatelessWidget {
                       _buildMarqueeShimmer(context),
                       const SizedBox(height: 24),
                       _buildBannerShimmer(context),
+                      const SizedBox(height: 32),
+                      _buildSpinGamesShimmer(context),
                       const SizedBox(height: 32),
                       _buildEssentialsShimmer(context),
                       const SizedBox(height: 60),
@@ -53,8 +97,8 @@ class HomeShimmer extends StatelessWidget {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            const Color(0xFF0A0A0A),
-            const Color(0xFF1A1A2E).withOpacity(0.9),
+            const Color(0xFF0A0A0A).withOpacity(0.8),
+            const Color(0xFF1A1A2E).withOpacity(0.7),
             Colors.transparent,
           ],
           stops: const [0.0, 0.7, 1.0],
@@ -68,8 +112,7 @@ class HomeShimmer extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  _buildShimmerContainer(48, 48, borderRadius: 12),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 6),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -105,9 +148,9 @@ class HomeShimmer extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            const Color(0xFF1A1A2E),
-            const Color(0xFF16213E),
-            const Color(0xFF0F0F23),
+            const Color(0xFF1A1A2E).withOpacity(0.8),
+            const Color(0xFF16213E).withOpacity(0.8),
+            const Color(0xFF0F0F23).withOpacity(0.8),
           ],
         ),
         border: Border.all(
@@ -290,9 +333,9 @@ class HomeShimmer extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppConstants.appPrimaryColor.withOpacity(0.9),
             AppConstants.appPrimaryColor.withOpacity(0.7),
-            AppConstants.appPrimaryColor.withOpacity(0.9),
+            AppConstants.appPrimaryColor.withOpacity(0.5),
+            AppConstants.appPrimaryColor.withOpacity(0.7),
           ],
           stops: const [0.0, 0.5, 1.0],
         ),
@@ -367,7 +410,7 @@ class HomeShimmer extends StatelessWidget {
             height: 200,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
-              color: const Color(0xFF1A1A2E),
+              color: const Color(0xFF1A1A2E).withOpacity(0.8),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.3),
@@ -426,6 +469,113 @@ class HomeShimmer extends StatelessWidget {
     );
   }
 
+  Widget _buildSpinGamesShimmer(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Section title shimmer
+        Padding(
+          padding: const EdgeInsets.only(left: 24, bottom: 16),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.amber.shade400, Colors.orange.shade500],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.amber.withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: const Icon(Icons.casino, color: Colors.white, size: 20),
+              ),
+              const SizedBox(width: 12),
+              _buildShimmerContainer(120, 22),
+            ],
+          ),
+        ),
+
+        // Spin games grid shimmer
+        Container(
+          height: 160,
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              Expanded(child: _buildSpinGameCardShimmer(Colors.orange)),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildSpinGameCardShimmer(AppConstants.appPrimaryColor),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSpinGameCardShimmer(Color baseColor) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            baseColor.withOpacity(0.7),
+            baseColor.withOpacity(0.5),
+            baseColor.withOpacity(0.7),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: baseColor.withOpacity(0.4),
+            blurRadius: 15,
+            spreadRadius: 2,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Icon and badge row
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _buildShimmerContainer(44, 44, borderRadius: 12),
+                _buildShimmerContainer(60, 20, borderRadius: 20),
+              ],
+            ),
+
+            const Spacer(),
+
+            // Title
+            _buildShimmerContainer(80, 18),
+            const SizedBox(height: 4),
+
+            // Subtitle
+            _buildShimmerContainer(120, 12),
+            const SizedBox(height: 2),
+            _buildShimmerContainer(100, 12),
+
+            const SizedBox(height: 8),
+
+            // Action row
+            _buildShimmerContainer(70, 12),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildEssentialsShimmer(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -468,8 +618,8 @@ class HomeShimmer extends StatelessWidget {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      const Color(0xFF1A1A1A),
-                      const Color(0xFF2A2A2A).withOpacity(0.8),
+                      const Color(0xFF1A1A1A).withOpacity(0.8),
+                      const Color(0xFF2A2A2A).withOpacity(0.6),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -543,7 +693,7 @@ class HomeShimmer extends StatelessWidget {
     double? borderRadius,
   }) {
     return SkeletonAnimation(
-      shimmerColor: Colors.white.withOpacity(0.2),
+      shimmerColor: Colors.white.withOpacity(0.3),
       borderRadius: BorderRadius.circular(
         isCircle ? height / 2 : borderRadius ?? 4,
       ),
@@ -551,7 +701,7 @@ class HomeShimmer extends StatelessWidget {
         width: width,
         height: height,
         decoration: BoxDecoration(
-          color: Colors.grey.withOpacity(0.15),
+          color: Colors.grey.withOpacity(0.2),
           borderRadius: BorderRadius.circular(
             isCircle ? height / 2 : borderRadius ?? 4,
           ),

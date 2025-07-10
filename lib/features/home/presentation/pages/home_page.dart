@@ -1,4 +1,3 @@
-import 'package:fittor/fittor.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -55,61 +54,78 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0A0A0A),
-      body: Container(
-        height: context.hp(100),
-        width: context.wp(100),
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/animation/bg.gif'),
-            fit: BoxFit.cover,
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: Image.asset(
+              'assets/animation/bg.gif',
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Color(0xFF0A0A0A),
+                        Color(0xFF1A1A2E),
+                        Color(0xFF0F0F23),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
           ),
-        ),
-        child: Column(
-          children: [
-            const StickyHomeAppBar(),
-            Expanded(
-              child: Consumer<HomeProvider>(
-                builder: (context, provider, child) {
-                  if (provider.isLoading) {
-                    return const HomeShimmer();
-                  }
-                  if (provider.hasError) {
-                    return _buildErrorState(provider);
-                  }
-                  return FadeTransition(
-                    opacity: _fadeAnimation,
-                    child: RefreshIndicator(
-                      onRefresh: () =>
-                          provider.loadUserDetails(forceRefresh: true),
-                      color: AppConstants.appPrimaryColor,
-                      backgroundColor: const Color(0xFF1A1A2E),
-                      child: SingleChildScrollView(
-                        controller: _scrollController,
-                        physics: const BouncingScrollPhysics(),
-                        child: Column(
-                          children: [
-                            const SizedBox(height: 16),
-                            const EnhancedLoyaltyCard(),
-                            const SizedBox(height: 24),
-                            const MarqueeText(),
-                            const SizedBox(height: 24),
-                            const EnhancedBannerCarousel(),
-                            const SizedBox(height: 32),
-                            // New Spin Games Section
-                            _buildSpinGamesSection(),
-                            const SizedBox(height: 32),
-                            _buildEssentialsSection(),
-                            const SizedBox(height: 60),
-                          ],
+
+          // Main content
+          Column(
+            children: [
+              const StickyHomeAppBar(),
+              Expanded(
+                child: Consumer<HomeProvider>(
+                  builder: (context, provider, child) {
+                    if (provider.isLoading) {
+                      return const HomeShimmer();
+                    }
+                    if (provider.hasError) {
+                      return _buildErrorState(provider);
+                    }
+                    return FadeTransition(
+                      opacity: _fadeAnimation,
+                      child: RefreshIndicator(
+                        onRefresh: () =>
+                            provider.loadUserDetails(forceRefresh: true),
+                        color: AppConstants.appPrimaryColor,
+                        backgroundColor: const Color(0xFF1A1A2E),
+                        child: SingleChildScrollView(
+                          controller: _scrollController,
+                          physics: const BouncingScrollPhysics(),
+                          child: Column(
+                            children: [
+                              const SizedBox(height: 16),
+                              const EnhancedLoyaltyCard(),
+                              const SizedBox(height: 24),
+                              const MarqueeText(),
+                              const SizedBox(height: 24),
+                              const EnhancedBannerCarousel(),
+                              const SizedBox(height: 32),
+                              // New Spin Games Section
+                              _buildSpinGamesSection(),
+                              const SizedBox(height: 32),
+                              _buildEssentialsSection(),
+                              const SizedBox(height: 60),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
+        ],
       ),
     );
   }
