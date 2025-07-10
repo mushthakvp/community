@@ -55,6 +55,8 @@ class MainAppRouter {
       name: 'vizzleHomeShell',
       builder: (context, state) => const VizzleHomePage(),
     ),
+
+    // ==================== VJOB HOME ROUTE ====================
   ];
 
   /// Route paths constants

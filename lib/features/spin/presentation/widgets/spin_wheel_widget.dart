@@ -184,7 +184,7 @@ class _SpinWheelWidgetState extends State<SpinWheelWidget>
           ),
         ),
 
-        // Center logo with enhanced styling
+        // Center logo with animated GIF
         Container(
           width: 90,
           height: 90,
@@ -210,7 +210,22 @@ class _SpinWheelWidgetState extends State<SpinWheelWidget>
               ),
             ],
           ),
-          child: const Icon(Icons.stars, color: AppConstants.black, size: 45),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(41),
+            child: Image.asset(
+              'assets/animation/vivera-animation.gif',
+              width: 82,
+              height: 82,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return const Icon(
+                  Icons.stars,
+                  color: AppConstants.black,
+                  size: 45,
+                );
+              },
+            ),
+          ),
         ),
 
         // Spinning indicator
@@ -261,7 +276,7 @@ class _SpinWheelWidgetState extends State<SpinWheelWidget>
       final index = entry.key;
       final option = entry.value;
 
-      // Enhanced color palette
+      // Enhanced color palette - same as original
       final colors = [
         const Color(0xFFFDDC57), // Golden Yellow
         const Color(0xFF4ECDC4), // Turquoise
@@ -276,6 +291,7 @@ class _SpinWheelWidgetState extends State<SpinWheelWidget>
       ];
       final backgroundColor = colors[index % colors.length];
       final textColor = _getContrastColor(backgroundColor);
+
       return FortuneItem(
         style: FortuneItemStyle(
           color: backgroundColor,
@@ -288,52 +304,65 @@ class _SpinWheelWidgetState extends State<SpinWheelWidget>
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Icon/Image with background
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(16),
+              // Icon/Image - fixed to show properly
+              if (option.image?.isNotEmpty == true)
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: CachedNetworkImage(
+                      imageUrl: option.image!,
+                      width: 32,
+                      height: 32,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => Container(
+                        decoration: BoxDecoration(
+                          color: Colors.grey.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Icon(
+                          _getItemIcon(option),
+                          color: textColor,
+                          size: 20,
+                        ),
+                      ),
+                      errorWidget: (context, url, error) => Icon(
+                        _getItemIcon(option),
+                        color: textColor,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                )
+              else
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Center(
+                    child: Icon(
+                      _getItemIcon(option),
+                      color: textColor,
+                      size: 20,
+                    ),
+                  ),
                 ),
-                child: Center(
-                  child: option.image?.isNotEmpty == true
-                      ? CachedNetworkImage(
-                          imageUrl: option.image!,
-                          width: 24,
-                          height: 24,
-                          placeholder: (context, url) => Icon(
-                            _getItemIcon(option),
-                            color: textColor,
-                            size: 20,
-                          ),
-                          errorWidget: (context, url, error) => Icon(
-                            _getItemIcon(option),
-                            color: textColor,
-                            size: 20,
-                          ),
-                        )
-                      : Icon(_getItemIcon(option), color: textColor, size: 20),
-                ),
-              ),
-
               const SizedBox(height: 6),
-
-              // Title with background
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: CommonTextWidget(
-                  text: _getDisplayText(option),
-                  color: Colors.white,
-                  fontSize: _getTextSize(option.title),
-                  fontWeight: FontWeight.w700,
-                  maxLines: 2,
-                  align: TextAlign.center,
-                ),
+              CommonTextWidget(
+                text: _getDisplayText(option),
+                color: Colors.white,
+                fontSize: _getTextSize(option.title, widget.options.length),
+                fontWeight: FontWeight.w700,
+                maxLines: _getMaxLines(widget.options.length),
+                align: TextAlign.right,
               ),
             ],
           ),
@@ -355,19 +384,34 @@ class _SpinWheelWidgetState extends State<SpinWheelWidget>
       return '${option.loyaltyPoint}\nPoints';
     }
     if (option.title.isNotEmpty) {
-      // Shorten long titles for better display
-      if (option.title.length > 12) {
-        return '${option.title.substring(0, 10)}...';
-      }
+      // Return full title without truncation
       return option.title;
     }
     return 'Prize';
   }
 
-  double _getTextSize(String text) {
-    if (text.length > 15) return 9;
-    if (text.length > 10) return 10;
-    return 11;
+  // Improved text sizing based on number of items and text length
+  double _getTextSize(String text, int totalItems) {
+    if (totalItems > 8) {
+      if (text.length > 20) return 8;
+      if (text.length > 15) return 9;
+      return 10;
+    } else if (totalItems > 6) {
+      if (text.length > 25) return 9;
+      if (text.length > 20) return 10;
+      return 11;
+    } else {
+      if (text.length > 30) return 10;
+      if (text.length > 25) return 11;
+      return 12;
+    }
+  }
+
+  // Max lines based on number of items
+  int _getMaxLines(int totalItems) {
+    if (totalItems > 8) return 2;
+    if (totalItems > 6) return 3;
+    return 3;
   }
 
   Color _getContrastColor(Color backgroundColor) {

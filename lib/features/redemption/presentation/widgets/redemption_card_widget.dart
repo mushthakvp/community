@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/constants/route_constants.dart';
 import '../../../../core/widgets/buttons/primary_button.dart';
 import '../../../../core/widgets/common/image_widget.dart';
 import '../../../../core/widgets/common/spacer_widget.dart';
@@ -103,7 +104,8 @@ class RedemptionCardWidget extends StatelessWidget {
                         height: 40,
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        onPressed: () => context.push('/redemption/recharge'),
+                        onPressed: () =>
+                            context.push(RouteConstants.walletRecharge),
                       ),
                     ),
                   ],
