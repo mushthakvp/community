@@ -8,6 +8,7 @@ import 'providers/notification_providers.dart';
 import 'providers/profile_providers.dart';
 import 'providers/redemption_providers.dart';
 import 'providers/spin_providers.dart';
+import 'providers/vchat_providers.dart';
 import 'providers/vhub_providers.dart';
 import 'providers/vizzle_providers.dart';
 import 'providers/vjob_provider.dart';
@@ -24,6 +25,7 @@ class AppProviders {
     ...VizzleProviders.providers,
     ...VHubProviders.providers,
     ...VJobProviders.providers,
+    ...VChatProviders.providers,
     ...NotificationProviders.providers,
   ];
 
@@ -41,6 +43,7 @@ class AppProviders {
       ...VizzleProviders.providers,
       ...VHubProviders.providers,
       ...VJobProviders.providers,
+      ...VChatProviders.providers,
       ...NotificationProviders.providers,
     ];
   }
@@ -60,6 +63,8 @@ class AppProviders {
       VizzleProviders.providers;
   static List<SingleChildWidget> getVHubProviders() => VHubProviders.providers;
   static List<SingleChildWidget> getVJobProviders() => VJobProviders.providers;
+  static List<SingleChildWidget> getVChatProviders() =>
+      VChatProviders.providers;
   static List<SingleChildWidget> getNotificationProviders() =>
       NotificationProviders.providers;
 
@@ -67,6 +72,7 @@ class AppProviders {
     ...AppCoreProviders.providers,
     ...AuthProviders.providers,
     ...HomeProviders.providers,
+    ...VChatProviders.providers,
   ];
 
   static int get totalProvidersCount => providers.length;
@@ -82,6 +88,7 @@ class AppProviders {
     'Vizzle': VizzleProviders.providers.length,
     'VHub': VHubProviders.providers.length,
     'VJob': VJobProviders.providers.length,
+    'VChat': VChatProviders.providers.length,
     'Notification': NotificationProviders.providers.length,
   };
 }

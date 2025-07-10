@@ -4,37 +4,69 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 
 import '../constants/api_constants.dart';
+import '../constants/chat_api_constants.dart';
 import '../error/exceptions.dart';
 import '../services/storage_service.dart';
 import 'network_info.dart';
+
+enum ApiClientType { main, chat }
 
 class ApiClient {
   late http.Client _client;
   final String baseUrl;
   final NetworkInfo? networkInfo;
+  final ApiClientType clientType;
 
-  ApiClient({required this.baseUrl, this.networkInfo}) {
+  ApiClient({
+    required this.baseUrl,
+    this.networkInfo,
+    this.clientType = ApiClientType.main,
+  }) {
     _client = http.Client();
+  }
+
+  factory ApiClient.main({NetworkInfo? networkInfo}) {
+    return ApiClient(
+      baseUrl: ApiConstants.baseUrl,
+      networkInfo: networkInfo,
+      clientType: ApiClientType.main,
+    );
+  }
+
+  factory ApiClient.chat({NetworkInfo? networkInfo}) {
+    return ApiClient(
+      baseUrl: ChatApiConstants.chatBaseUrl,
+      networkInfo: networkInfo,
+      clientType: ApiClientType.chat,
+    );
   }
 
   Future<Map<String, String>> _getHeaders({
     Map<String, String>? additionalHeaders,
   }) async {
+    String? countryName = StorageService.getCountryName();
+
     final headers = <String, String>{
       'Content-Type': 'application/json',
       'Accept': 'application/json',
     };
 
-    // Add auth token if available
     final token = await StorageService.getToken();
     if (token != null) {
       headers['Authorization'] = 'Bearer $token';
     }
 
-    // Add country header if available
-    String? countryName = StorageService.getCountryName();
-    if (countryName != null) {
-      headers['country'] = countryName;
+    if (clientType == ApiClientType.main) {
+      if (countryName != null) {
+        headers['country'] = countryName;
+      }
+    }
+
+    if (clientType == ApiClientType.chat) {
+      if (countryName != null) {
+        headers['country'] = countryName;
+      }
+      headers['Client-Type'] = 'chat';
     }
 
     if (additionalHeaders != null) {
@@ -195,4 +227,6 @@ class ApiClient {
   void dispose() {
     _client.close();
   }
+
+  String get clientInfo => 'ApiClient(type: $clientType, baseUrl: $baseUrl)';
 }

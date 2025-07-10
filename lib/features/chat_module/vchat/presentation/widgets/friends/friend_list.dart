@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../../../core/router/routers/chat_router.dart';
 import '../../../domain/entities/friend_entity.dart';
 import '../../providers/chat_provider.dart';
 import '../common/empty_state_widget.dart';
@@ -32,14 +33,11 @@ class FriendList extends StatelessWidget {
             return FriendTile(
               friend: friend,
               onTap: () {
-                Navigator.pushNamed(
+                ChatRouter.navigateToSingleChat(
                   context,
-                  '/single-chat',
-                  arguments: {
-                    'friendId': friend.id,
-                    'friendName': friend.name,
-                    'friendAvatar': friend.profileImage,
-                  },
+                  friendId: friend.id,
+                  friendName: friend.name,
+                  friendAvatar: friend.profileImage,
                 );
               },
               onRemove: () =>

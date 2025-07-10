@@ -177,7 +177,7 @@ class _BottomNavigationState extends State<BottomNavigation>
                 size: isActive ? 24 : 22,
                 color: isActive
                     ? AppConstants.black
-                    : AppConstants.greyDark.withOpacity(0.6),
+                    : AppConstants.black.withOpacity(0.6),
               ),
             ),
           ),
@@ -189,7 +189,7 @@ class _BottomNavigationState extends State<BottomNavigation>
               fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
               color: isActive
                   ? AppConstants.black
-                  : AppConstants.greyDark.withOpacity(0.6),
+                  : AppConstants.black.withOpacity(0.6),
             ),
             child: Text(item['label'], textAlign: TextAlign.center),
           ),

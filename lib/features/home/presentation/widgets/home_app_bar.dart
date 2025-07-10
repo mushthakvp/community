@@ -1,9 +1,12 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:livera/core/utils/extensions.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/router/routers/chat_router.dart';
 import '../../../../core/widgets/common/text_widget.dart';
 import '../providers/home_provider.dart';
 
@@ -97,11 +100,28 @@ class _StickyHomeAppBarState extends State<StickyHomeAppBar> {
   Widget _buildActionIcons(BuildContext context) {
     return Row(
       children: [
-        _buildIconButton(icon: AppConstants.chatIcon, onTap: () {}),
+        _buildIconButton(
+          icon: AppConstants.chatIcon,
+          onTap: () => _navigateToChat(context),
+        ),
         const SizedBox(width: 8),
         _buildNotificationButton(),
       ],
     );
+  }
+
+  void _navigateToChat(BuildContext context) {
+    try {
+      log('Navigating to chat...');
+      ChatRouter.navigateToChatHome(context);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Chat feature is currently unavailable'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   Widget _buildIconButton({required String icon, required VoidCallback onTap}) {
@@ -110,7 +130,7 @@ class _StickyHomeAppBarState extends State<StickyHomeAppBar> {
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.2), // Subtle transparent background
+          color: Colors.black.withOpacity(0.2),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: AppConstants.white.withOpacity(0.3),
@@ -128,7 +148,10 @@ class _StickyHomeAppBarState extends State<StickyHomeAppBar> {
           icon,
           height: 20,
           width: 20,
-          color: AppConstants.white,
+          colorFilter: const ColorFilter.mode(
+            AppConstants.white,
+            BlendMode.srcIn,
+          ),
         ),
       ),
     );
