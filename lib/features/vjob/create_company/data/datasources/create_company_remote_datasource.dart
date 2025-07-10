@@ -25,15 +25,17 @@ class CreateCompanyRemoteDataSourceImpl
         'user/company',
         body: company.toCreateJson(),
       );
-
       final data = json.decode(response.body);
-
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        final responseModel = CreateCompanyResponse.fromJson(data);
-        if (responseModel.company != null) {
-          return responseModel.company!;
+        if (data['success'] == true) {
+          return CompanyModel.fromEntity(company).copyWith(
+            id: company.id ?? 'temp_${DateTime.now().millisecondsSinceEpoch}',
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          );
+        } else {
+          throw ServerException(data['message'] ?? 'Failed to create company');
         }
-        throw ServerException('Company data not found in response');
       } else {
         throw ServerException(data['message'] ?? 'Failed to create company');
       }
@@ -52,11 +54,13 @@ class CreateCompanyRemoteDataSourceImpl
       );
       final data = json.decode(response.body);
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        final responseModel = CreateCompanyResponse.fromJson(data);
-        if (responseModel.company != null) {
-          return responseModel.company!;
+        if (data['success'] == true) {
+          return CompanyModel.fromEntity(
+            company,
+          ).copyWith(updatedAt: DateTime.now());
+        } else {
+          throw ServerException(data['message'] ?? 'Failed to update company');
         }
-        throw ServerException('Company data not found in response');
       } else {
         throw ServerException(data['message'] ?? 'Failed to update company');
       }

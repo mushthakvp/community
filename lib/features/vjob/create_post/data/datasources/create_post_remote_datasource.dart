@@ -30,11 +30,19 @@ class CreatePostRemoteDataSourceImpl implements CreatePostRemoteDataSource {
       final data = json.decode(response.body);
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        final responseModel = CreatePostResponseModel.fromJson(data);
-        if (responseModel.success && responseModel.post != null) {
-          return responseModel.post!;
+        if (data['success'] == true) {
+          return CreatePostModel(
+            id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
+            title: request.title,
+            description: request.description,
+            image: request.image,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+            likesCount: 0,
+            isLiked: false,
+          );
         } else {
-          throw ServerException(responseModel.message);
+          throw ServerException(data['message'] ?? 'Failed to create post');
         }
       } else {
         throw ServerException(data['message'] ?? 'Failed to create post');
@@ -60,11 +68,18 @@ class CreatePostRemoteDataSourceImpl implements CreatePostRemoteDataSource {
       final data = json.decode(response.body);
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        final responseModel = CreatePostResponseModel.fromJson(data);
-        if (responseModel.success && responseModel.post != null) {
-          return responseModel.post!;
+        if (data['success'] == true) {
+          return CreatePostModel(
+            id: request.postId,
+            title: request.title,
+            description: request.description,
+            image: request.image,
+            updatedAt: DateTime.now(),
+            likesCount: 0,
+            isLiked: false,
+          );
         } else {
-          throw ServerException(responseModel.message);
+          throw ServerException(data['message'] ?? 'Failed to update post');
         }
       } else {
         throw ServerException(data['message'] ?? 'Failed to update post');
@@ -102,9 +117,7 @@ class CreatePostRemoteDataSourceImpl implements CreatePostRemoteDataSource {
         'user/job-post-action',
         body: {'postId': postId, 'action': 'delete'},
       );
-
       final data = json.decode(response.body);
-
       if (response.statusCode >= 200 && response.statusCode < 300) {
         return data['success'] ?? false;
       } else {
