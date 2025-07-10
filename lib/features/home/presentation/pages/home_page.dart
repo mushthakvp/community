@@ -53,103 +53,60 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0A0A),
-      body: Stack(
-        children: [
-          // Background with clear GIF visibility
-          Positioned.fill(
-            child: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Color(0xFF0F172A), // Dark slate
-                    Color(0xFF1E293B), // Slate
-                    Color(0xFF334155), // Light slate
-                  ],
-                ),
-              ),
-              child: Image.asset(
-                'assets/animation/bg.gif',
-                fit: BoxFit.cover,
-                opacity: const AlwaysStoppedAnimation(
-                  0.8, // Increased opacity for clearer visibility
-                ),
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(); // Just return the gradient background
+      backgroundColor: Colors.white,
+      body: Container(
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/animation/bg.gif'),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: Column(
+          children: [
+            const StickyHomeAppBar(),
+            Expanded(
+              child: Consumer<HomeProvider>(
+                builder: (context, provider, child) {
+                  if (provider.isLoading) {
+                    return const HomeShimmer();
+                  }
+                  if (provider.hasError) {
+                    return _buildErrorState(provider);
+                  }
+                  return FadeTransition(
+                    opacity: _fadeAnimation,
+                    child: RefreshIndicator(
+                      onRefresh: () =>
+                          provider.loadUserDetails(forceRefresh: true),
+                      color: AppConstants.appPrimaryColor,
+                      backgroundColor: const Color(0xFF1A1A2E),
+                      child: SingleChildScrollView(
+                        controller: _scrollController,
+                        physics: const BouncingScrollPhysics(),
+                        child: Column(
+                          children: [
+                            const SizedBox(height: 16),
+                            const EnhancedLoyaltyCard(),
+                            const SizedBox(height: 24),
+                            const MarqueeText(),
+                            const SizedBox(height: 24),
+                            const EnhancedBannerCarousel(),
+                            const SizedBox(height: 32),
+                            // New Spin Games Section
+                            _buildSpinGamesSection(),
+                            const SizedBox(height: 32),
+                            _buildEssentialsSection(),
+                            const SizedBox(height: 60),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
                 },
               ),
             ),
-          ),
-
-          // Reduced overlay for better GIF visibility
-          Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.black.withOpacity(0.1), // Much lighter overlay
-                    Colors.black.withOpacity(0.15),
-                    Colors.black.withOpacity(0.2),
-                    Colors.black.withOpacity(0.25),
-                  ],
-                  stops: const [0.0, 0.3, 0.7, 1.0],
-                ),
-              ),
-            ),
-          ),
-
-          // Main content
-          Column(
-            children: [
-              const StickyHomeAppBar(),
-              Expanded(
-                child: Consumer<HomeProvider>(
-                  builder: (context, provider, child) {
-                    if (provider.isLoading) {
-                      return const HomeShimmer();
-                    }
-                    if (provider.hasError) {
-                      return _buildErrorState(provider);
-                    }
-                    return FadeTransition(
-                      opacity: _fadeAnimation,
-                      child: RefreshIndicator(
-                        onRefresh: () =>
-                            provider.loadUserDetails(forceRefresh: true),
-                        color: AppConstants.appPrimaryColor,
-                        backgroundColor: const Color(0xFF1A1A2E),
-                        child: SingleChildScrollView(
-                          controller: _scrollController,
-                          physics: const BouncingScrollPhysics(),
-                          child: Column(
-                            children: [
-                              const SizedBox(height: 16),
-                              const EnhancedLoyaltyCard(),
-                              const SizedBox(height: 24),
-                              const MarqueeText(),
-                              const SizedBox(height: 24),
-                              const EnhancedBannerCarousel(),
-                              const SizedBox(height: 32),
-                              // New Spin Games Section
-                              _buildSpinGamesSection(),
-                              const SizedBox(height: 32),
-                              _buildEssentialsSection(),
-                              const SizedBox(height: 60),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

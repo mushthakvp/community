@@ -29,20 +29,8 @@ class _StickyHomeAppBarState extends State<StickyHomeAppBar> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       height: 120,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            const Color(0xFF0A0A0A),
-            const Color(0xFF1A1A2E).withOpacity(0.9),
-            Colors.transparent,
-          ],
-          stops: const [0.0, 0.7, 1.0],
-        ),
-      ),
       child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

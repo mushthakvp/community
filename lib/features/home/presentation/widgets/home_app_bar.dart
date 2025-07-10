@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:livera/core/utils/extensions.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../core/constants/app_constants.dart';
+import '../../../../core/widgets/common/text_widget.dart';
 import '../providers/home_provider.dart';
 
 class StickyHomeAppBar extends StatefulWidget {
@@ -13,9 +16,19 @@ class StickyHomeAppBar extends StatefulWidget {
 
 class _StickyHomeAppBarState extends State<StickyHomeAppBar> {
   @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Container(
-      height: 100,
+      height: 120,
       decoration: const BoxDecoration(color: Colors.transparent),
       child: SafeArea(
         child: Padding(
@@ -40,34 +53,38 @@ class _StickyHomeAppBarState extends State<StickyHomeAppBar> {
             "Community User";
         return Row(
           children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.transparent,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(Icons.menu, color: Colors.white, size: 24),
-            ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 6),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text(
-                  'Welcome',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w400,
-                  ),
+                CommonTextWidget(
+                  color: AppConstants.white,
+                  text: 'Welcome',
+                  align: TextAlign.start,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  shadows: [
+                    Shadow(
+                      color: Colors.black.withOpacity(0.8),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
-                Text(
-                  userName,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                  ),
+                CommonTextWidget(
+                  color: AppConstants.white,
+                  text: userName,
+                  align: TextAlign.start,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  shadows: [
+                    Shadow(
+                      color: Colors.black.withOpacity(0.8),
+                      blurRadius: 6,
+                      offset: const Offset(0, 1),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -80,31 +97,39 @@ class _StickyHomeAppBarState extends State<StickyHomeAppBar> {
   Widget _buildActionIcons(BuildContext context) {
     return Row(
       children: [
-        _buildIconButton(
-          icon: Icons.chat_bubble_outline,
-          onTap: () {
-            // Handle chat navigation
-          },
-        ),
-        const SizedBox(width: 12),
+        _buildIconButton(icon: AppConstants.chatIcon, onTap: () {}),
+        const SizedBox(width: 8),
         _buildNotificationButton(),
       ],
     );
   }
 
-  Widget _buildIconButton({
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
+  Widget _buildIconButton({required String icon, required VoidCallback onTap}) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
+          color: Colors.black.withOpacity(0.2), // Subtle transparent background
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: AppConstants.white.withOpacity(0.3),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
-        child: Icon(icon, color: Colors.white, size: 24),
+        child: SvgPicture.string(
+          icon,
+          height: 20,
+          width: 20,
+          color: AppConstants.white,
+        ),
       ),
     );
   }
@@ -115,22 +140,37 @@ class _StickyHomeAppBarState extends State<StickyHomeAppBar> {
         // Navigate to notifications
       },
       child: Container(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
+          color: Colors.black.withOpacity(0.2), // Subtle transparent background
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: AppConstants.white.withOpacity(0.3),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Stack(
           children: [
-            const Icon(Icons.notifications_none, color: Colors.white, size: 24),
+            const Icon(
+              Icons.notifications_outlined,
+              color: AppConstants.white,
+              size: 20,
+            ),
             Positioned(
               right: 0,
               top: 0,
               child: Container(
-                width: 8,
-                height: 8,
+                width: 6,
+                height: 6,
                 decoration: const BoxDecoration(
-                  color: Colors.red,
+                  color: AppConstants.red,
                   shape: BoxShape.circle,
                 ),
               ),
