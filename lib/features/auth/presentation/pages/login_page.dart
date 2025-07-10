@@ -8,7 +8,6 @@ import '../../../../core/constants/route_constants.dart';
 import '../../../../core/error/error_handler.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/widgets/loading/loading_widget.dart';
-import '../../../promos/presentation/animation/animated_promos_background.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/login/login_form.dart';
 import '../widgets/login/login_header.dart';
@@ -72,18 +71,16 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppConstants.black,
-      body: AnimatedPromosBackground(
-        child: Consumer<AuthProvider>(
-          builder: (context, authProvider, child) {
-            _handleAuthStateChanges(authProvider);
-            if (authProvider.isLoading) {
-              return const Center(
-                child: LoadingWidget(message: 'Signing you in...'),
-              );
-            }
-            return _buildContent(authProvider);
-          },
-        ),
+      body: Consumer<AuthProvider>(
+        builder: (context, authProvider, child) {
+          _handleAuthStateChanges(authProvider);
+          if (authProvider.isLoading) {
+            return const Center(
+              child: LoadingWidget(message: 'Signing you in...'),
+            );
+          }
+          return _buildContent(authProvider);
+        },
       ),
     );
   }

@@ -9,7 +9,6 @@ import '../../../../../core/widgets/buttons/primary_button.dart';
 import '../../../../../core/widgets/common/text_widget.dart';
 import '../../../../../core/widgets/inputs/text_field.dart';
 import '../../providers/auth_provider.dart';
-import '../forgot_password_dialog.dart';
 import '../password_field.dart';
 
 class LoginForm extends StatefulWidget {
@@ -60,9 +59,9 @@ class _LoginFormState extends State<LoginForm> {
                   _buildEmailField(authProvider),
                   const SizedBox(height: 20),
                   _buildPasswordField(authProvider),
-                  const SizedBox(height: 12),
-                  _buildForgotPasswordButton(),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 20),
+                  // _buildForgotPasswordButton(),
+                  // const SizedBox(height: 12),
                   _buildLoginButton(authProvider),
                   const SizedBox(height: 32),
                   _buildSignUpPrompt(),
@@ -118,30 +117,30 @@ class _LoginFormState extends State<LoginForm> {
     );
   }
 
-  Widget _buildForgotPasswordButton() {
-    return TweenAnimationBuilder<double>(
-      duration: const Duration(milliseconds: 1200),
-      tween: Tween(begin: 0.0, end: 1.0),
-      curve: Curves.easeInOut,
-      builder: (context, value, child) {
-        return Opacity(
-          opacity: value,
-          child: Align(
-            alignment: Alignment.centerRight,
-            child: TextButton(
-              onPressed: _showForgotPasswordDialog,
-              child: const CommonTextWidget(
-                text: 'Forgot Password?',
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: AppConstants.appPrimaryColor,
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
+  // Widget _buildForgotPasswordButton() {
+  //   return TweenAnimationBuilder<double>(
+  //     duration: const Duration(milliseconds: 1200),
+  //     tween: Tween(begin: 0.0, end: 1.0),
+  //     curve: Curves.easeInOut,
+  //     builder: (context, value, child) {
+  //       return Opacity(
+  //         opacity: value,
+  //         child: Align(
+  //           alignment: Alignment.centerRight,
+  //           child: TextButton(
+  //             onPressed: _showForgotPasswordDialog,
+  //             child: const CommonTextWidget(
+  //               text: 'Forgot Password?',
+  //               fontSize: 14,
+  //               fontWeight: FontWeight.w500,
+  //               color: AppConstants.appPrimaryColor,
+  //             ),
+  //           ),
+  //         ),
+  //       );
+  //     },
+  //   );
+  // }
 
   Widget _buildLoginButton(AuthProvider authProvider) {
     return TweenAnimationBuilder<double>(
@@ -212,10 +211,10 @@ class _LoginFormState extends State<LoginForm> {
     }
   }
 
-  void _showForgotPasswordDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => const ForgotPasswordDialog(),
-    );
-  }
+  // void _showForgotPasswordDialog() {
+  //   showDialog(
+  //     context: context,
+  //     builder: (context) => const ForgotPasswordDialog(),
+  //   );
+  // }
 }
