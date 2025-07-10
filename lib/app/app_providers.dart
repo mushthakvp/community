@@ -4,6 +4,7 @@ import 'providers/app_core_providers.dart';
 import 'providers/auth_providers.dart';
 import 'providers/coupon_promo_providers.dart';
 import 'providers/home_providers.dart';
+import 'providers/notification_providers.dart';
 import 'providers/profile_providers.dart';
 import 'providers/redemption_providers.dart';
 import 'providers/spin_providers.dart';
@@ -23,6 +24,7 @@ class AppProviders {
     ...VizzleProviders.providers,
     ...VHubProviders.providers,
     ...VJobProviders.providers,
+    ...NotificationProviders.providers,
   ];
 
   static Future<List<SingleChildWidget>> getInitializedProviders() async {
@@ -39,6 +41,7 @@ class AppProviders {
       ...VizzleProviders.providers,
       ...VHubProviders.providers,
       ...VJobProviders.providers,
+      ...NotificationProviders.providers,
     ];
   }
 
@@ -57,6 +60,8 @@ class AppProviders {
       VizzleProviders.providers;
   static List<SingleChildWidget> getVHubProviders() => VHubProviders.providers;
   static List<SingleChildWidget> getVJobProviders() => VJobProviders.providers;
+  static List<SingleChildWidget> getNotificationProviders() =>
+      NotificationProviders.providers;
 
   static List<SingleChildWidget> getEssentialProviders() => [
     ...AppCoreProviders.providers,
@@ -77,5 +82,6 @@ class AppProviders {
     'Vizzle': VizzleProviders.providers.length,
     'VHub': VHubProviders.providers.length,
     'VJob': VJobProviders.providers.length,
+    'Notification': NotificationProviders.providers.length,
   };
 }
