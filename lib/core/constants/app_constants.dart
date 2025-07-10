@@ -46,6 +46,7 @@ class AppConstants {
   static const Color appPrimaryColor = primary;
   static const Color textFieldColor = surfaceVariant;
   static const Color transparent = Colors.transparent;
+  static const Color chatBackgroundColor = Color(0xFFF7F8FA);
 
   // Font
   static const String fontFamily = 'Inter';
