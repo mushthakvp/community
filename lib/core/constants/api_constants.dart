@@ -30,9 +30,6 @@ class ApiConstants {
   static const String promosScreen = 'user/rewardsScreen';
   static const String addRewardPointsFromPromos = 'user/addRewardPoints';
 
-  // ========== NOTIFICATIONS ENDPOINTS ==========
-  static const String getNotifications = 'user/getNotification';
-
   // ========== HOME ENDPOINTS ==========
   static const String getHome = 'user/getHome';
 
@@ -140,6 +137,21 @@ class ApiConstants {
   static const String jobPostAction = "user/job-post-action";
   static const String reportPostUrl = "user/reportPost";
   static const String shareFeedUrl = "user/shareFeed/";
+
+  // Notifications Endpoints
+
+  static const String getNotificationUrl = "user/getNotification";
+  static const String getNotifications = "user/getNotifications";
+  static const String markNotificationRead = "user/markNotificationRead";
+  static const String markAllNotificationsRead =
+      "user/markAllNotificationsRead";
+  static const String deleteNotification = "user/deleteNotification";
+  static const String getUnreadNotificationCount =
+      "user/getUnreadNotificationCount";
+  static const String clearAllNotifications = "user/clearAllNotifications";
+  static const String getNotificationById = "user/getNotificationById";
+  static const String updateNotificationPreferences =
+      "user/updateNotificationPreferences";
 
   // ========== DYNAMIC ENDPOINT BUILDERS ==========
 

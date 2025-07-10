@@ -42,7 +42,7 @@ class _SplashPageState extends State<SplashPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppConstants.black,
+      backgroundColor: AppConstants.primary,
       body: Consumer<SplashProvider>(
         builder: (context, provider, child) {
           return Center(
@@ -59,7 +59,6 @@ class _SplashPageState extends State<SplashPage> {
                       'assets/animation/vivera-animation.gif',
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
-                        // Fallback to a simple container if GIF fails to load
                         return Container(
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(20),

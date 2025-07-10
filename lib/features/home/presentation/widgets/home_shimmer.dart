@@ -9,59 +9,13 @@ class HomeShimmer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0A0A),
       body: Stack(
         children: [
-          // Background GIF - Full screen (same as home page)
           Positioned.fill(
-            child: Image.asset(
-              'assets/animation/bg.gif',
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                // Fallback to gradient if GIF fails to load
-                return Container(
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Color(0xFF0A0A0A),
-                        Color(0xFF1A1A2E),
-                        Color(0xFF0F0F23),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
+            child: Image.asset('assets/animation/bg.gif', fit: BoxFit.cover),
           ),
-
-          // Semi-transparent overlay for better shimmer visibility
-          Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.black.withOpacity(0.2),
-                    Colors.black.withOpacity(0.3),
-                    Colors.black.withOpacity(0.4),
-                    Colors.black.withOpacity(0.5),
-                  ],
-                  stops: const [0.0, 0.3, 0.7, 1.0],
-                ),
-              ),
-            ),
-          ),
-
-          // Shimmer content
           Column(
             children: [
-              // Sticky App Bar Shimmer
-              _buildStickyAppBarShimmer(),
-
-              // Scrollable Content
               Expanded(
                 child: SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
@@ -85,55 +39,6 @@ class HomeShimmer extends StatelessWidget {
             ],
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildStickyAppBarShimmer() {
-    return Container(
-      height: 120,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            const Color(0xFF0A0A0A).withOpacity(0.8),
-            const Color(0xFF1A1A2E).withOpacity(0.7),
-            Colors.transparent,
-          ],
-          stops: const [0.0, 0.7, 1.0],
-        ),
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  const SizedBox(width: 6),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _buildShimmerContainer(80, 18),
-                      const SizedBox(height: 4),
-                      _buildShimmerContainer(120, 13),
-                    ],
-                  ),
-                ],
-              ),
-              Row(
-                children: [
-                  _buildShimmerContainer(40, 40, borderRadius: 12),
-                  const SizedBox(width: 8),
-                  _buildShimmerContainer(40, 40, borderRadius: 12),
-                ],
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
