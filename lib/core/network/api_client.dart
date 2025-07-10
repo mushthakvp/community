@@ -20,7 +20,7 @@ class ApiClient {
   ApiClient({
     required this.baseUrl,
     this.networkInfo,
-    this.clientType = ApiClientType.main,
+    required this.clientType,
   }) {
     _client = http.Client();
   }

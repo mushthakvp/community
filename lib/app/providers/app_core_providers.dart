@@ -3,8 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../core/constants/api_constants.dart';
 import '../../core/network/api_client.dart';
+import '../../core/network/api_client_wrapper.dart';
 import '../../core/network/network_info.dart';
 import '../../features/splash/presentation/providers/splash_provider.dart';
 
@@ -24,13 +24,20 @@ class AppCoreProviders {
       update: (_, connectivity, __) => NetworkInfoImpl(connectivity),
     ),
 
-    // API Client
-    ProxyProvider<NetworkInfo, ApiClient>(
-      update: (_, networkInfo, __) =>
-          ApiClient(baseUrl: ApiConstants.baseUrl, networkInfo: networkInfo),
+    // API Clients Wrapper
+    ProxyProvider<NetworkInfo, ApiClientWrapper>(
+      update: (_, networkInfo, __) => ApiClientWrapper(
+        mainClient: ApiClient.main(networkInfo: networkInfo),
+        chatClient: ApiClient.chat(networkInfo: networkInfo),
+      ),
     ),
 
-    // SharedPreferences Provider - FIXED: Now properly initializes SharedPreferences
+    // Main API Client for backward compatibility
+    ProxyProvider<ApiClientWrapper, ApiClient>(
+      update: (_, wrapper, __) => wrapper.mainClient,
+    ),
+
+    // SharedPreferences Provider
     Provider<SharedPreferences>(
       create: (_) =>
           throw UnimplementedError('SharedPreferences must be initialized'),
@@ -56,10 +63,17 @@ class AppCoreProviders {
         update: (_, connectivity, __) => NetworkInfoImpl(connectivity),
       ),
 
-      // API Client
-      ProxyProvider<NetworkInfo, ApiClient>(
-        update: (_, networkInfo, __) =>
-            ApiClient(baseUrl: ApiConstants.baseUrl, networkInfo: networkInfo),
+      // API Clients Wrapper
+      ProxyProvider<NetworkInfo, ApiClientWrapper>(
+        update: (_, networkInfo, __) => ApiClientWrapper(
+          mainClient: ApiClient.main(networkInfo: networkInfo),
+          chatClient: ApiClient.chat(networkInfo: networkInfo),
+        ),
+      ),
+
+      // Main API Client for backward compatibility
+      ProxyProvider<ApiClientWrapper, ApiClient>(
+        update: (_, wrapper, __) => wrapper.mainClient,
       ),
 
       // SharedPreferences Provider - Now properly initialized

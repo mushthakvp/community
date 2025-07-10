@@ -2,7 +2,7 @@ import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../core/network/api_client.dart';
+import '../../core/network/api_client_wrapper.dart';
 import '../../features/chat_module/vchat/data/datasources/chat_local_datasource.dart';
 import '../../features/chat_module/vchat/data/datasources/chat_remote_datasource.dart';
 import '../../features/chat_module/vchat/data/repositories/chat_repository_impl.dart';
@@ -30,10 +30,10 @@ class VChatProviders {
       update: (_, prefs, __) => ChatLocalDataSourceImpl(prefs: prefs),
     ),
 
-    // Remote Data Source - Uses the main ApiClient from core providers
-    ProxyProvider<ApiClient, ChatRemoteDataSource>(
-      update: (_, apiClient, __) =>
-          ChatRemoteDataSourceImpl(apiClient: apiClient),
+    // Remote Data Source - Uses the Chat API Client from wrapper
+    ProxyProvider<ApiClientWrapper, ChatRemoteDataSource>(
+      update: (_, apiWrapper, __) =>
+          ChatRemoteDataSourceImpl(apiClient: apiWrapper.chatClient),
     ),
 
     // ========================================
@@ -46,6 +46,7 @@ class VChatProviders {
       ),
     ),
 
+    // ... rest of your use cases and providers remain the same
     // ========================================
     // CHAT USE CASES
     // ========================================
