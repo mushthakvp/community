@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/route_constants.dart';
@@ -40,7 +41,7 @@ class SpinGamesSection extends StatelessWidget {
       children: [
         _buildSectionHeader(),
         const SizedBox(height: 16),
-        _buildSpinGamesGrid(spinGames),
+        _buildSpinGamesGrid(spinGames, context),
       ],
     );
   }
@@ -81,142 +82,161 @@ class SpinGamesSection extends StatelessWidget {
     );
   }
 
-  Widget _buildSpinGamesGrid(List<SpinGameModel> spinGames) {
+  Widget _buildSpinGamesGrid(
+    List<SpinGameModel> spinGames,
+    BuildContext context,
+  ) {
     return Container(
       height: 160,
       margin: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         children: [
-          Expanded(child: _buildGameCard(spinGames[0])),
+          Expanded(
+            child: _buildGameCard(
+              spinGames[0],
+              onTap: () {
+                context.push(RouteConstants.dailySpin);
+              },
+            ),
+          ),
           const SizedBox(width: 16),
-          Expanded(child: _buildGameCard(spinGames[1])),
+          Expanded(
+            child: _buildGameCard(
+              spinGames[1],
+              onTap: () {
+                context.push(RouteConstants.spinAndWin);
+              },
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildGameCard(SpinGameModel game) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF1C1C1C), Color(0xFF2A2A2A), Color(0xFF1A1A1A)],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: const Color(0xFFFFD700).withOpacity(0.3),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.5),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
+  Widget _buildGameCard(SpinGameModel game, {required Function() onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF1C1C1C), Color(0xFF2A2A2A), Color(0xFF1A1A1A)],
           ),
-          BoxShadow(
-            color: const Color(0xFFFFD700).withOpacity(0.1),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: const Color(0xFFFFD700).withOpacity(0.3),
+            width: 1,
           ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header with icon and badge
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(game.icon, color: Colors.black, size: 24),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: game.badgeColor,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    game.badgeText,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.5),
+              blurRadius: 15,
+              offset: const Offset(0, 5),
             ),
-
-            const Spacer(),
-
-            // Title
-            Text(
-              game.title,
-              style: const TextStyle(
-                color: Color(0xFFFFD700),
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 4),
-
-            // Subtitle
-            Text(
-              game.subtitle,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                height: 1.3,
-              ),
-            ),
-            const SizedBox(height: 2),
-
-            // Description
-            Text(
-              game.description,
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.8),
-                fontSize: 11,
-                height: 1.2,
-              ),
-            ),
-
-            const SizedBox(height: 8),
-
-            // Action indicator
-            Row(
-              children: [
-                Text(
-                  game.isFree ? 'Spin Now' : 'Play Now',
-                  style: const TextStyle(
-                    color: Color(0xFFFFD700),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                const Icon(
-                  Icons.arrow_forward,
-                  color: Color(0xFFFFD700),
-                  size: 16,
-                ),
-              ],
+            BoxShadow(
+              color: const Color(0xFFFFD700).withOpacity(0.1),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
             ),
           ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(game.icon, color: Colors.black, size: 24),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: game.badgeColor,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      game.badgeText,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const Spacer(),
+
+              // Title
+              Text(
+                game.title,
+                style: const TextStyle(
+                  color: Color(0xFFFFD700),
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 4),
+
+              // Subtitle
+              Text(
+                game.subtitle,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  height: 1.3,
+                ),
+              ),
+              const SizedBox(height: 2),
+
+              // Description
+              Text(
+                game.description,
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.8),
+                  fontSize: 11,
+                  height: 1.2,
+                ),
+              ),
+
+              const SizedBox(height: 8),
+
+              // Action indicator
+              Row(
+                children: [
+                  Text(
+                    game.isFree ? 'Spin Now' : 'Play Now',
+                    style: const TextStyle(
+                      color: Color(0xFFFFD700),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  const Icon(
+                    Icons.arrow_forward,
+                    color: Color(0xFFFFD700),
+                    size: 16,
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
