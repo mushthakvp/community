@@ -42,17 +42,16 @@ class _SplashPageState extends State<SplashPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppConstants.primary,
+      backgroundColor: AppConstants.black,
       body: Consumer<SplashProvider>(
         builder: (context, provider, child) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Logo GIF
                 SizedBox(
-                  width: 180,
-                  height: 180,
+                  width: 140,
+                  height: 140,
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(20),
                     child: Image.asset(

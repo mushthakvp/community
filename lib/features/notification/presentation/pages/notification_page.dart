@@ -30,7 +30,7 @@ class _NotificationPageState extends State<NotificationPage> {
     _scrollController.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       token = await StorageService.getToken();
-      if (token != null) {
+      if (StorageService.token.trim().isNotEmpty) {
         context.read<NotificationProvider>().initialize();
       }
     });
@@ -52,17 +52,13 @@ class _NotificationPageState extends State<NotificationPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (token == null) {
+    if (StorageService.token.trim().isEmpty) {
       return _buildNotLoggedInWidget();
     }
 
     return Scaffold(
       backgroundColor: AppConstants.black,
-      appBar: CommonAppBar(
-        title: "Notifications",
-        showBackButton: true,
-        actions: [_buildAppBarActions()],
-      ),
+      appBar: CommonAppBar(title: "Notifications", showBackButton: true),
       body: Consumer<NotificationProvider>(
         builder: (context, provider, child) {
           if (provider.isLoading && provider.notifications.isEmpty) {
@@ -113,85 +109,6 @@ class _NotificationPageState extends State<NotificationPage> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildAppBarActions() {
-    return Consumer<NotificationProvider>(
-      builder: (context, provider, child) {
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Filter button
-            IconButton(
-              onPressed: () => _showFilterBottomSheet(context),
-              icon: Stack(
-                children: [
-                  const Icon(
-                    Icons.filter_alt_outlined,
-                    color: AppConstants.white,
-                  ),
-                  if (provider.selectedTypes.isNotEmpty ||
-                      provider.showUnreadOnly)
-                    Positioned(
-                      right: 0,
-                      top: 0,
-                      child: Container(
-                        width: 8,
-                        height: 8,
-                        decoration: const BoxDecoration(
-                          color: AppConstants.appPrimaryColor,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            // Mark all as read button
-            if (provider.unreadCount > 0)
-              IconButton(
-                onPressed: () => _showMarkAllAsReadDialog(context),
-                icon: const Icon(
-                  Icons.mark_email_read_outlined,
-                  color: AppConstants.white,
-                ),
-              ),
-            // More options
-            PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert, color: AppConstants.white),
-              color: AppConstants.black,
-              onSelected: (value) => _handleMenuSelection(context, value),
-              itemBuilder: (context) => [
-                const PopupMenuItem(
-                  value: 'refresh',
-                  child: Row(
-                    children: [
-                      Icon(Icons.refresh, color: AppConstants.white),
-                      SizedBox(width: 8),
-                      CommonTextWidget(
-                        text: 'Refresh',
-                        color: AppConstants.white,
-                      ),
-                    ],
-                  ),
-                ),
-                if (provider.notifications.isNotEmpty)
-                  const PopupMenuItem(
-                    value: 'clear_all',
-                    child: Row(
-                      children: [
-                        Icon(Icons.clear_all, color: Colors.red),
-                        SizedBox(width: 8),
-                        CommonTextWidget(text: 'Clear All', color: Colors.red),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-          ],
-        );
-      },
     );
   }
 
@@ -280,102 +197,6 @@ class _NotificationPageState extends State<NotificationPage> {
     );
   }
 
-  void _showFilterBottomSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppConstants.black,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => _buildFilterBottomSheet(),
-    );
-  }
-
-  Widget _buildFilterBottomSheet() {
-    return Consumer<NotificationProvider>(
-      builder: (context, provider, child) {
-        return Container(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const CommonTextWidget(
-                text: 'Filter Notifications',
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: AppConstants.white,
-              ),
-              const SizedBox(height: 20),
-              // Unread only filter
-              CheckboxListTile(
-                title: const CommonTextWidget(
-                  text: 'Show unread only',
-                  color: AppConstants.white,
-                ),
-                value: provider.showUnreadOnly,
-                onChanged: (value) => provider.setUnreadFilter(value ?? false),
-                activeColor: AppConstants.appPrimaryColor,
-              ),
-              const SizedBox(height: 16),
-              // Clear filters button
-              if (provider.selectedTypes.isNotEmpty || provider.showUnreadOnly)
-                TextButton(
-                  onPressed: () {
-                    provider.clearFilters();
-                    Navigator.pop(context);
-                  },
-                  child: const CommonTextWidget(
-                    text: 'Clear Filters',
-                    color: AppConstants.appPrimaryColor,
-                  ),
-                ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  void _showMarkAllAsReadDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppConstants.black,
-        title: const CommonTextWidget(
-          text: 'Mark All as Read',
-          color: AppConstants.white,
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-        ),
-        content: const CommonTextWidget(
-          text: 'Are you sure you want to mark all notifications as read?',
-          color: AppConstants.white,
-          fontSize: 14,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const CommonTextWidget(
-              text: 'Cancel',
-              color: AppConstants.white,
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              context.read<NotificationProvider>().markAllNotificationsAsRead();
-            },
-            child: const CommonTextWidget(
-              text: 'Mark All',
-              color: AppConstants.appPrimaryColor,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   void _showDeleteConfirmation(BuildContext context, String notificationId) {
     showDialog(
       context: context,
@@ -414,56 +235,6 @@ class _NotificationPageState extends State<NotificationPage> {
     );
   }
 
-  void _handleMenuSelection(BuildContext context, String value) {
-    final provider = context.read<NotificationProvider>();
-
-    switch (value) {
-      case 'refresh':
-        provider.loadNotifications(forceRefresh: true);
-        break;
-      case 'clear_all':
-        _showClearAllConfirmation(context);
-        break;
-    }
-  }
-
-  void _showClearAllConfirmation(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppConstants.black,
-        title: const CommonTextWidget(
-          text: 'Clear All Notifications',
-          color: AppConstants.white,
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-        ),
-        content: const CommonTextWidget(
-          text:
-              'Are you sure you want to clear all notifications? This action cannot be undone.',
-          color: AppConstants.white,
-          fontSize: 14,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const CommonTextWidget(
-              text: 'Cancel',
-              color: AppConstants.white,
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              context.read<NotificationProvider>().clearAllNotifications();
-            },
-            child: const CommonTextWidget(text: 'Clear All', color: Colors.red),
-          ),
-        ],
-      ),
-    );
-  }
-
   void _handleNotificationTap(
     BuildContext context,
     NotificationEntity notification,
@@ -482,15 +253,6 @@ class _NotificationPageState extends State<NotificationPage> {
   }
 
   void _handleDeepLink(BuildContext context, String deepLink) {
-    // Implement deep link navigation logic here
-    // This depends on your app's routing system
-    // For example, using go_router:
-    // context.go(deepLink);
-
-    // Or using Navigator:
-    // Navigator.pushNamed(context, deepLink);
-
-    // For now, just show a snackbar
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: CommonTextWidget(

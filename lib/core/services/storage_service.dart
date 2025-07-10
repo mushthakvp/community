@@ -13,6 +13,9 @@ class StorageService {
     _prefs = await SharedPreferences.getInstance();
   }
 
+  static String get token =>
+      _prefs.getString(StorageConstants.accessToken) ?? '';
+
   // Secure Storage Methods
   static Future<void> setSecureString(String key, String value) async {
     await _prefs.setString(key, value);
