@@ -29,7 +29,6 @@ class HomeAppBar extends StatelessWidget {
         final userName =
             provider.userDetails?.name.capitalizeFirstLetter() ??
             "Community User";
-
         return Row(
           children: [
             IconButton(
