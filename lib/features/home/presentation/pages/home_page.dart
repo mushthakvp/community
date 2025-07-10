@@ -56,7 +56,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       backgroundColor: const Color(0xFF0A0A0A),
       body: Stack(
         children: [
-          // Background with better clarity
+          // Background with clear GIF visibility
           Positioned.fill(
             child: Container(
               decoration: const BoxDecoration(
@@ -74,11 +74,30 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 'assets/animation/bg.gif',
                 fit: BoxFit.cover,
                 opacity: const AlwaysStoppedAnimation(
-                  0.3,
-                ), // Reduced opacity for clarity
+                  0.8, // Increased opacity for clearer visibility
+                ),
                 errorBuilder: (context, error, stackTrace) {
                   return Container(); // Just return the gradient background
                 },
+              ),
+            ),
+          ),
+
+          // Reduced overlay for better GIF visibility
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withOpacity(0.1), // Much lighter overlay
+                    Colors.black.withOpacity(0.15),
+                    Colors.black.withOpacity(0.2),
+                    Colors.black.withOpacity(0.25),
+                  ],
+                  stops: const [0.0, 0.3, 0.7, 1.0],
+                ),
               ),
             ),
           ),
