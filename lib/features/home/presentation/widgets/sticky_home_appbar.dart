@@ -86,11 +86,30 @@ class _StickyHomeAppBarState extends State<StickyHomeAppBar> {
   Widget _buildActionIcons(BuildContext context) {
     return Row(
       children: [
-        _buildIconButton(icon: AppConstants.chatIcon, onTap: () {}),
+        _buildIconButton(
+          icon: AppConstants.chatIcon,
+          onTap: () {
+            _navigateToChat(context);
+          },
+        ),
         const SizedBox(width: 8),
         _buildNotificationButton(),
       ],
     );
+  }
+
+  void _navigateToChat(BuildContext context) {
+    debugPrint('Navigating to chat...');
+    try {
+      context.push(RouteConstants.chatHomePath);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Navigation error: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   Widget _buildIconButton({required String icon, required VoidCallback onTap}) {

@@ -135,6 +135,12 @@ class RouteConstants {
   static const String vjobPosts = '/v-job/posts';
   static const String vjobCreatePost = '/v-job/create-post';
 
+  // ==================== CHAT ROUTES ====================
+
+  static const String chatHomePath = '/chat';
+  static const String singleChatPath = '/chat/single';
+  static const String communityChatPath = '/chat/community';
+
   // ==================== HELPER METHODS ====================
 
   static String editAdWithId(String adId) {

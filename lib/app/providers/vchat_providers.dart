@@ -2,9 +2,7 @@ import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../core/constants/chat_api_constants.dart';
 import '../../core/network/api_client.dart';
-import '../../core/network/network_info.dart';
 import '../../features/chat_module/vchat/data/datasources/chat_local_datasource.dart';
 import '../../features/chat_module/vchat/data/datasources/chat_remote_datasource.dart';
 import '../../features/chat_module/vchat/data/repositories/chat_repository_impl.dart';
@@ -23,74 +21,77 @@ import '../../features/chat_module/vchat/presentation/providers/message_provider
 
 class VChatProviders {
   static List<SingleChildWidget> get providers => [
-    // Chat API Client
-    Provider<ApiClient>(
-      create: (context) => ApiClient(
-        baseUrl: ChatApiConstants.chatBaseUrl,
-        networkInfo: context.read<NetworkInfo>(),
-      ),
-      lazy: false,
+    // ========================================
+    // CHAT DATA SOURCES
+    // ========================================
+
+    // Local Data Source
+    ProxyProvider<SharedPreferences, ChatLocalDataSource>(
+      update: (_, prefs, __) => ChatLocalDataSourceImpl(prefs: prefs),
     ),
 
-    // Data Sources
-    Provider<ChatLocalDataSource>(
-      create: (context) =>
-          ChatLocalDataSourceImpl(prefs: context.read<SharedPreferences>()),
+    // Remote Data Source - Uses the main ApiClient from core providers
+    ProxyProvider<ApiClient, ChatRemoteDataSource>(
+      update: (_, apiClient, __) =>
+          ChatRemoteDataSourceImpl(apiClient: apiClient),
     ),
 
-    Provider<ChatRemoteDataSource>(
-      create: (context) =>
-          ChatRemoteDataSourceImpl(apiClient: context.read<ApiClient>()),
-    ),
-
-    // Repository
-    Provider<ChatRepository>(
-      create: (context) => ChatRepositoryImpl(
-        remoteDataSource: context.read<ChatRemoteDataSource>(),
-        localDataSource: context.read<ChatLocalDataSource>(),
+    // ========================================
+    // CHAT REPOSITORY
+    // ========================================
+    ProxyProvider2<ChatRemoteDataSource, ChatLocalDataSource, ChatRepository>(
+      update: (_, remoteDataSource, localDataSource, __) => ChatRepositoryImpl(
+        remoteDataSource: remoteDataSource,
+        localDataSource: localDataSource,
       ),
     ),
 
-    // Use Cases
-    Provider<GetCommunitiesUseCase>(
-      create: (context) =>
-          GetCommunitiesUseCase(context.read<ChatRepository>()),
+    // ========================================
+    // CHAT USE CASES
+    // ========================================
+    ProxyProvider<ChatRepository, GetCommunitiesUseCase>(
+      update: (_, repository, __) => GetCommunitiesUseCase(repository),
     ),
 
-    Provider<GetFriendsUseCase>(
-      create: (context) => GetFriendsUseCase(context.read<ChatRepository>()),
+    ProxyProvider<ChatRepository, GetFriendsUseCase>(
+      update: (_, repository, __) => GetFriendsUseCase(repository),
     ),
 
-    Provider<GetBirthdayFriendsUseCase>(
-      create: (context) =>
-          GetBirthdayFriendsUseCase(context.read<ChatRepository>()),
+    ProxyProvider<ChatRepository, GetBirthdayFriendsUseCase>(
+      update: (_, repository, __) => GetBirthdayFriendsUseCase(repository),
     ),
 
-    Provider<ManageFriendRequestsUseCase>(
-      create: (context) =>
-          ManageFriendRequestsUseCase(context.read<ChatRepository>()),
+    ProxyProvider<ChatRepository, ManageFriendRequestsUseCase>(
+      update: (_, repository, __) => ManageFriendRequestsUseCase(repository),
     ),
 
-    Provider<SendBirthdayWishUseCase>(
-      create: (context) =>
-          SendBirthdayWishUseCase(context.read<ChatRepository>()),
+    ProxyProvider<ChatRepository, SendBirthdayWishUseCase>(
+      update: (_, repository, __) => SendBirthdayWishUseCase(repository),
     ),
 
-    Provider<CreateCommunityUseCase>(
-      create: (context) =>
-          CreateCommunityUseCase(context.read<ChatRepository>()),
+    ProxyProvider<ChatRepository, CreateCommunityUseCase>(
+      update: (_, repository, __) => CreateCommunityUseCase(repository),
     ),
 
-    Provider<GetMessagesUseCase>(
-      create: (context) => GetMessagesUseCase(context.read<ChatRepository>()),
+    ProxyProvider<ChatRepository, GetMessagesUseCase>(
+      update: (_, repository, __) => GetMessagesUseCase(repository),
     ),
 
-    Provider<SendMessageUseCase>(
-      create: (context) => SendMessageUseCase(context.read<ChatRepository>()),
+    ProxyProvider<ChatRepository, SendMessageUseCase>(
+      update: (_, repository, __) => SendMessageUseCase(repository),
     ),
 
-    // Providers
-    ChangeNotifierProvider<ChatProvider>(
+    // ========================================
+    // CHAT PROVIDERS
+    // ========================================
+    ChangeNotifierProxyProvider5<
+      GetCommunitiesUseCase,
+      GetFriendsUseCase,
+      GetBirthdayFriendsUseCase,
+      ManageFriendRequestsUseCase,
+      SendBirthdayWishUseCase,
+      ChatProvider
+    >(
       create: (context) => ChatProvider(
         getCommunitiesUseCase: context.read<GetCommunitiesUseCase>(),
         getFriendsUseCase: context.read<GetFriendsUseCase>(),
@@ -99,6 +100,24 @@ class VChatProviders {
             .read<ManageFriendRequestsUseCase>(),
         sendBirthdayWishUseCase: context.read<SendBirthdayWishUseCase>(),
       ),
+      update:
+          (
+            _,
+            getCommunitiesUseCase,
+            getFriendsUseCase,
+            getBirthdayFriendsUseCase,
+            manageFriendRequestsUseCase,
+            sendBirthdayWishUseCase,
+            previous,
+          ) =>
+              previous ??
+              ChatProvider(
+                getCommunitiesUseCase: getCommunitiesUseCase,
+                getFriendsUseCase: getFriendsUseCase,
+                getBirthdayFriendsUseCase: getBirthdayFriendsUseCase,
+                manageFriendRequestsUseCase: manageFriendRequestsUseCase,
+                sendBirthdayWishUseCase: sendBirthdayWishUseCase,
+              ),
     ),
 
     ChangeNotifierProvider<CommunityProvider>(

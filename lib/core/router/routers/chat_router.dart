@@ -3,20 +3,17 @@ import 'package:go_router/go_router.dart';
 import '../../../features/chat_module/vchat/presentation/pages/chat_home_page.dart';
 import '../../../features/chat_module/vchat/presentation/pages/community_chat_page.dart';
 import '../../../features/chat_module/vchat/presentation/pages/single_chat_page.dart';
+import '../../constants/route_constants.dart';
 
 class ChatRouter {
-  static const String chatHomePath = '/chat';
-  static const String singleChatPath = '/chat/single';
-  static const String communityChatPath = '/chat/community';
-
   static List<RouteBase> get routes => [
     GoRoute(
-      path: chatHomePath,
+      path: RouteConstants.chatHomePath,
       name: 'chat-home',
       builder: (context, state) => const ChatHomePage(),
     ),
     GoRoute(
-      path: '$singleChatPath/:friendId',
+      path: '${RouteConstants.singleChatPath}/:friendId',
       name: 'single-chat',
       builder: (context, state) {
         final friendId = state.pathParameters['friendId']!;
@@ -32,7 +29,7 @@ class ChatRouter {
     ),
 
     GoRoute(
-      path: '$communityChatPath/:communityId',
+      path: '${RouteConstants.communityChatPath}/:communityId',
       name: 'community-chat',
       builder: (context, state) {
         final communityId = state.pathParameters['communityId']!;
@@ -47,8 +44,13 @@ class ChatRouter {
     ),
   ];
 
+  // Fixed navigation methods
   static void navigateToChatHome(context) {
-    GoRouter.of(context).pushNamed(chatHomePath);
+    GoRouter.of(context).push(RouteConstants.chatHomePath);
+  }
+
+  static void goToChatHome(context) {
+    GoRouter.of(context).go(RouteConstants.chatHomePath);
   }
 
   static void navigateToSingleChat(
@@ -58,9 +60,8 @@ class ChatRouter {
     String? friendName,
     String? friendAvatar,
   }) {
-    GoRouter.of(context).pushNamed(
-      'single-chat',
-      pathParameters: {'friendId': friendId},
+    GoRouter.of(context).push(
+      '${RouteConstants.singleChatPath}/$friendId',
       extra: {
         'chatId': chatId,
         'friendName': friendName,
@@ -75,9 +76,8 @@ class ChatRouter {
     String? communityName,
     String? communityImage,
   }) {
-    GoRouter.of(context).pushNamed(
-      'community-chat',
-      pathParameters: {'communityId': communityId},
+    GoRouter.of(context).push(
+      '${RouteConstants.communityChatPath}/$communityId',
       extra: {'communityName': communityName, 'communityImage': communityImage},
     );
   }
