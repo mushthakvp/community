@@ -6,6 +6,7 @@ import '../widgets/navigation/bottom_navigation.dart';
 import 'route_helper.dart';
 import 'routers/auth_router.dart';
 import 'routers/main_app_router.dart';
+import 'routers/notification_router.dart';
 import 'routers/profile_router.dart';
 import 'routers/spin_router.dart';
 import 'routers/vhub_router.dart';
@@ -43,6 +44,7 @@ class CoreRouter {
       ...VHubRouter.routes,
       ...VJobRouter.routes,
       ...ProfileRouter.routes,
+      ...NotificationRouter.routes,
     ],
   );
 

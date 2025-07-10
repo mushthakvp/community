@@ -7,7 +7,6 @@ import '../../../features/profile/presentation/pages/contact_us_page.dart';
 import '../../../features/profile/presentation/pages/edit_profile_page.dart';
 import '../../../features/profile/presentation/pages/help_support_page.dart';
 import '../../../features/profile/presentation/pages/loyalty_points_page.dart';
-import '../../../features/profile/presentation/pages/notifications_page.dart';
 import '../../../features/profile/presentation/pages/privacy_page.dart';
 import '../../../features/profile/presentation/pages/terms_conditions_page.dart';
 import '../../../features/redemption/presentation/pages/wallet_recharge_page.dart';
@@ -31,11 +30,6 @@ class ProfileRouter {
       path: RouteConstants.changePassword,
       name: 'changePassword',
       builder: (context, state) => const ChangePasswordPage(),
-    ),
-    GoRoute(
-      path: RouteConstants.notifications,
-      name: 'notifications',
-      builder: (context, state) => const NotificationsPage(),
     ),
 
     // ==================== LEGAL & INFORMATION ROUTES ====================

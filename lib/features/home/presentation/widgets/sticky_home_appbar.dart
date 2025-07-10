@@ -2,10 +2,12 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:go_router/go_router.dart';
 import 'package:livera/core/utils/extensions.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/constants/route_constants.dart';
 import '../../../../core/widgets/common/text_widget.dart';
 import '../providers/home_provider.dart';
 
@@ -117,7 +119,7 @@ class _StickyHomeAppBarState extends State<StickyHomeAppBar> {
   Widget _buildNotificationButton() {
     return GestureDetector(
       onTap: () {
-        // Navigate to notifications
+        context.push(RouteConstants.notifications);
       },
       child: Container(
         padding: const EdgeInsets.all(10),
