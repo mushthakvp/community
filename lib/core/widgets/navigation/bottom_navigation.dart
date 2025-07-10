@@ -103,8 +103,8 @@ class _BottomNavigationState extends State<BottomNavigation>
     return ScaleTransition(
       scale: _fabAnimation,
       child: SizedBox(
-        height: 69,
-        width: 69,
+        height: 65,
+        width: 65,
         child: FloatingActionButton(
           heroTag: "bottom_navigation_vizzle_fab",
           backgroundColor: AppConstants.appPrimaryColor,
@@ -133,9 +133,9 @@ class _BottomNavigationState extends State<BottomNavigation>
       gapLocation: GapLocation.center,
       notchSmoothness: NotchSmoothness.sharpEdge,
       onTap: (index) => _onItemTapped(context, index),
-      backgroundColor: AppConstants.black,
+      backgroundColor: AppConstants.primary,
       elevation: 8,
-      height: 80,
+      height: 78,
       splashColor: AppConstants.appPrimaryColor.withOpacity(0.3),
       splashSpeedInMilliseconds: 300,
       notchMargin: 8,
@@ -162,13 +162,11 @@ class _BottomNavigationState extends State<BottomNavigation>
             padding: EdgeInsets.all(isActive ? 8 : 6),
             decoration: BoxDecoration(
               color: isActive
-                  ? AppConstants.appPrimaryColor.withOpacity(0.2)
+                  ? AppConstants.black.withOpacity(0.2)
                   : Colors.transparent,
               borderRadius: BorderRadius.circular(12),
               border: isActive
-                  ? Border.all(
-                      color: AppConstants.appPrimaryColor.withOpacity(0.3),
-                    )
+                  ? Border.all(color: AppConstants.greyDark.withOpacity(0.3))
                   : null,
             ),
             child: AnimatedSwitcher(
@@ -176,10 +174,10 @@ class _BottomNavigationState extends State<BottomNavigation>
               child: Icon(
                 isActive ? item['activeIcon'] : item['icon'],
                 key: ValueKey(isActive),
-                size: isActive ? 26 : 24,
+                size: isActive ? 24 : 22,
                 color: isActive
-                    ? AppConstants.appPrimaryColor
-                    : AppConstants.white.withOpacity(0.6),
+                    ? AppConstants.black
+                    : AppConstants.greyDark.withOpacity(0.6),
               ),
             ),
           ),
@@ -190,8 +188,8 @@ class _BottomNavigationState extends State<BottomNavigation>
               fontSize: isActive ? 12 : 11,
               fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
               color: isActive
-                  ? AppConstants.appPrimaryColor
-                  : AppConstants.white.withOpacity(0.6),
+                  ? AppConstants.black
+                  : AppConstants.greyDark.withOpacity(0.6),
             ),
             child: Text(item['label'], textAlign: TextAlign.center),
           ),
