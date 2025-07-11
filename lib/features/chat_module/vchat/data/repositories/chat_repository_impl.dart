@@ -242,7 +242,9 @@ class ChatRepositoryImpl implements ChatRepository {
   }
 
   @override
-  Future<Either<Failure, List<FriendEntity>>> getFriends({String? type}) async {
+  Future<Either<Failure, List<FriendEntity>>> getFriends({
+    required String type,
+  }) async {
     try {
       // Try cached data first
       final cachedFriends = await _localDataSource.getCachedFriends();

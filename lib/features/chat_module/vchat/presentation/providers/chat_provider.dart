@@ -84,7 +84,7 @@ class ChatProvider extends ChangeNotifier {
       _setLoading();
       await Future.wait([
         loadCommunities(),
-        loadFriends(),
+        loadFriends(type: 'recent'),
         loadBirthdayFriends(),
       ]);
       _setLoaded();
@@ -120,7 +120,7 @@ class ChatProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> loadFriends({String? type}) async {
+  Future<void> loadFriends({required String type}) async {
     try {
       final result = await _getFriendsUseCase.call(type: type);
 
@@ -161,8 +161,6 @@ class ChatProvider extends ChangeNotifier {
     if (_chatType != type) {
       _chatType = type;
       notifyListeners();
-
-      // Load appropriate data based on type
       switch (type) {
         case 'Explore':
           loadCommunities(status: 'recommended');
@@ -172,7 +170,7 @@ class ChatProvider extends ChangeNotifier {
           break;
         case 'My Group':
           loadCommunities(status: 'my_groups');
-          loadFriends();
+          loadFriends(type: 'recent');
           break;
       }
     }
@@ -210,7 +208,7 @@ class ChatProvider extends ChangeNotifier {
       ) {
         if (success) {
           _showSuccess('Friend request sent successfully');
-          loadFriends(); // Refresh friends list
+          loadFriends(type: 'recent');
         }
       });
     } catch (e) {
@@ -227,8 +225,8 @@ class ChatProvider extends ChangeNotifier {
       ) {
         if (success) {
           _showSuccess('Friend request accepted');
-          loadFriends(); // Refresh friends list
-          loadFriends(type: 'requests'); // Refresh requests list
+          loadFriends(type: 'friends');
+          loadFriends(type: 'requests');
         }
       });
     } catch (e) {
@@ -262,7 +260,7 @@ class ChatProvider extends ChangeNotifier {
       ) {
         if (success) {
           _showSuccess('Friend removed successfully');
-          loadFriends(); // Refresh friends list
+          loadFriends(type: 'friends');
         }
       });
     } catch (e) {

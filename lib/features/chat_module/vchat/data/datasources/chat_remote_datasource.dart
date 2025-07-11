@@ -29,7 +29,7 @@ abstract class ChatRemoteDataSource {
   });
 
   // Friend Operations
-  Future<FriendResponseModel> getFriends({String? type});
+  Future<FriendResponseModel> getFriends({required String type});
   Future<bool> sendFriendRequest(String userId);
   Future<bool> acceptFriendRequest(String userId);
   Future<bool> rejectFriendRequest(String userId);

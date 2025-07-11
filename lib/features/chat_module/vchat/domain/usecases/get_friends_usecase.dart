@@ -9,7 +9,9 @@ class GetFriendsUseCase {
 
   GetFriendsUseCase(this.repository);
 
-  Future<Either<Failure, List<FriendEntity>>> call({String? type}) async {
+  Future<Either<Failure, List<FriendEntity>>> call({
+    required String type,
+  }) async {
     return await repository.getFriends(type: type);
   }
 }

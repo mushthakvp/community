@@ -36,7 +36,9 @@ abstract class ChatRepository {
   });
 
   // Friend Operations
-  Future<Either<Failure, List<FriendEntity>>> getFriends({String? type});
+  Future<Either<Failure, List<FriendEntity>>> getFriends({
+    required String type,
+  });
 
   Future<Either<Failure, bool>> sendFriendRequest(String userId);
 
