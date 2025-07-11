@@ -50,8 +50,8 @@ class ChatRepositoryImpl implements ChatRepository {
         type: type,
       );
 
-      if (response.success == true && response.data?.data != null) {
-        final communities = response.data!.data!;
+      if (response.success == true && response.data != null) {
+        final communities = response.data!;
 
         // Cache the fresh data
         await _localDataSource.cacheCommunities(communities);

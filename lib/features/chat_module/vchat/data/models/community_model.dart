@@ -12,7 +12,7 @@ String communityResponseModelToJson(CommunityResponseModel data) =>
 
 class CommunityResponseModel extends Equatable {
   final bool? success;
-  final CommunityDataModel? data;
+  final List<CommunityModel>? data;
   final String? message;
 
   const CommunityResponseModel({this.success, this.data, this.message});
@@ -22,7 +22,9 @@ class CommunityResponseModel extends Equatable {
       return CommunityResponseModel(
         success: json["success"] as bool?,
         data: json["data"] != null
-            ? CommunityDataModel.fromJson(json["data"])
+            ? List<CommunityModel>.from(
+                (json["data"] as List).map((x) => CommunityModel.fromJson(x)),
+              )
             : null,
         message: json["message"] as String?,
       );
@@ -33,39 +35,12 @@ class CommunityResponseModel extends Equatable {
 
   Map<String, dynamic> toJson() => {
     "success": success,
-    "data": data?.toJson(),
+    "data": data?.map((x) => x.toJson()).toList(),
     "message": message,
   };
 
   @override
   List<Object?> get props => [success, data, message];
-}
-
-class CommunityDataModel extends Equatable {
-  final List<CommunityModel>? data;
-
-  const CommunityDataModel({this.data});
-
-  factory CommunityDataModel.fromJson(Map<String, dynamic> json) {
-    try {
-      return CommunityDataModel(
-        data: json["data"] != null
-            ? List<CommunityModel>.from(
-                (json["data"] as List).map((x) => CommunityModel.fromJson(x)),
-              )
-            : null,
-      );
-    } catch (e) {
-      return const CommunityDataModel();
-    }
-  }
-
-  Map<String, dynamic> toJson() => {
-    "data": data?.map((x) => x.toJson()).toList(),
-  };
-
-  @override
-  List<Object?> get props => [data];
 }
 
 class CommunityModel extends Equatable {
