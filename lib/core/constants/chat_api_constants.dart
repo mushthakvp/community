@@ -1,8 +1,8 @@
 class ChatApiConstants {
   // Base URLs
   static const String chatBaseUrlPro = 'https://chat.prod.liveraapp.com/chat/';
-  static const String chatBaseUrlDev = 'http://192.168.3.6:3553/chat/';
-  static const String chatBaseUrl = 'http://192.168.3.6:3553/chat/';
+  static const String chatBaseUrlDev = 'http://192.168.3.6:3555/chat/';
+  static const String chatBaseUrl = 'http://192.168.3.6:3555/chat/';
 
   // Chat Module Endpoints
 
