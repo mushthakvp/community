@@ -23,8 +23,6 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
-    // No need to fetch profile data separately since we use home data
-    // The home data should already be loaded when this page is accessed
   }
 
   @override

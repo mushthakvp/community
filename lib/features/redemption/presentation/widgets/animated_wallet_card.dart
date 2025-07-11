@@ -65,7 +65,7 @@ class _AnimatedWalletCardState extends State<AnimatedWalletCard>
             builder: (context, child) {
               return Container(
                 width: double.infinity,
-                height: 200,
+                height: 170,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(24),
                   gradient: LinearGradient(
@@ -173,10 +173,7 @@ class _AnimatedWalletCardState extends State<AnimatedWalletCard>
             ),
           ],
         ),
-
         AppSpacing.verticalLG,
-
-        // Balance amount with animation
         TweenAnimationBuilder<double>(
           duration: const Duration(milliseconds: 1500),
           tween: Tween(begin: 0.0, end: user?.walletAmount ?? 0.0),
@@ -189,31 +186,7 @@ class _AnimatedWalletCardState extends State<AnimatedWalletCard>
             );
           },
         ),
-
         AppSpacing.verticalSM,
-
-        // Loyalty points
-        Row(
-          children: [
-            Icon(
-              Icons.stars,
-              color: AppConstants.appPrimaryColor.withOpacity(0.7),
-              size: 16,
-            ),
-            AppSpacing.horizontalXS,
-            CommonTextWidget(
-              text:
-                  '${user?.loyaltyPoints?.toStringAsFixed(0) ?? '0'} Loyalty Points',
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: AppConstants.white.withOpacity(0.8),
-            ),
-          ],
-        ),
-
-        const Spacer(),
-
-        // Wallet features row
         Row(
           children: [
             _buildFeatureIcon(Icons.security, 'Secure'),

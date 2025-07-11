@@ -43,7 +43,7 @@ class AppConstants {
   // Legacy Support
   static const Color black = surface;
   static const Color white = onSurface;
-  static const Color appPrimaryColor = primary;
+  static const Color appPrimaryColor = Color(0xFFFEDD59);
   static const Color textFieldColor = surfaceVariant;
   static const Color transparent = Colors.transparent;
   static const Color chatBackgroundColor = Color(0xFFF7F8FA);

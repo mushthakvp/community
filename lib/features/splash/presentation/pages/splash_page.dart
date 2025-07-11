@@ -42,7 +42,7 @@ class _SplashPageState extends State<SplashPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppConstants.black,
+      backgroundColor: AppConstants.appPrimaryColor,
       body: Consumer<SplashProvider>(
         builder: (context, provider, child) {
           return Center(
@@ -80,7 +80,7 @@ class _SplashPageState extends State<SplashPage> {
                   text: 'LIVERA',
                   fontSize: 42,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: Colors.black,
                   letterSpacing: 3.0,
                 ),
                 const SizedBox(height: 8),
@@ -90,7 +90,7 @@ class _SplashPageState extends State<SplashPage> {
                   text: 'Community Empowerment Platform',
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
-                  color: Colors.white70,
+                  color: Colors.black45,
                   letterSpacing: 1.2,
                   align: TextAlign.center,
                 ),

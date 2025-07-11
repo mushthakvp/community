@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_advanced_drawer/flutter_advanced_drawer.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../providers/home_provider.dart';
 import '../widgets/banner_carousel.dart';
+import '../widgets/drawer_screen.dart';
 import '../widgets/essentials_grid.dart';
 import '../widgets/home_shimmer.dart';
 import '../widgets/loyalty_card.dart';
 import '../widgets/marquee_text.dart';
-import '../widgets/spin_games_section.dart';
 import '../widgets/sticky_home_appbar.dart';
 
 class HomePage extends StatefulWidget {
@@ -21,12 +22,15 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
+  late AdvancedDrawerController _advancedDrawerController;
 
   final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
+
+    _advancedDrawerController = AdvancedDrawerController();
 
     _fadeController = AnimationController(
       duration: const Duration(milliseconds: 1200),
@@ -47,65 +51,90 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   void dispose() {
     _fadeController.dispose();
     _scrollController.dispose();
+    _advancedDrawerController.dispose();
     super.dispose();
+  }
+
+  void _handleMenuButtonPressed() {
+    _advancedDrawerController.showDrawer();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Container(
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/animation/bg.gif'),
-            fit: BoxFit.cover,
+    return AdvancedDrawer(
+      backdrop: Container(
+        decoration: const BoxDecoration(color: AppConstants.appPrimaryColor),
+      ),
+      controller: _advancedDrawerController,
+      animationCurve: Curves.easeInOut,
+      animationDuration: const Duration(milliseconds: 300),
+      animateChildDecoration: true,
+      rtlOpening: false,
+      openRatio: 0.57,
+      disabledGestures: false,
+      childDecoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(.35),
+            blurRadius: 14,
+            offset: const Offset(-12, 0),
           ),
-        ),
-        child: Column(
-          children: [
-            const StickyHomeAppBar(),
-            Expanded(
-              child: Consumer<HomeProvider>(
-                builder: (context, provider, child) {
-                  if (provider.isLoading) {
-                    return const HomeShimmer();
-                  }
-                  if (provider.hasError) {
-                    return _buildErrorState(provider);
-                  }
-                  return FadeTransition(
-                    opacity: _fadeAnimation,
-                    child: RefreshIndicator(
-                      onRefresh: () =>
-                          provider.loadUserDetails(forceRefresh: true),
-                      color: AppConstants.appPrimaryColor,
-                      backgroundColor: const Color(0xFF1A1A2E),
-                      child: SingleChildScrollView(
-                        controller: _scrollController,
-                        physics: const BouncingScrollPhysics(),
-                        child: Column(
-                          children: [
-                            const SizedBox(height: 16),
-                            const EnhancedLoyaltyCard(),
-                            const SizedBox(height: 24),
-                            const MarqueeText(),
-                            const SizedBox(height: 24),
-                            const EnhancedBannerCarousel(),
-                            const SizedBox(height: 32),
-                            // New Spin Games Section
-                            _buildSpinGamesSection(),
-                            const SizedBox(height: 32),
-                            _buildEssentialsSection(),
-                            const SizedBox(height: 60),
-                          ],
+        ],
+        borderRadius: const BorderRadius.all(Radius.circular(50)),
+      ),
+      drawer: const DrawerScreen(),
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: Container(
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage('assets/animation/bg.gif'),
+              fit: BoxFit.cover,
+            ),
+          ),
+          child: Column(
+            children: [
+              StickyHomeAppBar(onMenuPressed: _handleMenuButtonPressed),
+              Expanded(
+                child: Consumer<HomeProvider>(
+                  builder: (context, provider, child) {
+                    if (provider.isLoading) {
+                      return const HomeShimmer();
+                    }
+                    if (provider.hasError) {
+                      return _buildErrorState(provider);
+                    }
+                    return FadeTransition(
+                      opacity: _fadeAnimation,
+                      child: RefreshIndicator(
+                        onRefresh: () =>
+                            provider.loadUserDetails(forceRefresh: true),
+                        color: AppConstants.appPrimaryColor,
+                        backgroundColor: const Color(0xFF1A1A2E),
+                        child: SingleChildScrollView(
+                          controller: _scrollController,
+                          physics: const BouncingScrollPhysics(),
+                          child: Column(
+                            children: [
+                              const SizedBox(height: 16),
+                              const EnhancedLoyaltyCard(),
+                              const SizedBox(height: 24),
+                              const MarqueeText(),
+                              const SizedBox(height: 24),
+                              const EnhancedBannerCarousel(),
+                              const SizedBox(height: 32),
+                              _buildEssentialsSection(),
+                              const SizedBox(height: 60),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -185,19 +214,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildSpinGamesSection() {
-    return SlideTransition(
-      position: Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero)
-          .animate(
-            CurvedAnimation(
-              parent: _fadeController,
-              curve: const Interval(0.4, 1.0, curve: Curves.easeOutBack),
-            ),
-          ),
-      child: const SpinGamesSection(),
     );
   }
 

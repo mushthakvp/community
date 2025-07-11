@@ -83,6 +83,7 @@ class _BottomNavigationState extends State<BottomNavigation>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppConstants.black,
       body: IndexedStack(
         index: _currentIndex,
         children: const [
