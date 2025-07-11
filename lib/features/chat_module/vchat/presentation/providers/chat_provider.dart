@@ -190,7 +190,7 @@ class ChatProvider extends ChangeNotifier {
           loadCommunities(type: 'joined');
           break;
         case 'Friend Request':
-          loadFriends(type: 'requests');
+          loadFriends(type: 'request');
           break;
         case 'My Friends':
           loadFriends(type: 'friends');
