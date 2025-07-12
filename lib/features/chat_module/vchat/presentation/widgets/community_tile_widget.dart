@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 
 import '../../domain/entities/community_entity.dart';
-import '../providers/vchat_provider.dart';
 
 class CommunityTileWidget extends StatelessWidget {
   final CommunityEntity community;
@@ -24,13 +22,12 @@ class CommunityTileWidget extends StatelessWidget {
     return InkWell(
       onTap: onTap ?? () => _handleTap(context),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Row(
           children: [
             _buildCommunityAvatar(context),
             const SizedBox(width: 12),
             Expanded(child: _buildCommunityInfo(context)),
-            _buildActionSection(context),
           ],
         ),
       ),
@@ -262,47 +259,6 @@ class CommunityTileWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildActionSection(BuildContext context) {
-    return Consumer<VChatProvider>(
-      builder: (context, provider, _) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            if (community.isJoined || community.isCreated)
-              Icon(
-                Icons.check_circle,
-                size: 16,
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.6),
-              )
-            else
-              _buildJoinButton(context, provider),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildJoinButton(BuildContext context, VChatProvider provider) {
-    return GestureDetector(
-      onTap: () => _handleJoinCommunity(context, provider),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.primary,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Text(
-          'Join',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Theme.of(context).colorScheme.onPrimary,
-            fontWeight: FontWeight.w600,
-            fontSize: 12,
-          ),
-        ),
-      ),
-    );
-  }
-
   String _formatMemberCount(int count) {
     if (count < 1000) {
       return '$count';
@@ -323,16 +279,6 @@ class CommunityTileWidget extends StatelessWidget {
         'chatImage': community.image,
         'isGroup': true,
       },
-    );
-  }
-
-  void _handleJoinCommunity(BuildContext context, VChatProvider provider) {
-    provider.joinCommunityById(community.id);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Joining ${community.name}...'),
-        duration: const Duration(seconds: 2),
-      ),
     );
   }
 }

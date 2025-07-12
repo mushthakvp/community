@@ -14,28 +14,63 @@ class ChatModel extends ChatEntity {
     super.isBot,
     super.role,
     super.unreadCount,
+    super.isCreator,
+    super.isUserInGroup,
+    super.isUserRequested,
+    super.shareLink,
   });
 
   factory ChatModel.fromJson(Map<String, dynamic> json) {
-    return ChatModel(
-      id: json['_id'] ?? '',
-      users:
-          (json['users'] as List<dynamic>?)
-              ?.map((user) => UserModel.fromJson(user))
-              .toList() ??
-          [],
-      latestMessage: json['latestMessage'],
-      lastMessageTime: json['updatedAt'] != null
-          ? DateTime.parse(json['updatedAt'])
-          : null,
-      isGroup: json['isGroup'] ?? false,
-      groupName: json['groupName'],
-      groupImage: json['groupProfileImage'],
-      wallpaper: json['wallpapers'],
-      isBot: json['isBot'] ?? false, // Parse isBot field from API
-      role: json['role'],
-      unreadCount: json['unreadCount'] ?? 0,
-    );
+    // Handle both old and new API response formats
+    final isNewFormat = json.containsKey('groupName');
+
+    if (isNewFormat) {
+      // New API format (groupDetails)
+      return ChatModel(
+        id: json['_id'] ?? '',
+        users: [], // Members array might be empty in new format
+        latestMessage: null, // Not provided in new format
+        lastMessageTime: json['updatedAt'] != null
+            ? DateTime.parse(json['updatedAt'])
+            : null,
+        isGroup: true, // Assuming it's a group/community chat
+        groupName: json['groupName'],
+        groupImage: json['groupProfileImage'],
+        wallpaper: json['userWallpaper'],
+        isBot: json['isBot'] ?? false,
+        role: null,
+        unreadCount: 0,
+        isCreator: json['isCreator'] ?? false,
+        isUserInGroup: json['isUserInGroup'] ?? false,
+        isUserRequested: json['isUserRequested'] ?? false,
+        shareLink: json['shareLink'],
+      );
+    } else {
+      // Old API format
+      return ChatModel(
+        id: json['_id'] ?? '',
+        users:
+            (json['users'] as List<dynamic>?)
+                ?.map((user) => UserModel.fromJson(user))
+                .toList() ??
+            [],
+        latestMessage: json['latestMessage'],
+        lastMessageTime: json['updatedAt'] != null
+            ? DateTime.parse(json['updatedAt'])
+            : null,
+        isGroup: json['isGroup'] ?? false,
+        groupName: json['groupName'],
+        groupImage: json['groupProfileImage'],
+        wallpaper: json['wallpapers'],
+        isBot: json['isBot'] ?? false,
+        role: json['role'],
+        unreadCount: json['unreadCount'] ?? 0,
+        isCreator: json['isCreator'] ?? false,
+        isUserInGroup: json['isUserInGroup'] ?? false,
+        isUserRequested: json['isUserRequested'] ?? false,
+        shareLink: json['shareLink'],
+      );
+    }
   }
 
   Map<String, dynamic> toJson() {
@@ -51,6 +86,10 @@ class ChatModel extends ChatEntity {
       'isBot': isBot,
       'role': role,
       'unreadCount': unreadCount,
+      'isCreator': isCreator,
+      'isUserInGroup': isUserInGroup,
+      'isUserRequested': isUserRequested,
+      'shareLink': shareLink,
     };
   }
 
@@ -66,6 +105,10 @@ class ChatModel extends ChatEntity {
     bool? isBot,
     String? role,
     int? unreadCount,
+    bool? isCreator,
+    bool? isUserInGroup,
+    bool? isUserRequested,
+    String? shareLink,
   }) {
     return ChatModel(
       id: id ?? this.id,
@@ -79,6 +122,10 @@ class ChatModel extends ChatEntity {
       isBot: isBot ?? this.isBot,
       role: role ?? this.role,
       unreadCount: unreadCount ?? this.unreadCount,
+      isCreator: isCreator ?? this.isCreator,
+      isUserInGroup: isUserInGroup ?? this.isUserInGroup,
+      isUserRequested: isUserRequested ?? this.isUserRequested,
+      shareLink: shareLink ?? this.shareLink,
     );
   }
 }

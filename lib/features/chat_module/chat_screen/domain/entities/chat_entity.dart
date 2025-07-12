@@ -14,6 +14,10 @@ class ChatEntity extends Equatable {
   final bool isBot;
   final String? role;
   final int unreadCount;
+  final bool isCreator;
+  final bool isUserInGroup;
+  final bool isUserRequested;
+  final String? shareLink;
 
   const ChatEntity({
     required this.id,
@@ -27,6 +31,10 @@ class ChatEntity extends Equatable {
     this.isBot = false,
     this.role,
     this.unreadCount = 0,
+    this.isCreator = false,
+    this.isUserInGroup = false,
+    this.isUserRequested = false,
+    this.shareLink,
   });
 
   @override
@@ -39,8 +47,12 @@ class ChatEntity extends Equatable {
     groupName,
     groupImage,
     wallpaper,
-    isBot, // Added to props
+    isBot,
     role,
     unreadCount,
+    isCreator,
+    isUserInGroup,
+    isUserRequested,
+    shareLink,
   ];
 }

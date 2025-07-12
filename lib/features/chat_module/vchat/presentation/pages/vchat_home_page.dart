@@ -192,8 +192,9 @@ class _VChatHomePageState extends State<VChatHomePage> {
     return ListView.separated(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
+      padding: EdgeInsets.zero,
       itemCount: communities.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      separatorBuilder: (_, __) => Divider(),
       itemBuilder: (context, index) {
         final community = communities[index];
         return CommunityTileWidget(community: community);

@@ -41,69 +41,212 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.isBotChat) {
-      return SizedBox.shrink();
-    }
-
     return Consumer<ChatProvider>(
       builder: (context, provider, _) {
-        if (provider.isRecording &&
-            !_recordingAnimationController.isAnimating) {
-          _recordingAnimationController.repeat(reverse: true);
-        } else if (!provider.isRecording &&
-            _recordingAnimationController.isAnimating) {
-          _recordingAnimationController.stop();
-          _recordingAnimationController.reset();
-        }
+        // Determine what input UI to show based on chat status
+        final inputType = _determineInputType(provider);
 
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            border: Border(
-              top: BorderSide(
-                color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+        switch (inputType) {
+          case ChatInputType.hidden:
+            return const SizedBox.shrink();
+          case ChatInputType.requestSent:
+            return _buildRequestSentWidget(context);
+          case ChatInputType.joinRequest:
+            return _buildJoinRequestWidget(context, provider);
+          case ChatInputType.normal:
+            return _buildNormalChatInput(context, provider);
+        }
+      },
+    );
+  }
+
+  ChatInputType _determineInputType(ChatProvider provider) {
+    final chat = provider.currentChat;
+    if (chat == null) return ChatInputType.hidden;
+    if (chat.isCreator || chat.isUserInGroup) {
+      return ChatInputType.normal;
+    }
+    if (chat.isUserRequested && !chat.isUserInGroup) {
+      return ChatInputType.requestSent;
+    }
+    if (chat.isBot) {
+      return ChatInputType.hidden;
+    }
+    return ChatInputType.normal;
+  }
+
+  Widget _buildRequestSentWidget(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        border: Border(
+          top: BorderSide(
+            color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+          ),
+        ),
+      ),
+      child: SafeArea(
+        child: Row(
+          children: [
+            Icon(Icons.pending, color: Theme.of(context).colorScheme.primary),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Request Sent',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    'Waiting for approval to join this group',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withOpacity(0.6),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ),
-          child: SafeArea(
-            child: Column(
-              children: [
-                if (provider.isRecording)
-                  _buildRecordingIndicator(context, provider),
-                Row(
-                  children: [
-                    IconButton(
-                      onPressed: provider.isRecording
-                          ? null
-                          : () => _showAttachmentOptions(context, provider),
-                      icon: const Icon(Icons.add),
-                      style: IconButton.styleFrom(
-                        backgroundColor: Theme.of(
-                          context,
-                        ).colorScheme.primaryContainer,
-                        foregroundColor: Theme.of(
-                          context,
-                        ).colorScheme.onPrimaryContainer,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
+          ],
+        ),
+      ),
+    );
+  }
 
-                    // Text input
-                    Expanded(
-                      child: provider.isRecording
-                          ? _buildRecordingContainer(context, provider)
-                          : _buildTextInput(context, provider),
+  Widget _buildJoinRequestWidget(BuildContext context, ChatProvider provider) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        border: Border(
+          top: BorderSide(
+            color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+          ),
+        ),
+      ),
+      child: SafeArea(
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    provider.currentChat?.isBot == true
+                        ? 'Bot Channel'
+                        : 'Join Group',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
                     ),
-                    const SizedBox(width: 8),
-                    _buildActionButton(context, provider),
-                  ],
+                  ),
+                  Text(
+                    provider.currentChat?.isBot == true
+                        ? 'Request to join this bot channel'
+                        : 'Request to join this group to start chatting',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withOpacity(0.6),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            ElevatedButton.icon(
+              onPressed: provider.isLoading
+                  ? null
+                  : () => _handleJoinRequest(context, provider),
+              icon: provider.isLoading
+                  ? SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
+                    )
+                  : Icon(
+                      provider.currentChat?.isBot == true
+                          ? Icons.smart_toy
+                          : Icons.group_add,
+                    ),
+              label: Text(
+                provider.currentChat?.isBot == true ? 'Join Bot' : 'Join Group',
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Theme.of(context).colorScheme.onPrimary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNormalChatInput(BuildContext context, ChatProvider provider) {
+    if (provider.isRecording && !_recordingAnimationController.isAnimating) {
+      _recordingAnimationController.repeat(reverse: true);
+    } else if (!provider.isRecording &&
+        _recordingAnimationController.isAnimating) {
+      _recordingAnimationController.stop();
+      _recordingAnimationController.reset();
+    }
+
+    return Container(
+      height: 94,
+      padding: const EdgeInsets.only(left: 8, right: 8, top: 8),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        border: Border(
+          top: BorderSide(
+            color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+          ),
+        ),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          children: [
+            if (provider.isRecording)
+              _buildRecordingIndicator(context, provider),
+            Row(
+              children: [
+                IconButton(
+                  onPressed: provider.isRecording
+                      ? null
+                      : () => _showAttachmentOptions(context, provider),
+                  icon: const Icon(Icons.add),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Theme.of(
+                      context,
+                    ).colorScheme.primaryContainer,
+                    foregroundColor: Theme.of(
+                      context,
+                    ).colorScheme.onPrimaryContainer,
+                  ),
                 ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: provider.isRecording
+                      ? _buildRecordingContainer(context, provider)
+                      : _buildTextInput(context, provider),
+                ),
+                const SizedBox(width: 8),
+                _buildActionButton(context, provider),
               ],
             ),
-          ),
-        );
-      },
+          ],
+        ),
+      ),
     );
   }
 
@@ -158,7 +301,6 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
 
   Widget _buildTextInput(BuildContext context, ChatProvider provider) {
     return Container(
-      constraints: const BoxConstraints(maxHeight: 120),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceVariant,
         borderRadius: BorderRadius.circular(24),
@@ -167,6 +309,7 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
         ),
       ),
       child: TextField(
+        onTapUpOutside: (event) => FocusScope.of(context).unfocus(),
         controller: provider.messageController,
         focusNode: provider.focusNode,
         maxLines: null,
@@ -181,11 +324,7 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
             ).colorScheme.onSurfaceVariant.withOpacity(0.6),
           ),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 12,
-          ),
-          // NO suffixIcon - completely removed send button from text field
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16),
         ),
         style: Theme.of(context).textTheme.bodyMedium,
         onChanged: (value) {
@@ -194,7 +333,6 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
           });
         },
         onSubmitted: (_) {
-          // Allow submission via keyboard
           if (_isTyping) {
             provider.sendTextMessage(widget.chatId);
             setState(() {
@@ -243,7 +381,6 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
     if (provider.isRecording) {
       return Row(
         children: [
-          // Cancel recording
           IconButton(
             onPressed: provider.cancelRecording,
             icon: const Icon(Icons.close),
@@ -253,7 +390,6 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
             ),
           ),
           const SizedBox(width: 8),
-          // Stop recording
           IconButton(
             onPressed: () => provider.stopRecording(widget.chatId),
             icon: const Icon(Icons.stop),
@@ -326,7 +462,6 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Handle bar
             Container(
               width: 40,
               height: 4,
@@ -336,8 +471,6 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
               ),
             ),
             const SizedBox(height: 24),
-
-            // Title
             Text(
               'Share',
               style: Theme.of(
@@ -345,8 +478,6 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
               ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 24),
-
-            // Options grid
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -427,4 +558,10 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
     final remainingSeconds = seconds % 60;
     return '${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
   }
+
+  void _handleJoinRequest(BuildContext context, ChatProvider provider) {
+    provider.joinGroupOrBot(widget.chatId);
+  }
 }
+
+enum ChatInputType { hidden, requestSent, joinRequest, normal }

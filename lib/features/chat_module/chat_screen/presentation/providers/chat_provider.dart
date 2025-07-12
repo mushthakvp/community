@@ -68,6 +68,17 @@ class ChatProvider extends ChangeNotifier {
   // Add getter for bot status
   bool get isBotChat => _currentChat?.isBot ?? false;
 
+  // Add getters for new chat states
+  bool get canSendMessages =>
+      _currentChat?.isCreator == true || _currentChat?.isUserInGroup == true;
+  bool get isRequestSent =>
+      _currentChat?.isUserRequested == true &&
+      _currentChat?.isUserInGroup == false;
+  bool get needsJoinRequest =>
+      !canSendMessages &&
+      !isRequestSent &&
+      (_currentChat?.isBot == true || _currentChat?.isGroup == true);
+
   // Initialize chat - Optimized to get both chat and messages in one call
   Future<void> initializeChat(String chatId) async {
     _setLoading(true);
@@ -85,14 +96,17 @@ class ChatProvider extends ChangeNotifier {
         notifyListeners(); // Notify listeners so UI can update with bot status
       });
 
-      // Set up socket listener for new messages
-      _messageSubscription?.cancel();
-      _messageSubscription = chatRepository
-          .listenToNewMessages(chatId)
-          .listen(
-            _onNewMessage,
-            onError: (error) => _setError(error.toString()),
-          );
+      // Set up socket listener for new messages only if user can receive messages
+      if (_currentChat?.isUserInGroup == true ||
+          _currentChat?.isCreator == true) {
+        _messageSubscription?.cancel();
+        _messageSubscription = chatRepository
+            .listenToNewMessages(chatId)
+            .listen(
+              _onNewMessage,
+              onError: (error) => _setError(error.toString()),
+            );
+      }
     } catch (e) {
       _setError(e.toString());
     }
@@ -104,9 +118,9 @@ class ChatProvider extends ChangeNotifier {
     final content = messageController.text.trim();
     if (content.isEmpty || _isSending) return;
 
-    // Don't allow sending if it's a bot chat
-    if (isBotChat) {
-      _setError('Cannot send messages to bot chats');
+    // Check if user can send messages
+    if (!canSendMessages) {
+      _setError('You cannot send messages to this chat');
       return;
     }
 
@@ -134,9 +148,9 @@ class ChatProvider extends ChangeNotifier {
   ) async {
     if (_isUploading) return;
 
-    // Don't allow sending if it's a bot chat
-    if (isBotChat) {
-      _setError('Cannot send media to bot chats');
+    // Check if user can send messages
+    if (!canSendMessages) {
+      _setError('You cannot send media to this chat');
       return;
     }
 
@@ -166,10 +180,28 @@ class ChatProvider extends ChangeNotifier {
     _setUploading(false);
   }
 
+  // Join group/bot functionality
+  Future<void> joinGroupOrBot(String chatId) async {
+    if (_isLoading) return;
+
+    _setLoading(true);
+    try {
+      final result = await chatRepository.joinGroup(chatId);
+      result.fold((failure) => _setError(failure.message), (_) {
+        // Refresh chat data after successful join
+        initializeChat(chatId);
+        _setError(null); // Clear any previous errors
+      });
+    } catch (e) {
+      _setError(e.toString());
+    }
+    _setLoading(false);
+  }
+
   // Image picker
   Future<void> pickImage(String chatId, {bool fromCamera = false}) async {
-    if (isBotChat) {
-      _setError('Cannot send images to bot chats');
+    if (!canSendMessages) {
+      _setError('You cannot send images to this chat');
       return;
     }
 
@@ -198,8 +230,8 @@ class ChatProvider extends ChangeNotifier {
 
   // File picker
   Future<void> pickFile(String chatId) async {
-    if (isBotChat) {
-      _setError('Cannot send files to bot chats');
+    if (!canSendMessages) {
+      _setError('You cannot send files to this chat');
       return;
     }
 
@@ -231,8 +263,8 @@ class ChatProvider extends ChangeNotifier {
 
   // Voice recording methods
   Future<void> startRecording() async {
-    if (isBotChat) {
-      _setError('Cannot send voice messages to bot chats');
+    if (!canSendMessages) {
+      _setError('You cannot send voice messages to this chat');
       return;
     }
 

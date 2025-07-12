@@ -47,7 +47,7 @@ class ChatRepositoryImpl implements ChatRepository {
     }
   }
 
-  // Add method to get both chat and messages efficiently
+  @override
   Future<Either<Failure, Map<String, dynamic>>> getChatWithMessages(
     String chatId,
   ) async {
@@ -110,6 +110,20 @@ class ChatRepositoryImpl implements ChatRepository {
   Future<Either<Failure, void>> markMessageAsRead(String messageId) async {
     try {
       await remoteDataSource.markMessageAsRead(messageId);
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(message: e.message));
+    } catch (e) {
+      return Left(UnknownFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> joinGroup(String chatId) async {
+    try {
+      await remoteDataSource.joinGroup(chatId);
       return const Right(null);
     } on ServerException catch (e) {
       return Left(ServerFailure(message: e.message));

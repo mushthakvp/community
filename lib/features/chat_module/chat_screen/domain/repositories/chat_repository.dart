@@ -19,4 +19,5 @@ abstract class ChatRepository {
   Future<Either<Failure, Map<String, dynamic>>> getChatWithMessages(
     String chatId,
   );
+  Future<Either<Failure, void>> joinGroup(String chatId);
 }

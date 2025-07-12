@@ -11,8 +11,7 @@ abstract class ChatRemoteDataSource {
   Future<List<MessageModel>> getMessages(String chatId);
   Future<String> uploadMedia(String filePath);
   Future<void> markMessageAsRead(String messageId);
-
-  // Add combined method for getting both chat and messages
+  Future<void> joinGroup(String chatId);
   Future<Map<String, dynamic>> getChatWithMessages(String chatId);
 }
 
@@ -48,11 +47,18 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
     );
     final data = jsonDecode(response.body);
     log("data $data fn3");
-    final chat = ChatModel.fromJson(data['chat']);
-    final messagesJson = data['messages'] as List<dynamic>;
+
+    // Handle the new API response structure
+    final responseData = data['data'] ?? data;
+    final groupDetails = responseData['groupDetails'] as Map<String, dynamic>;
+    final messagesJson = responseData['messages'] as List<dynamic>;
+
+    // Create chat model from groupDetails
+    final chat = ChatModel.fromJson(groupDetails);
     final messages = messagesJson
         .map((json) => MessageModel.fromJson(json))
         .toList();
+
     return {'chat': chat, 'messages': messages};
   }
 
@@ -67,5 +73,10 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
       '${ChatApiConstants.fetchAllMessagesSingleChat}/read',
       body: {'messageId': messageId},
     );
+  }
+
+  @override
+  Future<void> joinGroup(String chatId) async {
+    await apiClient.post('${ChatApiConstants.joinCommunity}$chatId');
   }
 }
