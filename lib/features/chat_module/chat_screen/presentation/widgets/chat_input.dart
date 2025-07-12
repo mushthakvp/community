@@ -131,6 +131,7 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
         ),
       ),
       child: SafeArea(
+        top: false,
         child: Row(
           children: [
             Expanded(
@@ -202,8 +203,7 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
     }
 
     return Container(
-      height: 94,
-      padding: const EdgeInsets.only(left: 8, right: 8, top: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         border: Border(
@@ -235,6 +235,8 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
                   ),
                 ),
                 const SizedBox(width: 8),
+
+                // Text input
                 Expanded(
                   child: provider.isRecording
                       ? _buildRecordingContainer(context, provider)
@@ -301,15 +303,18 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
 
   Widget _buildTextInput(BuildContext context, ChatProvider provider) {
     return Container(
+      constraints: const BoxConstraints(
+        minHeight: 40,
+        maxHeight: 100, // Limit max height to prevent overflow
+      ),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceVariant,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(20), // Reduced border radius
         border: Border.all(
           color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
         ),
       ),
       child: TextField(
-        onTapUpOutside: (event) => FocusScope.of(context).unfocus(),
         controller: provider.messageController,
         focusNode: provider.focusNode,
         maxLines: null,
@@ -324,7 +329,10 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
             ).colorScheme.onSurfaceVariant.withOpacity(0.6),
           ),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 10, // Reduced padding
+          ),
         ),
         style: Theme.of(context).textTheme.bodyMedium,
         onChanged: (value) {
