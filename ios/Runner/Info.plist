@@ -64,5 +64,9 @@
 	<!-- Export Compliance -->
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+
+	<!-- Microphone Permissions -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Some message to describe why you need this permission</string>
 </dict>
 </plist>
