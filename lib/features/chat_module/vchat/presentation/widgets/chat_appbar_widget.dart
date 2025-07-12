@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:livera/core/constants/app_constants.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/vchat_provider.dart';
@@ -14,21 +15,16 @@ class ChatAppBarWidget extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Theme.of(context).colorScheme.primary,
-            Theme.of(context).colorScheme.primary.withOpacity(0.8),
-          ],
+          colors: [AppConstants.appPrimaryColor, AppConstants.black],
         ),
       ),
       child: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Column(
             children: [
-              // Main app bar row
               Row(
                 children: [
-                  // Back button
                   IconButton(
                     onPressed: () => context.pop(),
                     icon: Icon(
@@ -42,8 +38,6 @@ class ChatAppBarWidget extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 12),
-
-                  // Title
                   Text(
                     'Chat',
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
@@ -52,8 +46,6 @@ class ChatAppBarWidget extends StatelessWidget {
                     ),
                   ),
                   const Spacer(),
-
-                  // Tab selector and actions
                   Row(
                     children: [
                       _buildTabSelector(context),
@@ -82,6 +74,7 @@ class ChatAppBarWidget extends StatelessWidget {
             ),
           ),
           child: DropdownButton<VChatTab>(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
             value: provider.selectedTab,
             underline: const SizedBox(),
             dropdownColor: Theme.of(context).colorScheme.surface,

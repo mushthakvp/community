@@ -44,20 +44,18 @@ class _ChatPageState extends State<ChatPage> {
         chatImage: widget.chatImage,
         isGroup: widget.isGroup,
         onBackPressed: () => context.pop(),
-        onMenuPressed: () {
-          // Handle menu options
-        },
+        onMenuPressed: () {},
       ),
       body: Container(
         decoration: BoxDecoration(
-          image: DecorationImage(
-            image: const AssetImage('assets/images/chat_bg.png'),
-            fit: BoxFit.cover,
-            colorFilter: ColorFilter.mode(
-              Theme.of(context).colorScheme.surface.withOpacity(0.8),
-              BlendMode.overlay,
-            ),
-          ),
+          // image: DecorationImage(
+          //   image: CachedNetworkImageProvider(widget.chatImage ?? ''),
+          //   fit: BoxFit.cover,
+          //   colorFilter: ColorFilter.mode(
+          //     Theme.of(context).colorScheme.surface.withOpacity(0.8),
+          //     BlendMode.overlay,
+          //   ),
+          // ),
         ),
         child: Column(
           children: [

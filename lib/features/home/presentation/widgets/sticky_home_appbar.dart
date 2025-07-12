@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:livera/core/router/routers/chat_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/constants/app_constants.dart';
@@ -107,9 +108,8 @@ class _StickyHomeAppBarState extends State<StickyHomeAppBar> {
   }
 
   void _navigateToChat(BuildContext context) {
-    debugPrint('Navigating to chat...');
     try {
-      context.push(RouteConstants.chatHomePath);
+      context.push(ChatRouter.vchatHomePath);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

@@ -140,6 +140,7 @@ class RouteConstants {
   static const String chatHomePath = '/chat';
   static const String singleChatPath = '/chat/single';
   static const String communityChatPath = '/chat/community';
+  static const String chatScreen = '/chatscreen';
 
   // ==================== HELPER METHODS ====================
 

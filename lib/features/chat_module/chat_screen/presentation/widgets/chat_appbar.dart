@@ -69,59 +69,6 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
           ),
         ],
       ),
-      actions: [
-        IconButton(
-          onPressed: () {
-            // Handle wallpaper change
-          },
-          icon: const Icon(Icons.wallpaper),
-          tooltip: 'Change wallpaper',
-        ),
-        PopupMenuButton<String>(
-          onSelected: (value) {
-            switch (value) {
-              case 'info':
-                break;
-              case 'media':
-                break;
-              case 'clear':
-                break;
-            }
-          },
-          itemBuilder: (context) => [
-            const PopupMenuItem(
-              value: 'info',
-              child: Row(
-                children: [
-                  Icon(Icons.info_outline),
-                  SizedBox(width: 12),
-                  Text('Chat Info'),
-                ],
-              ),
-            ),
-            const PopupMenuItem(
-              value: 'media',
-              child: Row(
-                children: [
-                  Icon(Icons.photo_library_outlined),
-                  SizedBox(width: 12),
-                  Text('Media Gallery'),
-                ],
-              ),
-            ),
-            const PopupMenuItem(
-              value: 'clear',
-              child: Row(
-                children: [
-                  Icon(Icons.clear_all),
-                  SizedBox(width: 12),
-                  Text('Clear Chat'),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ],
     );
   }
 

@@ -29,7 +29,7 @@ class _VChatHomePageState extends State<VChatHomePage> {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: const PreferredSize(
-        preferredSize: Size.fromHeight(120),
+        preferredSize: Size.fromHeight(60),
         child: ChatAppBarWidget(),
       ),
       body: Container(
@@ -50,12 +50,8 @@ class _VChatHomePageState extends State<VChatHomePage> {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Banner section
                   _buildBannerSection(provider),
-
                   const SizedBox(height: 24),
-
-                  // Content section based on selected tab
                   _buildContentSection(provider),
                 ],
               );
