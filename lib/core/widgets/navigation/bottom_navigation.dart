@@ -2,11 +2,6 @@ import 'package:animated_bottom_navigation_bar/animated_bottom_navigation_bar.da
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../features/home/presentation/pages/home_page.dart';
-import '../../../features/profile/presentation/pages/profile_page.dart';
-import '../../../features/promos/presentation/pages/promos_page.dart';
-import '../../../features/redemption/presentation/pages/redemption_page.dart';
-import '../../../features/vizzle/home/presentation/pages/vizzle_home_page.dart';
 import '../../constants/app_constants.dart';
 import '../../constants/route_constants.dart';
 
@@ -27,6 +22,35 @@ class _BottomNavigationState extends State<BottomNavigation>
   late CurvedAnimation _fabCurve;
 
   int _currentIndex = 0;
+  String? _lastLocation; // Track last location to prevent unnecessary updates
+
+  // Cache the bottom nav items to prevent recreation
+  static const List<Map<String, dynamic>> _bottomNavItems = [
+    {
+      'icon': Icons.home_outlined,
+      'activeIcon': Icons.home,
+      'label': 'Home',
+      'route': RouteConstants.home,
+    },
+    {
+      'icon': Icons.card_giftcard_outlined,
+      'activeIcon': Icons.card_giftcard,
+      'label': 'Promos',
+      'route': RouteConstants.promos,
+    },
+    {
+      'icon': Icons.account_balance_wallet_outlined,
+      'activeIcon': Icons.account_balance_wallet,
+      'label': 'Redemption',
+      'route': RouteConstants.redemption,
+    },
+    {
+      'icon': Icons.person_outline,
+      'activeIcon': Icons.person,
+      'label': 'Profile',
+      'route': RouteConstants.profile,
+    },
+  ];
 
   @override
   void initState() {
@@ -58,14 +82,22 @@ class _BottomNavigationState extends State<BottomNavigation>
   void _updateIndexFromLocation() {
     try {
       final currentLocation = GoRouterState.of(context).uri.toString();
+
+      // Only update if location actually changed
+      if (_lastLocation == currentLocation) return;
+
+      _lastLocation = currentLocation;
       final newIndex = _getSelectedIndex(currentLocation);
+
       if (_currentIndex != newIndex) {
-        setState(() {
-          _currentIndex = newIndex;
-        });
+        if (mounted) {
+          setState(() {
+            _currentIndex = newIndex;
+          });
+        }
       }
     } catch (e) {
-      if (_currentIndex != 0) {
+      if (_currentIndex != 0 && mounted) {
         setState(() {
           _currentIndex = 0;
         });
@@ -84,16 +116,7 @@ class _BottomNavigationState extends State<BottomNavigation>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppConstants.black,
-      body: IndexedStack(
-        index: _currentIndex,
-        children: const [
-          HomePage(),
-          PromosPage(),
-          RedemptionPage(),
-          ProfilePage(),
-          VizzleHomePage(),
-        ],
-      ),
+      body: widget.child, // Use the provided child instead of IndexedStack
       floatingActionButton: _buildFloatingActionButton(),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: _buildBottomNavigationBar(context),
@@ -114,12 +137,7 @@ class _BottomNavigationState extends State<BottomNavigation>
           ),
           onPressed: () => _onVizzleTap(context),
           elevation: 8,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.store, color: AppConstants.white, size: 35),
-            ],
-          ),
+          child: const Icon(Icons.store, color: AppConstants.white, size: 35),
         ),
       ),
     );
@@ -127,7 +145,7 @@ class _BottomNavigationState extends State<BottomNavigation>
 
   Widget _buildBottomNavigationBar(BuildContext context) {
     return AnimatedBottomNavigationBar.builder(
-      itemCount: _getBottomNavItems().length,
+      itemCount: _bottomNavItems.length,
       tabBuilder: (index, isActive) =>
           _buildTabItem(index, _currentIndex == index),
       activeIndex: _currentIndex,
@@ -152,7 +170,7 @@ class _BottomNavigationState extends State<BottomNavigation>
   }
 
   Widget _buildTabItem(int index, bool isActive) {
-    final item = _getBottomNavItems()[index];
+    final item = _bottomNavItems[index];
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Column(
@@ -199,43 +217,13 @@ class _BottomNavigationState extends State<BottomNavigation>
     );
   }
 
-  List<Map<String, dynamic>> _getBottomNavItems() {
-    return [
-      {
-        'icon': Icons.home_outlined,
-        'activeIcon': Icons.home,
-        'label': 'Home',
-        'route': RouteConstants.home,
-      },
-      {
-        'icon': Icons.card_giftcard_outlined,
-        'activeIcon': Icons.card_giftcard,
-        'label': 'Promos',
-        'route': RouteConstants.promos,
-      },
-      {
-        'icon': Icons.account_balance_wallet_outlined,
-        'activeIcon': Icons.account_balance_wallet,
-        'label': 'Redemption',
-        'route': RouteConstants.redemption,
-      },
-      {
-        'icon': Icons.person_outline,
-        'activeIcon': Icons.person,
-        'label': 'Profile',
-        'route': RouteConstants.profile,
-      },
-    ];
-  }
-
   int _getSelectedIndex(String location) {
     if (location.startsWith('/vizzle')) {
       return 4;
     }
 
-    final items = _getBottomNavItems();
-    for (int i = 0; i < items.length; i++) {
-      if (location.startsWith(items[i]['route'])) {
+    for (int i = 0; i < _bottomNavItems.length; i++) {
+      if (location.startsWith(_bottomNavItems[i]['route'])) {
         return i;
       }
     }
@@ -243,19 +231,22 @@ class _BottomNavigationState extends State<BottomNavigation>
   }
 
   void _onItemTapped(BuildContext context, int index) {
-    setState(() {
-      _currentIndex = index;
-    });
-    final items = _getBottomNavItems();
-    if (index < items.length) {
-      context.go(items[index]['route']);
+    if (_currentIndex != index) {
+      setState(() {
+        _currentIndex = index;
+      });
+      if (index < _bottomNavItems.length) {
+        context.go(_bottomNavItems[index]['route']);
+      }
     }
   }
 
   void _onVizzleTap(BuildContext context) {
-    setState(() {
-      _currentIndex = 4;
-    });
-    context.go('/vizzle');
+    if (_currentIndex != 4) {
+      setState(() {
+        _currentIndex = 4;
+      });
+      context.go('/vizzle');
+    }
   }
 }

@@ -20,8 +20,8 @@ class CoreRouter {
   static final GlobalKey<NavigatorState> _shellNavigatorKey =
       GlobalKey<NavigatorState>();
 
-  /// Main GoRouter configuration
-  static GoRouter get router => GoRouter(
+  // Make router static final to prevent recreation
+  static final GoRouter _router = GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: RouteConstants.splash,
     redirect: RouteHelper.redirect,
@@ -44,11 +44,14 @@ class CoreRouter {
       ...VizzleRouter.routes,
       ...VHubRouter.routes,
       ...VJobRouter.routes,
-      ...ChatRouter.routes, // Added chat routes
+      ...ChatRouter.routes,
       ...ProfileRouter.routes,
       ...NotificationRouter.routes,
     ],
   );
+
+  /// Main router instance - now returns the static router
+  static GoRouter get router => _router;
 
   /// Get navigator keys for external access
   static GlobalKey<NavigatorState> get rootNavigatorKey => _rootNavigatorKey;

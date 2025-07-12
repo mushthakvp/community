@@ -10,39 +10,19 @@ import 'core/services/storage_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await _initializeServices();
-  runApp(const CommunityApp());
-}
-
-Future<void> _initializeServices() async {
   await StorageService.init();
   CloudinaryService().initialize();
+  final providers = await AppProviders.getInitializedProviders();
+  runApp(CommunityApp(providers: providers));
 }
 
 class CommunityApp extends StatelessWidget with FittorAppMixin {
-  const CommunityApp({super.key});
+  final List<SingleChildWidget> providers;
+
+  const CommunityApp({super.key, required this.providers});
 
   @override
   Widget responsive(BuildContext context) {
-    return FutureBuilder<List<SingleChildWidget>>(
-      future: AppProviders.getInitializedProviders(),
-      builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          return MultiProvider(providers: snapshot.data!, child: const App());
-        } else if (snapshot.hasError) {
-          return MaterialApp(
-            home: Scaffold(
-              body: Center(
-                child: Text('Error initializing app: ${snapshot.error}'),
-              ),
-            ),
-          );
-        } else {
-          return const MaterialApp(
-            home: Scaffold(body: Center(child: CircularProgressIndicator())),
-          );
-        }
-      },
-    );
+    return MultiProvider(providers: providers, child: const App());
   }
 }

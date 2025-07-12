@@ -37,7 +37,7 @@ class AppCoreProviders {
       update: (_, wrapper, __) => wrapper.mainClient,
     ),
 
-    // SharedPreferences Provider
+    // SharedPreferences Provider - placeholder that will be replaced
     Provider<SharedPreferences>(
       create: (_) =>
           throw UnimplementedError('SharedPreferences must be initialized'),
@@ -76,11 +76,8 @@ class AppCoreProviders {
         update: (_, wrapper, __) => wrapper.mainClient,
       ),
 
-      // SharedPreferences Provider - Now properly initialized
-      Provider<SharedPreferences>(
-        create: (_) => sharedPreferences,
-        lazy: false,
-      ),
+      // SharedPreferences Provider - Use Provider.value instead of create
+      Provider<SharedPreferences>.value(value: sharedPreferences),
     ];
   }
 }
