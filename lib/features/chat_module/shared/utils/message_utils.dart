@@ -76,12 +76,23 @@ class MessageUtils {
     return audioExtensions.any((ext) => mediaType.contains(ext));
   }
 
-  // Check if message is a video
+  // Check if message is a video - UPDATED to include .mov support
   static bool isVideoMessage(MessageEntity message) {
     if (!isMediaMessage(message)) return false;
 
     final mediaType = message.mediaType?.toLowerCase() ?? '';
-    final videoExtensions = ['video', 'mp4', 'avi', 'mov', 'wmv', 'mkv'];
+    final videoExtensions = [
+      'video',
+      'mp4',
+      'avi',
+      'mov', // Added .mov support
+      'wmv',
+      'mkv',
+      'webm',
+      'm4v', // Added additional video formats
+      'flv',
+      '3gp',
+    ];
 
     return videoExtensions.any((ext) => mediaType.contains(ext));
   }

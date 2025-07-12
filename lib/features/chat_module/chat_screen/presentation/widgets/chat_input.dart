@@ -5,8 +5,13 @@ import '../providers/chat_provider.dart';
 
 class ChatInput extends StatefulWidget {
   final String chatId;
+  final bool isBotChat; // New parameter to disable input for bot chats
 
-  const ChatInput({super.key, required this.chatId});
+  const ChatInput({
+    super.key,
+    required this.chatId,
+    this.isBotChat = false, // Default to false for regular chats
+  });
 
   @override
   State<ChatInput> createState() => _ChatInputState();
@@ -40,6 +45,41 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    // If it's a bot chat, don't show the input at all
+    if (widget.isBotChat) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+          border: Border(
+            top: BorderSide(
+              color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+            ),
+          ),
+        ),
+        child: SafeArea(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.smart_toy,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'This is a bot chat - viewing only',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Consumer<ChatProvider>(
       builder: (context, provider, _) {
         // Start/stop recording animation

@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../../../shared/utils/date_utils.dart';
 import '../../../shared/utils/message_utils.dart';
 import '../../domain/entities/message_entity.dart';
+import '../widgets/fullscreen_media_viewer.dart';
 
 class MessageBubble extends StatelessWidget {
   final MessageEntity message;
@@ -51,7 +52,7 @@ class MessageBubble extends StatelessWidget {
 
                 // Message bubble
                 GestureDetector(
-                  onTap: onTap,
+                  onTap: onTap ?? () => _handleMessageTap(context),
                   onLongPress: () => _showMessageOptions(context),
                   child: Container(
                     constraints: BoxConstraints(
@@ -207,8 +208,9 @@ class MessageBubble extends StatelessWidget {
   }
 
   Widget _buildMediaContent(BuildContext context) {
-    if (MessageUtils.isImageMessage(message)) {
-      return _buildImageContent(context);
+    if (MessageUtils.isImageMessage(message) ||
+        MessageUtils.isVideoMessage(message)) {
+      return _buildImageVideoContent(context);
     } else if (MessageUtils.isAudioMessage(message)) {
       return _buildAudioContent(context);
     } else if (MessageUtils.isDocumentMessage(message)) {
@@ -218,72 +220,111 @@ class MessageBubble extends StatelessWidget {
     return _buildUnknownMediaContent(context);
   }
 
-  Widget _buildImageContent(BuildContext context) {
+  Widget _buildImageVideoContent(BuildContext context) {
+    final heroTag =
+        'media_${message.id}_${message.createdAt.millisecondsSinceEpoch}';
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 250, maxHeight: 300),
-            child: Image.network(
-              message.mediaUrl!,
-              fit: BoxFit.cover,
-              loadingBuilder: (context, child, loadingProgress) {
-                if (loadingProgress == null) return child;
-                return Container(
-                  width: 200,
-                  height: 150,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceVariant,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Center(
-                    child: CircularProgressIndicator(
-                      value: loadingProgress.expectedTotalBytes != null
-                          ? loadingProgress.cumulativeBytesLoaded /
-                                loadingProgress.expectedTotalBytes!
-                          : null,
-                      strokeWidth: 2,
+        GestureDetector(
+          onTap: () => _openFullScreenMedia(context, heroTag),
+          child: Hero(
+            tag: heroTag,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                constraints: const BoxConstraints(
+                  maxWidth: 250,
+                  maxHeight: 300,
+                ),
+                child: Stack(
+                  children: [
+                    Image.network(
+                      message.mediaUrl!,
+                      fit: BoxFit.cover,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Container(
+                          width: 200,
+                          height: 150,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.surfaceVariant,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              value: loadingProgress.expectedTotalBytes != null
+                                  ? loadingProgress.cumulativeBytesLoaded /
+                                        loadingProgress.expectedTotalBytes!
+                                  : null,
+                              strokeWidth: 2,
+                            ),
+                          ),
+                        );
+                      },
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          width: 200,
+                          height: 150,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.errorContainer,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.broken_image,
+                                size: 48,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onErrorContainer,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Failed to load media',
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onErrorContainer,
+                                    ),
+                                textAlign: TextAlign.center,
+                              ),
+                              if (onRetry != null) ...[
+                                const SizedBox(height: 8),
+                                TextButton(
+                                  onPressed: onRetry,
+                                  child: const Text('Retry'),
+                                ),
+                              ],
+                            ],
+                          ),
+                        );
+                      },
                     ),
-                  ),
-                );
-              },
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  width: 200,
-                  height: 150,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.errorContainer,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.broken_image,
-                        size: 48,
-                        color: Theme.of(context).colorScheme.onErrorContainer,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Failed to load image',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onErrorContainer,
+
+                    // Video play button overlay
+                    if (MessageUtils.isVideoMessage(message))
+                      Positioned.fill(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.3),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Center(
+                            child: Icon(
+                              Icons.play_circle_filled,
+                              color: Colors.white,
+                              size: 48,
+                            ),
+                          ),
                         ),
-                        textAlign: TextAlign.center,
                       ),
-                      if (onRetry != null) ...[
-                        const SizedBox(height: 8),
-                        TextButton(
-                          onPressed: onRetry,
-                          child: const Text('Retry'),
-                        ),
-                      ],
-                    ],
-                  ),
-                );
-              },
+                  ],
+                ),
+              ),
             ),
           ),
         ),
@@ -538,6 +579,25 @@ class MessageBubble extends StatelessWidget {
   String _getDocumentType() {
     final extension = message.mediaType?.toUpperCase() ?? 'FILE';
     return '$extension Document';
+  }
+
+  void _handleMessageTap(BuildContext context) {
+    if (MessageUtils.isMediaMessage(message) &&
+        (MessageUtils.isImageMessage(message) ||
+            MessageUtils.isVideoMessage(message))) {
+      final heroTag =
+          'media_${message.id}_${message.createdAt.millisecondsSinceEpoch}';
+      _openFullScreenMedia(context, heroTag);
+    }
+  }
+
+  void _openFullScreenMedia(BuildContext context, String heroTag) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) =>
+            FullScreenMediaViewer(message: message, heroTag: heroTag),
+      ),
+    );
   }
 
   void _showMessageOptions(BuildContext context) {
