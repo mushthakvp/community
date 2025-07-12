@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import '../../../../../core/constants/chat_api_constants.dart';
 import '../../../../../core/network/api_client.dart';
@@ -32,6 +33,7 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
       '${ChatApiConstants.getSingleChat}?friendId=$chatId',
     );
     final data = jsonDecode(response.body);
+    log("data $data");
     final messagesJson = data['messages'] as List<dynamic>;
     return messagesJson.map((json) => MessageModel.fromJson(json)).toList();
   }

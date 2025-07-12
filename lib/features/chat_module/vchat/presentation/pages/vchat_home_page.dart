@@ -1,3 +1,4 @@
+import 'package:fittor/fittor.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -29,7 +30,7 @@ class _VChatHomePageState extends State<VChatHomePage> {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: const PreferredSize(
-        preferredSize: Size.fromHeight(60),
+        preferredSize: Size.fromHeight(kToolbarHeight),
         child: ChatAppBarWidget(),
       ),
       body: Container(
@@ -44,13 +45,16 @@ class _VChatHomePageState extends State<VChatHomePage> {
           ),
         ),
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
           child: Consumer<VChatProvider>(
             builder: (context, provider, _) {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildBannerSection(provider),
+                  20.h,
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: _buildBannerSection(provider),
+                  ),
                   const SizedBox(height: 24),
                   _buildContentSection(provider),
                 ],
@@ -99,6 +103,7 @@ class _VChatHomePageState extends State<VChatHomePage> {
     return SizedBox(
       height: 40,
       child: ListView.separated(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         scrollDirection: Axis.horizontal,
         itemCount: filters.length,
         separatorBuilder: (_, __) => const SizedBox(width: 12),

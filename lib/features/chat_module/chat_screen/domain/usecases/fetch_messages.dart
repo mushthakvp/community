@@ -17,7 +17,6 @@ class FetchMessages
     FetchMessagesParams params,
   ) async {
     final result = await repository.getMessages(params.chatId);
-
     return result.fold((failure) => Left(failure), (messages) async {
       final currentUserId = await StorageService.getUserId();
       final updatedMessages = messages.map((message) {
@@ -35,7 +34,6 @@ class FetchMessages
           isCurrentUser: message.senderId == currentUserId,
         );
       }).toList();
-
       return Right(updatedMessages);
     });
   }

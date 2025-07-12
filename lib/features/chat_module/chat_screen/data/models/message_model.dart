@@ -29,7 +29,7 @@ class MessageModel extends MessageEntity {
           ? DateTime.parse(json['createdAt'])
           : DateTime.now(),
       isDeleted: json['deleted'] ?? false,
-      isCurrentUser: false, // This will be set in the use case
+      isCurrentUser: false,
     );
   }
 

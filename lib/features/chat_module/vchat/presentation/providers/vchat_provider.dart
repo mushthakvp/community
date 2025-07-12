@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 
 import '../../domain/entities/community_entity.dart';
@@ -121,12 +123,11 @@ class VChatProvider extends ChangeNotifier {
 
   Future<void> joinCommunityById(String communityId) async {
     try {
+      log('joinCommunityById: $communityId');
       final result = await joinCommunity(
         JoinCommunityParams(communityId: communityId),
       );
-
       result.fold((failure) => _setError(failure.message), (_) {
-        // Refresh communities
         fetchRecommendedCommunities();
       });
     } catch (e) {

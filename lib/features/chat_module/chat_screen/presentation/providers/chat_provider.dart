@@ -67,19 +67,14 @@ class ChatProvider extends ChangeNotifier {
   Future<void> initializeChat(String chatId) async {
     _setLoading(true);
     _clearError();
-
     try {
-      // Fetch initial messages
       final messagesResult = await fetchMessages(
         FetchMessagesParams(chatId: chatId),
       );
-
       messagesResult.fold((failure) => _setError(failure.message), (messages) {
         _messages = messages;
         _scrollToBottom();
       });
-
-      // Listen to new messages
       _messageSubscription?.cancel();
       _messageSubscription = chatRepository
           .listenToNewMessages(chatId)
@@ -90,7 +85,6 @@ class ChatProvider extends ChangeNotifier {
     } catch (e) {
       _setError(e.toString());
     }
-
     _setLoading(false);
   }
 
@@ -98,25 +92,19 @@ class ChatProvider extends ChangeNotifier {
   Future<void> sendTextMessage(String chatId) async {
     final content = messageController.text.trim();
     if (content.isEmpty || _isSending) return;
-
     _setSending(true);
     messageController.clear();
-
     try {
       final result = await sendMessage(
         SendMessageParams(chatId: chatId, content: content),
       );
-
       result.fold((failure) => _setError(failure.message), (message) {
-        // Message will be received via socket, but add optimistically
         _addOptimisticMessage(message);
       });
     } catch (e) {
       _setError(e.toString());
-      // Restore message text on error
       messageController.text = content;
     }
-
     _setSending(false);
   }
 
@@ -127,9 +115,7 @@ class ChatProvider extends ChangeNotifier {
     String mediaType,
   ) async {
     if (_isUploading) return;
-
     _setUploading(true);
-
     try {
       final uploadResult = await uploadMedia(
         UploadMediaParams(filePath: file.path),
@@ -152,7 +138,6 @@ class ChatProvider extends ChangeNotifier {
     } catch (e) {
       _setError(e.toString());
     }
-
     _setUploading(false);
   }
 
@@ -212,36 +197,27 @@ class ChatProvider extends ChangeNotifier {
   // Voice recording methods
   Future<void> startRecording() async {
     try {
-      // Request microphone permission
       final status = await Permission.microphone.request();
       if (!status.isGranted) {
         _setError('Microphone permission is required for voice messages');
         return;
       }
-
-      // Check if recorder is available
       if (await _audioRecorder.hasPermission()) {
         final directory = await getApplicationDocumentsDirectory();
         final fileName = 'audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
         _recordingPath = path.join(directory.path, fileName);
-
         const config = RecordConfig(
           encoder: AudioEncoder.aacLc,
           bitRate: 128000,
           sampleRate: 44100,
         );
-
         await _audioRecorder.start(config, path: _recordingPath!);
-
         _isRecording = true;
         _recordingDuration = 0;
-
-        // Start timer for recording duration
         _recordingTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
           _recordingDuration++;
           notifyListeners();
         });
-
         notifyListeners();
       } else {
         _setError('Microphone permission denied');
@@ -253,18 +229,15 @@ class ChatProvider extends ChangeNotifier {
 
   Future<void> stopRecording(String chatId) async {
     if (!_isRecording) return;
-
     try {
       await _audioRecorder.stop();
       _stopRecordingTimer();
-
       if (_recordingPath != null && _recordingDuration > 0) {
         final file = File(_recordingPath!);
         if (await file.exists()) {
           await sendMediaMessage(chatId, file, 'm4a');
         }
       }
-
       _resetRecording();
     } catch (e) {
       _setError('Failed to stop recording: $e');
@@ -278,15 +251,12 @@ class ChatProvider extends ChangeNotifier {
     try {
       await _audioRecorder.stop();
       _stopRecordingTimer();
-
-      // Delete the recording file
       if (_recordingPath != null) {
         final file = File(_recordingPath!);
         if (await file.exists()) {
           await file.delete();
         }
       }
-
       _resetRecording();
     } catch (e) {
       _setError('Failed to cancel recording: $e');
@@ -301,7 +271,6 @@ class ChatProvider extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       _setError('Failed to delete message: $e');
-      // Refresh messages on error
       if (_currentChat != null) {
         initializeChat(_currentChat!.id);
       }
@@ -314,12 +283,10 @@ class ChatProvider extends ChangeNotifier {
       final unreadMessages = _messages
           .where((message) => !message.isCurrentUser && message.id.isNotEmpty)
           .toList();
-
       for (final message in unreadMessages) {
         await chatRepository.markMessageAsRead(message.id);
       }
     } catch (e) {
-      // Silently fail for read receipts
       debugPrint('Failed to mark messages as read: $e');
     }
   }
@@ -328,16 +295,12 @@ class ChatProvider extends ChangeNotifier {
   Future<void> retryMessage(String chatId, MessageEntity message) async {
     try {
       if (message.mediaUrl != null && message.mediaUrl!.isNotEmpty) {
-        // For media messages, we need the original file (not implemented here)
         _setError('Cannot retry media messages');
       } else {
-        // For text messages
         final result = await sendMessage(
           SendMessageParams(chatId: chatId, content: message.content),
         );
-
         result.fold((failure) => _setError(failure.message), (newMessage) {
-          // Remove old failed message and add new one
           _messages.removeWhere((m) => m.id == message.id);
           _addOptimisticMessage(newMessage);
         });
@@ -356,10 +319,8 @@ class ChatProvider extends ChangeNotifier {
     }
   }
 
-  // Search messages
   List<MessageEntity> searchMessages(String query) {
     if (query.trim().isEmpty) return _messages;
-
     final lowercaseQuery = query.toLowerCase();
     return _messages
         .where(
@@ -370,7 +331,6 @@ class ChatProvider extends ChangeNotifier {
         .toList();
   }
 
-  // Get message by ID
   MessageEntity? getMessageById(String messageId) {
     try {
       return _messages.firstWhere((message) => message.id == messageId);
@@ -381,21 +341,14 @@ class ChatProvider extends ChangeNotifier {
 
   // Private methods
   void _onNewMessage(MessageEntity message) {
-    // Check if message already exists (to avoid duplicates)
     final existingIndex = _messages.indexWhere((m) => m.id == message.id);
-
     if (existingIndex != -1) {
-      // Update existing message
       _messages[existingIndex] = message;
     } else {
-      // Add new message
       _messages.add(message);
     }
-
     _scrollToBottom();
     notifyListeners();
-
-    // Mark as read if not from current user
     if (!message.isCurrentUser) {
       markMessagesAsRead();
     }
@@ -455,7 +408,6 @@ class ChatProvider extends ChangeNotifier {
     _error = null;
   }
 
-  // Public utility methods
   void clearError() {
     _clearError();
   }
@@ -464,7 +416,6 @@ class ChatProvider extends ChangeNotifier {
     _scrollToBottom();
   }
 
-  // Refresh chat
   Future<void> refreshChat(String chatId) async {
     await initializeChat(chatId);
   }

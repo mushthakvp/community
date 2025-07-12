@@ -30,7 +30,6 @@ class FriendListWidget extends StatelessWidget {
           ),
           itemBuilder: (context, index) {
             final friend = provider.myGroups[index];
-
             if (filter == MyGroupFilter.friendRequest) {
               return _buildFriendRequestTile(context, friend, index);
             } else {
@@ -88,11 +87,8 @@ class FriendListWidget extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
-            // Friend avatar
             _buildFriendAvatar(context, friend),
             const SizedBox(width: 12),
-
-            // Friend info
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -125,8 +121,6 @@ class FriendListWidget extends StatelessWidget {
                 ],
               ),
             ),
-
-            // Action section
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [

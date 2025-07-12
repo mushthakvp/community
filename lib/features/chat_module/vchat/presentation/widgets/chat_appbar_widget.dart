@@ -30,6 +30,7 @@ class ChatAppBarWidget extends StatelessWidget {
                     icon: Icon(
                       Icons.arrow_back_ios,
                       color: Theme.of(context).colorScheme.onPrimary,
+                      size: 20,
                     ),
                     style: IconButton.styleFrom(
                       backgroundColor: Theme.of(

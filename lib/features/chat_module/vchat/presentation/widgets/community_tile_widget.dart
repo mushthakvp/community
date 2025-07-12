@@ -27,14 +27,9 @@ class CommunityTileWidget extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
-            // Community avatar
             _buildCommunityAvatar(context),
             const SizedBox(width: 12),
-
-            // Community info
             Expanded(child: _buildCommunityInfo(context)),
-
-            // Action section (time and join button)
             _buildActionSection(context),
           ],
         ),
@@ -273,26 +268,13 @@ class CommunityTileWidget extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            // Time/Date (placeholder - you can add actual timestamp)
-            Text(
-              _getTimeString(),
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
-                fontSize: 12,
-              ),
-            ),
-            const SizedBox(height: 4),
-
-            // Join button or enter arrow
             if (community.isJoined || community.isCreated)
-              // Show nothing or a small indicator for joined communities
               Icon(
                 Icons.check_circle,
                 size: 16,
                 color: Theme.of(context).colorScheme.primary.withOpacity(0.6),
               )
             else
-              // Show join button for non-joined communities
               _buildJoinButton(context, provider),
           ],
         );
@@ -333,30 +315,19 @@ class CommunityTileWidget extends StatelessWidget {
     }
   }
 
-  String _getTimeString() {
-    // Placeholder time - you can implement actual timestamp logic
-    final times = ['9:30 AM', '10:15 AM', '11:45 AM', '2:20 PM', 'Yesterday'];
-    return times[community.name.hashCode % times.length];
-  }
-
   void _handleTap(BuildContext context) {
-    if (community.isJoined || community.isCreated) {
-      // Navigate to chat screen
-      context.push(
-        '/chat/${community.id}',
-        extra: {
-          'chatName': community.name,
-          'chatImage': community.image,
-          'isGroup': true,
-        },
-      );
-    }
+    context.push(
+      '/chat/${community.id}',
+      extra: {
+        'chatName': community.name,
+        'chatImage': community.image,
+        'isGroup': true,
+      },
+    );
   }
 
   void _handleJoinCommunity(BuildContext context, VChatProvider provider) {
     provider.joinCommunityById(community.id);
-
-    // Show success message
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Joining ${community.name}...'),

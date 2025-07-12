@@ -13,7 +13,7 @@ class ChatPage extends StatefulWidget {
   final String chatName;
   final String? chatImage;
   final bool isGroup;
-  final bool isBotChat; // New parameter for bot chats
+  final bool isBotChat;
 
   const ChatPage({
     super.key,
@@ -21,7 +21,7 @@ class ChatPage extends StatefulWidget {
     required this.chatName,
     this.chatImage,
     this.isGroup = false,
-    this.isBotChat = false, // Default to false
+    this.isBotChat = false,
   });
 
   @override
@@ -53,7 +53,6 @@ class _ChatPageState extends State<ChatPage> {
         decoration: BoxDecoration(),
         child: Column(
           children: [
-            // Bot chat info banner (if it's a bot chat)
             if (widget.isBotChat) _buildBotChatBanner(context),
 
             Expanded(
