@@ -78,10 +78,8 @@ class _VChatHomePageState extends State<VChatHomePage> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Filter tabs for My Group
           _buildFilterTabs(provider),
           const SizedBox(height: 16),
-          // Content based on filter
           _buildMyGroupContent(provider),
         ],
       );

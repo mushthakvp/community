@@ -21,27 +21,22 @@ class CommunityTileWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: InkWell(
-        onTap: onTap ?? () => _handleTap(context),
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              // Community avatar
-              _buildCommunityAvatar(context),
-              const SizedBox(width: 16),
+    return InkWell(
+      onTap: onTap ?? () => _handleTap(context),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            // Community avatar
+            _buildCommunityAvatar(context),
+            const SizedBox(width: 12),
 
-              // Community info
-              Expanded(child: _buildCommunityInfo(context)),
+            // Community info
+            Expanded(child: _buildCommunityInfo(context)),
 
-              // Action button
-              if (showJoinButton) _buildActionButton(context),
-            ],
-          ),
+            // Action section (time and join button)
+            _buildActionSection(context),
+          ],
         ),
       ),
     );
@@ -49,10 +44,10 @@ class CommunityTileWidget extends StatelessWidget {
 
   Widget _buildCommunityAvatar(BuildContext context) {
     return Container(
-      width: 60,
-      height: 60,
+      width: 50,
+      height: 50,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(25),
         color: Theme.of(context).colorScheme.primaryContainer,
         border: Border.all(
           color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
@@ -60,11 +55,11 @@ class CommunityTileWidget extends StatelessWidget {
       ),
       child: community.image != null && community.image!.isNotEmpty
           ? ClipRRect(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(25),
               child: Image.network(
                 community.image!,
-                width: 60,
-                height: 60,
+                width: 50,
+                height: 50,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) =>
                     _buildDefaultAvatar(context),
@@ -81,7 +76,7 @@ class CommunityTileWidget extends StatelessWidget {
   Widget _buildDefaultAvatar(BuildContext context) {
     return Icon(
       Icons.groups,
-      size: 30,
+      size: 28,
       color: Theme.of(context).colorScheme.onPrimaryContainer,
     );
   }
@@ -103,61 +98,67 @@ class CommunityTileWidget extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Community name
-        Text(
-          community.name,
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+        // Community name and status badges row
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                community.name,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: 8),
+
+            // Status badges
+            if (community.isCreated)
+              _buildStatusChip(
+                context,
+                'Admin',
+                Theme.of(context).colorScheme.primary,
+              )
+            else if (community.isJoined)
+              _buildStatusChip(
+                context,
+                'Member',
+                Theme.of(context).colorScheme.tertiary,
+              ),
+          ],
         ),
         const SizedBox(height: 4),
 
-        // Member count and status
+        // Member count and member avatars row
         Row(
           children: [
             if (showMemberCount) ...[
               Icon(
                 Icons.people,
-                size: 16,
+                size: 14,
                 color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
               ),
               const SizedBox(width: 4),
               Text(
                 _formatMemberCount(community.memberCount),
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Theme.of(
                     context,
                   ).colorScheme.onSurface.withOpacity(0.6),
+                  fontSize: 13,
                 ),
               ),
             ],
 
-            // Community status badges
-            if (community.isCreated) ...[
-              const SizedBox(width: 8),
-              _buildStatusChip(
-                context,
-                'Created',
-                Theme.of(context).colorScheme.primary,
-              ),
-            ] else if (community.isJoined) ...[
-              const SizedBox(width: 8),
-              _buildStatusChip(
-                context,
-                'Joined',
-                Theme.of(context).colorScheme.tertiary,
-              ),
+            // Member avatars preview
+            if (community.profileImages.isNotEmpty) ...[
+              const SizedBox(width: 12),
+              _buildMemberAvatars(context),
             ],
           ],
         ),
-
-        // Member avatars preview
-        if (community.profileImages.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          _buildMemberAvatars(context),
-        ],
       ],
     );
   }
@@ -182,22 +183,29 @@ class CommunityTileWidget extends StatelessWidget {
   }
 
   Widget _buildMemberAvatars(BuildContext context) {
-    final displayCount = community.profileImages.length > 4
-        ? 4
+    final displayCount = community.profileImages.length > 3
+        ? 3
         : community.profileImages.length;
-    final hasMore = community.profileImages.length > 4;
+    final hasMore = community.profileImages.length > 3;
+
+    // Calculate total width needed
+    final totalAvatars = hasMore ? displayCount + 1 : displayCount;
+    final totalWidth =
+        (totalAvatars * 14.0) + 6.0; // 14px spacing + 6px for last avatar
 
     return SizedBox(
-      height: 24,
+      height: 20,
+      width: totalWidth,
       child: Stack(
+        clipBehavior: Clip.none,
         children: [
           // Member avatars
           ...List.generate(displayCount, (index) {
             return Positioned(
-              left: index * 18.0,
+              left: index * 14.0,
               child: Container(
-                width: 24,
-                height: 24,
+                width: 20,
+                height: 20,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
@@ -206,7 +214,7 @@ class CommunityTileWidget extends StatelessWidget {
                   ),
                 ),
                 child: CircleAvatar(
-                  radius: 11,
+                  radius: 9,
                   backgroundColor: Theme.of(
                     context,
                   ).colorScheme.secondaryContainer,
@@ -216,7 +224,7 @@ class CommunityTileWidget extends StatelessWidget {
                   child: community.profileImages[index].isEmpty
                       ? Icon(
                           Icons.person,
-                          size: 12,
+                          size: 10,
                           color: Theme.of(
                             context,
                           ).colorScheme.onSecondaryContainer,
@@ -230,10 +238,10 @@ class CommunityTileWidget extends StatelessWidget {
           // "+X more" indicator
           if (hasMore)
             Positioned(
-              left: displayCount * 18.0,
+              left: displayCount * 14.0,
               child: Container(
-                width: 24,
-                height: 24,
+                width: 20,
+                height: 20,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: Theme.of(context).colorScheme.secondaryContainer,
@@ -246,7 +254,7 @@ class CommunityTileWidget extends StatelessWidget {
                   child: Text(
                     '+${community.profileImages.length - displayCount}',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontSize: 8,
+                      fontSize: 7,
                       fontWeight: FontWeight.w600,
                       color: Theme.of(context).colorScheme.onSecondaryContainer,
                     ),
@@ -259,74 +267,101 @@ class CommunityTileWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildActionButton(BuildContext context) {
+  Widget _buildActionSection(BuildContext context) {
     return Consumer<VChatProvider>(
       builder: (context, provider, _) {
-        if (community.isJoined || community.isCreated) {
-          return _buildEnterButton(context);
-        } else {
-          return _buildJoinButton(context, provider);
-        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            // Time/Date (placeholder - you can add actual timestamp)
+            Text(
+              _getTimeString(),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                fontSize: 12,
+              ),
+            ),
+            const SizedBox(height: 4),
+
+            // Join button or enter arrow
+            if (community.isJoined || community.isCreated)
+              // Show nothing or a small indicator for joined communities
+              Icon(
+                Icons.check_circle,
+                size: 16,
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.6),
+              )
+            else
+              // Show join button for non-joined communities
+              _buildJoinButton(context, provider),
+          ],
+        );
       },
     );
   }
 
-  Widget _buildEnterButton(BuildContext context) {
-    return Container(
-      width: 40,
-      height: 40,
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primary,
-        shape: BoxShape.circle,
-      ),
-      child: Icon(
-        Icons.arrow_forward,
-        color: Theme.of(context).colorScheme.onPrimary,
-        size: 20,
-      ),
-    );
-  }
-
   Widget _buildJoinButton(BuildContext context, VChatProvider provider) {
-    return Container(
-      width: 40,
-      height: 40,
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.secondaryContainer,
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+    return GestureDetector(
+      onTap: () => _handleJoinCommunity(context, provider),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.primary,
+          borderRadius: BorderRadius.circular(12),
         ),
-      ),
-      child: Icon(
-        Icons.add,
-        color: Theme.of(context).colorScheme.onSecondaryContainer,
-        size: 20,
+        child: Text(
+          'Join',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.onPrimary,
+            fontWeight: FontWeight.w600,
+            fontSize: 12,
+          ),
+        ),
       ),
     );
   }
 
   String _formatMemberCount(int count) {
     if (count < 1000) {
-      return '$count member${count == 1 ? '' : 's'}';
+      return '$count';
     } else if (count < 1000000) {
       final k = (count / 1000).toStringAsFixed(1);
-      return '${k}K members';
+      return '${k}K';
     } else {
       final m = (count / 1000000).toStringAsFixed(1);
-      return '${m}M members';
+      return '${m}M';
     }
   }
 
+  String _getTimeString() {
+    // Placeholder time - you can implement actual timestamp logic
+    final times = ['9:30 AM', '10:15 AM', '11:45 AM', '2:20 PM', 'Yesterday'];
+    return times[community.name.hashCode % times.length];
+  }
+
   void _handleTap(BuildContext context) {
-    // Navigate to chat screen
-    context.push(
-      '/chat/${community.id}',
-      extra: {
-        'chatName': community.name,
-        'chatImage': community.image,
-        'isGroup': true,
-      },
+    if (community.isJoined || community.isCreated) {
+      // Navigate to chat screen
+      context.push(
+        '/chat/${community.id}',
+        extra: {
+          'chatName': community.name,
+          'chatImage': community.image,
+          'isGroup': true,
+        },
+      );
+    }
+  }
+
+  void _handleJoinCommunity(BuildContext context, VChatProvider provider) {
+    provider.joinCommunityById(community.id);
+
+    // Show success message
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Joining ${community.name}...'),
+        duration: const Duration(seconds: 2),
+      ),
     );
   }
 }

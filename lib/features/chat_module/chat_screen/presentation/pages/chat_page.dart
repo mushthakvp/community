@@ -50,17 +50,7 @@ class _ChatPageState extends State<ChatPage> {
         onMenuPressed: () {},
       ),
       body: Container(
-        decoration: BoxDecoration(
-          // Optional: Add chat wallpaper support
-          // image: DecorationImage(
-          //   image: CachedNetworkImageProvider(widget.chatImage ?? ''),
-          //   fit: BoxFit.cover,
-          //   colorFilter: ColorFilter.mode(
-          //     Theme.of(context).colorScheme.surface.withOpacity(0.8),
-          //     BlendMode.overlay,
-          //   ),
-          // ),
-        ),
+        decoration: BoxDecoration(),
         child: Column(
           children: [
             // Bot chat info banner (if it's a bot chat)
