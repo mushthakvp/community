@@ -16,4 +16,7 @@ abstract class ChatRepository {
   Future<Either<Failure, String>> uploadMedia(String filePath);
   Stream<MessageEntity> listenToNewMessages(String chatId);
   Future<Either<Failure, void>> markMessageAsRead(String messageId);
+  Future<Either<Failure, Map<String, dynamic>>> getChatWithMessages(
+    String chatId,
+  );
 }

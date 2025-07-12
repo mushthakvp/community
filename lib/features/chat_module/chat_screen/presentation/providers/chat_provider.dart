@@ -18,12 +18,14 @@ import '../../domain/usecases/upload_media.dart';
 
 class ChatProvider extends ChangeNotifier {
   final FetchMessages fetchMessages;
+  final FetchChatWithMessages fetchChatWithMessages;
   final SendMessage sendMessage;
   final UploadMedia uploadMedia;
   final ChatRepository chatRepository;
 
   ChatProvider({
     required this.fetchMessages,
+    required this.fetchChatWithMessages,
     required this.sendMessage,
     required this.uploadMedia,
     required this.chatRepository,
@@ -63,18 +65,27 @@ class ChatProvider extends ChangeNotifier {
   int get recordingDuration => _recordingDuration;
   bool get hasText => messageController.text.trim().isNotEmpty;
 
-  // Initialize chat
+  // Add getter for bot status
+  bool get isBotChat => _currentChat?.isBot ?? false;
+
+  // Initialize chat - Optimized to get both chat and messages in one call
   Future<void> initializeChat(String chatId) async {
     _setLoading(true);
     _clearError();
     try {
-      final messagesResult = await fetchMessages(
-        FetchMessagesParams(chatId: chatId),
+      // Use the combined method to get both chat and messages efficiently
+      final result = await fetchChatWithMessages(
+        FetchChatWithMessagesParams(chatId: chatId),
       );
-      messagesResult.fold((failure) => _setError(failure.message), (messages) {
-        _messages = messages;
+
+      result.fold((failure) => _setError(failure.message), (data) {
+        _currentChat = data['chat'] as ChatEntity;
+        _messages = data['messages'] as List<MessageEntity>;
         _scrollToBottom();
+        notifyListeners(); // Notify listeners so UI can update with bot status
       });
+
+      // Set up socket listener for new messages
       _messageSubscription?.cancel();
       _messageSubscription = chatRepository
           .listenToNewMessages(chatId)
@@ -92,6 +103,13 @@ class ChatProvider extends ChangeNotifier {
   Future<void> sendTextMessage(String chatId) async {
     final content = messageController.text.trim();
     if (content.isEmpty || _isSending) return;
+
+    // Don't allow sending if it's a bot chat
+    if (isBotChat) {
+      _setError('Cannot send messages to bot chats');
+      return;
+    }
+
     _setSending(true);
     messageController.clear();
     try {
@@ -115,6 +133,13 @@ class ChatProvider extends ChangeNotifier {
     String mediaType,
   ) async {
     if (_isUploading) return;
+
+    // Don't allow sending if it's a bot chat
+    if (isBotChat) {
+      _setError('Cannot send media to bot chats');
+      return;
+    }
+
     _setUploading(true);
     try {
       final uploadResult = await uploadMedia(
@@ -143,6 +168,11 @@ class ChatProvider extends ChangeNotifier {
 
   // Image picker
   Future<void> pickImage(String chatId, {bool fromCamera = false}) async {
+    if (isBotChat) {
+      _setError('Cannot send images to bot chats');
+      return;
+    }
+
     try {
       final ImagePicker picker = ImagePicker();
       final XFile? image = await picker.pickImage(
@@ -168,6 +198,11 @@ class ChatProvider extends ChangeNotifier {
 
   // File picker
   Future<void> pickFile(String chatId) async {
+    if (isBotChat) {
+      _setError('Cannot send files to bot chats');
+      return;
+    }
+
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
@@ -196,6 +231,11 @@ class ChatProvider extends ChangeNotifier {
 
   // Voice recording methods
   Future<void> startRecording() async {
+    if (isBotChat) {
+      _setError('Cannot send voice messages to bot chats');
+      return;
+    }
+
     try {
       final status = await Permission.microphone.request();
       if (!status.isGranted) {

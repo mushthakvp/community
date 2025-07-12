@@ -39,7 +39,7 @@ class ChatEntity extends Equatable {
     groupName,
     groupImage,
     wallpaper,
-    isBot,
+    isBot, // Added to props
     role,
     unreadCount,
   ];

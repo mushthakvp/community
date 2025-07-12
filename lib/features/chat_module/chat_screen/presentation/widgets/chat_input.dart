@@ -5,13 +5,9 @@ import '../providers/chat_provider.dart';
 
 class ChatInput extends StatefulWidget {
   final String chatId;
-  final bool isBotChat; // New parameter to disable input for bot chats
+  final bool isBotChat;
 
-  const ChatInput({
-    super.key,
-    required this.chatId,
-    this.isBotChat = false, // Default to false for regular chats
-  });
+  const ChatInput({super.key, required this.chatId, this.isBotChat = false});
 
   @override
   State<ChatInput> createState() => _ChatInputState();
@@ -45,44 +41,12 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    // If it's a bot chat, don't show the input at all
     if (widget.isBotChat) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
-          border: Border(
-            top: BorderSide(
-              color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
-            ),
-          ),
-        ),
-        child: SafeArea(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.smart_toy,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'This is a bot chat - viewing only',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
+      return SizedBox.shrink();
     }
 
     return Consumer<ChatProvider>(
       builder: (context, provider, _) {
-        // Start/stop recording animation
         if (provider.isRecording &&
             !_recordingAnimationController.isAnimating) {
           _recordingAnimationController.repeat(reverse: true);
@@ -105,14 +69,10 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
           child: SafeArea(
             child: Column(
               children: [
-                // Recording indicator
                 if (provider.isRecording)
                   _buildRecordingIndicator(context, provider),
-
-                // Input row
                 Row(
                   children: [
-                    // Attachment button
                     IconButton(
                       onPressed: provider.isRecording
                           ? null
@@ -136,8 +96,6 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
                           : _buildTextInput(context, provider),
                     ),
                     const SizedBox(width: 8),
-
-                    // Send/Voice button
                     _buildActionButton(context, provider),
                   ],
                 ),
@@ -227,15 +185,7 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
             horizontal: 16,
             vertical: 12,
           ),
-          suffixIcon: _isTyping
-              ? IconButton(
-                  onPressed: () => provider.sendTextMessage(widget.chatId),
-                  icon: const Icon(Icons.send),
-                  style: IconButton.styleFrom(
-                    foregroundColor: Theme.of(context).colorScheme.primary,
-                  ),
-                )
-              : null,
+          // NO suffixIcon - completely removed send button from text field
         ),
         style: Theme.of(context).textTheme.bodyMedium,
         onChanged: (value) {
@@ -244,6 +194,7 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
           });
         },
         onSubmitted: (_) {
+          // Allow submission via keyboard
           if (_isTyping) {
             provider.sendTextMessage(widget.chatId);
             setState(() {
@@ -336,27 +287,28 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
       );
     }
 
-    if (_isTyping) {
-      return IconButton(
-        onPressed: () => provider.sendTextMessage(widget.chatId),
-        icon: const Icon(Icons.send),
-        style: IconButton.styleFrom(
-          backgroundColor: Theme.of(context).colorScheme.primary,
-          foregroundColor: Theme.of(context).colorScheme.onPrimary,
-        ),
-      );
-    }
-
-    // Voice recording button
     return GestureDetector(
-      onLongPressStart: (_) => provider.startRecording(),
-      onLongPressEnd: (_) => provider.stopRecording(widget.chatId),
+      onLongPressStart: _isTyping ? null : (_) => provider.startRecording(),
+      onLongPressEnd: _isTyping
+          ? null
+          : (_) => provider.stopRecording(widget.chatId),
       child: IconButton(
-        onPressed: null, // Only works with long press
-        icon: const Icon(Icons.mic),
+        onPressed: _isTyping
+            ? () {
+                provider.sendTextMessage(widget.chatId);
+                setState(() {
+                  _isTyping = false;
+                });
+              }
+            : null,
+        icon: Icon(_isTyping ? Icons.send : Icons.mic),
         style: IconButton.styleFrom(
-          backgroundColor: Theme.of(context).colorScheme.secondary,
-          foregroundColor: Theme.of(context).colorScheme.onSecondary,
+          backgroundColor: _isTyping
+              ? Theme.of(context).colorScheme.primary
+              : Theme.of(context).colorScheme.secondary,
+          foregroundColor: _isTyping
+              ? Theme.of(context).colorScheme.onPrimary
+              : Theme.of(context).colorScheme.onSecondary,
         ),
       ),
     );

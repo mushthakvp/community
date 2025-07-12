@@ -13,7 +13,6 @@ class ChatPage extends StatefulWidget {
   final String chatName;
   final String? chatImage;
   final bool isGroup;
-  final bool isBotChat;
 
   const ChatPage({
     super.key,
@@ -21,7 +20,6 @@ class ChatPage extends StatefulWidget {
     required this.chatName,
     this.chatImage,
     this.isGroup = false,
-    this.isBotChat = false,
   });
 
   @override
@@ -41,152 +39,129 @@ class _ChatPageState extends State<ChatPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
-      appBar: ChatAppBar(
-        chatName: widget.chatName,
-        chatImage: widget.chatImage,
-        isGroup: widget.isGroup,
-        isBotChat: widget.isBotChat,
-        onBackPressed: () => context.pop(),
-        onMenuPressed: () {},
-      ),
-      body: Container(
-        decoration: BoxDecoration(),
-        child: Column(
-          children: [
-            if (widget.isBotChat) _buildBotChatBanner(context),
+      body: Consumer<ChatProvider>(
+        builder: (context, provider, _) {
+          final isBotChat = provider.isBotChat;
+          final chatName = provider.currentChat?.users.isNotEmpty == true
+              ? provider.currentChat!.users.first.name
+              : widget.chatName;
+          final chatImage = provider.currentChat?.users.isNotEmpty == true
+              ? provider.currentChat!.users.first.profileImage
+              : widget.chatImage;
 
-            Expanded(
-              child: Consumer<ChatProvider>(
-                builder: (context, provider, _) {
-                  if (provider.isLoading && provider.messages.isEmpty) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-                  if (provider.error != null) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.error_outline,
-                            size: 64,
-                            color: Theme.of(context).colorScheme.error,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            provider.error!,
-                            style: Theme.of(context).textTheme.bodyLarge,
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 16),
-                          ElevatedButton(
-                            onPressed: () =>
-                                provider.initializeChat(widget.chatId),
-                            child: const Text('Retry'),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-
-                  if (provider.messages.isEmpty) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            widget.isBotChat
-                                ? Icons.smart_toy
-                                : Icons.chat_bubble_outline,
-                            size: 64,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurface.withOpacity(0.5),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            widget.isBotChat
-                                ? 'No messages from this bot yet'
-                                : 'No messages yet',
-                            style: Theme.of(context).textTheme.bodyLarge
-                                ?.copyWith(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onSurface.withOpacity(0.5),
-                                ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            widget.isBotChat
-                                ? 'This bot will send you messages here'
-                                : 'Start a conversation!',
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onSurface.withOpacity(0.5),
-                                ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-
-                  final groupedMessages = MessageUtils.groupMessagesByDate(
-                    provider.messages,
-                  );
-
-                  return ListView.builder(
-                    controller: provider.scrollController,
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    itemCount: groupedMessages.length,
-                    itemBuilder: (context, index) {
-                      final group = groupedMessages[index];
-                      return Column(
-                        children: [
-                          // Date header
-                          Container(
-                            margin: const EdgeInsets.symmetric(vertical: 16),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.surfaceVariant,
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Text(
-                              MessageUtils.formatDateHeader(group.date),
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onSurfaceVariant,
-                                  ),
-                            ),
-                          ),
-                          // Messages for this date
-                          ...group.messages.map(
-                            (message) => MessageBubble(
-                              message: message,
-                              isGroup: widget.isGroup,
-                            ),
-                          ),
-                        ],
-                      );
-                    },
-                  );
-                },
+          return Column(
+            children: [
+              ChatAppBar(
+                chatName: chatName,
+                chatImage: chatImage,
+                isGroup: widget.isGroup,
+                isBotChat: isBotChat,
+                onBackPressed: () => context.pop(),
+                onMenuPressed: () {},
               ),
-            ),
+              if (isBotChat) _buildBotChatBanner(context),
+              Expanded(child: _buildMessagesArea(context, provider, isBotChat)),
+              ChatInput(chatId: widget.chatId, isBotChat: isBotChat),
+            ],
+          );
+        },
+      ),
+    );
+  }
 
-            // Chat input (only shown for non-bot chats)
-            ChatInput(chatId: widget.chatId, isBotChat: widget.isBotChat),
+  Widget _buildMessagesArea(
+    BuildContext context,
+    ChatProvider provider,
+    bool isBotChat,
+  ) {
+    if (provider.isLoading && provider.messages.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (provider.error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 64,
+              color: Theme.of(context).colorScheme.error,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              provider.error!,
+              style: Theme.of(context).textTheme.bodyLarge,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () => provider.initializeChat(widget.chatId),
+              child: const Text('Retry'),
+            ),
           ],
         ),
-      ),
+      );
+    }
+    if (provider.messages.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              isBotChat ? Icons.smart_toy : Icons.chat_bubble_outline,
+              size: 64,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              isBotChat ? 'No messages from this bot yet' : 'No messages yet',
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              isBotChat
+                  ? 'This bot will send you messages here'
+                  : 'Start a conversation!',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    final groupedMessages = MessageUtils.groupMessagesByDate(provider.messages);
+    return ListView.builder(
+      controller: provider.scrollController,
+      padding: const EdgeInsets.only(top: 8, bottom: 30),
+      itemCount: groupedMessages.length,
+      itemBuilder: (context, index) {
+        final group = groupedMessages[index];
+        return Column(
+          children: [
+            Container(
+              margin: const EdgeInsets.symmetric(vertical: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceVariant,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Text(
+                MessageUtils.formatDateHeader(group.date),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+            ...group.messages.map(
+              (message) =>
+                  MessageBubble(message: message, isGroup: widget.isGroup),
+            ),
+          ],
+        );
+      },
     );
   }
 

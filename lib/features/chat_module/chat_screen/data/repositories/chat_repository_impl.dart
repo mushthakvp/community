@@ -47,6 +47,22 @@ class ChatRepositoryImpl implements ChatRepository {
     }
   }
 
+  // Add method to get both chat and messages efficiently
+  Future<Either<Failure, Map<String, dynamic>>> getChatWithMessages(
+    String chatId,
+  ) async {
+    try {
+      final result = await remoteDataSource.getChatWithMessages(chatId);
+      return Right(result);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(message: e.message));
+    } catch (e) {
+      return Left(UnknownFailure(message: e.toString()));
+    }
+  }
+
   @override
   Future<Either<Failure, MessageEntity>> sendMessage({
     required String chatId,

@@ -82,6 +82,9 @@ class ChatProviders {
         sendMessage: context.read<SendMessage>(),
         uploadMedia: context.read<UploadMedia>(),
         chatRepository: context.read<ChatRepository>(),
+        fetchChatWithMessages: FetchChatWithMessages(
+          context.read<ChatRepository>(),
+        ),
       ),
       update:
           (
@@ -98,6 +101,7 @@ class ChatProviders {
                 sendMessage: sendMessage,
                 uploadMedia: uploadMedia,
                 chatRepository: chatRepository,
+                fetchChatWithMessages: FetchChatWithMessages(chatRepository),
               ),
     ),
 

@@ -34,23 +34,17 @@ class MessageBubble extends StatelessWidget {
             : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Sender avatar for group chats (left side)
           if (!isCurrentUser && isGroup) ...[
             _buildAvatar(context),
             const SizedBox(width: 8),
           ],
-
-          // Message content
           Flexible(
             child: Column(
               crossAxisAlignment: isCurrentUser
                   ? CrossAxisAlignment.end
                   : CrossAxisAlignment.start,
               children: [
-                // Sender name for group chats
                 if (!isCurrentUser && isGroup) _buildSenderName(context),
-
-                // Message bubble
                 GestureDetector(
                   onTap: onTap ?? () => _handleMessageTap(context),
                   onLongPress: () => _showMessageOptions(context),
@@ -65,10 +59,7 @@ class MessageBubble extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Message content (text/media)
                         _buildMessageContent(context),
-
-                        // Message metadata (time, status)
                         const SizedBox(height: 4),
                         _buildMessageMetadata(context, isCurrentUser),
                       ],
@@ -78,8 +69,6 @@ class MessageBubble extends StatelessWidget {
               ],
             ),
           ),
-
-          // Current user avatar (right side)
           if (isCurrentUser && isGroup) ...[
             const SizedBox(width: 8),
             _buildAvatar(context),
@@ -138,7 +127,6 @@ class MessageBubble extends StatelessWidget {
   }
 
   Color _getSenderNameColor(BuildContext context) {
-    // Generate a color based on sender name for consistency
     final hash = message.senderName.hashCode;
     final colors = [
       Theme.of(context).colorScheme.primary,
@@ -187,11 +175,9 @@ class MessageBubble extends StatelessWidget {
     if (MessageUtils.isMediaMessage(message)) {
       return _buildMediaContent(context);
     }
-
     if (message.content.isEmpty) {
       return const SizedBox.shrink();
     }
-
     return _buildTextContent(context);
   }
 
@@ -223,7 +209,6 @@ class MessageBubble extends StatelessWidget {
   Widget _buildImageVideoContent(BuildContext context) {
     final heroTag =
         'media_${message.id}_${message.createdAt.millisecondsSinceEpoch}';
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -398,7 +383,7 @@ class MessageBubble extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           Text(
-            '0:30', // This would show actual duration
+            '0:30',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: message.isCurrentUser
                   ? Theme.of(context).colorScheme.onPrimary.withOpacity(0.7)
@@ -520,6 +505,7 @@ class MessageBubble extends StatelessWidget {
                   ).colorScheme.onSurfaceVariant.withOpacity(0.7),
             fontSize: 11,
           ),
+          textAlign: TextAlign.end,
         ),
         if (isCurrentUser) ...[
           const SizedBox(width: 4),
@@ -534,11 +520,7 @@ class MessageBubble extends StatelessWidget {
   }
 
   IconData _getMessageStatusIcon() {
-    // This would be determined by actual message status
-    return Icons.done_all; // Delivered
-    // return Icons.done; // Sent
-    // return Icons.schedule; // Pending
-    // return Icons.error_outline; // Failed
+    return Icons.done_all;
   }
 
   IconData _getDocumentIcon() {
@@ -563,7 +545,6 @@ class MessageBubble extends StatelessWidget {
   }
 
   String _getDocumentName() {
-    // Extract filename from URL or use a default name
     if (message.mediaUrl != null) {
       final uri = Uri.tryParse(message.mediaUrl!);
       if (uri != null) {
@@ -654,24 +635,14 @@ class MessageBubble extends StatelessWidget {
             context,
             icon: Icons.reply,
             title: 'Reply',
-            onTap: () {
-              Navigator.pop(context);
-              // Handle reply functionality
-            },
+            onTap: () {},
           ),
-
-          // Forward option
           _buildOptionTile(
             context,
             icon: Icons.forward,
             title: 'Forward',
-            onTap: () {
-              Navigator.pop(context);
-              // Handle forward functionality
-            },
+            onTap: () {},
           ),
-
-          // Delete option (only for current user's messages)
           if (message.isCurrentUser)
             _buildOptionTile(
               context,
@@ -683,8 +654,6 @@ class MessageBubble extends StatelessWidget {
               },
               isDestructive: true,
             ),
-
-          // Info option
           _buildOptionTile(
             context,
             icon: Icons.info_outline,

@@ -29,20 +29,16 @@ class SocketDataSourceImpl implements SocketDataSource {
   @override
   Future<void> connect() async {
     _socket = IO.io(
-      ChatApiConstants.chatBaseUrl,
+      ChatApiConstants.chatSocketUrl,
       IO.OptionBuilder().setTransports(['websocket']).build(),
     );
-
     _socket.connect();
-
     _socket.onConnect((_) {
       debugPrint('Socket connected');
     });
-
     _socket.onDisconnect((_) {
       debugPrint('Socket disconnected');
     });
-
     _socket.on('message_received_singleChat', (data) {
       final message = MessageModel.fromJson(data);
       _messageController.add(message);

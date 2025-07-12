@@ -32,7 +32,7 @@ class ChatModel extends ChatEntity {
       groupName: json['groupName'],
       groupImage: json['groupProfileImage'],
       wallpaper: json['wallpapers'],
-      isBot: json['isBot'] ?? false,
+      isBot: json['isBot'] ?? false, // Parse isBot field from API
       role: json['role'],
       unreadCount: json['unreadCount'] ?? 0,
     );
@@ -52,5 +52,33 @@ class ChatModel extends ChatEntity {
       'role': role,
       'unreadCount': unreadCount,
     };
+  }
+
+  ChatModel copyWith({
+    String? id,
+    List<UserModel>? users,
+    String? latestMessage,
+    DateTime? lastMessageTime,
+    bool? isGroup,
+    String? groupName,
+    String? groupImage,
+    String? wallpaper,
+    bool? isBot,
+    String? role,
+    int? unreadCount,
+  }) {
+    return ChatModel(
+      id: id ?? this.id,
+      users: users ?? this.users,
+      latestMessage: latestMessage ?? this.latestMessage,
+      lastMessageTime: lastMessageTime ?? this.lastMessageTime,
+      isGroup: isGroup ?? this.isGroup,
+      groupName: groupName ?? this.groupName,
+      groupImage: groupImage ?? this.groupImage,
+      wallpaper: wallpaper ?? this.wallpaper,
+      isBot: isBot ?? this.isBot,
+      role: role ?? this.role,
+      unreadCount: unreadCount ?? this.unreadCount,
+    );
   }
 }

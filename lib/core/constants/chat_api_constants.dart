@@ -3,6 +3,7 @@ class ChatApiConstants {
   static const String chatBaseUrlPro = 'https://chat.prod.liveraapp.com/chat/';
   static const String chatBaseUrlDev = 'http://192.168.3.6:3555/chat/';
   static const String chatBaseUrl = 'http://192.168.3.6:3555/chat/';
+  static const String chatSocketUrl = 'http://127.0.0.1:3555/';
 
   // Chat Module Endpoints
 
@@ -10,7 +11,7 @@ class ChatApiConstants {
   static const String getRecommendCommunity = 'getCommunities';
   static const String getMyGroupData = 'listHomeData';
   static const String createCommunity = 'createCommunity';
-  static const String getCommunityDetails = 'communityOpen/';
+  static const String enterChat = 'communityOpen/';
   static const String editCommunity = 'editCommunity/';
   static const String getCommunityMembers = 'communityMembers/';
   static const String getCommunityMemberRequest = 'listJoinRequests/';
