@@ -85,6 +85,7 @@ class ChatProviders {
         fetchChatWithMessages: FetchChatWithMessages(
           context.read<ChatRepository>(),
         ),
+        socketDataSource: context.read<SocketDataSource>(),
       ),
       update:
           (
@@ -102,6 +103,7 @@ class ChatProviders {
                 uploadMedia: uploadMedia,
                 chatRepository: chatRepository,
                 fetchChatWithMessages: FetchChatWithMessages(chatRepository),
+                socketDataSource: SocketDataSourceImpl(),
               ),
     ),
 

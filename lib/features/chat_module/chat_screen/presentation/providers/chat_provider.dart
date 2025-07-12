@@ -9,6 +9,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:record/record.dart';
 
+import '../../data/datasources/socket_datasource.dart';
 import '../../domain/entities/chat_entity.dart';
 import '../../domain/entities/message_entity.dart';
 import '../../domain/repositories/chat_repository.dart';
@@ -22,6 +23,7 @@ class ChatProvider extends ChangeNotifier {
   final SendMessage sendMessage;
   final UploadMedia uploadMedia;
   final ChatRepository chatRepository;
+  final SocketDataSource socketDataSource;
 
   ChatProvider({
     required this.fetchMessages,
@@ -29,6 +31,7 @@ class ChatProvider extends ChangeNotifier {
     required this.sendMessage,
     required this.uploadMedia,
     required this.chatRepository,
+    required this.socketDataSource,
   });
 
   // State
@@ -38,6 +41,7 @@ class ChatProvider extends ChangeNotifier {
   bool _isRecording = false;
   bool _isUploading = false;
   bool _isSending = false;
+  bool _isConnecting = false; // Add connection state
   String? _error;
 
   // Voice recording
@@ -61,6 +65,7 @@ class ChatProvider extends ChangeNotifier {
   bool get isRecording => _isRecording;
   bool get isUploading => _isUploading;
   bool get isSending => _isSending;
+  bool get isConnecting => _isConnecting;
   String? get error => _error;
   int get recordingDuration => _recordingDuration;
   bool get hasText => messageController.text.trim().isNotEmpty;
@@ -79,11 +84,20 @@ class ChatProvider extends ChangeNotifier {
       !isRequestSent &&
       (_currentChat?.isBot == true || _currentChat?.isGroup == true);
 
-  // Initialize chat - Optimized to get both chat and messages in one call
+  // Add socket connection status
+  bool get isSocketConnected => socketDataSource is SocketDataSourceImpl
+      ? (socketDataSource as SocketDataSourceImpl).isConnected
+      : false;
+
+  // Initialize chat - Updated to ensure socket connection
   Future<void> initializeChat(String chatId) async {
     _setLoading(true);
     _clearError();
+
     try {
+      // First, ensure socket is connected
+      await _ensureSocketConnection();
+
       // Use the combined method to get both chat and messages efficiently
       final result = await fetchChatWithMessages(
         FetchChatWithMessagesParams(chatId: chatId),
@@ -99,6 +113,10 @@ class ChatProvider extends ChangeNotifier {
       // Set up socket listener for new messages only if user can receive messages
       if (_currentChat?.isUserInGroup == true ||
           _currentChat?.isCreator == true) {
+        // Join the chat room
+        await _joinSocketRoom(chatId);
+
+        // Set up message listener
         _messageSubscription?.cancel();
         _messageSubscription = chatRepository
             .listenToNewMessages(chatId)
@@ -113,7 +131,35 @@ class ChatProvider extends ChangeNotifier {
     _setLoading(false);
   }
 
-  // Send text message
+  // Ensure socket connection
+  Future<void> _ensureSocketConnection() async {
+    if (!isSocketConnected) {
+      _setConnecting(true);
+      try {
+        await socketDataSource.connect();
+        debugPrint('Socket connected successfully');
+      } catch (e) {
+        debugPrint('Failed to connect socket: $e');
+        _setError('Failed to connect to chat server. Please try again.');
+        rethrow;
+      } finally {
+        _setConnecting(false);
+      }
+    }
+  }
+
+  // Join socket room
+  Future<void> _joinSocketRoom(String chatId) async {
+    try {
+      await socketDataSource.joinRoom(chatId);
+      debugPrint('Joined socket room: $chatId');
+    } catch (e) {
+      debugPrint('Failed to join socket room: $e');
+      // Don't throw error here as it's not critical
+    }
+  }
+
+  // Send text message - Updated with better error handling
   Future<void> sendTextMessage(String chatId) async {
     final content = messageController.text.trim();
     if (content.isEmpty || _isSending) return;
@@ -124,8 +170,21 @@ class ChatProvider extends ChangeNotifier {
       return;
     }
 
+    // Check socket connection
+    if (!isSocketConnected) {
+      _setError('Not connected to chat server. Reconnecting...');
+      try {
+        await _ensureSocketConnection();
+        await _joinSocketRoom(chatId);
+      } catch (e) {
+        _setError('Failed to connect to chat server');
+        return;
+      }
+    }
+
     _setSending(true);
     messageController.clear();
+
     try {
       final result = await sendMessage(
         SendMessageParams(chatId: chatId, content: content),
@@ -135,12 +194,12 @@ class ChatProvider extends ChangeNotifier {
       });
     } catch (e) {
       _setError(e.toString());
-      messageController.text = content;
+      messageController.text = content; // Restore message on error
     }
     _setSending(false);
   }
 
-  // Send media message
+  // Send media message - Updated with socket check
   Future<void> sendMediaMessage(
     String chatId,
     File file,
@@ -151,6 +210,12 @@ class ChatProvider extends ChangeNotifier {
     // Check if user can send messages
     if (!canSendMessages) {
       _setError('You cannot send media to this chat');
+      return;
+    }
+
+    // Check socket connection
+    if (!isSocketConnected) {
+      _setError('Not connected to chat server. Please reconnect.');
       return;
     }
 
@@ -196,6 +261,23 @@ class ChatProvider extends ChangeNotifier {
       _setError(e.toString());
     }
     _setLoading(false);
+  }
+
+  // Reconnect socket
+  Future<void> reconnectSocket() async {
+    _setConnecting(true);
+    try {
+      if (socketDataSource is SocketDataSourceImpl) {
+        await (socketDataSource as SocketDataSourceImpl).reconnect();
+      }
+      if (_currentChat != null) {
+        await _joinSocketRoom(_currentChat!.id);
+      }
+    } catch (e) {
+      _setError('Failed to reconnect: $e');
+    } finally {
+      _setConnecting(false);
+    }
   }
 
   // Image picker
@@ -471,6 +553,11 @@ class ChatProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void _setConnecting(bool connecting) {
+    _isConnecting = connecting;
+    notifyListeners();
+  }
+
   void _setError(String? error) {
     _error = error;
     notifyListeners();
@@ -500,6 +587,10 @@ class ChatProvider extends ChangeNotifier {
     messageController.dispose();
     scrollController.dispose();
     focusNode.dispose();
+    socketDataSource.disconnect().catchError((e) {
+      debugPrint('Error disconnecting socket: $e');
+    });
+
     super.dispose();
   }
 }

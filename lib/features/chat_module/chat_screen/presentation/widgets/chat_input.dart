@@ -315,6 +315,7 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
         ),
       ),
       child: TextField(
+        onTapUpOutside: (event) => FocusScope.of(context).unfocus(),
         controller: provider.messageController,
         focusNode: provider.focusNode,
         maxLines: null,
