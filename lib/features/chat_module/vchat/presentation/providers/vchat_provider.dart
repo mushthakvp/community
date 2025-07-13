@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 
 import '../../domain/entities/community_entity.dart';
@@ -22,7 +20,6 @@ class VChatProvider extends ChangeNotifier {
     required this.joinCommunity,
   });
 
-  // State
   VChatTab _selectedTab = VChatTab.explore;
   MyGroupFilter _selectedFilter = MyGroupFilter.recently;
   List<CommunityEntity> _communities = [];
@@ -30,7 +27,8 @@ class VChatProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _error;
 
-  // Getters
+  final Map<String, bool> _joiningStates = {};
+
   VChatTab get selectedTab => _selectedTab;
   MyGroupFilter get selectedFilter => _selectedFilter;
   List<CommunityEntity> get communities => _communities;
@@ -38,7 +36,8 @@ class VChatProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  // Methods
+  bool isJoining(String communityId) => _joiningStates[communityId] ?? false;
+
   void changeTab(VChatTab tab) {
     _selectedTab = tab;
     notifyListeners();
@@ -71,10 +70,10 @@ class VChatProvider extends ChangeNotifier {
         GetRecommendedCommunitiesParams(type: 'recommended'),
       );
 
-      result.fold(
-        (failure) => _setError(failure.message),
-        (communities) => _communities = communities,
-      );
+      result.fold((failure) => _setError(failure.message), (communities) {
+        _communities = communities;
+        notifyListeners();
+      });
     } catch (e) {
       _setError(e.toString());
     }
@@ -91,10 +90,10 @@ class VChatProvider extends ChangeNotifier {
         GetRecommendedCommunitiesParams(type: 'popular'),
       );
 
-      result.fold(
-        (failure) => _setError(failure.message),
-        (communities) => _communities = communities,
-      );
+      result.fold((failure) => _setError(failure.message), (communities) {
+        _communities = communities;
+        notifyListeners();
+      });
     } catch (e) {
       _setError(e.toString());
     }
@@ -110,10 +109,10 @@ class VChatProvider extends ChangeNotifier {
       final filterType = _getFilterType(_selectedFilter);
       final result = await getMyGroups(GetMyGroupsParams(type: filterType));
 
-      result.fold(
-        (failure) => _setError(failure.message),
-        (groups) => _myGroups = groups,
-      );
+      result.fold((failure) => _setError(failure.message), (groups) {
+        _myGroups = groups;
+        notifyListeners();
+      });
     } catch (e) {
       _setError(e.toString());
     }
@@ -122,16 +121,69 @@ class VChatProvider extends ChangeNotifier {
   }
 
   Future<void> joinCommunityById(String communityId) async {
+    _joiningStates[communityId] = true;
+    notifyListeners();
+
     try {
-      log('joinCommunityById: $communityId');
       final result = await joinCommunity(
         JoinCommunityParams(communityId: communityId),
       );
-      result.fold((failure) => _setError(failure.message), (_) {
-        fetchRecommendedCommunities();
-      });
+
+      result.fold(
+        (failure) {
+          _setError(failure.message);
+        },
+        (_) {
+          _updateCommunityJoinStatus(communityId, true);
+
+          switch (_selectedTab) {
+            case VChatTab.explore:
+              fetchRecommendedCommunities();
+              break;
+            case VChatTab.popular:
+              fetchPopularCommunities();
+              break;
+            case VChatTab.myGroup:
+              fetchMyGroups();
+              break;
+          }
+        },
+      );
     } catch (e) {
       _setError(e.toString());
+    } finally {
+      _joiningStates[communityId] = false;
+      notifyListeners();
+    }
+  }
+
+  void _updateCommunityJoinStatus(String communityId, bool isJoined) {
+    final communityIndex = _communities.indexWhere((c) => c.id == communityId);
+    if (communityIndex != -1) {
+      final community = _communities[communityIndex];
+      _communities[communityIndex] = CommunityEntity(
+        id: community.id,
+        name: community.name,
+        image: community.image,
+        memberCount: community.memberCount,
+        profileImages: community.profileImages,
+        isJoined: isJoined,
+        isCreated: community.isCreated,
+      );
+    }
+
+    final myGroupIndex = _myGroups.indexWhere((c) => c.id == communityId);
+    if (myGroupIndex != -1) {
+      final community = _myGroups[myGroupIndex];
+      _myGroups[myGroupIndex] = CommunityEntity(
+        id: community.id,
+        name: community.name,
+        image: community.image,
+        memberCount: community.memberCount,
+        profileImages: community.profileImages,
+        isJoined: isJoined,
+        isCreated: community.isCreated,
+      );
     }
   }
 
@@ -160,5 +212,35 @@ class VChatProvider extends ChangeNotifier {
 
   void _clearError() {
     _error = null;
+  }
+
+  void clearError() {
+    _clearError();
+  }
+
+  CommunityEntity? getCommunityById(String communityId) {
+    try {
+      return _communities.firstWhere((c) => c.id == communityId);
+    } catch (e) {
+      try {
+        return _myGroups.firstWhere((c) => c.id == communityId);
+      } catch (e) {
+        return null;
+      }
+    }
+  }
+
+  void refreshCurrentData() {
+    switch (_selectedTab) {
+      case VChatTab.explore:
+        fetchRecommendedCommunities();
+        break;
+      case VChatTab.popular:
+        fetchPopularCommunities();
+        break;
+      case VChatTab.myGroup:
+        fetchMyGroups();
+        break;
+    }
   }
 }

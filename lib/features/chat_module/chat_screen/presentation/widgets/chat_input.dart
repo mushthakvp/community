@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -63,31 +61,20 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
   ChatInputType _determineInputType(ChatProvider provider) {
     final chat = provider.currentChat;
 
-    // Log the current chat status for debugging
-    log(
-      'Input type: isCreator=${chat?.isCreator}, isUserInGroup=${chat?.isUserInGroup}, '
-      'isUserRequested=${chat?.isUserRequested}, isBot=${chat?.isBot}',
-    );
-
-    // If chat is null or it's a bot, hide the input widget
     if (chat == null || chat.isBot) return ChatInputType.hidden;
 
-    // If the user is the creator or already in the group, show the normal input
     if (chat.isCreator || chat.isUserInGroup) {
       return ChatInputType.normal;
     }
 
-    // If the user has already requested to join but is not yet in the group, show "Request Sent" status
     if (chat.isUserRequested && !chat.isUserInGroup) {
       return ChatInputType.requestSent;
     }
 
-    // If the user is not in the group and hasn't requested, show "Request to Join" option
     if (!chat.isUserInGroup) {
       return ChatInputType.joinRequest;
     }
 
-    // Default to normal input
     return ChatInputType.normal;
   }
 

@@ -1,7 +1,10 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 import '../../domain/entities/community_entity.dart';
+import '../providers/vchat_provider.dart';
 
 class CommunityTileWidget extends StatelessWidget {
   final CommunityEntity community;
@@ -19,18 +22,22 @@ class CommunityTileWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap ?? () => _handleTap(context),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          children: [
-            _buildCommunityAvatar(context),
-            const SizedBox(width: 12),
-            Expanded(child: _buildCommunityInfo(context)),
-          ],
-        ),
-      ),
+    return Consumer<VChatProvider>(
+      builder: (context, vChatProvider, _) {
+        return InkWell(
+          onTap: onTap ?? () => _handleTap(context, vChatProvider),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                _buildCommunityAvatar(context),
+                const SizedBox(width: 12),
+                Expanded(child: _buildCommunityInfo(context, vChatProvider)),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -48,17 +55,16 @@ class CommunityTileWidget extends StatelessWidget {
       child: community.image != null && community.image!.isNotEmpty
           ? ClipRRect(
               borderRadius: BorderRadius.circular(25),
-              child: Image.network(
-                community.image!,
+              child: CachedNetworkImage(
+                imageUrl: community.image!,
                 width: 50,
                 height: 50,
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) =>
+
+                errorWidget: (context, url, error) =>
                     _buildDefaultAvatar(context),
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return _buildLoadingAvatar(context);
-                },
+                progressIndicatorBuilder: (context, url, progress) =>
+                    _buildLoadingAvatar(context),
               ),
             )
           : _buildDefaultAvatar(context),
@@ -86,11 +92,13 @@ class CommunityTileWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildCommunityInfo(BuildContext context) {
+  Widget _buildCommunityInfo(
+    BuildContext context,
+    VChatProvider vChatProvider,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Community name and status badges row
         Row(
           children: [
             Expanded(
@@ -104,26 +112,10 @@ class CommunityTileWidget extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            const SizedBox(width: 8),
-
-            // Status badges
-            if (community.isCreated)
-              _buildStatusChip(
-                context,
-                'Admin',
-                Theme.of(context).colorScheme.primary,
-              )
-            else if (community.isJoined)
-              _buildStatusChip(
-                context,
-                'Member',
-                Theme.of(context).colorScheme.tertiary,
-              ),
           ],
         ),
         const SizedBox(height: 4),
 
-        // Member count and member avatars row
         Row(
           children: [
             if (showMemberCount) ...[
@@ -144,7 +136,6 @@ class CommunityTileWidget extends StatelessWidget {
               ),
             ],
 
-            // Member avatars preview
             if (community.profileImages.isNotEmpty) ...[
               const SizedBox(width: 12),
               _buildMemberAvatars(context),
@@ -155,35 +146,14 @@ class CommunityTileWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusChip(BuildContext context, String label, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: color,
-          fontWeight: FontWeight.w500,
-          fontSize: 10,
-        ),
-      ),
-    );
-  }
-
   Widget _buildMemberAvatars(BuildContext context) {
     final displayCount = community.profileImages.length > 3
         ? 3
         : community.profileImages.length;
     final hasMore = community.profileImages.length > 3;
 
-    // Calculate total width needed
     final totalAvatars = hasMore ? displayCount + 1 : displayCount;
-    final totalWidth =
-        (totalAvatars * 14.0) + 6.0; // 14px spacing + 6px for last avatar
+    final totalWidth = (totalAvatars * 14.0) + 6.0;
 
     return SizedBox(
       height: 20,
@@ -191,7 +161,6 @@ class CommunityTileWidget extends StatelessWidget {
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          // Member avatars
           ...List.generate(displayCount, (index) {
             return Positioned(
               left: index * 14.0,
@@ -211,7 +180,9 @@ class CommunityTileWidget extends StatelessWidget {
                     context,
                   ).colorScheme.secondaryContainer,
                   backgroundImage: community.profileImages[index].isNotEmpty
-                      ? NetworkImage(community.profileImages[index])
+                      ? CachedNetworkImageProvider(
+                          community.profileImages[index],
+                        )
                       : null,
                   child: community.profileImages[index].isEmpty
                       ? Icon(
@@ -227,7 +198,6 @@ class CommunityTileWidget extends StatelessWidget {
             );
           }),
 
-          // "+X more" indicator
           if (hasMore)
             Positioned(
               left: displayCount * 14.0,
@@ -271,11 +241,9 @@ class CommunityTileWidget extends StatelessWidget {
     }
   }
 
-  void _handleTap(BuildContext context) {
+  void _handleTap(BuildContext context, VChatProvider vChatProvider) {
     final route =
         '/chat/${community.id}?t=${DateTime.now().millisecondsSinceEpoch}';
-
-    debugPrint('Navigating to community chat: ${community.id}');
 
     context.push(
       route,

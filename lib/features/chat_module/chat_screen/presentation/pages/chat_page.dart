@@ -29,7 +29,6 @@ class ChatPage extends StatefulWidget {
 class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   bool isAppInForeground = true;
   bool _isInitialized = false;
-  bool _hasScrolledToBottom = false;
 
   @override
   void initState() {
@@ -43,38 +42,19 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         final provider = context.read<ChatProvider>();
         if (provider.currentChatId != widget.chatId) {
-          debugPrint('Initializing chat: ${widget.chatId}');
           provider.setLoading(true);
           provider.initializeChat(widget.chatId).then((_) {
             if (mounted) {
               setState(() {
                 _isInitialized = true;
               });
-              _ensureScrollToBottom();
             }
           });
         } else {
           setState(() {
             _isInitialized = true;
           });
-          _ensureScrollToBottom();
         }
-      });
-    }
-  }
-
-  void _ensureScrollToBottom() {
-    if (!_hasScrolledToBottom && mounted) {
-      final provider = context.read<ChatProvider>();
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        provider.scrollToBottom();
-        _hasScrolledToBottom = true;
-        Future.delayed(const Duration(milliseconds: 100), () {
-          if (mounted) provider.scrollToBottom();
-        });
-        Future.delayed(const Duration(milliseconds: 300), () {
-          if (mounted) provider.scrollToBottom();
-        });
       });
     }
   }
@@ -83,11 +63,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   void didUpdateWidget(ChatPage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.chatId != widget.chatId) {
-      debugPrint(
-        'Chat ID changed from ${oldWidget.chatId} to ${widget.chatId}',
-      );
       _isInitialized = false;
-      _hasScrolledToBottom = false;
       _initializeChat();
     }
   }
@@ -123,7 +99,6 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     final provider = context.read<ChatProvider>();
     if (!provider.isSocketConnected &&
         provider.currentChatId == widget.chatId) {
-      debugPrint('App resumed, reconnecting socket...');
       provider.reconnectAndRejoin();
     }
   }
@@ -133,7 +108,6 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     return PopScope(
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) {
-          // Clear any temporary state when leaving chat
           final provider = context.read<ChatProvider>();
           provider.clearError();
         }
@@ -297,7 +271,6 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     ChatProvider provider,
     bool isBotChat,
   ) {
-    // Show error only if we have no messages and there's an error
     if (provider.error != null && provider.messages.isEmpty) {
       return Center(
         child: Column(
@@ -377,13 +350,6 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
         itemCount: groupedMessages.length,
         itemBuilder: (context, index) {
           final group = groupedMessages[index];
-
-          // Add callback to scroll to bottom when last item is built
-          if (index == groupedMessages.length - 1 && !_hasScrolledToBottom) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              _ensureScrollToBottom();
-            });
-          }
 
           return Column(
             children: [
