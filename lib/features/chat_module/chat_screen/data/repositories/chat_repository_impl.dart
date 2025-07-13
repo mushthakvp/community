@@ -71,6 +71,14 @@ class ChatRepositoryImpl implements ChatRepository {
     String? mediaType,
   }) async {
     try {
+      // Ensure socket is connected before sending
+      if (socketDataSource is SocketDataSourceImpl) {
+        final socketImpl = socketDataSource as SocketDataSourceImpl;
+        if (!socketImpl.isConnected) {
+          await socketDataSource.connect();
+        }
+      }
+
       final message = await socketDataSource.sendMessage(
         chatId: chatId,
         content: content,
