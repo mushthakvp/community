@@ -7,7 +7,6 @@ import 'package:flutter/rendering.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:record/record.dart';
 
 import '../../../shared/cache/chat_cache_data.dart';
@@ -643,33 +642,23 @@ class ChatProvider extends ChangeNotifier {
       _setError('You cannot send voice messages to this chat');
       return;
     }
-
     try {
-      final status = await Permission.microphone.request();
-      if (!status.isGranted) {
-        _setError('Microphone permission is required for voice messages');
-        return;
-      }
-      if (await _audioRecorder.hasPermission()) {
-        final directory = await getApplicationDocumentsDirectory();
-        final fileName = 'audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
-        _recordingPath = path.join(directory.path, fileName);
-        const config = RecordConfig(
-          encoder: AudioEncoder.aacLc,
-          bitRate: 128000,
-          sampleRate: 44100,
-        );
-        await _audioRecorder.start(config, path: _recordingPath!);
-        _isRecording = true;
-        _recordingDuration = 0;
-        _recordingTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-          _recordingDuration++;
-          notifyListeners();
-        });
+      final directory = await getApplicationDocumentsDirectory();
+      final fileName = 'audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
+      _recordingPath = path.join(directory.path, fileName);
+      const config = RecordConfig(
+        encoder: AudioEncoder.aacLc,
+        bitRate: 128000,
+        sampleRate: 44100,
+      );
+      await _audioRecorder.start(config, path: _recordingPath!);
+      _isRecording = true;
+      _recordingDuration = 0;
+      _recordingTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        _recordingDuration++;
         notifyListeners();
-      } else {
-        _setError('Microphone permission denied');
-      }
+      });
+      notifyListeners();
     } catch (e) {
       _setError('Failed to start recording: $e');
     }
