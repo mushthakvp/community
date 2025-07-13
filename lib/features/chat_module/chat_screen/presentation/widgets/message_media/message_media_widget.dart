@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:livera/core/constants/app_constants.dart';
 import 'package:voice_message_package/voice_message_package.dart';
 
 import '../../../../shared/utils/message_utils.dart';
@@ -155,7 +156,7 @@ class MessageMediaWidget extends StatelessWidget {
       constraints: const BoxConstraints(maxWidth: 280),
       child: VoiceMessageView(
         backgroundColor: message.isCurrentUser
-            ? Colors.white.withOpacity(0.1)
+            ? AppConstants.cardColor
             : Theme.of(context).colorScheme.surface,
         activeSliderColor: message.isCurrentUser
             ? Colors.white
@@ -192,7 +193,7 @@ class MessageMediaWidget extends StatelessWidget {
         stopDownloadingIcon: Icon(
           Icons.close,
           color: message.isCurrentUser
-              ? Colors.white
+              ? Colors.black
               : Theme.of(context).colorScheme.onSurface,
         ),
         playPauseButtonDecoration: BoxDecoration(
@@ -203,7 +204,7 @@ class MessageMediaWidget extends StatelessWidget {
         ),
         circlesTextStyle: TextStyle(
           color: message.isCurrentUser
-              ? Colors.white.withOpacity(0.8)
+              ? Colors.black.withOpacity(0.8)
               : Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
           fontSize: 10,
           fontWeight: FontWeight.bold,

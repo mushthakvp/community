@@ -1,19 +1,13 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_sound/flutter_sound.dart';
 
 class AudioService {
-  static final FlutterSoundPlayer _audioPlayer = FlutterSoundPlayer();
+  static final AudioPlayer _audioPlayer = AudioPlayer();
 
   static Future<void> playSound(String assetPath) async {
     try {
-      await _audioPlayer.startPlayer(
-        fromURI: "assets/$assetPath",
-        codec: Codec.mp3,
-        whenFinished: () {
-          _audioPlayer.stopPlayer();
-        },
-      );
+      await _audioPlayer.play(AssetSource(assetPath.replaceAll('assets/', '')));
     } catch (e) {
       debugPrint('Error playing sound: $e');
     }
@@ -34,21 +28,21 @@ class AudioService {
     await HapticFeedback.selectionClick();
   }
 
+  static void dispose() {
+    _audioPlayer.dispose();
+  }
+
   static Future<void> playSpinSound() async {
     await playSound('sounds/spinner_sound.mp3');
     await HapticFeedback.mediumImpact();
   }
 
   static Future<void> stopSpinSound() async {
-    await _audioPlayer.stopPlayer();
+    await _audioPlayer.stop();
   }
 
   static Future<void> playWinSound() async {
     await playSound('sounds/winning_sound.mp3');
     await HapticFeedback.mediumImpact();
-  }
-
-  static void dispose() {
-    _audioPlayer.stopPlayer();
   }
 }

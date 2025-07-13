@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:livera/core/constants/app_constants.dart';
 
-import '../../../shared/utils/date_utils.dart';
 import '../../../shared/utils/message_utils.dart';
 import '../../domain/entities/message_entity.dart';
 import 'message_actions/message_actions_handler.dart';
@@ -128,13 +128,8 @@ class MessageBubble extends StatelessWidget {
     bool isCurrentUser,
   ) {
     return BoxDecoration(
-      gradient: isCurrentUser
-          ? LinearGradient(
-              colors: [const Color(0xFF4CAF50), const Color(0xFF45A049)],
-            )
-          : null,
       color: isCurrentUser
-          ? null
+          ? AppConstants.greyDark
           : Theme.of(context).colorScheme.surfaceVariant,
       borderRadius: BorderRadius.only(
         topLeft: const Radius.circular(16),
@@ -149,6 +144,12 @@ class MessageBubble extends StatelessWidget {
           offset: const Offset(0, 1),
         ),
       ],
+      border: Border.all(
+        color: isCurrentUser
+            ? Colors.grey.withOpacity(0.2)
+            : Colors.transparent,
+        width: isCurrentUser ? 0.5 : 0,
+      ),
     );
   }
 
@@ -157,10 +158,10 @@ class MessageBubble extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          ChatDateUtils.formatMessageTime(message.createdAt),
+          _formatMessageTime(message.createdAt),
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
             color: isCurrentUser
-                ? Colors.white.withOpacity(0.7)
+                ? Colors.grey[600]
                 : Theme.of(
                     context,
                   ).colorScheme.onSurfaceVariant.withOpacity(0.7),
@@ -170,10 +171,92 @@ class MessageBubble extends StatelessWidget {
         ),
         if (isCurrentUser) ...[
           const SizedBox(width: 4),
-          Icon(Icons.done_all, size: 14, color: Colors.white.withOpacity(0.7)),
+          Icon(Icons.done_all, size: 14, color: Colors.grey[600]),
         ],
       ],
     );
+  }
+
+  // Enhanced time formatting with AM/PM
+  String _formatMessageTime(DateTime dateTime) {
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+
+    // If message is from today, show time with AM/PM
+    if (_isSameDay(dateTime, now)) {
+      return _formatTimeWithAmPm(dateTime);
+    }
+
+    // If message is from yesterday
+    if (difference.inDays == 1) {
+      return 'Yesterday ${_formatTimeWithAmPm(dateTime)}';
+    }
+
+    // If message is from this week (within 7 days)
+    if (difference.inDays < 7) {
+      final dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      final dayName = dayNames[dateTime.weekday - 1];
+      return '$dayName ${_formatTimeWithAmPm(dateTime)}';
+    }
+
+    // If message is from this year
+    if (dateTime.year == now.year) {
+      final months = [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
+      ];
+      final month = months[dateTime.month - 1];
+      return '${dateTime.day} $month ${_formatTimeWithAmPm(dateTime)}';
+    }
+
+    // For older messages, include year
+    final months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    final month = months[dateTime.month - 1];
+    return '${dateTime.day} $month ${dateTime.year} ${_formatTimeWithAmPm(dateTime)}';
+  }
+
+  String _formatTimeWithAmPm(DateTime dateTime) {
+    final hour = dateTime.hour;
+    final minute = dateTime.minute;
+
+    if (hour == 0) {
+      return '12:${minute.toString().padLeft(2, '0')} AM';
+    } else if (hour < 12) {
+      return '$hour:${minute.toString().padLeft(2, '0')} AM';
+    } else if (hour == 12) {
+      return '12:${minute.toString().padLeft(2, '0')} PM';
+    } else {
+      return '${hour - 12}:${minute.toString().padLeft(2, '0')} PM';
+    }
+  }
+
+  bool _isSameDay(DateTime date1, DateTime date2) {
+    return date1.year == date2.year &&
+        date1.month == date2.month &&
+        date1.day == date2.day;
   }
 
   void _handleMessageTap(BuildContext context) {
