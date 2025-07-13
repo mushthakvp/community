@@ -134,23 +134,57 @@ class SocketDataSourceImpl implements SocketDataSource {
           return;
         }
 
-        final message = MessageModel.fromJson(data as Map<String, dynamic>);
+        final rawData = data as Map<String, dynamic>;
+
+        // CRITICAL FIX: Handle both chatId and communityId fields
+        String? messageRoomId;
+        if (rawData.containsKey('chatId') &&
+            rawData['chatId'] != null &&
+            rawData['chatId'].toString().isNotEmpty) {
+          messageRoomId = rawData['chatId'].toString();
+        } else if (rawData.containsKey('communityId') &&
+            rawData['communityId'] != null &&
+            rawData['communityId'].toString().isNotEmpty) {
+          messageRoomId = rawData['communityId'].toString();
+        }
+
+        if (messageRoomId == null || messageRoomId.isEmpty) {
+          debugPrint('Message has no valid room ID - ignoring');
+          return;
+        }
+
+        // Create message with proper chatId
+        final messageData = Map<String, dynamic>.from(rawData);
+        messageData['chat'] =
+            messageRoomId; // Ensure the 'chat' field is set for MessageModel.fromJson
+
+        final message = MessageModel.fromJson(messageData);
         debugPrint(
           'Parsed message: ${message.content} from ${message.senderName} for chat ${message.chatId}',
         );
 
-        // Only emit message if we're currently in this room
-        if (_currentRoomId == message.chatId ||
-            _joinedRooms.contains(message.chatId)) {
+        // FIXED: Check if we should emit this message
+        final shouldEmit =
+            _currentRoomId == messageRoomId ||
+            _joinedRooms.contains(messageRoomId);
+
+        debugPrint(
+          'Current room: $_currentRoomId, Message room: $messageRoomId, Should emit: $shouldEmit',
+        );
+        debugPrint('Joined rooms: $_joinedRooms');
+
+        if (shouldEmit) {
           if (!_messageController.isClosed) {
             _messageController.add(message);
-            debugPrint('Message added to stream successfully');
+            debugPrint(
+              'Message added to stream successfully for room: $messageRoomId',
+            );
           } else {
             debugPrint('Message controller is closed, cannot add message');
           }
         } else {
           debugPrint(
-            'Ignoring message for room we are not in: ${message.chatId}',
+            'Ignoring message for room we are not in: $messageRoomId (current: $_currentRoomId)',
           );
         }
       } catch (e, stackTrace) {
@@ -289,6 +323,7 @@ class SocketDataSourceImpl implements SocketDataSource {
       };
 
       debugPrint('Sending message to room: $chatId');
+      debugPrint('Message data: $data');
       _socket!.emit('newMessageCommunity', data);
 
       return MessageModel(
@@ -311,10 +346,15 @@ class SocketDataSourceImpl implements SocketDataSource {
   @override
   Stream<MessageModel> listenToNewMessages(String chatId) {
     debugPrint('Setting up message listener for chat: $chatId');
-    _currentRoomId = chatId;
-    return _messageController.stream.where(
-      (message) => message.chatId == chatId,
-    );
+    return _messageController.stream.where((message) {
+      final matches = message.chatId == chatId;
+      if (!matches) {
+        debugPrint(
+          'Filtering out message for different chat: ${message.chatId} (expected: $chatId)',
+        );
+      }
+      return matches;
+    });
   }
 
   @override
@@ -334,20 +374,29 @@ class SocketDataSourceImpl implements SocketDataSource {
 
       // Leave current room if different
       if (_currentRoomId != null && _currentRoomId != chatId) {
+        debugPrint('Leaving previous room: $_currentRoomId');
         await leaveRoom(_currentRoomId!);
       }
 
+      // Update tracking before joining
       _currentRoomId = chatId;
       _joinedRooms.add(chatId);
 
       debugPrint('Joining room: $chatId with token');
       _socket!.emit('setup', {'chatId': chatId, 'token': token});
 
-      // Wait a bit for the room join to complete
-      await Future.delayed(const Duration(milliseconds: 500));
+      // Wait longer for the room join to complete
+      await Future.delayed(const Duration(milliseconds: 1000));
       debugPrint('Successfully joined room: $chatId');
+      debugPrint('Current room now: $_currentRoomId');
+      debugPrint('Joined rooms: $_joinedRooms');
     } catch (e) {
       debugPrint('Failed to join room: $e');
+      // Remove from tracking if join failed
+      _joinedRooms.remove(chatId);
+      if (_currentRoomId == chatId) {
+        _currentRoomId = null;
+      }
       throw Exception('Failed to join room: $e');
     }
   }
@@ -367,6 +416,8 @@ class SocketDataSourceImpl implements SocketDataSource {
       }
 
       debugPrint('Successfully left room: $chatId');
+      debugPrint('Current room now: $_currentRoomId');
+      debugPrint('Joined rooms: $_joinedRooms');
     } catch (e) {
       debugPrint('Error leaving room: $e');
     }
@@ -381,7 +432,13 @@ class SocketDataSourceImpl implements SocketDataSource {
     final roomsToRejoin = List<String>.from(_joinedRooms);
     for (final roomId in roomsToRejoin) {
       try {
-        await joinRoom(roomId);
+        // Don't use joinRoom here as it would clear _currentRoomId
+        final token = await StorageService.getToken();
+        if (token != null) {
+          debugPrint('Rejoining room: $roomId');
+          _socket!.emit('setup', {'chatId': roomId, 'token': token});
+          await Future.delayed(const Duration(milliseconds: 500));
+        }
       } catch (e) {
         debugPrint('Failed to rejoin room $roomId: $e');
       }
