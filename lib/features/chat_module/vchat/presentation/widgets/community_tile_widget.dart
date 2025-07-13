@@ -22,7 +22,7 @@ class CommunityTileWidget extends StatelessWidget {
     return InkWell(
       onTap: onTap ?? () => _handleTap(context),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
             _buildCommunityAvatar(context),
@@ -272,12 +272,18 @@ class CommunityTileWidget extends StatelessWidget {
   }
 
   void _handleTap(BuildContext context) {
+    final route =
+        '/chat/${community.id}?t=${DateTime.now().millisecondsSinceEpoch}';
+
+    debugPrint('Navigating to community chat: ${community.id}');
+
     context.push(
-      '/chat/${community.id}',
+      route,
       extra: {
         'chatName': community.name,
         'chatImage': community.image,
         'isGroup': true,
+        'communityId': community.id,
       },
     );
   }

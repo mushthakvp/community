@@ -28,15 +28,51 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   bool isAppInForeground = true;
+  bool _isInitialized = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _initializeChat();
+  }
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ChatProvider>().initializeChat(widget.chatId);
-    });
+  void _initializeChat() {
+    if (!_isInitialized) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final provider = context.read<ChatProvider>();
+
+        // Only initialize if we're switching to a different chat or not initialized
+        if (provider.currentChatId != widget.chatId) {
+          debugPrint('Initializing chat: ${widget.chatId}');
+          provider.initializeChat(widget.chatId).then((_) {
+            if (mounted) {
+              setState(() {
+                _isInitialized = true;
+              });
+            }
+          });
+        } else {
+          setState(() {
+            _isInitialized = true;
+          });
+        }
+      });
+    }
+  }
+
+  @override
+  void didUpdateWidget(ChatPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // If the chat ID changed, reinitialize
+    if (oldWidget.chatId != widget.chatId) {
+      debugPrint(
+        'Chat ID changed from ${oldWidget.chatId} to ${widget.chatId}',
+      );
+      _isInitialized = false;
+      _initializeChat();
+    }
   }
 
   @override
@@ -68,7 +104,8 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
 
   void _handleAppResumed() {
     final provider = context.read<ChatProvider>();
-    if (!provider.isSocketConnected) {
+    if (!provider.isSocketConnected &&
+        provider.currentChatId == widget.chatId) {
       debugPrint('App resumed, reconnecting socket...');
       provider.reconnectAndRejoin();
     }
@@ -76,40 +113,82 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    return PopScope(
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) {
+          // Clear any temporary state when leaving chat
+          final provider = context.read<ChatProvider>();
+          provider.clearError();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        body: Consumer<ChatProvider>(
+          builder: (context, provider, _) {
+            // Show loading only if we have no cached data and are loading
+            if (!_isInitialized &&
+                provider.isLoading &&
+                provider.messages.isEmpty) {
+              return _buildLoadingState(context);
+            }
+
+            // Get chat info - prioritize from provider, fallback to widget params
+            final isBotChat = provider.isBotChat;
+            final chatName = provider.currentChat?.users.isNotEmpty == true
+                ? provider.currentChat!.users.first.name
+                : widget.chatName;
+            final chatImage = provider.currentChat?.users.isNotEmpty == true
+                ? provider.currentChat!.users.first.profileImage
+                : widget.chatImage;
+
+            return Column(
+              children: [
+                ChatAppBar(
+                  chatName: chatName,
+                  chatImage: chatImage,
+                  isGroup: widget.isGroup,
+                  isBotChat: isBotChat,
+                  onBackPressed: () => context.pop(),
+                  onMenuPressed: () {},
+                ),
+
+                // Connection status indicator
+                _buildConnectionStatus(provider),
+
+                if (isBotChat) _buildBotChatBanner(context),
+
+                Expanded(
+                  child: _buildMessagesArea(context, provider, isBotChat),
+                ),
+
+                ChatInput(chatId: widget.chatId, isBotChat: isBotChat),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoadingState(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
-      body: Consumer<ChatProvider>(
-        builder: (context, provider, _) {
-          final isBotChat = provider.isBotChat;
-          final chatName = provider.currentChat?.users.isNotEmpty == true
-              ? provider.currentChat!.users.first.name
-              : widget.chatName;
-          final chatImage = provider.currentChat?.users.isNotEmpty == true
-              ? provider.currentChat!.users.first.profileImage
-              : widget.chatImage;
-
-          return Column(
-            children: [
-              ChatAppBar(
-                chatName: chatName,
-                chatImage: chatImage,
-                isGroup: widget.isGroup,
-                isBotChat: isBotChat,
-                onBackPressed: () => context.pop(),
-                onMenuPressed: () {},
-              ),
-
-              // Connection status indicator
-              _buildConnectionStatus(provider),
-
-              if (isBotChat) _buildBotChatBanner(context),
-
-              Expanded(child: _buildMessagesArea(context, provider, isBotChat)),
-
-              ChatInput(chatId: widget.chatId, isBotChat: isBotChat),
-            ],
-          );
-        },
+      appBar: AppBar(
+        title: Text(widget.chatName),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
+        ),
+      ),
+      body: const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('Loading chat...'),
+          ],
+        ),
       ),
     );
   }
@@ -196,11 +275,8 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     ChatProvider provider,
     bool isBotChat,
   ) {
-    if (provider.isLoading && provider.messages.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (provider.error != null) {
+    // Show error only if we have no messages and there's an error
+    if (provider.error != null && provider.messages.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -237,7 +313,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
       );
     }
 
-    if (provider.messages.isEmpty) {
+    if (provider.messages.isEmpty && !provider.isLoading) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

@@ -34,11 +34,14 @@ class SocketDataSourceImpl implements SocketDataSource {
   static const int maxReconnectAttempts = 5;
   static const Duration reconnectDelay = Duration(seconds: 2);
 
-  // Add current chat ID tracking
-  String? _currentChatId;
+  // Track current room to avoid conflicts
+  String? _currentRoomId;
+  final Set<String> _joinedRooms = <String>{};
 
   @override
   bool get isConnected => _isConnected && _socket?.connected == true;
+
+  String? get currentRoom => _currentRoomId;
 
   @override
   Future<void> connect() async {
@@ -66,6 +69,7 @@ class SocketDataSourceImpl implements SocketDataSource {
         _socket!.dispose();
         _socket = null;
       }
+
       _socket = IO.io(
         ChatApiConstants.chatSocketUrl,
         IO.OptionBuilder()
@@ -78,6 +82,7 @@ class SocketDataSourceImpl implements SocketDataSource {
             .setTimeout(10000)
             .build(),
       );
+
       _setupSocketListeners();
       _socket!.connect();
       await _waitForConnection();
@@ -98,9 +103,9 @@ class SocketDataSourceImpl implements SocketDataSource {
       _isConnected = true;
       _reconnectAttempts = 0;
       _cancelReconnectTimer();
-      if (_currentChatId != null) {
-        _rejoinCurrentRoom();
-      }
+
+      // Rejoin all previously joined rooms
+      _rejoinAllRooms();
     });
 
     _socket!.onDisconnect((reason) {
@@ -128,15 +133,25 @@ class SocketDataSourceImpl implements SocketDataSource {
           debugPrint('Received null message data');
           return;
         }
+
         final message = MessageModel.fromJson(data as Map<String, dynamic>);
         debugPrint(
-          'Parsed message: ${message.content} from ${message.senderName}',
+          'Parsed message: ${message.content} from ${message.senderName} for chat ${message.chatId}',
         );
-        if (!_messageController.isClosed) {
-          _messageController.add(message);
-          debugPrint('Message added to stream successfully');
+
+        // Only emit message if we're currently in this room
+        if (_currentRoomId == message.chatId ||
+            _joinedRooms.contains(message.chatId)) {
+          if (!_messageController.isClosed) {
+            _messageController.add(message);
+            debugPrint('Message added to stream successfully');
+          } else {
+            debugPrint('Message controller is closed, cannot add message');
+          }
         } else {
-          debugPrint('Message controller is closed, cannot add message');
+          debugPrint(
+            'Ignoring message for room we are not in: ${message.chatId}',
+          );
         }
       } catch (e, stackTrace) {
         debugPrint('Error parsing received message: $e');
@@ -144,20 +159,25 @@ class SocketDataSourceImpl implements SocketDataSource {
         debugPrint('Raw data: $data');
       }
     });
+
     _socket!.on('userJoinedRoom', (data) {
       debugPrint('User joined room: $data');
     });
+
     _socket!.on('userLeftRoom', (data) {
       debugPrint('User left room: $data');
     });
+
     _socket!.onReconnect((attempt) {
       debugPrint('Socket reconnected after $attempt attempts');
       _isConnected = true;
       _reconnectAttempts = 0;
     });
+
     _socket!.onReconnectError((error) {
       debugPrint('Socket reconnection error: $error');
     });
+
     _socket!.onReconnectFailed((_) {
       debugPrint('Socket reconnection failed after maximum attempts');
       _isConnected = false;
@@ -217,17 +237,20 @@ class SocketDataSourceImpl implements SocketDataSource {
       _cancelReconnectTimer();
       _isConnected = false;
       _isConnecting = false;
-      if (_currentChatId != null) {
-        await leaveRoom(_currentChatId!);
-      }
+
+      // Leave all rooms before disconnecting
+      await _leaveAllRooms();
+
       if (_socket != null) {
         _socket!.disconnect();
         _socket!.dispose();
         _socket = null;
       }
+
       if (!_messageController.isClosed) {
         await _messageController.close();
       }
+
       debugPrint('Socket disconnected successfully');
     } catch (e) {
       debugPrint('Error disconnecting socket: $e');
@@ -249,12 +272,14 @@ class SocketDataSourceImpl implements SocketDataSource {
         );
       }
     }
+
     try {
       final token = await StorageService.getToken();
       final userId = await StorageService.getUserId();
       if (token == null || userId == null) {
         throw Exception('User not authenticated');
       }
+
       final data = {
         'communityId': chatId,
         'token': token,
@@ -262,7 +287,10 @@ class SocketDataSourceImpl implements SocketDataSource {
         'media': mediaUrl ?? '',
         'ext': mediaType ?? '',
       };
+
+      debugPrint('Sending message to room: $chatId');
       _socket!.emit('newMessageCommunity', data);
+
       return MessageModel(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         chatId: chatId,
@@ -282,8 +310,11 @@ class SocketDataSourceImpl implements SocketDataSource {
 
   @override
   Stream<MessageModel> listenToNewMessages(String chatId) {
-    _currentChatId = chatId;
-    return _messageController.stream;
+    debugPrint('Setting up message listener for chat: $chatId');
+    _currentRoomId = chatId;
+    return _messageController.stream.where(
+      (message) => message.chatId == chatId,
+    );
   }
 
   @override
@@ -294,17 +325,29 @@ class SocketDataSourceImpl implements SocketDataSource {
         throw Exception('Socket not connected');
       }
     }
+
     try {
       final token = await StorageService.getToken();
       if (token == null) {
         throw Exception('User not authenticated');
       }
-      _currentChatId = chatId;
+
+      // Leave current room if different
+      if (_currentRoomId != null && _currentRoomId != chatId) {
+        await leaveRoom(_currentRoomId!);
+      }
+
+      _currentRoomId = chatId;
+      _joinedRooms.add(chatId);
+
       debugPrint('Joining room: $chatId with token');
       _socket!.emit('setup', {'chatId': chatId, 'token': token});
+
+      // Wait a bit for the room join to complete
       await Future.delayed(const Duration(milliseconds: 500));
       debugPrint('Successfully joined room: $chatId');
     } catch (e) {
+      debugPrint('Failed to join room: $e');
       throw Exception('Failed to join room: $e');
     }
   }
@@ -316,25 +359,42 @@ class SocketDataSourceImpl implements SocketDataSource {
     try {
       debugPrint('Leaving room: $chatId');
       _socket!.emit('leave', {'chatId': chatId});
-      if (_currentChatId == chatId) {
-        _currentChatId = null;
+
+      _joinedRooms.remove(chatId);
+
+      if (_currentRoomId == chatId) {
+        _currentRoomId = null;
       }
+
       debugPrint('Successfully left room: $chatId');
     } catch (e) {
       debugPrint('Error leaving room: $e');
     }
   }
 
-  // Helper method to rejoin room after reconnection
-  Future<void> _rejoinCurrentRoom() async {
-    if (_currentChatId != null) {
+  // Helper method to rejoin all rooms after reconnection
+  Future<void> _rejoinAllRooms() async {
+    if (_joinedRooms.isEmpty) return;
+
+    debugPrint('Rejoining ${_joinedRooms.length} rooms after reconnection');
+
+    final roomsToRejoin = List<String>.from(_joinedRooms);
+    for (final roomId in roomsToRejoin) {
       try {
-        debugPrint('Rejoining room after reconnection: $_currentChatId');
-        await joinRoom(_currentChatId!);
+        await joinRoom(roomId);
       } catch (e) {
-        debugPrint('Failed to rejoin room: $e');
+        debugPrint('Failed to rejoin room $roomId: $e');
       }
     }
+  }
+
+  // Helper method to leave all rooms
+  Future<void> _leaveAllRooms() async {
+    final roomsToLeave = List<String>.from(_joinedRooms);
+    for (final roomId in roomsToLeave) {
+      await leaveRoom(roomId);
+    }
+    _currentRoomId = null;
   }
 
   // Add method to manually reconnect
@@ -344,4 +404,13 @@ class SocketDataSourceImpl implements SocketDataSource {
     await disconnect();
     await connect();
   }
+
+  // Method to clear all room tracking
+  void clearRoomTracking() {
+    _joinedRooms.clear();
+    _currentRoomId = null;
+  }
+
+  // Get list of joined rooms for debugging
+  Set<String> get joinedRooms => Set.from(_joinedRooms);
 }
