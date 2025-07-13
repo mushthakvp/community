@@ -15,20 +15,31 @@ abstract class ChatRemoteDataSource {
   Future<void> markMessageAsRead(String messageId);
   Future<void> joinGroup(String chatId);
   Future<Map<String, dynamic>> getChatWithMessages(String chatId);
+  Future<Map<String, dynamic>> getChatWithMessagesOptimized(String chatId);
+  Future<ChatModel> getChatBasicInfo(String chatId);
 }
 
 class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
   final ApiClient apiClient;
 
+  final Map<String, ChatModel> _chatInfoCache = {};
+  final Map<String, DateTime> _cacheTimestamps = {};
+  static const Duration _cacheTimeout = Duration(minutes: 5);
+
   ChatRemoteDataSourceImpl({required this.apiClient});
 
   @override
   Future<ChatModel> getChat(String chatId) async {
+    if (_isCacheValid(chatId)) {
+      return _chatInfoCache[chatId]!;
+    }
     final response = await apiClient.get(
       '${ChatApiConstants.getSingleChat}?friendId=$chatId',
     );
     final data = jsonDecode(response.body);
-    return ChatModel.fromJson(data['chat']);
+    final chat = ChatModel.fromJson(data['chat']);
+    _cacheResult(chatId, chat);
+    return chat;
   }
 
   @override
@@ -50,11 +61,51 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
     final responseData = data['data'] ?? data;
     final groupDetails = responseData['groupDetails'] as Map<String, dynamic>;
     final messagesJson = responseData['messages'] as List<dynamic>;
+
     final chat = ChatModel.fromJson(groupDetails);
     final messages = messagesJson
         .map((json) => MessageModel.fromJson(json))
         .toList();
+
+    // Cache the chat info
+    _cacheResult(chatId, chat);
+
     return {'chat': chat, 'messages': messages};
+  }
+
+  @override
+  Future<Map<String, dynamic>> getChatWithMessagesOptimized(
+    String chatId,
+  ) async {
+    try {
+      if (_isCacheValid(chatId)) {
+        final cachedChat = _chatInfoCache[chatId]!;
+        final messagesFuture = getMessages(chatId);
+        final messages = await messagesFuture;
+        return {'chat': cachedChat, 'messages': messages};
+      }
+      return await getChatWithMessages(chatId);
+    } catch (e) {
+      return await getChatWithMessages(chatId);
+    }
+  }
+
+  @override
+  Future<ChatModel> getChatBasicInfo(String chatId) async {
+    if (_isCacheValid(chatId)) {
+      return _chatInfoCache[chatId]!;
+    }
+    try {
+      final response = await apiClient.get(
+        '${ChatApiConstants.getSingleChat}?friendId=$chatId&basic=true',
+      );
+      final data = jsonDecode(response.body);
+      final chat = ChatModel.fromJson(data['chat']);
+      _cacheResult(chatId, chat);
+      return chat;
+    } catch (e) {
+      return await getChat(chatId);
+    }
   }
 
   @override
@@ -75,5 +126,43 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
   @override
   Future<void> joinGroup(String chatId) async {
     await apiClient.post('${ChatApiConstants.joinCommunity}$chatId');
+    _invalidateCache(chatId);
+  }
+
+  bool _isCacheValid(String chatId) {
+    if (!_chatInfoCache.containsKey(chatId)) return false;
+    final timestamp = _cacheTimestamps[chatId];
+    if (timestamp == null) return false;
+    return DateTime.now().difference(timestamp) < _cacheTimeout;
+  }
+
+  void _cacheResult(String chatId, ChatModel chat) {
+    _chatInfoCache[chatId] = chat;
+    _cacheTimestamps[chatId] = DateTime.now();
+    _cleanOldCache();
+  }
+
+  void _invalidateCache(String chatId) {
+    _chatInfoCache.remove(chatId);
+    _cacheTimestamps.remove(chatId);
+  }
+
+  void _cleanOldCache() {
+    final now = DateTime.now();
+    final keysToRemove = <String>[];
+    _cacheTimestamps.forEach((key, timestamp) {
+      if (now.difference(timestamp) > _cacheTimeout) {
+        keysToRemove.add(key);
+      }
+    });
+    for (final key in keysToRemove) {
+      _chatInfoCache.remove(key);
+      _cacheTimestamps.remove(key);
+    }
+  }
+
+  void clearCache() {
+    _chatInfoCache.clear();
+    _cacheTimestamps.clear();
   }
 }

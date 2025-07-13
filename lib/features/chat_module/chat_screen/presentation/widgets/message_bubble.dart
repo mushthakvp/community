@@ -1,5 +1,9 @@
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:fittor/fittor.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../shared/utils/date_utils.dart';
 import '../../../shared/utils/message_utils.dart';
@@ -12,6 +16,8 @@ class MessageBubble extends StatelessWidget {
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
   final VoidCallback? onRetry;
+  final Function(String)? onHashtagTap;
+  final Function(String)? onMentionTap;
 
   const MessageBubble({
     super.key,
@@ -20,6 +26,8 @@ class MessageBubble extends StatelessWidget {
     this.onTap,
     this.onLongPress,
     this.onRetry,
+    this.onHashtagTap,
+    this.onMentionTap,
   });
 
   @override
@@ -47,7 +55,7 @@ class MessageBubble extends StatelessWidget {
                 if (!isCurrentUser && isGroup) _buildSenderName(context),
                 GestureDetector(
                   onTap: onTap ?? () => _handleMessageTap(context),
-                  onLongPress: () => _showMessageOptions(context),
+                  onLongPress: () => _handleLongPress(context),
                   child: Container(
                     constraints: BoxConstraints(
                       maxWidth: MediaQuery.of(context).size.width * 0.75,
@@ -91,13 +99,14 @@ class MessageBubble extends StatelessWidget {
       ),
       child: message.senderImage != null && message.senderImage!.isNotEmpty
           ? ClipOval(
-              child: Image.network(
-                message.senderImage!,
+              child: CachedNetworkImage(
+                imageUrl: message.senderImage!,
                 width: 32,
                 height: 32,
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) =>
-                    _buildDefaultAvatar(context),
+                placeholder: (context, url) =>
+                    const Center(child: CircularProgressIndicator()),
+                errorWidget: (context, url, error) => const Icon(Icons.error),
               ),
             )
           : _buildDefaultAvatar(context),
@@ -178,20 +187,399 @@ class MessageBubble extends StatelessWidget {
     if (message.content.isEmpty) {
       return const SizedBox.shrink();
     }
-    return _buildTextContent(context);
+    return _buildEnhancedTextContent(context);
   }
 
-  Widget _buildTextContent(BuildContext context) {
-    return SelectableText(
+  Widget _buildEnhancedTextContent(BuildContext context) {
+    final baseTextColor = message.isCurrentUser
+        ? Theme.of(context).colorScheme.onPrimary
+        : Theme.of(context).colorScheme.onSurfaceVariant;
+
+    return FitReadMore(
       message.content,
-      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-        color: message.isCurrentUser
-            ? Theme.of(context).colorScheme.onPrimary
-            : Theme.of(context).colorScheme.onSurfaceVariant,
-        height: 1.4,
+      trimLength: 500,
+      style: Theme.of(
+        context,
+      ).textTheme.bodyMedium?.copyWith(color: baseTextColor, height: 1.4),
+      colorClickableText: baseTextColor.withOpacity(0.7),
+      trimMode: TrimMode.line,
+      trimLines: 8,
+      trimCollapsedText: ' Show more',
+      trimExpandedText: ' Show less',
+
+      annotations: [
+        FitAnnotation(
+          regExp: RegExp(
+            r'((https?:\/\/)?(www\.)?[a-zA-Z0-9\-]+\.[a-zA-Z]{2,}(\S*)?)',
+            caseSensitive: false,
+          ),
+          spanBuilder: ({required text, required textStyle}) => TextSpan(
+            text: text,
+            style: textStyle.copyWith(
+              color: message.isCurrentUser
+                  ? Colors.lightBlueAccent
+                  : Colors.blue,
+              decoration: TextDecoration.none,
+              fontWeight: FontWeight.w500,
+            ),
+            recognizer: TapGestureRecognizer()
+              ..onTap = () {
+                _handleUrlTap(text);
+              },
+          ),
+        ),
+
+        // Hashtag annotation with click handling
+        FitAnnotation(
+          regExp: RegExp(r'#\w+'),
+          spanBuilder: ({required text, required textStyle}) => TextSpan(
+            text: text,
+            style: textStyle.copyWith(
+              color: message.isCurrentUser
+                  ? Colors.cyanAccent
+                  : Colors.blueAccent,
+              fontWeight: FontWeight.bold,
+            ),
+            recognizer: TapGestureRecognizer()
+              ..onTap = () {
+                _handleHashtagTap(text);
+              },
+          ),
+        ),
+
+        // Mention annotation with click handling
+        FitAnnotation(
+          regExp: RegExp(r'@\w+'),
+          spanBuilder: ({required text, required textStyle}) => TextSpan(
+            text: text,
+            style: textStyle.copyWith(
+              color: message.isCurrentUser
+                  ? Colors.purpleAccent
+                  : Colors.purple,
+              fontWeight: FontWeight.bold,
+            ),
+            recognizer: TapGestureRecognizer()
+              ..onTap = () {
+                _handleMentionTap(text);
+              },
+          ),
+        ),
+
+        // Email annotation
+        FitAnnotation(
+          regExp: RegExp(
+            r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b',
+          ),
+          spanBuilder: ({required text, required textStyle}) => TextSpan(
+            text: text,
+            style: textStyle.copyWith(
+              color: message.isCurrentUser
+                  ? Colors.lightBlueAccent
+                  : Colors.blue,
+              decoration: TextDecoration.underline,
+            ),
+            recognizer: TapGestureRecognizer()
+              ..onTap = () {
+                _handleEmailTap(text);
+              },
+          ),
+        ),
+        FitAnnotation(
+          regExp: RegExp(
+            r'(?:(?:\+|00)[1-9]{1,4})?[\s\-.\(]?\(?\d{1,4}\)?[\s\-.\)]{0,2}\d{1,4}[\s\-.\)]{0,2}\d{1,9}',
+          ),
+          spanBuilder: ({required text, required textStyle}) => TextSpan(
+            text: text,
+            style: textStyle.copyWith(
+              color: message.isCurrentUser ? Colors.greenAccent : Colors.green,
+              fontWeight: FontWeight.w500,
+            ),
+            recognizer: TapGestureRecognizer()
+              ..onTap = () {
+                _handlePhoneTap(text);
+              },
+          ),
+        ),
+      ],
+    );
+  }
+
+  // URL handling
+  Future<void> _handleUrlTap(String url) async {
+    try {
+      // Ensure URL has a scheme
+      String finalUrl = url;
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        finalUrl = 'https://$url';
+      }
+
+      final uri = Uri.parse(finalUrl);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        _showErrorSnackBar('Could not open URL: $url');
+      }
+    } catch (e) {
+      _showErrorSnackBar('Error opening URL: $e');
+    }
+  }
+
+  // Hashtag handling
+  void _handleHashtagTap(String hashtag) {
+    if (onHashtagTap != null) {
+      onHashtagTap!(hashtag);
+    } else {
+      // Default behavior: show hashtag content or search
+      _showHashtagBottomSheet(hashtag);
+    }
+  }
+
+  // Mention handling
+  void _handleMentionTap(String mention) {
+    if (onMentionTap != null) {
+      onMentionTap!(mention);
+    } else {
+      // Default behavior: show user profile or info
+      _showMentionBottomSheet(mention);
+    }
+  }
+
+  // Email handling
+  Future<void> _handleEmailTap(String email) async {
+    try {
+      final uri = Uri.parse('mailto:$email');
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri);
+      } else {
+        // Copy to clipboard as fallback
+        await Clipboard.setData(ClipboardData(text: email));
+        _showSuccessSnackBar('Email copied to clipboard');
+      }
+    } catch (e) {
+      _showErrorSnackBar('Error handling email: $e');
+    }
+  }
+
+  // Phone handling
+  Future<void> _handlePhoneTap(String phone) async {
+    try {
+      final cleanPhone = phone.replaceAll(RegExp(r'[^\d+]'), '');
+      final uri = Uri.parse('tel:$cleanPhone');
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri);
+      } else {
+        // Copy to clipboard as fallback
+        await Clipboard.setData(ClipboardData(text: phone));
+        _showSuccessSnackBar('Phone number copied to clipboard');
+      }
+    } catch (e) {
+      _showErrorSnackBar('Error handling phone: $e');
+    }
+  }
+
+  // Show hashtag bottom sheet
+  void _showHashtagBottomSheet(String hashtag) {
+    showModalBottomSheet(
+      context: navigatorKey.currentContext!,
+      backgroundColor: Theme.of(
+        navigatorKey.currentContext!,
+      ).colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle bar
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.outline,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Hashtag header
+            Row(
+              children: [
+                Icon(
+                  Icons.tag,
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 24,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  hashtag,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+
+            // Action buttons
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _copyToClipboard(hashtag);
+                    },
+                    icon: const Icon(Icons.copy),
+                    label: const Text('Copy'),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      // Navigate to hashtag search or related content
+                      _navigateToHashtagSearch(hashtag);
+                    },
+                    icon: const Icon(Icons.search),
+                    label: const Text('Search'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
+
+  // Show mention bottom sheet
+  void _showMentionBottomSheet(String mention) {
+    showModalBottomSheet(
+      context: navigatorKey.currentContext!,
+      backgroundColor: Theme.of(
+        navigatorKey.currentContext!,
+      ).colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle bar
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.outline,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Mention header
+            Row(
+              children: [
+                Icon(
+                  Icons.person,
+                  color: Theme.of(context).colorScheme.secondary,
+                  size: 24,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  mention,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.secondary,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+
+            // Action buttons
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _copyToClipboard(mention);
+                    },
+                    icon: const Icon(Icons.copy),
+                    label: const Text('Copy'),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      // Navigate to user profile
+                      _navigateToUserProfile(mention);
+                    },
+                    icon: const Icon(Icons.person_search),
+                    label: const Text('Profile'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Helper methods
+  void _copyToClipboard(String text) {
+    Clipboard.setData(ClipboardData(text: text));
+    _showSuccessSnackBar('Copied to clipboard');
+  }
+
+  void _navigateToHashtagSearch(String hashtag) {
+    // Implement navigation to hashtag search
+    debugPrint('Navigating to hashtag search: $hashtag');
+    // Example: context.push('/hashtag-search?tag=${hashtag.substring(1)}');
+  }
+
+  void _navigateToUserProfile(String mention) {
+    // Implement navigation to user profile
+    debugPrint('Navigating to user profile: $mention');
+    // Example: context.push('/user-profile?username=${mention.substring(1)}');
+  }
+
+  void _showSuccessSnackBar(String message) {
+    if (navigatorKey.currentContext != null) {
+      ScaffoldMessenger.of(navigatorKey.currentContext!).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  void _showErrorSnackBar(String message) {
+    if (navigatorKey.currentContext != null) {
+      ScaffoldMessenger.of(navigatorKey.currentContext!).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
+  // Add navigator key to your main app
+  static final GlobalKey<NavigatorState> navigatorKey =
+      GlobalKey<NavigatorState>();
 
   Widget _buildMediaContent(BuildContext context) {
     if (MessageUtils.isImageMessage(message) ||
@@ -225,30 +613,29 @@ class MessageBubble extends StatelessWidget {
                 ),
                 child: Stack(
                   children: [
-                    Image.network(
-                      message.mediaUrl!,
+                    CachedNetworkImage(
+                      imageUrl: message.mediaUrl!,
                       fit: BoxFit.cover,
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
-                        return Container(
-                          width: 200,
-                          height: 150,
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.surfaceVariant,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Center(
-                            child: CircularProgressIndicator(
-                              value: loadingProgress.expectedTotalBytes != null
-                                  ? loadingProgress.cumulativeBytesLoaded /
-                                        loadingProgress.expectedTotalBytes!
-                                  : null,
-                              strokeWidth: 2,
-                            ),
-                          ),
-                        );
-                      },
-                      errorBuilder: (context, error, stackTrace) {
+                      progressIndicatorBuilder:
+                          (context, child, loadingProgress) {
+                            return Container(
+                              width: 200,
+                              height: 150,
+                              decoration: BoxDecoration(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.surfaceVariant,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  value: loadingProgress.progress,
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                            );
+                          },
+                      errorWidget: (context, error, stackTrace) {
                         return Container(
                           width: 200,
                           height: 150,
@@ -289,8 +676,6 @@ class MessageBubble extends StatelessWidget {
                         );
                       },
                     ),
-
-                    // Video play button overlay
                     if (MessageUtils.isVideoMessage(message))
                       Positioned.fill(
                         child: Container(
@@ -315,7 +700,7 @@ class MessageBubble extends StatelessWidget {
         ),
         if (message.content.isNotEmpty) ...[
           const SizedBox(height: 8),
-          _buildTextContent(context),
+          _buildEnhancedTextContent(context),
         ],
       ],
     );
@@ -572,6 +957,17 @@ class MessageBubble extends StatelessWidget {
     }
   }
 
+  // Separate long press handler to avoid conflicts
+  void _handleLongPress(BuildContext context) {
+    if (onLongPress != null) {
+      onLongPress!();
+      return;
+    }
+
+    // Show message options for all message types
+    _showMessageOptions(context);
+  }
+
   void _openFullScreenMedia(BuildContext context, String heroTag) {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -582,11 +978,6 @@ class MessageBubble extends StatelessWidget {
   }
 
   void _showMessageOptions(BuildContext context) {
-    if (onLongPress != null) {
-      onLongPress!();
-      return;
-    }
-
     showModalBottomSheet(
       context: context,
       backgroundColor: Theme.of(context).colorScheme.surface,
@@ -635,14 +1026,24 @@ class MessageBubble extends StatelessWidget {
             context,
             icon: Icons.reply,
             title: 'Reply',
-            onTap: () {},
+            onTap: () {
+              Navigator.pop(context);
+              // Handle reply functionality
+            },
           ),
+
+          // Forward option
           _buildOptionTile(
             context,
             icon: Icons.forward,
             title: 'Forward',
-            onTap: () {},
+            onTap: () {
+              Navigator.pop(context);
+              // Handle forward functionality
+            },
           ),
+
+          // Delete option (only for current user's messages)
           if (message.isCurrentUser)
             _buildOptionTile(
               context,
@@ -654,6 +1055,8 @@ class MessageBubble extends StatelessWidget {
               },
               isDestructive: true,
             ),
+
+          // Info option
           _buildOptionTile(
             context,
             icon: Icons.info_outline,

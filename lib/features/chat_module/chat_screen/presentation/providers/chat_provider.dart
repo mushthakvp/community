@@ -176,19 +176,12 @@ class ChatProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Initialize chat with enhanced caching and better sequencing
   Future<void> initializeChat(String chatId) async {
-    debugPrint('=== Initializing chat: $chatId ===');
-
-    // If switching to a different chat, clear previous state first
     if (_currentChatId != null && _currentChatId != chatId) {
       debugPrint('Switching from $_currentChatId to $chatId');
       _clearCurrentChat();
-      // Add longer delay for clean state transition
       await Future.delayed(const Duration(milliseconds: 200));
     }
-
-    // If already initialized for this exact chat, just ensure connection
     if (_currentChatId == chatId && _messages.isNotEmpty) {
       debugPrint('Chat already initialized for $chatId, ensuring connection');
       await _ensureSocketConnection();
@@ -196,110 +189,80 @@ class ChatProvider extends ChangeNotifier {
       if (_messageSubscription == null) {
         _setupMessageListener(chatId);
       }
-      _scrollToBottomSmooth();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollToBottomImmediate();
+      });
       return;
     }
-
     _currentChatId = chatId;
-    _setLoading(true);
+    setLoading(true);
     _clearError();
-
-    // Reset auto-scroll for new chat
     _shouldAutoScroll = true;
     _isUserScrolling = false;
-
     ChatCacheData? cachedData;
-
     try {
-      // Load from cache first for instant display
       try {
         cachedData = _memoryCache[chatId];
       } catch (e) {
         debugPrint('Error loading from cache: $e');
       }
-
       if (cachedData != null && !cachedData.isExpired()) {
         debugPrint('Loading chat from cache: $chatId');
         _currentChat = cachedData.chat;
         _messages = List.from(cachedData.messages);
-        notifyListeners(); // Show cached data immediately
-
-        // Scroll to bottom after a short delay to ensure UI is rendered
+        notifyListeners();
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _scrollToBottomImmediate();
+          Timer(const Duration(milliseconds: 100), () {
+            _scrollToBottomImmediate();
+          });
         });
       }
-
-      // CRITICAL: Ensure socket connection BEFORE joining room
       await _ensureSocketConnection();
-
-      // CRITICAL: Join room BEFORE setting up message listener
       await _joinSocketRoom(chatId);
-
-      // CRITICAL: Set up message listener AFTER joining room
       _setupMessageListener(chatId);
-
-      // Fetch fresh data from server
-      debugPrint('Fetching fresh data for chat: $chatId');
       final result = await fetchChatWithMessages(
         FetchChatWithMessagesParams(chatId: chatId),
       );
-
       result.fold(
         (failure) {
-          debugPrint('Failed to fetch chat data: ${failure.message}');
           if (cachedData == null) {
             _setError(failure.message);
           }
         },
         (data) {
-          debugPrint('Successfully fetched fresh chat data');
           _currentChat = data['chat'] as ChatEntity;
           _messages = data['messages'] as List<MessageEntity>;
-
-          // Update cache with fresh data
           _updateCache(chatId, _currentChat!, _messages);
-
-          // Scroll to bottom after updating messages
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            _scrollToBottomSmooth();
-          });
-
           notifyListeners();
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _scrollToBottomImmediate();
+            Timer(const Duration(milliseconds: 100), () {
+              _scrollToBottomSmooth();
+            });
+            Timer(const Duration(milliseconds: 300), () {
+              _scrollToBottomImmediate();
+            });
+          });
         },
       );
     } catch (e) {
-      debugPrint('Initialize chat error: $e');
       if (cachedData == null) {
         _setError(e.toString());
       }
     }
-
-    _setLoading(false);
+    setLoading(false);
     debugPrint('=== Chat initialization complete: $chatId ===');
   }
 
   // Enhanced message listener setup
   void _setupMessageListener(String chatId) {
-    // Cancel any existing subscription
     _messageSubscription?.cancel();
-
-    debugPrint('Setting up message listener for chat: $chatId');
-
     _messageSubscription = chatRepository
         .listenToNewMessages(chatId)
         .listen(
           (message) {
-            debugPrint(
-              'Received message from stream: ${message.content} for chat: ${message.chatId}',
-            );
-            debugPrint('Current chat ID: $_currentChatId');
-
-            // CRITICAL: Only process messages for the exact current chat
             if (_currentChatId == chatId && message.chatId == chatId) {
-              debugPrint(
-                'Processing new message for current chat: ${message.content}',
-              );
               _onNewMessage(message);
             } else {
               debugPrint(
@@ -308,7 +271,6 @@ class ChatProvider extends ChangeNotifier {
             }
           },
           onError: (error) {
-            debugPrint('Message listener error: $error');
             if (_currentChatId == chatId) {
               _setError('Connection error: $error');
             }
@@ -325,12 +287,8 @@ class ChatProvider extends ChangeNotifier {
       _setConnecting(true);
       try {
         await socketDataSource.connect();
-        debugPrint('Socket connected successfully');
-
-        // Wait for connection to stabilize
         await Future.delayed(const Duration(milliseconds: 500));
       } catch (e) {
-        debugPrint('Failed to connect socket: $e');
         _setError('Failed to connect to chat server. Please try again.');
         rethrow;
       } finally {
@@ -342,34 +300,24 @@ class ChatProvider extends ChangeNotifier {
   // Enhanced room joining
   Future<void> _joinSocketRoom(String chatId) async {
     try {
-      debugPrint('Joining socket room: $chatId');
       await socketDataSource.joinRoom(chatId);
       _connectedChatId = chatId;
       debugPrint('Successfully joined socket room: $chatId');
-
-      // Wait longer for room join to complete
       await Future.delayed(const Duration(milliseconds: 800));
     } catch (e) {
       debugPrint('Failed to join socket room: $e');
-      // Don't throw here, just log the error
     }
   }
 
   // Enhanced new message handling
   void _onNewMessage(MessageEntity message) {
-    // Strict checking for current chat
     if (_currentChatId == null || message.chatId != _currentChatId) {
       debugPrint(
         'Ignoring message for different chat: ${message.chatId} (current: $_currentChatId)',
       );
       return;
     }
-
-    debugPrint('Processing new message: ${message.id} - ${message.content}');
-
-    // Check if message already exists
     final existingIndex = _messages.indexWhere((m) => m.id == message.id);
-
     if (existingIndex != -1) {
       _messages[existingIndex] = message;
       debugPrint('Updated existing message: ${message.id}');
@@ -377,14 +325,8 @@ class ChatProvider extends ChangeNotifier {
       _messages.add(message);
       debugPrint('Added new message: ${message.id}');
     }
-
-    // Update cache
     _updateCacheWithNewMessage(_currentChatId!, message);
-
-    // Notify listeners first
     notifyListeners();
-
-    // Handle auto-scroll after state update
     if (_shouldAutoScroll && !_isUserScrolling) {
       debugPrint('Auto-scrolling to new message');
       _scrollToBottomSmooth();
@@ -393,8 +335,6 @@ class ChatProvider extends ChangeNotifier {
         'Not auto-scrolling - shouldAutoScroll: $_shouldAutoScroll, isUserScrolling: $_isUserScrolling',
       );
     }
-
-    // Mark as read if not from current user
     if (!message.isCurrentUser) {
       markMessagesAsRead();
     }
@@ -402,26 +342,23 @@ class ChatProvider extends ChangeNotifier {
 
   // Enhanced optimistic message handling
   void _addOptimisticMessage(MessageEntity message) {
-    // Only add if this is for the current chat
     if (_currentChatId == null || message.chatId != _currentChatId) {
       debugPrint('Not adding optimistic message - chat mismatch');
       return;
     }
-
     _messages.add(message);
-    debugPrint('Added optimistic message: ${message.content}');
-
-    // Always auto-scroll for sent messages
     _shouldAutoScroll = true;
-
     notifyListeners();
     _scrollToBottomSmooth();
   }
 
-  // Enhanced scroll methods
   void _scrollToBottomImmediate() {
-    if (!scrollController.hasClients) return;
-
+    if (!scrollController.hasClients) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollToBottomImmediate();
+      });
+      return;
+    }
     try {
       scrollController.jumpTo(scrollController.position.maxScrollExtent);
       debugPrint('Immediate scroll to bottom completed');
@@ -432,34 +369,43 @@ class ChatProvider extends ChangeNotifier {
 
   void _scrollToBottomSmooth() {
     if (!_shouldAutoScroll && !_isSending) return;
-
-    // Cancel any existing scroll timer
     _scrollTimer?.cancel();
+    final delay = _messages.isEmpty
+        ? const Duration(milliseconds: 300)
+        : const Duration(milliseconds: 100);
 
-    // Use a timer to ensure the scroll happens after the UI updates
-    _scrollTimer = Timer(const Duration(milliseconds: 100), () {
-      if (!scrollController.hasClients) return;
-
-      try {
-        final maxScroll = scrollController.position.maxScrollExtent;
-        if (maxScroll > 0) {
-          scrollController
-              .animateTo(
-                maxScroll,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeOut,
-              )
-              .then((_) {
-                debugPrint('Smooth scroll to bottom completed');
-              })
-              .catchError((e) {
-                debugPrint('Error in smooth scroll: $e');
-              });
-        }
-      } catch (e) {
-        debugPrint('Error initiating smooth scroll: $e');
+    _scrollTimer = Timer(delay, () {
+      if (!scrollController.hasClients) {
+        _scrollTimer = Timer(const Duration(milliseconds: 500), () {
+          _performScroll();
+        });
+        return;
       }
+      _performScroll();
     });
+  }
+
+  void _performScroll() {
+    if (!scrollController.hasClients) return;
+    try {
+      final maxScroll = scrollController.position.maxScrollExtent;
+      if (maxScroll > 0) {
+        scrollController
+            .animateTo(
+              maxScroll,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOut,
+            )
+            .then((_) {
+              debugPrint('Smooth scroll to bottom completed');
+            })
+            .catchError((e) {
+              debugPrint('Error in smooth scroll: $e');
+            });
+      }
+    } catch (e) {
+      debugPrint('Error initiating smooth scroll: $e');
+    }
   }
 
   // Send text message with enhanced auto-scroll
@@ -553,7 +499,7 @@ class ChatProvider extends ChangeNotifier {
   // Join group or bot
   Future<void> joinGroupOrBot(String chatId) async {
     if (_isLoading) return;
-    _setLoading(true);
+    setLoading(true);
     try {
       final result = await chatRepository.joinGroup(chatId);
       result.fold((failure) => _setError(failure.message), (_) {
@@ -565,7 +511,7 @@ class ChatProvider extends ChangeNotifier {
     } catch (e) {
       _setError(e.toString());
     }
-    _setLoading(false);
+    setLoading(false);
   }
 
   // Reconnect and rejoin room
@@ -813,7 +759,7 @@ class ChatProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _setLoading(bool loading) {
+  void setLoading(bool loading) {
     _isLoading = loading;
     notifyListeners();
   }

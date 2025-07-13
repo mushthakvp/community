@@ -29,6 +29,7 @@ class ChatPage extends StatefulWidget {
 class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   bool isAppInForeground = true;
   bool _isInitialized = false;
+  bool _hasScrolledToBottom = false;
 
   @override
   void initState() {
@@ -41,22 +42,39 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     if (!_isInitialized) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         final provider = context.read<ChatProvider>();
-
-        // Only initialize if we're switching to a different chat or not initialized
         if (provider.currentChatId != widget.chatId) {
           debugPrint('Initializing chat: ${widget.chatId}');
+          provider.setLoading(true);
           provider.initializeChat(widget.chatId).then((_) {
             if (mounted) {
               setState(() {
                 _isInitialized = true;
               });
+              _ensureScrollToBottom();
             }
           });
         } else {
           setState(() {
             _isInitialized = true;
           });
+          _ensureScrollToBottom();
         }
+      });
+    }
+  }
+
+  void _ensureScrollToBottom() {
+    if (!_hasScrolledToBottom && mounted) {
+      final provider = context.read<ChatProvider>();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        provider.scrollToBottom();
+        _hasScrolledToBottom = true;
+        Future.delayed(const Duration(milliseconds: 100), () {
+          if (mounted) provider.scrollToBottom();
+        });
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (mounted) provider.scrollToBottom();
+        });
       });
     }
   }
@@ -64,13 +82,12 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   @override
   void didUpdateWidget(ChatPage oldWidget) {
     super.didUpdateWidget(oldWidget);
-
-    // If the chat ID changed, reinitialize
     if (oldWidget.chatId != widget.chatId) {
       debugPrint(
         'Chat ID changed from ${oldWidget.chatId} to ${widget.chatId}',
       );
       _isInitialized = false;
+      _hasScrolledToBottom = false;
       _initializeChat();
     }
   }
@@ -125,14 +142,9 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
         backgroundColor: Theme.of(context).colorScheme.surface,
         body: Consumer<ChatProvider>(
           builder: (context, provider, _) {
-            // Show loading only if we have no cached data and are loading
-            if (!_isInitialized &&
-                provider.isLoading &&
-                provider.messages.isEmpty) {
-              return _buildLoadingState(context);
+            if (!_isInitialized && provider.isLoading) {
+              return _buildOptimizedLoadingState(context, provider);
             }
-
-            // Get chat info - prioritize from provider, fallback to widget params
             final isBotChat = provider.isBotChat;
             final chatName = provider.currentChat?.users.isNotEmpty == true
                 ? provider.currentChat!.users.first.name
@@ -140,7 +152,6 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
             final chatImage = provider.currentChat?.users.isNotEmpty == true
                 ? provider.currentChat!.users.first.profileImage
                 : widget.chatImage;
-
             return Column(
               children: [
                 ChatAppBar(
@@ -151,16 +162,11 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                   onBackPressed: () => context.pop(),
                   onMenuPressed: () {},
                 ),
-
-                // Connection status indicator
                 _buildConnectionStatus(provider),
-
                 if (isBotChat) _buildBotChatBanner(context),
-
                 Expanded(
                   child: _buildMessagesArea(context, provider, isBotChat),
                 ),
-
                 ChatInput(chatId: widget.chatId, isBotChat: isBotChat),
               ],
             );
@@ -170,25 +176,42 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     );
   }
 
-  Widget _buildLoadingState(BuildContext context) {
+  Widget _buildOptimizedLoadingState(
+    BuildContext context,
+    ChatProvider provider,
+  ) {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
-      appBar: AppBar(
-        title: Text(widget.chatName),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
+      body: Column(
+        children: [
+          ChatAppBar(
+            chatName: widget.chatName,
+            chatImage: widget.chatImage,
+            isGroup: widget.isGroup,
+            isBotChat: false,
+            onBackPressed: () => context.pop(),
+            onMenuPressed: () {},
+          ),
+          Expanded(
+            child: provider.messages.isNotEmpty
+                ? _buildMessagesArea(context, provider, false)
+                : _buildLoadingMessages(context),
+          ),
+          ChatInput(chatId: widget.chatId, isBotChat: false),
+        ],
       ),
-      body: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 16),
-            Text('Loading chat...'),
-          ],
-        ),
+    );
+  }
+
+  Widget _buildLoadingMessages(BuildContext context) {
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(),
+          SizedBox(height: 16),
+          Text('Loading messages...'),
+        ],
       ),
     );
   }
@@ -266,7 +289,6 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
       );
     }
 
-    // Connected state - no indicator needed
     return const SizedBox.shrink();
   }
 
@@ -355,6 +377,14 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
         itemCount: groupedMessages.length,
         itemBuilder: (context, index) {
           final group = groupedMessages[index];
+
+          // Add callback to scroll to bottom when last item is built
+          if (index == groupedMessages.length - 1 && !_hasScrolledToBottom) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _ensureScrollToBottom();
+            });
+          }
+
           return Column(
             children: [
               Container(
