@@ -103,8 +103,6 @@ class SocketDataSourceImpl implements SocketDataSource {
       _isConnected = true;
       _reconnectAttempts = 0;
       _cancelReconnectTimer();
-
-      // Rejoin all previously joined rooms
       _rejoinAllRooms();
     });
 
@@ -128,33 +126,24 @@ class SocketDataSourceImpl implements SocketDataSource {
 
     _socket!.on('message_received_community', (data) {
       try {
-        debugPrint('Raw socket message received: $data');
         if (data == null) {
           debugPrint('Received null message data');
           return;
         }
-
         final rawData = data as Map<String, dynamic>;
-
-        // ENHANCED: Handle multiple room ID field variations
         String? messageRoomId;
-
-        // Try different field names for room/chat ID
         if (rawData.containsKey('community') &&
             rawData['community'] != null &&
             rawData['community'].toString().isNotEmpty) {
           messageRoomId = rawData['community'].toString();
-          debugPrint('Found community ID: $messageRoomId');
         } else if (rawData.containsKey('chatId') &&
             rawData['chatId'] != null &&
             rawData['chatId'].toString().isNotEmpty) {
           messageRoomId = rawData['chatId'].toString();
-          debugPrint('Found chatId: $messageRoomId');
         } else if (rawData.containsKey('communityId') &&
             rawData['communityId'] != null &&
             rawData['communityId'].toString().isNotEmpty) {
           messageRoomId = rawData['communityId'].toString();
-          debugPrint('Found communityId: $messageRoomId');
         }
 
         if (messageRoomId == null || messageRoomId.isEmpty) {
@@ -163,37 +152,16 @@ class SocketDataSourceImpl implements SocketDataSource {
           );
           return;
         }
-
-        // Create message with proper chatId - IMPORTANT: Use the messageRoomId for chat field
         final messageData = Map<String, dynamic>.from(rawData);
         messageData['chat'] = messageRoomId;
-
         final message = MessageModel.fromJson(messageData);
-        debugPrint(
-          'Parsed message: ${message.content} from ${message.senderName} for chat ${message.chatId}',
-        );
-
-        // FIXED: Check if we should emit this message for the current room
         final shouldEmit = _shouldEmitMessage(messageRoomId);
-
-        debugPrint(
-          'Current room: $_currentRoomId, Message room: $messageRoomId, Should emit: $shouldEmit',
-        );
-        debugPrint('Joined rooms: $_joinedRooms');
-
         if (shouldEmit) {
           if (!_messageController.isClosed) {
             _messageController.add(message);
-            debugPrint(
-              'Message added to stream successfully for room: $messageRoomId',
-            );
           } else {
             debugPrint('Message controller is closed, cannot add message');
           }
-        } else {
-          debugPrint(
-            'Ignoring message for room we are not in: $messageRoomId (current: $_currentRoomId)',
-          );
         }
       } catch (e, stackTrace) {
         debugPrint('Error parsing received message: $e');
@@ -226,18 +194,13 @@ class SocketDataSourceImpl implements SocketDataSource {
     });
   }
 
-  // ENHANCED: Better room matching logic
   bool _shouldEmitMessage(String messageRoomId) {
-    // Check if the message is for the current active room
     if (_currentRoomId == messageRoomId) {
       return true;
     }
-
-    // Check if we're in this room (for multi-room scenarios)
     if (_joinedRooms.contains(messageRoomId)) {
       return true;
     }
-
     return false;
   }
 
@@ -357,7 +320,7 @@ class SocketDataSourceImpl implements SocketDataSource {
         content: content,
         mediaUrl: mediaUrl,
         mediaType: mediaType,
-        createdAt: DateTime.now().toLocal(), // Use local time
+        createdAt: DateTime.now().toLocal(),
         isCurrentUser: true,
       );
     } catch (e) {

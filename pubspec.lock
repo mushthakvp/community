@@ -41,14 +41,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.1.25"
-  audioplayers:
-    dependency: transitive
-    description:
-      name: audioplayers
-      sha256: a565e7e3e8a21a823b8cd7fed0bde1eb3796a96b373374be557adecfb511fa6b
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.20.1"
   boolean_selector:
     dependency: transitive
     description:
@@ -456,14 +448,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "8.2.12"
-  gallery_saver_plus:
-    dependency: "direct main"
-    description:
-      name: gallery_saver_plus
-      sha256: b9f88540c0e5f40a71bcf32f8d9b200d1334b7281a9be7b88c0c2945b738e5e0
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.0.1"
   geocoding:
     dependency: "direct main"
     description:
@@ -688,6 +672,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.5.4"
+  image_gallery_saver:
+    dependency: "direct main"
+    description:
+      name: image_gallery_saver
+      sha256: "0aba74216a4d9b0561510cb968015d56b701ba1bd94aace26aacdd8ae5761816"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.3"
   image_picker:
     dependency: "direct main"
     description:
@@ -756,10 +748,10 @@ packages:
     dependency: "direct main"
     description:
       name: intl
-      sha256: "3df61194eb431efc39c4ceba583b95633a403f46c9fd341e550ce0bfa50e9aa5"
+      sha256: d6f56758b7d3014a48af9701c085700aac781a92a87a62b1333b46d8879661cf
       url: "https://pub.dev"
     source: hosted
-    version: "0.20.2"
+    version: "0.19.0"
   just_audio:
     dependency: transitive
     description:
@@ -1240,14 +1232,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.4.1"
-  sizer:
-    dependency: transitive
-    description:
-      name: sizer
-      sha256: d2b3cb6cbc4a637f508dacd786bae55df31e5fc088044248a43e4fd1e050c117
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.0.15"
   skeleton_text:
     dependency: "direct main"
     description:
@@ -1357,6 +1341,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.1"
+  syncfusion_flutter_core:
+    dependency: transitive
+    description:
+      name: syncfusion_flutter_core
+      sha256: e17dcc7a1d0701e84d0a83c0040503cdcc6c72e44db0d733ab4c706dd5b8b9f8
+      url: "https://pub.dev"
+    source: hosted
+    version: "25.2.7"
+  syncfusion_flutter_sliders:
+    dependency: transitive
+    description:
+      name: syncfusion_flutter_sliders
+      sha256: "842a452fd73fd61fbebbff72d726ffea4cdaacf088ca2738aeaf7f4454b3861e"
+      url: "https://pub.dev"
+    source: hosted
+    version: "25.2.7"
   synchronized:
     dependency: transitive
     description:
@@ -1397,14 +1397,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.0"
-  universal_io:
-    dependency: transitive
-    description:
-      name: universal_io
-      sha256: "1722b2dcc462b4b2f3ee7d188dad008b6eb4c40bbd03a3de451d82c78bba9aad"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.2.2"
   universal_platform:
     dependency: transitive
     description:
@@ -1569,10 +1561,10 @@ packages:
     dependency: "direct main"
     description:
       name: voice_message_package
-      sha256: "143c420e78ede7b464173e55d54aad57551b65bf3991e6dc46dbb898fc70f6fc"
+      sha256: cd7a717751e60908d37624309c6995c1c62c1bab6b54f7d15c2d71289f0b0cb6
       url: "https://pub.dev"
     source: hosted
-    version: "0.0.46"
+    version: "2.2.1"
   wakelock_plus:
     dependency: transitive
     description:

@@ -17,8 +17,6 @@ class MessageModel extends MessageEntity {
 
   factory MessageModel.fromJson(Map<String, dynamic> json) {
     String chatId = '';
-
-    // Handle different chat ID field variations
     if (json.containsKey('chat') && json['chat'] != null) {
       chatId = json['chat'].toString();
     } else if (json.containsKey('community') && json['community'] != null) {
@@ -28,7 +26,6 @@ class MessageModel extends MessageEntity {
     } else if (json.containsKey('chatId') && json['chatId'] != null) {
       chatId = json['chatId'].toString();
     }
-
     DateTime createdAt = DateTime.now();
     if (json['createdAt'] != null) {
       try {
@@ -37,7 +34,6 @@ class MessageModel extends MessageEntity {
         createdAt = DateTime.now();
       }
     }
-
     return MessageModel(
       id: json['_id'] ?? '',
       chatId: chatId,

@@ -43,9 +43,7 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Consumer<ChatProvider>(
       builder: (context, provider, _) {
-        // Determine what input UI to show based on chat status
         final inputType = _determineInputType(provider);
-
         switch (inputType) {
           case ChatInputType.hidden:
             return const SizedBox.shrink();
@@ -201,7 +199,6 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
       _recordingAnimationController.stop();
       _recordingAnimationController.reset();
     }
-
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
@@ -237,8 +234,6 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
                 if (!provider.isRecording)
                   _buildAttachmentButton(context, provider),
                 const SizedBox(width: 8),
-
-                // Text input
                 Expanded(
                   child: provider.isRecording
                       ? _buildRecordingContainer(context, provider)
@@ -442,7 +437,6 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Cancel button
           Container(
             decoration: BoxDecoration(
               color: Colors.red.withOpacity(0.1),
@@ -459,7 +453,6 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
             ),
           ),
           const SizedBox(width: 8),
-          // Send button
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(

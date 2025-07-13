@@ -15,7 +15,7 @@ dependencies:
   google_sign_in: ^6.3.0
   image_picker: ^1.1.2
   provider: ^6.1.5
-  intl: ^0.20.2
+  intl:
   flutter_svg: 
   equatable: ^2.0.7
   connectivity_plus: 
@@ -52,8 +52,8 @@ dependencies:
   socket_io_client: ^3.1.2
   record: ^6.0.0
   path: ^1.9.1
-  gallery_saver_plus: 
-  voice_message_package: ^0.0.46
+  image_gallery_saver: ^2.0.3
+  voice_message_package: ^2.2.1
   flutter_sound: ^9.28.0
 
 dev_dependencies:
