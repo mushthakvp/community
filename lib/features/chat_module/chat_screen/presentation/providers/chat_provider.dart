@@ -41,7 +41,7 @@ class ChatProvider extends ChangeNotifier {
   bool _isRecording = false;
   bool _isUploading = false;
   bool _isSending = false;
-  bool _isConnecting = false; // Add connection state
+  bool _isConnecting = false;
   String? _error;
 
   // Voice recording
@@ -93,30 +93,20 @@ class ChatProvider extends ChangeNotifier {
   Future<void> initializeChat(String chatId) async {
     _setLoading(true);
     _clearError();
-
     try {
-      // First, ensure socket is connected
       await _ensureSocketConnection();
-
-      // Use the combined method to get both chat and messages efficiently
       final result = await fetchChatWithMessages(
         FetchChatWithMessagesParams(chatId: chatId),
       );
-
       result.fold((failure) => _setError(failure.message), (data) {
         _currentChat = data['chat'] as ChatEntity;
         _messages = data['messages'] as List<MessageEntity>;
         _scrollToBottom();
-        notifyListeners(); // Notify listeners so UI can update with bot status
+        notifyListeners();
       });
-
-      // Set up socket listener for new messages only if user can receive messages
       if (_currentChat?.isUserInGroup == true ||
           _currentChat?.isCreator == true) {
-        // Join the chat room
         await _joinSocketRoom(chatId);
-
-        // Set up message listener
         _messageSubscription?.cancel();
         _messageSubscription = chatRepository
             .listenToNewMessages(chatId)
@@ -155,22 +145,16 @@ class ChatProvider extends ChangeNotifier {
       debugPrint('Joined socket room: $chatId');
     } catch (e) {
       debugPrint('Failed to join socket room: $e');
-      // Don't throw error here as it's not critical
     }
   }
 
-  // Send text message - Updated with better error handling
   Future<void> sendTextMessage(String chatId) async {
     final content = messageController.text.trim();
     if (content.isEmpty || _isSending) return;
-
-    // Check if user can send messages
     if (!canSendMessages) {
       _setError('You cannot send messages to this chat');
       return;
     }
-
-    // Check socket connection
     if (!isSocketConnected) {
       _setError('Not connected to chat server. Reconnecting...');
       try {
@@ -181,10 +165,8 @@ class ChatProvider extends ChangeNotifier {
         return;
       }
     }
-
     _setSending(true);
     messageController.clear();
-
     try {
       final result = await sendMessage(
         SendMessageParams(chatId: chatId, content: content),
@@ -194,31 +176,25 @@ class ChatProvider extends ChangeNotifier {
       });
     } catch (e) {
       _setError(e.toString());
-      messageController.text = content; // Restore message on error
+      messageController.text = content;
     }
     _setSending(false);
   }
 
-  // Send media message - Updated with socket check
   Future<void> sendMediaMessage(
     String chatId,
     File file,
     String mediaType,
   ) async {
     if (_isUploading) return;
-
-    // Check if user can send messages
     if (!canSendMessages) {
       _setError('You cannot send media to this chat');
       return;
     }
-
-    // Check socket connection
     if (!isSocketConnected) {
       _setError('Not connected to chat server. Please reconnect.');
       return;
     }
-
     _setUploading(true);
     try {
       final uploadResult = await uploadMedia(
@@ -245,17 +221,14 @@ class ChatProvider extends ChangeNotifier {
     _setUploading(false);
   }
 
-  // Join group/bot functionality
   Future<void> joinGroupOrBot(String chatId) async {
     if (_isLoading) return;
-
     _setLoading(true);
     try {
       final result = await chatRepository.joinGroup(chatId);
       result.fold((failure) => _setError(failure.message), (_) {
-        // Refresh chat data after successful join
         initializeChat(chatId);
-        _setError(null); // Clear any previous errors
+        _setError(null);
       });
     } catch (e) {
       _setError(e.toString());
@@ -286,7 +259,6 @@ class ChatProvider extends ChangeNotifier {
       _setError('You cannot send images to this chat');
       return;
     }
-
     try {
       final ImagePicker picker = ImagePicker();
       final XFile? image = await picker.pickImage(
@@ -295,15 +267,10 @@ class ChatProvider extends ChangeNotifier {
         maxHeight: 1920,
         imageQuality: 85,
       );
-
       if (image != null) {
         final file = File(image.path);
         final extension = path.extension(image.path).toLowerCase();
-        await sendMediaMessage(
-          chatId,
-          file,
-          extension.substring(1),
-        ); // Remove the dot
+        await sendMediaMessage(chatId, file, extension.substring(1));
       }
     } catch (e) {
       _setError('Failed to pick image: $e');
@@ -316,7 +283,6 @@ class ChatProvider extends ChangeNotifier {
       _setError('You cannot send files to this chat');
       return;
     }
-
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
@@ -332,7 +298,6 @@ class ChatProvider extends ChangeNotifier {
         ],
         allowMultiple: false,
       );
-
       if (result != null && result.files.single.path != null) {
         final file = File(result.files.single.path!);
         final extension = result.files.single.extension ?? 'file';
@@ -343,7 +308,6 @@ class ChatProvider extends ChangeNotifier {
     }
   }
 
-  // Voice recording methods
   Future<void> startRecording() async {
     if (!canSendMessages) {
       _setError('You cannot send voice messages to this chat');

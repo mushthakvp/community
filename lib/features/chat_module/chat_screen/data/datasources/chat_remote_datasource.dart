@@ -1,5 +1,7 @@
 import 'dart:convert';
-import 'dart:developer';
+import 'dart:io';
+
+import 'package:livera/core/services/cloudinary_service.dart';
 
 import '../../../../../core/constants/chat_api_constants.dart';
 import '../../../../../core/network/api_client.dart';
@@ -41,30 +43,25 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
 
   @override
   Future<Map<String, dynamic>> getChatWithMessages(String chatId) async {
-    log("chatId $chatId fn3");
     final response = await apiClient.get(
       '${ChatApiConstants.enterChat}$chatId',
     );
     final data = jsonDecode(response.body);
-    log("data $data fn3");
-
-    // Handle the new API response structure
     final responseData = data['data'] ?? data;
     final groupDetails = responseData['groupDetails'] as Map<String, dynamic>;
     final messagesJson = responseData['messages'] as List<dynamic>;
-
-    // Create chat model from groupDetails
     final chat = ChatModel.fromJson(groupDetails);
     final messages = messagesJson
         .map((json) => MessageModel.fromJson(json))
         .toList();
-
     return {'chat': chat, 'messages': messages};
   }
 
   @override
   Future<String> uploadMedia(String filePath) async {
-    throw UnimplementedError('Upload media implementation needed');
+    File file = File(filePath);
+    String? url = await CloudinaryService.uploadSingleImage(file: file);
+    return url ?? "";
   }
 
   @override
