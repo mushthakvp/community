@@ -15,11 +15,10 @@ class MessageModel extends MessageEntity {
     super.isCurrentUser,
   });
 
-  // In lib/features/chat_module/chat_screen/data/models/message_model.dart
-  // Replace the fromJson method
-
   factory MessageModel.fromJson(Map<String, dynamic> json) {
     String chatId = '';
+
+    // Handle different chat ID field variations
     if (json.containsKey('chat') && json['chat'] != null) {
       chatId = json['chat'].toString();
     } else if (json.containsKey('community') && json['community'] != null) {
@@ -28,6 +27,15 @@ class MessageModel extends MessageEntity {
       chatId = json['communityId'].toString();
     } else if (json.containsKey('chatId') && json['chatId'] != null) {
       chatId = json['chatId'].toString();
+    }
+
+    DateTime createdAt = DateTime.now();
+    if (json['createdAt'] != null) {
+      try {
+        createdAt = DateTime.parse(json['createdAt']).toLocal();
+      } catch (e) {
+        createdAt = DateTime.now();
+      }
     }
 
     return MessageModel(
@@ -39,9 +47,7 @@ class MessageModel extends MessageEntity {
       content: json['content'] ?? '',
       mediaUrl: json['media'],
       mediaType: json['ext'],
-      createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'])
-          : DateTime.now(),
+      createdAt: createdAt,
       isDeleted: json['deleted'] ?? false,
       isCurrentUser: false,
     );
@@ -59,7 +65,7 @@ class MessageModel extends MessageEntity {
       'content': content,
       'media': mediaUrl,
       'ext': mediaType,
-      'createdAt': createdAt.toIso8601String(),
+      'createdAt': createdAt.toUtc().toIso8601String(),
       'deleted': isDeleted,
     };
   }

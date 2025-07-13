@@ -22,13 +22,13 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     _recordingAnimationController = AnimationController(
-      duration: const Duration(milliseconds: 1000),
+      duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-    _recordingAnimation = Tween<double>(begin: 0.8, end: 1.2).animate(
+    _recordingAnimation = Tween<double>(begin: 1.0, end: 1.3).animate(
       CurvedAnimation(
         parent: _recordingAnimationController,
-        curve: Curves.easeInOut,
+        curve: Curves.elasticInOut,
       ),
     );
   }
@@ -203,14 +203,28 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Theme.of(context).colorScheme.surface,
+            Theme.of(context).colorScheme.surface.withOpacity(0.95),
+          ],
+        ),
         border: Border(
           top: BorderSide(
             color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
           ),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).shadowColor.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, -2),
+          ),
+        ],
       ),
       child: SafeArea(
         top: false,
@@ -220,20 +234,8 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
               _buildRecordingIndicator(context, provider),
             Row(
               children: [
-                IconButton(
-                  onPressed: provider.isRecording
-                      ? null
-                      : () => _showAttachmentOptions(context, provider),
-                  icon: const Icon(Icons.add),
-                  style: IconButton.styleFrom(
-                    backgroundColor: Theme.of(
-                      context,
-                    ).colorScheme.primaryContainer,
-                    foregroundColor: Theme.of(
-                      context,
-                    ).colorScheme.onPrimaryContainer,
-                  ),
-                ),
+                if (!provider.isRecording)
+                  _buildAttachmentButton(context, provider),
                 const SizedBox(width: 8),
 
                 // Text input
@@ -255,10 +257,13 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
   Widget _buildRecordingIndicator(BuildContext context, ChatProvider provider) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.errorContainer,
-        borderRadius: BorderRadius.circular(20),
+        gradient: LinearGradient(
+          colors: [Colors.red.withOpacity(0.1), Colors.red.withOpacity(0.05)],
+        ),
+        borderRadius: BorderRadius.circular(25),
+        border: Border.all(color: Colors.red.withOpacity(0.3)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -269,31 +274,24 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
               return Transform.scale(
                 scale: _recordingAnimation.value,
                 child: Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.error,
+                  width: 10,
+                  height: 10,
+                  decoration: const BoxDecoration(
+                    color: Colors.red,
                     shape: BoxShape.circle,
                   ),
                 ),
               );
             },
           ),
+          const SizedBox(width: 12),
+          Icon(Icons.mic, color: Colors.red, size: 18),
           const SizedBox(width: 8),
           Text(
-            'Recording... ${_formatDuration(provider.recordingDuration)}',
+            'Recording ${_formatDuration(provider.recordingDuration)}',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onErrorContainer,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            'Slide to cancel',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(
-                context,
-              ).colorScheme.onErrorContainer.withOpacity(0.7),
+              color: Colors.red,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
@@ -301,21 +299,54 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
     );
   }
 
+  Widget _buildAttachmentButton(BuildContext context, ChatProvider provider) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Theme.of(context).colorScheme.primary.withOpacity(0.8),
+            Theme.of(context).colorScheme.primary,
+          ],
+        ),
+        borderRadius: BorderRadius.circular(25),
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: IconButton(
+        onPressed: () => _showAttachmentOptions(context, provider),
+        icon: const Icon(Icons.add),
+        style: IconButton.styleFrom(
+          foregroundColor: Theme.of(context).colorScheme.onPrimary,
+          padding: const EdgeInsets.all(12),
+        ),
+      ),
+    );
+  }
+
   Widget _buildTextInput(BuildContext context, ChatProvider provider) {
     return Container(
-      constraints: const BoxConstraints(
-        minHeight: 40,
-        maxHeight: 100, // Limit max height to prevent overflow
-      ),
+      constraints: const BoxConstraints(minHeight: 48, maxHeight: 120),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceVariant,
-        borderRadius: BorderRadius.circular(20), // Reduced border radius
+        borderRadius: BorderRadius.circular(25),
         border: Border.all(
           color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).shadowColor.withOpacity(0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: TextField(
-        onTapUpOutside: (event) => FocusScope.of(context).unfocus(),
+        onTapOutside: (event) => FocusScope.of(context).unfocus(),
         controller: provider.messageController,
         focusNode: provider.focusNode,
         maxLines: null,
@@ -331,8 +362,8 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
           ),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 10, // Reduced padding
+            horizontal: 20,
+            vertical: 14,
           ),
         ),
         style: Theme.of(context).textTheme.bodyMedium,
@@ -355,29 +386,49 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
 
   Widget _buildRecordingContainer(BuildContext context, ChatProvider provider) {
     return Container(
-      height: 48,
+      height: 56,
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.errorContainer,
-        borderRadius: BorderRadius.circular(24),
+        gradient: LinearGradient(
+          colors: [Colors.red.withOpacity(0.1), Colors.red.withOpacity(0.05)],
+        ),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Colors.red.withOpacity(0.3)),
       ),
       child: Row(
         children: [
-          const SizedBox(width: 16),
-          Icon(Icons.mic, color: Theme.of(context).colorScheme.error),
-          const SizedBox(width: 8),
+          const SizedBox(width: 20),
+          AnimatedBuilder(
+            animation: _recordingAnimation,
+            builder: (context, child) {
+              return Transform.scale(
+                scale: _recordingAnimation.value,
+                child: Icon(Icons.mic, color: Colors.red, size: 24),
+              );
+            },
+          ),
+          const SizedBox(width: 12),
           Expanded(
             child: Text(
               'Recording voice message...',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onErrorContainer,
+                color: Colors.red,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),
-          Text(
-            _formatDuration(provider.recordingDuration),
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onErrorContainer,
-              fontWeight: FontWeight.w600,
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.red.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              _formatDuration(provider.recordingDuration),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Colors.red,
+                fontWeight: FontWeight.w600,
+                fontFeatures: [const FontFeature.tabularFigures()],
+              ),
             ),
           ),
           const SizedBox(width: 16),
@@ -389,22 +440,47 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
   Widget _buildActionButton(BuildContext context, ChatProvider provider) {
     if (provider.isRecording) {
       return Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          IconButton(
-            onPressed: provider.cancelRecording,
-            icon: const Icon(Icons.close),
-            style: IconButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.errorContainer,
-              foregroundColor: Theme.of(context).colorScheme.error,
+          // Cancel button
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.red.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(25),
+              border: Border.all(color: Colors.red.withOpacity(0.3)),
+            ),
+            child: IconButton(
+              onPressed: provider.cancelRecording,
+              icon: const Icon(Icons.close),
+              style: IconButton.styleFrom(
+                foregroundColor: Colors.red,
+                padding: const EdgeInsets.all(12),
+              ),
             ),
           ),
           const SizedBox(width: 8),
-          IconButton(
-            onPressed: () => provider.stopRecording(widget.chatId),
-            icon: const Icon(Icons.stop),
-            style: IconButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              foregroundColor: Theme.of(context).colorScheme.onPrimary,
+          // Send button
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.green.shade400, Colors.green.shade600],
+              ),
+              borderRadius: BorderRadius.circular(25),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.green.withOpacity(0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: IconButton(
+              onPressed: () => provider.stopRecording(widget.chatId),
+              icon: const Icon(Icons.send),
+              style: IconButton.styleFrom(
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.all(12),
+              ),
             ),
           ),
         ],
@@ -432,11 +508,29 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
       );
     }
 
-    return GestureDetector(
-      onLongPressStart: _isTyping ? null : (_) => provider.startRecording(),
-      onLongPressEnd: _isTyping
-          ? null
-          : (_) => provider.stopRecording(widget.chatId),
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: _isTyping
+              ? [const Color(0xFF4CAF50), const Color(0xFF45A049)]
+              : [
+                  Theme.of(context).colorScheme.secondary,
+                  Theme.of(context).colorScheme.secondary.withOpacity(0.8),
+                ],
+        ),
+        borderRadius: BorderRadius.circular(25),
+        boxShadow: [
+          BoxShadow(
+            color:
+                (_isTyping
+                        ? Colors.green
+                        : Theme.of(context).colorScheme.secondary)
+                    .withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: IconButton(
         onPressed: _isTyping
             ? () {
@@ -445,15 +539,11 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
                   _isTyping = false;
                 });
               }
-            : null,
+            : () => provider.startRecording(),
         icon: Icon(_isTyping ? Icons.send : Icons.mic),
         style: IconButton.styleFrom(
-          backgroundColor: _isTyping
-              ? Theme.of(context).colorScheme.primary
-              : Theme.of(context).colorScheme.secondary,
-          foregroundColor: _isTyping
-              ? Theme.of(context).colorScheme.onPrimary
-              : Theme.of(context).colorScheme.onSecondary,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.all(12),
         ),
       ),
     );
@@ -464,7 +554,7 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
       context: context,
       backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) => Container(
         padding: const EdgeInsets.all(24),
@@ -481,7 +571,7 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
             ),
             const SizedBox(height: 24),
             Text(
-              'Share',
+              'Share Media',
               style: Theme.of(
                 context,
               ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
@@ -541,17 +631,23 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
         GestureDetector(
           onTap: onTap,
           child: Container(
-            width: 60,
-            height: 60,
+            width: 70,
+            height: 70,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              gradient: LinearGradient(colors: [color.withOpacity(0.8), color]),
               shape: BoxShape.circle,
-              border: Border.all(color: color.withOpacity(0.3), width: 1),
+              boxShadow: [
+                BoxShadow(
+                  color: color.withOpacity(0.3),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-            child: Icon(icon, size: 30, color: color),
+            child: Icon(icon, size: 32, color: Colors.white),
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 12),
         Text(
           label,
           style: Theme.of(

@@ -136,7 +136,7 @@ class SocketDataSourceImpl implements SocketDataSource {
 
         final rawData = data as Map<String, dynamic>;
 
-        // CRITICAL FIX: Handle multiple room ID field variations
+        // ENHANCED: Handle multiple room ID field variations
         String? messageRoomId;
 
         // Try different field names for room/chat ID
@@ -173,9 +173,8 @@ class SocketDataSourceImpl implements SocketDataSource {
           'Parsed message: ${message.content} from ${message.senderName} for chat ${message.chatId}',
         );
 
-        final shouldEmit =
-            _currentRoomId == messageRoomId ||
-            _joinedRooms.contains(messageRoomId);
+        // FIXED: Check if we should emit this message for the current room
+        final shouldEmit = _shouldEmitMessage(messageRoomId);
 
         debugPrint(
           'Current room: $_currentRoomId, Message room: $messageRoomId, Should emit: $shouldEmit',
@@ -225,6 +224,21 @@ class SocketDataSourceImpl implements SocketDataSource {
       debugPrint('Socket reconnection failed after maximum attempts');
       _isConnected = false;
     });
+  }
+
+  // ENHANCED: Better room matching logic
+  bool _shouldEmitMessage(String messageRoomId) {
+    // Check if the message is for the current active room
+    if (_currentRoomId == messageRoomId) {
+      return true;
+    }
+
+    // Check if we're in this room (for multi-room scenarios)
+    if (_joinedRooms.contains(messageRoomId)) {
+      return true;
+    }
+
+    return false;
   }
 
   Future<void> _waitForConnection() async {
@@ -343,7 +357,7 @@ class SocketDataSourceImpl implements SocketDataSource {
         content: content,
         mediaUrl: mediaUrl,
         mediaType: mediaType,
-        createdAt: DateTime.now(),
+        createdAt: DateTime.now().toLocal(), // Use local time
         isCurrentUser: true,
       );
     } catch (e) {
@@ -394,7 +408,7 @@ class SocketDataSourceImpl implements SocketDataSource {
       debugPrint('Joining room: $chatId with token');
       _socket!.emit('setup', {'chatId': chatId, 'token': token});
 
-      // Wait longer for the room join to complete
+      // Wait for the room join to complete
       await Future.delayed(const Duration(milliseconds: 1000));
       debugPrint('Successfully joined room: $chatId');
       debugPrint('Current room now: $_currentRoomId');
