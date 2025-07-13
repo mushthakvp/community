@@ -136,34 +136,43 @@ class SocketDataSourceImpl implements SocketDataSource {
 
         final rawData = data as Map<String, dynamic>;
 
-        // CRITICAL FIX: Handle both chatId and communityId fields
+        // CRITICAL FIX: Handle multiple room ID field variations
         String? messageRoomId;
-        if (rawData.containsKey('chatId') &&
+
+        // Try different field names for room/chat ID
+        if (rawData.containsKey('community') &&
+            rawData['community'] != null &&
+            rawData['community'].toString().isNotEmpty) {
+          messageRoomId = rawData['community'].toString();
+          debugPrint('Found community ID: $messageRoomId');
+        } else if (rawData.containsKey('chatId') &&
             rawData['chatId'] != null &&
             rawData['chatId'].toString().isNotEmpty) {
           messageRoomId = rawData['chatId'].toString();
+          debugPrint('Found chatId: $messageRoomId');
         } else if (rawData.containsKey('communityId') &&
             rawData['communityId'] != null &&
             rawData['communityId'].toString().isNotEmpty) {
           messageRoomId = rawData['communityId'].toString();
+          debugPrint('Found communityId: $messageRoomId');
         }
 
         if (messageRoomId == null || messageRoomId.isEmpty) {
-          debugPrint('Message has no valid room ID - ignoring');
+          debugPrint(
+            'Message has no valid room ID - ignoring. Available fields: ${rawData.keys.toList()}',
+          );
           return;
         }
 
-        // Create message with proper chatId
+        // Create message with proper chatId - IMPORTANT: Use the messageRoomId for chat field
         final messageData = Map<String, dynamic>.from(rawData);
-        messageData['chat'] =
-            messageRoomId; // Ensure the 'chat' field is set for MessageModel.fromJson
+        messageData['chat'] = messageRoomId;
 
         final message = MessageModel.fromJson(messageData);
         debugPrint(
           'Parsed message: ${message.content} from ${message.senderName} for chat ${message.chatId}',
         );
 
-        // FIXED: Check if we should emit this message
         final shouldEmit =
             _currentRoomId == messageRoomId ||
             _joinedRooms.contains(messageRoomId);

@@ -58,6 +58,8 @@ dependencies:
   socket_io_client: ^3.1.2
   record: ^6.0.0
   path: ^1.9.1
+  gallery_saver_plus: ^3.2.8
+  device_info_plus: ^11.5.0
 
 dev_dependencies:
   flutter_test:

@@ -15,10 +15,24 @@ class MessageModel extends MessageEntity {
     super.isCurrentUser,
   });
 
+  // In lib/features/chat_module/chat_screen/data/models/message_model.dart
+  // Replace the fromJson method
+
   factory MessageModel.fromJson(Map<String, dynamic> json) {
+    String chatId = '';
+    if (json.containsKey('chat') && json['chat'] != null) {
+      chatId = json['chat'].toString();
+    } else if (json.containsKey('community') && json['community'] != null) {
+      chatId = json['community'].toString();
+    } else if (json.containsKey('communityId') && json['communityId'] != null) {
+      chatId = json['communityId'].toString();
+    } else if (json.containsKey('chatId') && json['chatId'] != null) {
+      chatId = json['chatId'].toString();
+    }
+
     return MessageModel(
       id: json['_id'] ?? '',
-      chatId: json['chat'] ?? '',
+      chatId: chatId,
       senderId: json['sender']?['_id'] ?? '',
       senderName: json['sender']?['name'] ?? '',
       senderImage: json['sender']?['profileImage'],

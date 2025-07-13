@@ -1,8 +1,14 @@
+import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloudinary/cloudinary.dart';
 import 'package:fittor/fittor.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:gallery_saver_plus/gallery_saver.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../shared/utils/date_utils.dart';
@@ -206,7 +212,6 @@ class MessageBubble extends StatelessWidget {
       trimLines: 8,
       trimCollapsedText: ' Show more',
       trimExpandedText: ' Show less',
-
       annotations: [
         FitAnnotation(
           regExp: RegExp(
@@ -228,8 +233,6 @@ class MessageBubble extends StatelessWidget {
               },
           ),
         ),
-
-        // Hashtag annotation with click handling
         FitAnnotation(
           regExp: RegExp(r'#\w+'),
           spanBuilder: ({required text, required textStyle}) => TextSpan(
@@ -246,8 +249,6 @@ class MessageBubble extends StatelessWidget {
               },
           ),
         ),
-
-        // Mention annotation with click handling
         FitAnnotation(
           regExp: RegExp(r'@\w+'),
           spanBuilder: ({required text, required textStyle}) => TextSpan(
@@ -264,8 +265,6 @@ class MessageBubble extends StatelessWidget {
               },
           ),
         ),
-
-        // Email annotation
         FitAnnotation(
           regExp: RegExp(
             r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b',
@@ -304,10 +303,8 @@ class MessageBubble extends StatelessWidget {
     );
   }
 
-  // URL handling
   Future<void> _handleUrlTap(String url) async {
     try {
-      // Ensure URL has a scheme
       String finalUrl = url;
       if (!url.startsWith('http://') && !url.startsWith('https://')) {
         finalUrl = 'https://$url';
@@ -324,34 +321,28 @@ class MessageBubble extends StatelessWidget {
     }
   }
 
-  // Hashtag handling
   void _handleHashtagTap(String hashtag) {
     if (onHashtagTap != null) {
       onHashtagTap!(hashtag);
     } else {
-      // Default behavior: show hashtag content or search
       _showHashtagBottomSheet(hashtag);
     }
   }
 
-  // Mention handling
   void _handleMentionTap(String mention) {
     if (onMentionTap != null) {
       onMentionTap!(mention);
     } else {
-      // Default behavior: show user profile or info
       _showMentionBottomSheet(mention);
     }
   }
 
-  // Email handling
   Future<void> _handleEmailTap(String email) async {
     try {
       final uri = Uri.parse('mailto:$email');
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri);
       } else {
-        // Copy to clipboard as fallback
         await Clipboard.setData(ClipboardData(text: email));
         _showSuccessSnackBar('Email copied to clipboard');
       }
@@ -360,7 +351,6 @@ class MessageBubble extends StatelessWidget {
     }
   }
 
-  // Phone handling
   Future<void> _handlePhoneTap(String phone) async {
     try {
       final cleanPhone = phone.replaceAll(RegExp(r'[^\d+]'), '');
@@ -368,7 +358,6 @@ class MessageBubble extends StatelessWidget {
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri);
       } else {
-        // Copy to clipboard as fallback
         await Clipboard.setData(ClipboardData(text: phone));
         _showSuccessSnackBar('Phone number copied to clipboard');
       }
@@ -377,13 +366,11 @@ class MessageBubble extends StatelessWidget {
     }
   }
 
-  // Show hashtag bottom sheet
   void _showHashtagBottomSheet(String hashtag) {
+    final context = navigatorKey.currentContext!;
     showModalBottomSheet(
-      context: navigatorKey.currentContext!,
-      backgroundColor: Theme.of(
-        navigatorKey.currentContext!,
-      ).colorScheme.surface,
+      context: context,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -392,7 +379,6 @@ class MessageBubble extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Handle bar
             Container(
               width: 40,
               height: 4,
@@ -402,8 +388,6 @@ class MessageBubble extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-
-            // Hashtag header
             Row(
               children: [
                 Icon(
@@ -422,8 +406,6 @@ class MessageBubble extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 24),
-
-            // Action buttons
             Row(
               children: [
                 Expanded(
@@ -441,7 +423,6 @@ class MessageBubble extends StatelessWidget {
                   child: ElevatedButton.icon(
                     onPressed: () {
                       Navigator.pop(context);
-                      // Navigate to hashtag search or related content
                       _navigateToHashtagSearch(hashtag);
                     },
                     icon: const Icon(Icons.search),
@@ -456,13 +437,11 @@ class MessageBubble extends StatelessWidget {
     );
   }
 
-  // Show mention bottom sheet
   void _showMentionBottomSheet(String mention) {
+    final context = navigatorKey.currentContext!;
     showModalBottomSheet(
-      context: navigatorKey.currentContext!,
-      backgroundColor: Theme.of(
-        navigatorKey.currentContext!,
-      ).colorScheme.surface,
+      context: context,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -471,7 +450,6 @@ class MessageBubble extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Handle bar
             Container(
               width: 40,
               height: 4,
@@ -481,8 +459,6 @@ class MessageBubble extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-
-            // Mention header
             Row(
               children: [
                 Icon(
@@ -501,8 +477,6 @@ class MessageBubble extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 24),
-
-            // Action buttons
             Row(
               children: [
                 Expanded(
@@ -520,7 +494,6 @@ class MessageBubble extends StatelessWidget {
                   child: ElevatedButton.icon(
                     onPressed: () {
                       Navigator.pop(context);
-                      // Navigate to user profile
                       _navigateToUserProfile(mention);
                     },
                     icon: const Icon(Icons.person_search),
@@ -535,22 +508,17 @@ class MessageBubble extends StatelessWidget {
     );
   }
 
-  // Helper methods
   void _copyToClipboard(String text) {
     Clipboard.setData(ClipboardData(text: text));
     _showSuccessSnackBar('Copied to clipboard');
   }
 
   void _navigateToHashtagSearch(String hashtag) {
-    // Implement navigation to hashtag search
     debugPrint('Navigating to hashtag search: $hashtag');
-    // Example: context.push('/hashtag-search?tag=${hashtag.substring(1)}');
   }
 
   void _navigateToUserProfile(String mention) {
-    // Implement navigation to user profile
     debugPrint('Navigating to user profile: $mention');
-    // Example: context.push('/user-profile?username=${mention.substring(1)}');
   }
 
   void _showSuccessSnackBar(String message) {
@@ -577,7 +545,6 @@ class MessageBubble extends StatelessWidget {
     }
   }
 
-  // Add navigator key to your main app
   static final GlobalKey<NavigatorState> navigatorKey =
       GlobalKey<NavigatorState>();
 
@@ -692,6 +659,26 @@ class MessageBubble extends StatelessWidget {
                           ),
                         ),
                       ),
+                    // Download/Save button
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: GestureDetector(
+                        onTap: () => _saveMediaToGallery(context),
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.5),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Icon(
+                            Icons.download,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -707,145 +694,151 @@ class MessageBubble extends StatelessWidget {
   }
 
   Widget _buildAudioContent(BuildContext context) {
-    return Container(
-      width: 250,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: message.isCurrentUser
-            ? Theme.of(context).colorScheme.onPrimary.withOpacity(0.1)
-            : Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary,
-              shape: BoxShape.circle,
+    return GestureDetector(
+      onTap: () => _handleAudioTap(context),
+      child: Container(
+        width: 250,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: message.isCurrentUser
+              ? Theme.of(context).colorScheme.onPrimary.withOpacity(0.1)
+              : Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.play_arrow,
+                color: Theme.of(context).colorScheme.onPrimary,
+                size: 24,
+              ),
             ),
-            child: Icon(
-              Icons.play_arrow,
-              color: Theme.of(context).colorScheme.onPrimary,
-              size: 24,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Voice message',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w500,
-                    color: message.isCurrentUser
-                        ? Theme.of(context).colorScheme.onPrimary
-                        : Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Container(
-                  height: 2,
-                  decoration: BoxDecoration(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.outline.withOpacity(0.3),
-                    borderRadius: BorderRadius.circular(1),
-                  ),
-                  child: LinearProgressIndicator(
-                    value: 0.0, // This would be updated by audio player
-                    backgroundColor: Colors.transparent,
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      Theme.of(context).colorScheme.primary,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Voice message',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w500,
+                      color: message.isCurrentUser
+                          ? Theme.of(context).colorScheme.onPrimary
+                          : Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 2),
+                  Container(
+                    height: 2,
+                    decoration: BoxDecoration(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.outline.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(1),
+                    ),
+                    child: LinearProgressIndicator(
+                      value: 0.0,
+                      backgroundColor: Colors.transparent,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            '0:30',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: message.isCurrentUser
-                  ? Theme.of(context).colorScheme.onPrimary.withOpacity(0.7)
-                  : Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+            const SizedBox(width: 8),
+            Text(
+              '0:30',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: message.isCurrentUser
+                    ? Theme.of(context).colorScheme.onPrimary.withOpacity(0.7)
+                    : Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildDocumentContent(BuildContext context) {
-    return Container(
-      constraints: const BoxConstraints(maxWidth: 250),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: message.isCurrentUser
-            ? Theme.of(context).colorScheme.onPrimary.withOpacity(0.1)
-            : Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.secondaryContainer,
-              borderRadius: BorderRadius.circular(8),
+    return GestureDetector(
+      onTap: () => _handleDocumentTap(context),
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 250),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: message.isCurrentUser
+              ? Theme.of(context).colorScheme.onPrimary.withOpacity(0.1)
+              : Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.secondaryContainer,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                _getDocumentIcon(),
+                color: Theme.of(context).colorScheme.onSecondaryContainer,
+                size: 20,
+              ),
             ),
-            child: Icon(
-              _getDocumentIcon(),
-              color: Theme.of(context).colorScheme.onSecondaryContainer,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _getDocumentName(),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w500,
+                      color: message.isCurrentUser
+                          ? Theme.of(context).colorScheme.onPrimary
+                          : Theme.of(context).colorScheme.onSurface,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    _getDocumentType(),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: message.isCurrentUser
+                          ? Theme.of(
+                              context,
+                            ).colorScheme.onPrimary.withOpacity(0.7)
+                          : Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withOpacity(0.7),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.download,
               size: 20,
+              color: message.isCurrentUser
+                  ? Theme.of(context).colorScheme.onPrimary.withOpacity(0.7)
+                  : Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
             ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _getDocumentName(),
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w500,
-                    color: message.isCurrentUser
-                        ? Theme.of(context).colorScheme.onPrimary
-                        : Theme.of(context).colorScheme.onSurface,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  _getDocumentType(),
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: message.isCurrentUser
-                        ? Theme.of(
-                            context,
-                          ).colorScheme.onPrimary.withOpacity(0.7)
-                        : Theme.of(
-                            context,
-                          ).colorScheme.onSurface.withOpacity(0.7),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Icon(
-            Icons.download,
-            size: 20,
-            color: message.isCurrentUser
-                ? Theme.of(context).colorScheme.onPrimary.withOpacity(0.7)
-                : Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -948,23 +941,31 @@ class MessageBubble extends StatelessWidget {
   }
 
   void _handleMessageTap(BuildContext context) {
-    if (MessageUtils.isMediaMessage(message) &&
-        (MessageUtils.isImageMessage(message) ||
-            MessageUtils.isVideoMessage(message))) {
-      final heroTag =
-          'media_${message.id}_${message.createdAt.millisecondsSinceEpoch}';
-      _openFullScreenMedia(context, heroTag);
+    if (MessageUtils.isMediaMessage(message)) {
+      if (MessageUtils.isImageMessage(message) ||
+          MessageUtils.isVideoMessage(message)) {
+        final heroTag =
+            'media_${message.id}_${message.createdAt.millisecondsSinceEpoch}';
+        _openFullScreenMedia(context, heroTag);
+      } else if (MessageUtils.isAudioMessage(message)) {
+        _handleAudioTap(context);
+      } else if (MessageUtils.isDocumentMessage(message)) {
+        _handleDocumentTap(context);
+      } else {
+        _showUnsupportedMediaDialog(context);
+      }
+    } else {
+      if (message.content.isNotEmpty) {
+        _showTextMessageOptions(context);
+      }
     }
   }
 
-  // Separate long press handler to avoid conflicts
   void _handleLongPress(BuildContext context) {
     if (onLongPress != null) {
       onLongPress!();
       return;
     }
-
-    // Show message options for all message types
     _showMessageOptions(context);
   }
 
@@ -973,6 +974,496 @@ class MessageBubble extends StatelessWidget {
       MaterialPageRoute(
         builder: (context) =>
             FullScreenMediaViewer(message: message, heroTag: heroTag),
+      ),
+    );
+  }
+
+  // Save media to gallery
+  Future<void> _saveMediaToGallery(BuildContext context) async {
+    if (message.mediaUrl == null || message.mediaUrl!.isEmpty) {
+      _showErrorSnackBar('Media URL not available');
+      return;
+    }
+    try {
+      _showLoadingSnackBar('Saving to gallery...');
+      final success = await _downloadAndSaveMedia();
+      if (success) {
+        _showSuccessSnackBar('Saved to gallery successfully');
+      } else {
+        _showErrorSnackBar('Failed to save media');
+      }
+    } catch (e) {
+      _showErrorSnackBar('Error saving media: $e');
+    }
+  }
+
+  Future<bool> _downloadAndSaveMedia() async {
+    try {
+      final dio = Dio();
+      final tempDir = await getTemporaryDirectory();
+      final fileName = _getFileName();
+      final filePath = '${tempDir.path}/$fileName';
+      await dio.download(message.mediaUrl!, filePath);
+      if (MessageUtils.isImageMessage(message)) {
+        return await GallerySaver.saveImage(filePath) ?? false;
+      } else if (MessageUtils.isVideoMessage(message)) {
+        return await GallerySaver.saveVideo(filePath) ?? false;
+      } else {
+        return await _saveToDownloads(filePath, fileName);
+      }
+    } catch (e) {
+      debugPrint('Error downloading media: $e');
+      return false;
+    }
+  }
+
+  Future<bool> _saveToDownloads(String filePath, String fileName) async {
+    try {
+      final downloadsDir = await getExternalStorageDirectory();
+      if (downloadsDir != null) {
+        final downloadPath = '${downloadsDir.path}/Download/$fileName';
+        final file = File(filePath);
+        await file.copy(downloadPath);
+        return true;
+      }
+      return false;
+    } catch (e) {
+      debugPrint('Error saving to downloads: $e');
+      return false;
+    }
+  }
+
+  String _getFileName() {
+    if (message.mediaUrl != null) {
+      final uri = Uri.tryParse(message.mediaUrl!);
+      if (uri != null) {
+        final segments = uri.pathSegments;
+        if (segments.isNotEmpty) {
+          return segments.last;
+        }
+      }
+    }
+    final extension = message.mediaType ?? 'file';
+    final timestamp = message.createdAt.millisecondsSinceEpoch;
+    return 'media_$timestamp.$extension';
+  }
+
+  void _showLoadingSnackBar(String message) {
+    if (navigatorKey.currentContext != null) {
+      ScaffoldMessenger.of(navigatorKey.currentContext!).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+              const SizedBox(width: 12),
+              Text(message),
+            ],
+          ),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
+  // Document handling
+  void _handleDocumentTap(BuildContext context) {
+    if (message.mediaUrl == null || message.mediaUrl!.isEmpty) {
+      _showErrorSnackBar('Document URL not available');
+      return;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.outline,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Icon(
+                  _getDocumentIcon(),
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 24,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _getDocumentName(),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w600),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _getDocumentType(),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withOpacity(0.6),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () => _downloadDocument(context),
+                    icon: const Icon(Icons.download),
+                    label: const Text('Download'),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () => _openDocument(context),
+                    icon: const Icon(Icons.open_in_new),
+                    label: const Text('Open'),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () => _shareDocument(context),
+                icon: const Icon(Icons.share),
+                label: const Text('Share'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.secondaryContainer,
+                  foregroundColor: Theme.of(
+                    context,
+                  ).colorScheme.onSecondaryContainer,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Audio handling
+  void _handleAudioTap(BuildContext context) {
+    if (message.mediaUrl == null || message.mediaUrl!.isEmpty) {
+      _showErrorSnackBar('Audio URL not available');
+      return;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.outline,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.volume_up,
+                    color: Theme.of(context).colorScheme.onPrimary,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Voice Message',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'From ${message.senderName}',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withOpacity(0.6),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                IconButton(
+                  onPressed: () => _playAudio(context),
+                  icon: const Icon(Icons.play_arrow),
+                  iconSize: 32,
+                  style: IconButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => _downloadAudio(context),
+                  icon: const Icon(Icons.download),
+                  iconSize: 24,
+                  style: IconButton.styleFrom(
+                    backgroundColor: Theme.of(
+                      context,
+                    ).colorScheme.secondaryContainer,
+                    foregroundColor: Theme.of(
+                      context,
+                    ).colorScheme.onSecondaryContainer,
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => _shareAudio(context),
+                  icon: const Icon(Icons.share),
+                  iconSize: 24,
+                  style: IconButton.styleFrom(
+                    backgroundColor: Theme.of(
+                      context,
+                    ).colorScheme.tertiaryContainer,
+                    foregroundColor: Theme.of(
+                      context,
+                    ).colorScheme.onTertiaryContainer,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _downloadDocument(BuildContext context) async {
+    Navigator.pop(context);
+    try {
+      _showLoadingSnackBar('Downloading ${_getDocumentName()}...');
+
+      final dio = Dio();
+      final tempDir = await getTemporaryDirectory();
+      final fileName = _getDocumentName();
+      final filePath = '${tempDir.path}/$fileName';
+
+      await dio.download(message.mediaUrl!, filePath);
+
+      // Save to downloads folder
+      await _saveToDownloads(filePath, fileName);
+
+      _showSuccessSnackBar('Document downloaded successfully');
+    } catch (e) {
+      _showErrorSnackBar('Failed to download document: $e');
+    }
+  }
+
+  Future<void> _openDocument(BuildContext context) async {
+    Navigator.pop(context);
+    try {
+      await _launchUrl(message.mediaUrl!);
+    } catch (e) {
+      _showErrorSnackBar('Failed to open document: $e');
+    }
+  }
+
+  Future<void> _shareDocument(BuildContext context) async {
+    Navigator.pop(context);
+    try {
+      await Share.shareUri(Uri.parse(message.mediaUrl!));
+    } catch (e) {
+      _showErrorSnackBar('Failed to share document: $e');
+    }
+  }
+
+  Future<void> _playAudio(BuildContext context) async {
+    Navigator.pop(context);
+    try {
+      _showSuccessSnackBar('Playing voice message...');
+      await _launchUrl(message.mediaUrl!);
+    } catch (e) {
+      _showErrorSnackBar('Failed to play audio: $e');
+    }
+  }
+
+  Future<void> _downloadAudio(BuildContext context) async {
+    Navigator.pop(context);
+    try {
+      _showLoadingSnackBar('Downloading voice message...');
+
+      final dio = Dio();
+      final tempDir = await getTemporaryDirectory();
+      final fileName =
+          'voice_${message.createdAt.millisecondsSinceEpoch}.${message.mediaType ?? 'm4a'}';
+      final filePath = '${tempDir.path}/$fileName';
+
+      await dio.download(message.mediaUrl!, filePath);
+      await _saveToDownloads(filePath, fileName);
+
+      _showSuccessSnackBar('Voice message downloaded successfully');
+    } catch (e) {
+      _showErrorSnackBar('Failed to download audio: $e');
+    }
+  }
+
+  Future<void> _shareAudio(BuildContext context) async {
+    Navigator.pop(context);
+    try {
+      await Share.shareUri(Uri.parse(message.mediaUrl!));
+    } catch (e) {
+      _showErrorSnackBar('Failed to share audio: $e');
+    }
+  }
+
+  Future<void> _launchUrl(String url) async {
+    try {
+      final uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        throw 'Could not launch $url';
+      }
+    } catch (e) {
+      throw 'Error launching URL: $e';
+    }
+  }
+
+  void _showUnsupportedMediaDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Unsupported Media'),
+        content: const Text('This media type is not supported for preview.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+          if (message.mediaUrl != null && message.mediaUrl!.isNotEmpty)
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _launchUrl(message.mediaUrl!);
+              },
+              child: const Text('Open Externally'),
+            ),
+        ],
+      ),
+    );
+  }
+
+  void _showTextMessageOptions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.outline,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceVariant,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                message.content,
+                style: Theme.of(context).textTheme.bodyMedium,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      Clipboard.setData(ClipboardData(text: message.content));
+                      _showSuccessSnackBar('Message copied to clipboard');
+                    },
+                    icon: const Icon(Icons.copy),
+                    label: const Text('Copy'),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _showMessageInfo(context);
+                    },
+                    icon: const Icon(Icons.info),
+                    label: const Text('Info'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -994,7 +1485,6 @@ class MessageBubble extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Handle bar
           Container(
             width: 40,
             height: 4,
@@ -1015,11 +1505,61 @@ class MessageBubble extends StatelessWidget {
               onTap: () {
                 Clipboard.setData(ClipboardData(text: message.content));
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Text copied to clipboard')),
-                );
+                _showSuccessSnackBar('Text copied to clipboard');
               },
             ),
+
+          // Save to gallery (for images and videos)
+          if (MessageUtils.isImageMessage(message) ||
+              MessageUtils.isVideoMessage(message))
+            _buildOptionTile(
+              context,
+              icon: Icons.save_alt,
+              title: 'Save to Gallery',
+              onTap: () {
+                Navigator.pop(context);
+                _saveMediaToGallery(context);
+              },
+            ),
+
+          // Download option (for all media)
+          if (MessageUtils.isMediaMessage(message))
+            _buildOptionTile(
+              context,
+              icon: Icons.download,
+              title: 'Download',
+              onTap: () {
+                Navigator.pop(context);
+                if (MessageUtils.isDocumentMessage(message)) {
+                  _downloadDocument(context);
+                } else if (MessageUtils.isAudioMessage(message)) {
+                  _downloadAudio(context);
+                } else {
+                  _saveMediaToGallery(context);
+                }
+              },
+            ),
+
+          // Share option
+          _buildOptionTile(
+            context,
+            icon: Icons.share,
+            title: 'Share',
+            onTap: () {
+              Navigator.pop(context);
+              if (MessageUtils.isMediaMessage(message)) {
+                if (MessageUtils.isDocumentMessage(message)) {
+                  _shareDocument(context);
+                } else if (MessageUtils.isAudioMessage(message)) {
+                  _shareAudio(context);
+                } else {
+                  Share.shareUri(Uri.parse(message.mediaUrl!));
+                }
+              } else {
+                Share.share(message.content);
+              }
+            },
+          ),
 
           // Reply option
           _buildOptionTile(
@@ -1136,7 +1676,7 @@ class MessageBubble extends StatelessWidget {
             _buildInfoRow(
               context,
               'Sent',
-              ChatDateUtils.formatMessageTime(message.createdAt),
+              ChatDateUtils.formatDetailedTimestamp(message.createdAt),
             ),
             if (MessageUtils.isMediaMessage(message))
               _buildInfoRow(context, 'Type', message.mediaType ?? 'Unknown'),
