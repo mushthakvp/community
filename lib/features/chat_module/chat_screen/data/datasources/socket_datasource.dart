@@ -34,6 +34,9 @@ class SocketDataSourceImpl implements SocketDataSource {
   static const int maxReconnectAttempts = 5;
   static const Duration reconnectDelay = Duration(seconds: 2);
 
+  // Add current chat ID tracking
+  String? _currentChatId;
+
   @override
   bool get isConnected => _isConnected && _socket?.connected == true;
 
@@ -95,6 +98,9 @@ class SocketDataSourceImpl implements SocketDataSource {
       _isConnected = true;
       _reconnectAttempts = 0;
       _cancelReconnectTimer();
+      if (_currentChatId != null) {
+        _rejoinCurrentRoom();
+      }
     });
 
     _socket!.onDisconnect((reason) {
@@ -115,26 +121,43 @@ class SocketDataSourceImpl implements SocketDataSource {
       log('Socket error: $error');
     });
 
-    _socket!.on('message_received_singleChat', (data) {
+    _socket!.on('message_received_community', (data) {
       try {
-        debugPrint('Received message: $data');
-        final message = MessageModel.fromJson(data);
-        _messageController.add(message);
-      } catch (e) {
+        debugPrint('Raw socket message received: $data');
+        if (data == null) {
+          debugPrint('Received null message data');
+          return;
+        }
+        final message = MessageModel.fromJson(data as Map<String, dynamic>);
+        debugPrint(
+          'Parsed message: ${message.content} from ${message.senderName}',
+        );
+        if (!_messageController.isClosed) {
+          _messageController.add(message);
+          debugPrint('Message added to stream successfully');
+        } else {
+          debugPrint('Message controller is closed, cannot add message');
+        }
+      } catch (e, stackTrace) {
         debugPrint('Error parsing received message: $e');
+        debugPrint('Stack trace: $stackTrace');
+        debugPrint('Raw data: $data');
       }
     });
-
+    _socket!.on('userJoinedRoom', (data) {
+      debugPrint('User joined room: $data');
+    });
+    _socket!.on('userLeftRoom', (data) {
+      debugPrint('User left room: $data');
+    });
     _socket!.onReconnect((attempt) {
       debugPrint('Socket reconnected after $attempt attempts');
       _isConnected = true;
       _reconnectAttempts = 0;
     });
-
     _socket!.onReconnectError((error) {
       debugPrint('Socket reconnection error: $error');
     });
-
     _socket!.onReconnectFailed((_) {
       debugPrint('Socket reconnection failed after maximum attempts');
       _isConnected = false;
@@ -145,14 +168,12 @@ class SocketDataSourceImpl implements SocketDataSource {
     int attempts = 0;
     const maxAttempts = 20;
     const delayMs = 500;
-
     while (!_isConnected &&
         attempts < maxAttempts &&
         _socket?.connected != true) {
       await Future.delayed(const Duration(milliseconds: delayMs));
       attempts++;
     }
-
     if (!_isConnected && _socket?.connected != true) {
       throw Exception(
         'Socket connection timeout after ${maxAttempts * delayMs}ms',
@@ -173,7 +194,6 @@ class SocketDataSourceImpl implements SocketDataSource {
     debugPrint(
       'Scheduling reconnection attempt $_reconnectAttempts in ${delay.inSeconds} seconds',
     );
-
     _reconnectTimer = Timer(delay, () {
       if (!isConnected) {
         debugPrint(
@@ -197,16 +217,18 @@ class SocketDataSourceImpl implements SocketDataSource {
       _cancelReconnectTimer();
       _isConnected = false;
       _isConnecting = false;
-
+      if (_currentChatId != null) {
+        await leaveRoom(_currentChatId!);
+      }
       if (_socket != null) {
         _socket!.disconnect();
         _socket!.dispose();
         _socket = null;
       }
-
       if (!_messageController.isClosed) {
         await _messageController.close();
       }
+      debugPrint('Socket disconnected successfully');
     } catch (e) {
       debugPrint('Error disconnecting socket: $e');
     }
@@ -227,7 +249,6 @@ class SocketDataSourceImpl implements SocketDataSource {
         );
       }
     }
-
     try {
       final token = await StorageService.getToken();
       final userId = await StorageService.getUserId();
@@ -235,14 +256,13 @@ class SocketDataSourceImpl implements SocketDataSource {
         throw Exception('User not authenticated');
       }
       final data = {
-        'chatId': chatId,
+        'communityId': chatId,
         'token': token,
         'msg': content,
         'media': mediaUrl ?? '',
         'ext': mediaType ?? '',
       };
-      debugPrint('Sending message: $data');
-      _socket!.emit('newMessageSingleChat', data);
+      _socket!.emit('newMessageCommunity', data);
       return MessageModel(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         chatId: chatId,
@@ -262,6 +282,7 @@ class SocketDataSourceImpl implements SocketDataSource {
 
   @override
   Stream<MessageModel> listenToNewMessages(String chatId) {
+    _currentChatId = chatId;
     return _messageController.stream;
   }
 
@@ -278,10 +299,12 @@ class SocketDataSourceImpl implements SocketDataSource {
       if (token == null) {
         throw Exception('User not authenticated');
       }
-      debugPrint('Joining room: $chatId');
+      _currentChatId = chatId;
+      debugPrint('Joining room: $chatId with token');
       _socket!.emit('setup', {'chatId': chatId, 'token': token});
+      await Future.delayed(const Duration(milliseconds: 500));
+      debugPrint('Successfully joined room: $chatId');
     } catch (e) {
-      log('Error joining room: $e');
       throw Exception('Failed to join room: $e');
     }
   }
@@ -289,14 +312,32 @@ class SocketDataSourceImpl implements SocketDataSource {
   @override
   Future<void> leaveRoom(String chatId) async {
     if (_socket == null) return;
+
     try {
       debugPrint('Leaving room: $chatId');
       _socket!.emit('leave', {'chatId': chatId});
+      if (_currentChatId == chatId) {
+        _currentChatId = null;
+      }
+      debugPrint('Successfully left room: $chatId');
     } catch (e) {
       debugPrint('Error leaving room: $e');
     }
   }
 
+  // Helper method to rejoin room after reconnection
+  Future<void> _rejoinCurrentRoom() async {
+    if (_currentChatId != null) {
+      try {
+        debugPrint('Rejoining room after reconnection: $_currentChatId');
+        await joinRoom(_currentChatId!);
+      } catch (e) {
+        debugPrint('Failed to rejoin room: $e');
+      }
+    }
+  }
+
+  // Add method to manually reconnect
   Future<void> reconnect() async {
     debugPrint('Manual reconnection requested');
     _reconnectAttempts = 0;

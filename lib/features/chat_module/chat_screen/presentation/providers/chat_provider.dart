@@ -89,36 +89,62 @@ class ChatProvider extends ChangeNotifier {
       ? (socketDataSource as SocketDataSourceImpl).isConnected
       : false;
 
-  // Initialize chat - Updated to ensure socket connection
+  // Initialize chat - Fixed version
   Future<void> initializeChat(String chatId) async {
     _setLoading(true);
     _clearError();
+
     try {
+      // Cancel any existing subscription
+      _messageSubscription?.cancel();
+
+      // Ensure socket is connected
       await _ensureSocketConnection();
+
+      // Always join the room first, regardless of user status
+      await _joinSocketRoom(chatId);
+
+      // Start listening to messages immediately after joining room
+      _setupMessageListener(chatId);
+
+      // Fetch chat data
       final result = await fetchChatWithMessages(
         FetchChatWithMessagesParams(chatId: chatId),
       );
+
       result.fold((failure) => _setError(failure.message), (data) {
         _currentChat = data['chat'] as ChatEntity;
         _messages = data['messages'] as List<MessageEntity>;
         _scrollToBottom();
         notifyListeners();
       });
-      if (_currentChat?.isUserInGroup == true ||
-          _currentChat?.isCreator == true) {
-        await _joinSocketRoom(chatId);
-        _messageSubscription?.cancel();
-        _messageSubscription = chatRepository
-            .listenToNewMessages(chatId)
-            .listen(
-              _onNewMessage,
-              onError: (error) => _setError(error.toString()),
-            );
-      }
     } catch (e) {
       _setError(e.toString());
+      debugPrint('Initialize chat error: $e');
     }
+
     _setLoading(false);
+  }
+
+  // Setup message listener - Separated method
+  void _setupMessageListener(String chatId) {
+    debugPrint('Setting up message listener for chat: $chatId');
+
+    _messageSubscription = chatRepository
+        .listenToNewMessages(chatId)
+        .listen(
+          (message) {
+            debugPrint('Received new message: ${message.content}');
+            _onNewMessage(message);
+          },
+          onError: (error) {
+            debugPrint('Message listener error: $error');
+            _setError('Connection error: $error');
+          },
+          onDone: () {
+            debugPrint('Message stream closed');
+          },
+        );
   }
 
   // Ensure socket connection
@@ -138,13 +164,16 @@ class ChatProvider extends ChangeNotifier {
     }
   }
 
-  // Join socket room
+  // Join socket room - Enhanced with better error handling
   Future<void> _joinSocketRoom(String chatId) async {
     try {
+      debugPrint('Joining socket room: $chatId');
       await socketDataSource.joinRoom(chatId);
-      debugPrint('Joined socket room: $chatId');
+      debugPrint('Successfully joined socket room: $chatId');
     } catch (e) {
       debugPrint('Failed to join socket room: $e');
+      // Don't throw here, just log the error
+      // The message listener should still work even if room join fails
     }
   }
 
@@ -234,6 +263,30 @@ class ChatProvider extends ChangeNotifier {
       _setError(e.toString());
     }
     _setLoading(false);
+  }
+
+  // Add method to reconnect and rejoin room
+  Future<void> reconnectAndRejoin() async {
+    if (_currentChat == null) return;
+
+    _setConnecting(true);
+    try {
+      // Reconnect socket
+      await socketDataSource.connect();
+
+      // Rejoin room
+      await _joinSocketRoom(_currentChat!.id);
+
+      // Setup listener again
+      _setupMessageListener(_currentChat!.id);
+
+      debugPrint('Successfully reconnected and rejoined room');
+    } catch (e) {
+      debugPrint('Failed to reconnect and rejoin: $e');
+      _setError('Failed to reconnect: $e');
+    } finally {
+      _setConnecting(false);
+    }
   }
 
   // Reconnect socket
@@ -459,14 +512,25 @@ class ChatProvider extends ChangeNotifier {
 
   // Private methods
   void _onNewMessage(MessageEntity message) {
+    debugPrint('Processing new message: ${message.id}');
+
+    // Check if message already exists
     final existingIndex = _messages.indexWhere((m) => m.id == message.id);
+
     if (existingIndex != -1) {
+      // Update existing message
       _messages[existingIndex] = message;
+      debugPrint('Updated existing message: ${message.id}');
     } else {
+      // Add new message
       _messages.add(message);
+      debugPrint('Added new message: ${message.id}');
     }
+
     _scrollToBottom();
     notifyListeners();
+
+    // Mark as read if not from current user
     if (!message.isCurrentUser) {
       markMessagesAsRead();
     }
@@ -545,14 +609,30 @@ class ChatProvider extends ChangeNotifier {
 
   @override
   void dispose() {
+    debugPrint('Disposing ChatProvider');
+
+    // Cancel message subscription
     _messageSubscription?.cancel();
+
+    // Leave current room if exists
+    if (_currentChat != null) {
+      socketDataSource.leaveRoom(_currentChat!.id).catchError((e) {
+        debugPrint('Error leaving room on dispose: $e');
+      });
+    }
+
+    // Stop recording timer
     _recordingTimer?.cancel();
+
+    // Dispose controllers and resources
     _audioRecorder.dispose();
     messageController.dispose();
     scrollController.dispose();
     focusNode.dispose();
+
+    // Disconnect socket
     socketDataSource.disconnect().catchError((e) {
-      debugPrint('Error disconnecting socket: $e');
+      debugPrint('Error disconnecting socket on dispose: $e');
     });
 
     super.dispose();

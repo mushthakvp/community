@@ -26,13 +26,52 @@ class ChatPage extends StatefulWidget {
   State<ChatPage> createState() => _ChatPageState();
 }
 
-class _ChatPageState extends State<ChatPage> {
+class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
+  bool isAppInForeground = true;
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ChatProvider>().initializeChat(widget.chatId);
     });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    switch (state) {
+      case AppLifecycleState.resumed:
+        isAppInForeground = true;
+        _handleAppResumed();
+        break;
+      case AppLifecycleState.paused:
+      case AppLifecycleState.inactive:
+        isAppInForeground = false;
+        break;
+      case AppLifecycleState.detached:
+        break;
+      case AppLifecycleState.hidden:
+        isAppInForeground = true;
+        _handleAppResumed();
+        break;
+    }
+  }
+
+  void _handleAppResumed() {
+    final provider = context.read<ChatProvider>();
+    if (!provider.isSocketConnected) {
+      debugPrint('App resumed, reconnecting socket...');
+      provider.reconnectAndRejoin();
+    }
   }
 
   @override
@@ -59,14 +98,97 @@ class _ChatPageState extends State<ChatPage> {
                 onBackPressed: () => context.pop(),
                 onMenuPressed: () {},
               ),
+
+              // Connection status indicator
+              _buildConnectionStatus(provider),
+
               if (isBotChat) _buildBotChatBanner(context),
+
               Expanded(child: _buildMessagesArea(context, provider, isBotChat)),
+
               ChatInput(chatId: widget.chatId, isBotChat: isBotChat),
             ],
           );
         },
       ),
     );
+  }
+
+  Widget _buildConnectionStatus(ChatProvider provider) {
+    if (provider.isConnecting) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.orange.withOpacity(0.1),
+          border: Border(
+            bottom: BorderSide(color: Colors.orange.withOpacity(0.3)),
+          ),
+        ),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.orange,
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Text(
+              'Connecting...',
+              style: TextStyle(
+                color: Colors.orange,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (!provider.isSocketConnected) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.red.withOpacity(0.1),
+          border: Border(
+            bottom: BorderSide(color: Colors.red.withOpacity(0.3)),
+          ),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.cloud_off, color: Colors.red, size: 16),
+            const SizedBox(width: 8),
+            const Expanded(
+              child: Text(
+                'Connection lost. Messages may not update.',
+                style: TextStyle(
+                  color: Colors.red,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () => provider.reconnectAndRejoin(),
+              child: const Text(
+                'Reconnect',
+                style: TextStyle(
+                  color: Colors.red,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Connected state - no indicator needed
+    return const SizedBox.shrink();
   }
 
   Widget _buildMessagesArea(
@@ -77,6 +199,7 @@ class _ChatPageState extends State<ChatPage> {
     if (provider.isLoading && provider.messages.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
+
     if (provider.error != null) {
       return Center(
         child: Column(
@@ -94,14 +217,26 @@ class _ChatPageState extends State<ChatPage> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () => provider.initializeChat(widget.chatId),
-              child: const Text('Retry'),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                  onPressed: () => provider.initializeChat(widget.chatId),
+                  child: const Text('Retry'),
+                ),
+                const SizedBox(width: 16),
+                if (!provider.isSocketConnected)
+                  ElevatedButton(
+                    onPressed: () => provider.reconnectAndRejoin(),
+                    child: const Text('Reconnect'),
+                  ),
+              ],
             ),
           ],
         ),
       );
     }
+
     if (provider.messages.isEmpty) {
       return Center(
         child: Column(
@@ -132,36 +267,45 @@ class _ChatPageState extends State<ChatPage> {
         ),
       );
     }
+
     final groupedMessages = MessageUtils.groupMessagesByDate(provider.messages);
-    return ListView.builder(
-      controller: provider.scrollController,
-      padding: const EdgeInsets.only(top: 8, bottom: 30),
-      itemCount: groupedMessages.length,
-      itemBuilder: (context, index) {
-        final group = groupedMessages[index];
-        return Column(
-          children: [
-            Container(
-              margin: const EdgeInsets.symmetric(vertical: 16),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceVariant,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Text(
-                MessageUtils.formatDateHeader(group.date),
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+    return RefreshIndicator(
+      onRefresh: () async {
+        await provider.refreshChat(widget.chatId);
+      },
+      child: ListView.builder(
+        controller: provider.scrollController,
+        padding: const EdgeInsets.only(top: 8, bottom: 30),
+        itemCount: groupedMessages.length,
+        itemBuilder: (context, index) {
+          final group = groupedMessages[index];
+          return Column(
+            children: [
+              Container(
+                margin: const EdgeInsets.symmetric(vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceVariant,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Text(
+                  MessageUtils.formatDateHeader(group.date),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ),
-            ),
-            ...group.messages.map(
-              (message) =>
-                  MessageBubble(message: message, isGroup: widget.isGroup),
-            ),
-          ],
-        );
-      },
+              ...group.messages.map(
+                (message) =>
+                    MessageBubble(message: message, isGroup: widget.isGroup),
+              ),
+            ],
+          );
+        },
+      ),
     );
   }
 
