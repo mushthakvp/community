@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:livera/core/constants/route_constants.dart';
 import 'package:livera/core/utils/extensions.dart';
 import 'package:livera/core/utils/result.dart';
 import 'package:provider/provider.dart';
@@ -275,8 +276,7 @@ class _VJobHomePageState extends State<VJobHomePage> {
   }
 
   void _handleSearchTap() {
-    // Navigate to search page
-    context.push('/vjob/search');
+    context.push(RouteConstants.vjobSearch);
   }
 
   void _handleToggleView() {
