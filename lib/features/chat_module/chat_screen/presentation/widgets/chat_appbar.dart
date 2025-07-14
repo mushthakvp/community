@@ -42,7 +42,9 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
         style: IconButton.styleFrom(foregroundColor: Colors.white),
       ),
       title: GestureDetector(
-        onTap: () => _navigateToProfile(context),
+        onTap: (isGroup && !isBotChat)
+            ? () => _navigateToProfile(context)
+            : null,
         child: Row(
           children: [
             // Chat avatar
@@ -58,7 +60,6 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
                       ? Icon(_getChatIcon(), color: Colors.white, size: 24)
                       : null,
                 ),
-                // Bot indicator
                 if (isBotChat)
                   Positioned(
                     bottom: 0,
@@ -163,7 +164,7 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   void _navigateToProfile(BuildContext context) {
-    if (isGroup) {
+    if (isGroup && !isBotChat) {
       context.push(
         '${ChatRouter.chatProfilePath}/$chatId',
         extra: {
@@ -172,86 +173,7 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
           'isGroup': isGroup,
         },
       );
-    } else {
-      // _showUserInfoDialog(context);
     }
-  }
-
-  @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
-}
-
-class CompactChatAppBar extends StatelessWidget implements PreferredSizeWidget {
-  final String chatName;
-  final String? chatImage;
-  final bool isGroup;
-  final bool isBotChat;
-  final VoidCallback onBackPressed;
-  final VoidCallback onMenuPressed;
-
-  const CompactChatAppBar({
-    super.key,
-    required this.chatName,
-    this.chatImage,
-    this.isGroup = false,
-    this.isBotChat = false,
-    required this.onBackPressed,
-    required this.onMenuPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return AppBar(
-      elevation: 1,
-      flexibleSpace: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFFFD700), // Gold
-              Color(0xFF000000), // Black
-            ],
-          ),
-        ),
-      ),
-      leading: IconButton(
-        onPressed: onBackPressed,
-        icon: const Icon(Icons.arrow_back, color: Colors.white),
-      ),
-      title: Row(
-        children: [
-          CircleAvatar(
-            radius: 16,
-            backgroundColor: Colors.white.withOpacity(0.2),
-            backgroundImage: chatImage != null
-                ? CachedNetworkImageProvider(chatImage!)
-                : null,
-            child: chatImage == null
-                ? Icon(
-                    isBotChat
-                        ? Icons.smart_toy
-                        : (isGroup ? Icons.group : Icons.person),
-                    color: Colors.white,
-                    size: 18,
-                  )
-                : null,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              chatName,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-                fontSize: 16,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   @override

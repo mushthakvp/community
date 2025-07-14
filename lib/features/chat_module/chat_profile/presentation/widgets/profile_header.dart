@@ -113,7 +113,7 @@ class ProfileHeader extends StatelessWidget {
 
           const SizedBox(height: 16),
 
-          // Stats Row
+          // Stats Row - Removed Status, kept Members and Role
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
@@ -129,14 +129,6 @@ class ProfileHeader extends StatelessWidget {
                     : Icons.person,
                 label: communityInfo.isCreator ? 'Creator' : 'Member',
                 value: communityInfo.isCreator ? 'Admin' : 'User',
-              ),
-              Container(width: 1, height: 40, color: Colors.grey[600]),
-              _buildStatItem(
-                icon: communityInfo.isUserInGroup
-                    ? Icons.check_circle
-                    : Icons.pending,
-                label: 'Status',
-                value: communityInfo.isUserInGroup ? 'Joined' : 'Pending',
               ),
             ],
           ),

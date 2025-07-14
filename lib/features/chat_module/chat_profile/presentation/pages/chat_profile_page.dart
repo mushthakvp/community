@@ -11,7 +11,6 @@ import '../widgets/member_list_item.dart';
 import '../widgets/member_request_item.dart';
 import '../widgets/member_search_field.dart';
 import '../widgets/profile_header.dart';
-import 'add_member_page.dart';
 import 'members_list_page.dart';
 
 class ChatProfilePage extends StatefulWidget {
@@ -35,11 +34,13 @@ class ChatProfilePage extends StatefulWidget {
 class _ChatProfilePageState extends State<ChatProfilePage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  late ScrollController _scrollController;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _scrollController = ScrollController();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ChatProfileProvider>().initializeCommunityProfile(
@@ -51,6 +52,7 @@ class _ChatProfilePageState extends State<ChatProfilePage>
   @override
   void dispose() {
     _tabController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -122,69 +124,76 @@ class _ChatProfilePageState extends State<ChatProfilePage>
     final isCreator = provider.isCreator;
     final isUserInGroup = provider.isUserInGroup;
 
-    return Column(
-      children: [
-        // Custom App Bar
-        SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              children: [
-                IconButton(
-                  onPressed: () => context.pop(),
-                  icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-                ),
-                const Text(
-                  'Profile',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const Spacer(),
-                if (!isCreator && isUserInGroup)
-                  _buildLeaveCommunityButton(provider),
-              ],
+    return CustomScrollView(
+      controller: _scrollController,
+      slivers: [
+        // Sliver App Bar with Profile Header
+        SliverAppBar(
+          expandedHeight: 350.0,
+          floating: false,
+          pinned: true,
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          leading: IconButton(
+            onPressed: () => context.pop(),
+            icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+          ),
+          title: const Text(
+            'Profile',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w500,
             ),
           ),
-        ),
-
-        // Profile Header
-        ProfileHeader(
-          communityInfo: provider.communityInfo!,
-          memberCount: provider.totalMemberCount,
-        ),
-
-        const SizedBox(height: 20),
-
-        if (isCreator) ...[
-          // Tab Bar for Creator
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: BoxDecoration(
-              color: Colors.grey[800],
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: TabBar(
-              controller: _tabController,
-              labelColor: Colors.white,
-              unselectedLabelColor: Colors.grey[400],
-              indicator: BoxDecoration(
-                color: AppConstants.primary,
-                borderRadius: BorderRadius.circular(12),
+          actions: [
+            if (!isCreator && isUserInGroup)
+              _buildLeaveCommunityButton(provider),
+          ],
+          flexibleSpace: FlexibleSpaceBar(
+            background: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFF1A1A1A), Color(0xFF0D0D0D)],
+                ),
               ),
-              tabs: [
-                Tab(text: 'Members (${provider.totalMemberCount})'),
-                Tab(text: 'Requests (${provider.totalRequestCount})'),
-              ],
+              child: SafeArea(
+                child: ProfileHeader(
+                  communityInfo: provider.communityInfo!,
+                  memberCount: provider.totalMemberCount,
+                ),
+              ),
+            ),
+          ),
+        ),
+
+        // Tab Bar (only for creators)
+        if (isCreator)
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: _SliverTabBarDelegate(
+              TabBar(
+                controller: _tabController,
+                labelColor: Colors.white,
+                unselectedLabelColor: Colors.grey[400],
+                indicator: BoxDecoration(
+                  color: AppConstants.primary,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                indicatorSize: TabBarIndicatorSize.tab,
+                tabs: [
+                  Tab(text: 'Members (${provider.totalMemberCount})'),
+                  Tab(text: 'Requests (${provider.totalRequestCount})'),
+                ],
+              ),
             ),
           ),
 
-          const SizedBox(height: 20),
-
-          // Tab Bar View
-          Expanded(
+        // Content
+        if (isCreator)
+          SliverFillRemaining(
             child: TabBarView(
               controller: _tabController,
               children: [
@@ -192,31 +201,32 @@ class _ChatProfilePageState extends State<ChatProfilePage>
                 _buildRequestsTab(provider),
               ],
             ),
-          ),
-        ] else ...[
-          // Members list for non-creators
-          _buildMembersSection(provider),
-        ],
+          )
+        else
+          SliverToBoxAdapter(child: _buildMembersSection(provider)),
       ],
     );
   }
 
   Widget _buildLeaveCommunityButton(ChatProfileProvider provider) {
-    return GestureDetector(
-      onTap: () => _showLeaveCommunityDialog(provider),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: Colors.red.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.red.withOpacity(0.3)),
-        ),
-        child: const Text(
-          'Leave',
-          style: TextStyle(
-            color: Colors.red,
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
+    return Padding(
+      padding: const EdgeInsets.only(right: 16.0),
+      child: GestureDetector(
+        onTap: () => _showLeaveCommunityDialog(provider),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.red.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.red.withOpacity(0.3)),
+          ),
+          child: const Text(
+            'Leave',
+            style: TextStyle(
+              color: Colors.red,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
       ),
@@ -226,25 +236,15 @@ class _ChatProfilePageState extends State<ChatProfilePage>
   Widget _buildMembersTab(ChatProfileProvider provider) {
     return Column(
       children: [
-        // Search and Add Button
+        // Search Field (removed Add Button)
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            children: [
-              Expanded(
-                child: MemberSearchField(
-                  controller: provider.memberSearchController,
-                  onChanged: provider.searchMembers,
-                  hintText: 'Search members...',
-                ),
-              ),
-              const SizedBox(width: 12),
-              _buildAddMemberButton(),
-            ],
+          padding: const EdgeInsets.all(16),
+          child: MemberSearchField(
+            controller: provider.memberSearchController,
+            onChanged: provider.searchMembers,
+            hintText: 'Search members...',
           ),
         ),
-
-        const SizedBox(height: 16),
 
         // Members List
         Expanded(child: _buildMembersList(provider)),
@@ -287,49 +287,51 @@ class _ChatProfilePageState extends State<ChatProfilePage>
   }
 
   Widget _buildMembersSection(ChatProfileProvider provider) {
-    return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              Text(
+                'Members (${provider.totalMemberCount})',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const Spacer(),
+              if (provider.totalMemberCount > 10)
+                TextButton(
+                  onPressed: () => _navigateToMembersList(),
+                  child: const Text('View All'),
+                ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 16),
+
+        if (provider.totalMemberCount > 4)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                Text(
-                  'Members (${provider.totalMemberCount})',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const Spacer(),
-                if (provider.totalMemberCount > 10)
-                  TextButton(
-                    onPressed: () => _navigateToMembersList(),
-                    child: const Text('View All'),
-                  ),
-              ],
+            child: MemberSearchField(
+              controller: provider.memberSearchController,
+              onChanged: provider.searchMembers,
+              hintText: 'Search members...',
             ),
           ),
 
-          const SizedBox(height: 16),
+        const SizedBox(height: 16),
 
-          if (provider.totalMemberCount > 4)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: MemberSearchField(
-                controller: provider.memberSearchController,
-                onChanged: provider.searchMembers,
-                hintText: 'Search members...',
-              ),
-            ),
-
-          const SizedBox(height: 16),
-
-          Expanded(child: _buildMembersList(provider)),
-        ],
-      ),
+        // Make members list scrollable
+        SizedBox(
+          height: MediaQuery.of(context).size.height * 0.6,
+          child: _buildMembersList(provider),
+        ),
+      ],
     );
   }
 
@@ -345,9 +347,8 @@ class _ChatProfilePageState extends State<ChatProfilePage>
                 return MemberListItem(
                   member: member,
                   isCreator: provider.isCreator,
-                  onRemove: provider.isCreator && !member.isCurrentUser
-                      ? () => _showRemoveMemberDialog(provider, member, index)
-                      : null,
+                  // Removed onRemove - no longer needed
+                  onRemove: null,
                   onSendFriendRequest:
                       !member.isFriend &&
                           !member.isRequested &&
@@ -377,25 +378,6 @@ class _ChatProfilePageState extends State<ChatProfilePage>
     );
   }
 
-  Widget _buildAddMemberButton() {
-    return GestureDetector(
-      onTap: _navigateToAddMember,
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              AppConstants.primary,
-              AppConstants.primary.withOpacity(0.8),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: const Icon(Icons.person_add, color: Colors.white, size: 24),
-      ),
-    );
-  }
-
   void _navigateToMembersList() {
     Navigator.push(
       context,
@@ -408,43 +390,14 @@ class _ChatProfilePageState extends State<ChatProfilePage>
     );
   }
 
-  void _navigateToAddMember() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => AddMemberPage(
-          communityId: widget.chatId,
-          communityName: widget.chatName ?? 'Community',
-        ),
-      ),
-    );
-  }
-
   void _navigateToChat(member) {
-    // Navigate to single chat - you'll need to implement this based on your routing
     context.pushNamed(
-      'singleChat', // Replace with your chat route name
+      'singleChat',
       pathParameters: {'chatId': member.id},
       queryParameters: {
         'chatName': member.name,
         'chatImage': member.profileImage ?? '',
       },
-    );
-  }
-
-  void _showRemoveMemberDialog(
-    ChatProfileProvider provider,
-    member,
-    int index,
-  ) {
-    AppUtils.showConfirmationDialog(
-      context: context,
-      title: 'Remove Member',
-      message:
-          'Are you sure you want to remove ${member.name} from the community?',
-      confirmText: 'Remove',
-      isDestructive: true,
-      onConfirm: () => provider.removeMemberFromCommunity(member.id, index),
     );
   }
 
@@ -458,9 +411,51 @@ class _ChatProfilePageState extends State<ChatProfilePage>
       onConfirm: () async {
         await provider.leaveCommunityAction();
         if (mounted) {
-          context.pop(); // Go back after leaving
+          context.pop();
         }
       },
     );
+  }
+}
+
+// Custom Sliver Tab Bar Delegate for pinned tab bar
+class _SliverTabBarDelegate extends SliverPersistentHeaderDelegate {
+  final TabBar _tabBar;
+
+  _SliverTabBarDelegate(this._tabBar);
+
+  @override
+  double get minExtent => _tabBar.preferredSize.height + 20;
+  @override
+  double get maxExtent => _tabBar.preferredSize.height + 20;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF1A1A1A), Color(0xFF0D0D0D)],
+        ),
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.grey[800],
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: _tabBar,
+      ),
+    );
+  }
+
+  @override
+  bool shouldRebuild(_SliverTabBarDelegate oldDelegate) {
+    return false;
   }
 }

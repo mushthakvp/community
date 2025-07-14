@@ -7,7 +7,7 @@ import '../../domain/entities/community_member_entity.dart';
 class MemberListItem extends StatelessWidget {
   final CommunityMemberEntity member;
   final bool isCreator;
-  final VoidCallback? onRemove;
+  final VoidCallback? onRemove; // This will be null now
   final VoidCallback? onSendFriendRequest;
   final VoidCallback? onChat;
   final bool isLoading;
@@ -178,7 +178,7 @@ class MemberListItem extends StatelessWidget {
             ),
           ),
 
-          // Action Buttons
+          // Action Buttons - Removed Remove Member option
           if (!member.isCurrentUser) ...[
             const SizedBox(width: 12),
             _buildActionButtons(),
@@ -234,7 +234,7 @@ class MemberListItem extends StatelessWidget {
           ),
 
         // Request Sent Indicator
-        if (member.isRequested) ...[
+        if (member.isRequested)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
@@ -247,27 +247,6 @@ class MemberListItem extends StatelessWidget {
                 color: Colors.orange,
                 fontSize: 10,
                 fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-        ],
-
-        // Remove Button (for creators)
-        if (isCreator && onRemove != null)
-          GestureDetector(
-            onTap: onRemove,
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.red.withOpacity(0.3)),
-              ),
-              child: const Icon(
-                Icons.remove_circle_outline,
-                color: Colors.red,
-                size: 16,
               ),
             ),
           ),
