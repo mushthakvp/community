@@ -15,6 +15,9 @@ class StorageService {
 
   static String get token =>
       _prefs.getString(StorageConstants.accessToken) ?? '';
+  static String get userId => _prefs.getString(StorageConstants.userId) ?? '';
+  static String get userProfilePicture =>
+      _prefs.getString(StorageConstants.userProfileCache) ?? '';
 
   // Secure Storage Methods
   static Future<void> setSecureString(String key, String value) async {

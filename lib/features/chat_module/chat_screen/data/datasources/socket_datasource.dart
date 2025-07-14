@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
@@ -46,11 +45,9 @@ class SocketDataSourceImpl implements SocketDataSource {
   @override
   Future<void> connect() async {
     if (_isConnecting) {
-      debugPrint('Socket connection already in progress');
       return;
     }
     if (isConnected) {
-      debugPrint('Socket already connected');
       return;
     }
     _isConnecting = true;
@@ -88,10 +85,8 @@ class SocketDataSourceImpl implements SocketDataSource {
       await _waitForConnection();
       _isConnecting = false;
       _reconnectAttempts = 0;
-      debugPrint('Socket connected successfully');
     } catch (e) {
       _isConnecting = false;
-      debugPrint('Socket connection error: $e');
       _scheduleReconnect();
       rethrow;
     }
@@ -99,7 +94,6 @@ class SocketDataSourceImpl implements SocketDataSource {
 
   void _setupSocketListeners() {
     _socket!.onConnect((_) {
-      debugPrint('Socket connected successfully');
       _isConnected = true;
       _reconnectAttempts = 0;
       _cancelReconnectTimer();
@@ -107,7 +101,6 @@ class SocketDataSourceImpl implements SocketDataSource {
     });
 
     _socket!.onDisconnect((reason) {
-      debugPrint('Socket disconnected: $reason');
       _isConnected = false;
       if (reason != 'io client disconnect') {
         _scheduleReconnect();
@@ -115,19 +108,17 @@ class SocketDataSourceImpl implements SocketDataSource {
     });
 
     _socket!.onConnectError((error) {
-      debugPrint('Socket connection error: $error');
       _isConnected = false;
       _scheduleReconnect();
     });
 
     _socket!.onError((error) {
-      log('Socket error: $error');
+      // Error handled silently
     });
 
     _socket!.on('message_received_community', (data) {
       try {
         if (data == null) {
-          debugPrint('Received null message data');
           return;
         }
         final rawData = data as Map<String, dynamic>;
@@ -147,9 +138,6 @@ class SocketDataSourceImpl implements SocketDataSource {
         }
 
         if (messageRoomId == null || messageRoomId.isEmpty) {
-          debugPrint(
-            'Message has no valid room ID - ignoring. Available fields: ${rawData.keys.toList()}',
-          );
           return;
         }
         final messageData = Map<String, dynamic>.from(rawData);
@@ -159,37 +147,27 @@ class SocketDataSourceImpl implements SocketDataSource {
         if (shouldEmit) {
           if (!_messageController.isClosed) {
             _messageController.add(message);
-          } else {
-            debugPrint('Message controller is closed, cannot add message');
           }
         }
       } catch (e, stackTrace) {
-        debugPrint('Error parsing received message: $e');
-        debugPrint('Stack trace: $stackTrace');
-        debugPrint('Raw data: $data');
+        debugPrint(
+          'Error in _socket!.on("message_received_community"): $e trace $stackTrace',
+        );
       }
     });
 
-    _socket!.on('userJoinedRoom', (data) {
-      debugPrint('User joined room: $data');
-    });
+    _socket!.on('userJoinedRoom', (data) {});
 
-    _socket!.on('userLeftRoom', (data) {
-      debugPrint('User left room: $data');
-    });
+    _socket!.on('userLeftRoom', (data) {});
 
     _socket!.onReconnect((attempt) {
-      debugPrint('Socket reconnected after $attempt attempts');
       _isConnected = true;
       _reconnectAttempts = 0;
     });
 
-    _socket!.onReconnectError((error) {
-      debugPrint('Socket reconnection error: $error');
-    });
+    _socket!.onReconnectError((error) {});
 
     _socket!.onReconnectFailed((_) {
-      debugPrint('Socket reconnection failed after maximum attempts');
       _isConnected = false;
     });
   }
@@ -223,7 +201,6 @@ class SocketDataSourceImpl implements SocketDataSource {
 
   void _scheduleReconnect() {
     if (_reconnectAttempts >= maxReconnectAttempts) {
-      debugPrint('Maximum reconnection attempts reached');
       return;
     }
     _cancelReconnectTimer();
@@ -231,17 +208,9 @@ class SocketDataSourceImpl implements SocketDataSource {
     final delay = Duration(
       seconds: reconnectDelay.inSeconds * _reconnectAttempts,
     );
-    debugPrint(
-      'Scheduling reconnection attempt $_reconnectAttempts in ${delay.inSeconds} seconds',
-    );
     _reconnectTimer = Timer(delay, () {
       if (!isConnected) {
-        debugPrint(
-          'Attempting reconnection $_reconnectAttempts/$maxReconnectAttempts',
-        );
-        _connectToSocket().catchError((e) {
-          debugPrint('Reconnection attempt $_reconnectAttempts failed: $e');
-        });
+        _connectToSocket().catchError((e) {});
       }
     });
   }
@@ -257,23 +226,17 @@ class SocketDataSourceImpl implements SocketDataSource {
       _cancelReconnectTimer();
       _isConnected = false;
       _isConnecting = false;
-
-      // Leave all rooms before disconnecting
       await _leaveAllRooms();
-
       if (_socket != null) {
         _socket!.disconnect();
         _socket!.dispose();
         _socket = null;
       }
-
       if (!_messageController.isClosed) {
         await _messageController.close();
       }
-
-      debugPrint('Socket disconnected successfully');
     } catch (e) {
-      debugPrint('Error disconnecting socket: $e');
+      // Error handled silently
     }
   }
 
@@ -292,14 +255,12 @@ class SocketDataSourceImpl implements SocketDataSource {
         );
       }
     }
-
     try {
       final token = await StorageService.getToken();
       final userId = await StorageService.getUserId();
       if (token == null || userId == null) {
         throw Exception('User not authenticated');
       }
-
       final data = {
         'communityId': chatId,
         'token': token,
@@ -307,9 +268,6 @@ class SocketDataSourceImpl implements SocketDataSource {
         'media': mediaUrl ?? '',
         'ext': mediaType ?? '',
       };
-
-      debugPrint('Sending message to room: $chatId');
-      debugPrint('Message data: $data');
       _socket!.emit('newMessageCommunity', data);
 
       return MessageModel(
@@ -324,21 +282,14 @@ class SocketDataSourceImpl implements SocketDataSource {
         isCurrentUser: true,
       );
     } catch (e) {
-      debugPrint('Error sending message: $e');
       throw Exception('Failed to send message: $e');
     }
   }
 
   @override
   Stream<MessageModel> listenToNewMessages(String chatId) {
-    debugPrint('Setting up message listener for chat: $chatId');
     return _messageController.stream.where((message) {
       final matches = message.chatId == chatId;
-      if (!matches) {
-        debugPrint(
-          'Filtering out message for different chat: ${message.chatId} (expected: $chatId)',
-        );
-      }
       return matches;
     });
   }
@@ -360,7 +311,6 @@ class SocketDataSourceImpl implements SocketDataSource {
 
       // Leave current room if different
       if (_currentRoomId != null && _currentRoomId != chatId) {
-        debugPrint('Leaving previous room: $_currentRoomId');
         await leaveRoom(_currentRoomId!);
       }
 
@@ -368,16 +318,11 @@ class SocketDataSourceImpl implements SocketDataSource {
       _currentRoomId = chatId;
       _joinedRooms.add(chatId);
 
-      debugPrint('Joining room: $chatId with token');
       _socket!.emit('setup', {'chatId': chatId, 'token': token});
 
       // Wait for the room join to complete
       await Future.delayed(const Duration(milliseconds: 1000));
-      debugPrint('Successfully joined room: $chatId');
-      debugPrint('Current room now: $_currentRoomId');
-      debugPrint('Joined rooms: $_joinedRooms');
     } catch (e) {
-      debugPrint('Failed to join room: $e');
       // Remove from tracking if join failed
       _joinedRooms.remove(chatId);
       if (_currentRoomId == chatId) {
@@ -392,7 +337,6 @@ class SocketDataSourceImpl implements SocketDataSource {
     if (_socket == null) return;
 
     try {
-      debugPrint('Leaving room: $chatId');
       _socket!.emit('leave', {'chatId': chatId});
 
       _joinedRooms.remove(chatId);
@@ -400,12 +344,8 @@ class SocketDataSourceImpl implements SocketDataSource {
       if (_currentRoomId == chatId) {
         _currentRoomId = null;
       }
-
-      debugPrint('Successfully left room: $chatId');
-      debugPrint('Current room now: $_currentRoomId');
-      debugPrint('Joined rooms: $_joinedRooms');
     } catch (e) {
-      debugPrint('Error leaving room: $e');
+      // Error handled silently
     }
   }
 
@@ -413,20 +353,17 @@ class SocketDataSourceImpl implements SocketDataSource {
   Future<void> _rejoinAllRooms() async {
     if (_joinedRooms.isEmpty) return;
 
-    debugPrint('Rejoining ${_joinedRooms.length} rooms after reconnection');
-
     final roomsToRejoin = List<String>.from(_joinedRooms);
     for (final roomId in roomsToRejoin) {
       try {
         // Don't use joinRoom here as it would clear _currentRoomId
         final token = await StorageService.getToken();
         if (token != null) {
-          debugPrint('Rejoining room: $roomId');
           _socket!.emit('setup', {'chatId': roomId, 'token': token});
           await Future.delayed(const Duration(milliseconds: 500));
         }
       } catch (e) {
-        debugPrint('Failed to rejoin room $roomId: $e');
+        // Error handled silently
       }
     }
   }
@@ -442,7 +379,6 @@ class SocketDataSourceImpl implements SocketDataSource {
 
   // Add method to manually reconnect
   Future<void> reconnect() async {
-    debugPrint('Manual reconnection requested');
     _reconnectAttempts = 0;
     await disconnect();
     await connect();

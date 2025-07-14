@@ -71,20 +71,15 @@ class ChatRepositoryImpl implements ChatRepository {
     String? mediaType,
   }) async {
     try {
-      // Ensure socket is connected and in the right room before sending
       if (socketDataSource is SocketDataSourceImpl) {
         final socketImpl = socketDataSource as SocketDataSourceImpl;
-
         if (!socketImpl.isConnected) {
           await socketDataSource.connect();
         }
-
-        // Make sure we're in the correct room
         if (socketImpl.currentRoom != chatId) {
           await socketDataSource.joinRoom(chatId);
         }
       }
-
       final message = await socketDataSource.sendMessage(
         chatId: chatId,
         content: content,

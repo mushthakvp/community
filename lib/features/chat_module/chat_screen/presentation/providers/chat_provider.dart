@@ -9,6 +9,7 @@ import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 
+import '../../../../../core/services/storage_service.dart';
 import '../../../shared/cache/chat_cache_data.dart';
 import '../../data/datasources/socket_datasource.dart';
 import '../../domain/entities/chat_entity.dart';
@@ -49,9 +50,11 @@ class ChatProvider extends ChangeNotifier {
   bool _isConnecting = false;
   String? _error;
 
+  // Enhanced optimistic message handling
   final Map<String, MessageEntity> _optimisticMessages =
       <String, MessageEntity>{};
   final Set<String> _processedMessageIds = <String>{};
+  final Map<String, Timer> _optimisticTimers = <String, Timer>{};
 
   final AudioRecorder _audioRecorder = AudioRecorder();
   String? _recordingPath;
@@ -135,6 +138,10 @@ class ChatProvider extends ChangeNotifier {
       _connectedChatId = null;
     }
 
+    // Clear all optimistic message timers
+    _optimisticTimers.forEach((key, timer) => timer.cancel());
+    _optimisticTimers.clear();
+
     _currentChatId = null;
     _messages.clear();
     _currentChat = null;
@@ -153,7 +160,10 @@ class ChatProvider extends ChangeNotifier {
 
   Future<void> initializeChat(String chatId) async {
     if (_isInitializing) return;
-
+    if (_currentChatId != null && _currentChatId != chatId) {
+      _clearCurrentChat();
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
     if (_currentChatId == chatId && _messages.isNotEmpty) {
       await _ensureSocketConnection();
       await _joinSocketRoom(chatId);
@@ -163,44 +173,38 @@ class ChatProvider extends ChangeNotifier {
       _scrollToBottomIfNeeded();
       return;
     }
-
     _isInitializing = true;
-
-    if (_currentChatId != null && _currentChatId != chatId) {
-      _clearCurrentChat();
-      await Future.delayed(const Duration(milliseconds: 100));
-    }
-
     _currentChatId = chatId;
     setLoading(true);
     _clearError();
     _shouldAutoScroll = true;
     _isUserScrolling = false;
-
+    _messages.clear();
+    _currentChat = null;
+    notifyListeners();
     ChatCacheData? cachedData;
-
     try {
       try {
         cachedData = _memoryCache[chatId];
+        if (cachedData != null && cachedData.isExpired()) {
+          _memoryCache.remove(chatId);
+          cachedData = null;
+        }
       } catch (e) {
         // Cache error handled
       }
-
-      if (cachedData != null && !cachedData.isExpired()) {
+      if (cachedData != null) {
         _currentChat = cachedData.chat;
         _messages = List.from(cachedData.messages);
         notifyListeners();
         _scrollToBottomIfNeeded();
       }
-
       await _ensureSocketConnection();
       await _joinSocketRoom(chatId);
       _setupMessageListener(chatId);
-
       final result = await fetchChatWithMessages(
         FetchChatWithMessagesParams(chatId: chatId),
       );
-
       result.fold(
         (failure) {
           if (cachedData == null) {
@@ -208,15 +212,23 @@ class ChatProvider extends ChangeNotifier {
           }
         },
         (data) {
-          _currentChat = data['chat'] as ChatEntity;
-          _messages = data['messages'] as List<MessageEntity>;
-          _updateCache(chatId, _currentChat!, _messages);
-          notifyListeners();
-          _scrollToBottomIfNeeded();
+          if (_currentChatId == chatId) {
+            _currentChat = data['chat'] as ChatEntity;
+            final newMessages = data['messages'] as List<MessageEntity>;
+            _messages.clear();
+            _messages.addAll(newMessages);
+            _processedMessageIds.clear();
+            for (final message in newMessages) {
+              _processedMessageIds.add(message.id);
+            }
+            _updateCache(chatId, _currentChat!, _messages);
+            notifyListeners();
+            _scrollToBottomIfNeeded();
+          }
         },
       );
     } catch (e) {
-      if (cachedData == null) {
+      if (cachedData == null && _currentChatId == chatId) {
         _setError(e.toString());
       }
     }
@@ -269,80 +281,63 @@ class ChatProvider extends ChangeNotifier {
   }
 
   void _onNewMessage(MessageEntity message) {
+    if (StorageService.userId == message.senderId) {
+      return;
+    }
     if (_currentChatId == null || message.chatId != _currentChatId) {
       return;
     }
-
     if (_processedMessageIds.contains(message.id)) {
       return;
     }
-
-    final optimisticKey = _findOptimisticMessage(message);
-    if (optimisticKey != null) {
-      _optimisticMessages.remove(optimisticKey);
-      final existingIndex = _messages.indexWhere(
-        (m) =>
-            m.senderId == message.senderId &&
-            m.content == message.content &&
-            m.createdAt.difference(message.createdAt).abs().inMinutes < 2,
-      );
-
-      if (existingIndex != -1) {
-        _messages[existingIndex] = message;
-      } else {
-        _messages.add(message);
-      }
+    final existingIndex = _messages.indexWhere((m) => m.id == message.id);
+    if (existingIndex != -1) {
+      _messages[existingIndex] = message;
     } else {
-      final existingIndex = _messages.indexWhere((m) => m.id == message.id);
-      if (existingIndex != -1) {
-        _messages[existingIndex] = message;
-      } else {
-        _messages.add(message);
-      }
+      _messages.add(message);
+      _messages.sort((a, b) => a.createdAt.compareTo(b.createdAt));
     }
-
     _processedMessageIds.add(message.id);
     _updateCacheWithNewMessage(_currentChatId!, message);
     notifyListeners();
-
     if (_shouldAutoScroll && !_isUserScrolling) {
       _scrollToBottomSmooth();
     }
-
     if (!message.isCurrentUser) {
       markMessagesAsRead();
     }
-  }
-
-  String? _findOptimisticMessage(MessageEntity serverMessage) {
-    for (final entry in _optimisticMessages.entries) {
-      final optimistic = entry.value;
-      if (optimistic.senderId == serverMessage.senderId &&
-          optimistic.content == serverMessage.content &&
-          optimistic.createdAt
-                  .difference(serverMessage.createdAt)
-                  .abs()
-                  .inMinutes <
-              2) {
-        return entry.key;
-      }
-    }
-    return null;
   }
 
   void _addOptimisticMessage(MessageEntity message) {
     if (_currentChatId == null || message.chatId != _currentChatId) {
       return;
     }
-
     final optimisticId =
-        '${message.senderId}_${DateTime.now().millisecondsSinceEpoch}';
-    _optimisticMessages[optimisticId] = message;
-
-    _messages.add(message);
+        'optimistic_${DateTime.now().millisecondsSinceEpoch}_${message.content.hashCode}';
+    final optimisticMessage = MessageEntity(
+      id: optimisticId,
+      chatId: message.chatId,
+      senderId: message.senderId,
+      senderName: message.senderName,
+      senderImage: message.senderImage,
+      content: message.content,
+      mediaUrl: message.mediaUrl,
+      mediaType: message.mediaType,
+      createdAt: message.createdAt,
+      isDeleted: message.isDeleted,
+      isCurrentUser: message.isCurrentUser,
+    );
+    _optimisticMessages[optimisticId] = optimisticMessage;
+    _messages.add(optimisticMessage);
     _shouldAutoScroll = true;
     notifyListeners();
     _scrollToBottomSmooth();
+    _optimisticTimers[optimisticId] = Timer(const Duration(seconds: 30), () {
+      _optimisticMessages.remove(optimisticId);
+      _optimisticTimers.remove(optimisticId);
+      _messages.removeWhere((m) => m.id == optimisticId);
+      notifyListeners();
+    });
   }
 
   void _scrollToBottomIfNeeded() {
@@ -400,7 +395,6 @@ class ChatProvider extends ChangeNotifier {
   Future<void> sendTextMessage(String chatId) async {
     final content = messageController.text.trim();
     if (content.isEmpty || _isSending) return;
-
     if (!canSendMessages) {
       _setError('You cannot send messages to this chat');
       return;
@@ -416,18 +410,14 @@ class ChatProvider extends ChangeNotifier {
         return;
       }
     }
-
     _setSending(true);
     messageController.clear();
-
     _shouldAutoScroll = true;
     _isUserScrolling = false;
-
     try {
       final result = await sendMessage(
         SendMessageParams(chatId: chatId, content: content),
       );
-
       result.fold((failure) => _setError(failure.message), (message) {
         _addOptimisticMessage(message);
         _updateCacheWithNewMessage(chatId, message);
@@ -793,6 +783,10 @@ class ChatProvider extends ChangeNotifier {
 
     _recordingTimer?.cancel();
     _scrollTimer?.cancel();
+
+    // Clean up optimistic timers
+    _optimisticTimers.forEach((key, timer) => timer.cancel());
+    _optimisticTimers.clear();
 
     _audioRecorder.dispose();
     messageController.dispose();
