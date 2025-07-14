@@ -249,32 +249,17 @@ class ChatProviders {
               ),
     ),
 
-    // Chat Profile Provider
-    ChangeNotifierProxyProvider10<
+    // Chat Profile Provider (Split into multiple providers due to limitation)
+    // First, create a provider for the use case bundle
+    ProxyProvider6<
       GetCommunityMembers,
       GetMemberRequests,
       AddMembers,
       RemoveMember,
       ApproveRequest,
       RejectRequest,
-      SendFriendRequest,
-      GetFriends,
-      GetCommunityInfo,
-      LeaveCommunity,
-      ChatProfileProvider
+      _ChatProfileUseCaseBundle1
     >(
-      create: (context) => ChatProfileProvider(
-        getCommunityMembersUseCase: context.read<GetCommunityMembers>(),
-        getMemberRequestsUseCase: context.read<GetMemberRequests>(),
-        addMembersUseCase: context.read<AddMembers>(),
-        removeMemberUseCase: context.read<RemoveMember>(),
-        approveRequestUseCase: context.read<ApproveRequest>(),
-        rejectRequestUseCase: context.read<RejectRequest>(),
-        sendFriendRequestUseCase: context.read<SendFriendRequest>(),
-        getFriendsUseCase: context.read<GetFriends>(),
-        getCommunityInfoUseCase: context.read<GetCommunityInfo>(),
-        leaveCommunityUseCase: context.read<LeaveCommunity>(),
-      ),
       update:
           (
             _,
@@ -284,25 +269,77 @@ class ChatProviders {
             removeMember,
             approveRequest,
             rejectRequest,
+            __,
+          ) => _ChatProfileUseCaseBundle1(
+            getCommunityMembers: getCommunityMembers,
+            getMemberRequests: getMemberRequests,
+            addMembers: addMembers,
+            removeMember: removeMember,
+            approveRequest: approveRequest,
+            rejectRequest: rejectRequest,
+          ),
+    ),
+
+    // Second bundle for remaining use cases
+    ProxyProvider4<
+      SendFriendRequest,
+      GetFriends,
+      GetCommunityInfo,
+      LeaveCommunity,
+      _ChatProfileUseCaseBundle2
+    >(
+      update:
+          (
+            _,
             sendFriendRequest,
             getFriends,
             getCommunityInfo,
             leaveCommunity,
-            previous,
-          ) =>
-              previous ??
-              ChatProfileProvider(
-                getCommunityMembersUseCase: getCommunityMembers,
-                getMemberRequestsUseCase: getMemberRequests,
-                addMembersUseCase: addMembers,
-                removeMemberUseCase: removeMember,
-                approveRequestUseCase: approveRequest,
-                rejectRequestUseCase: rejectRequest,
-                sendFriendRequestUseCase: sendFriendRequest,
-                getFriendsUseCase: getFriends,
-                getCommunityInfoUseCase: getCommunityInfo,
-                leaveCommunityUseCase: leaveCommunity,
-              ),
+            __,
+          ) => _ChatProfileUseCaseBundle2(
+            sendFriendRequest: sendFriendRequest,
+            getFriends: getFriends,
+            getCommunityInfo: getCommunityInfo,
+            leaveCommunity: leaveCommunity,
+          ),
+    ),
+
+    // Chat Profile Provider using the bundles
+    ChangeNotifierProxyProvider2<
+      _ChatProfileUseCaseBundle1,
+      _ChatProfileUseCaseBundle2,
+      ChatProfileProvider
+    >(
+      create: (context) {
+        final bundle1 = context.read<_ChatProfileUseCaseBundle1>();
+        final bundle2 = context.read<_ChatProfileUseCaseBundle2>();
+        return ChatProfileProvider(
+          getCommunityMembersUseCase: bundle1.getCommunityMembers,
+          getMemberRequestsUseCase: bundle1.getMemberRequests,
+          addMembersUseCase: bundle1.addMembers,
+          removeMemberUseCase: bundle1.removeMember,
+          approveRequestUseCase: bundle1.approveRequest,
+          rejectRequestUseCase: bundle1.rejectRequest,
+          sendFriendRequestUseCase: bundle2.sendFriendRequest,
+          getFriendsUseCase: bundle2.getFriends,
+          getCommunityInfoUseCase: bundle2.getCommunityInfo,
+          leaveCommunityUseCase: bundle2.leaveCommunity,
+        );
+      },
+      update: (_, bundle1, bundle2, previous) =>
+          previous ??
+          ChatProfileProvider(
+            getCommunityMembersUseCase: bundle1.getCommunityMembers,
+            getMemberRequestsUseCase: bundle1.getMemberRequests,
+            addMembersUseCase: bundle1.addMembers,
+            removeMemberUseCase: bundle1.removeMember,
+            approveRequestUseCase: bundle1.approveRequest,
+            rejectRequestUseCase: bundle1.rejectRequest,
+            sendFriendRequestUseCase: bundle2.sendFriendRequest,
+            getFriendsUseCase: bundle2.getFriends,
+            getCommunityInfoUseCase: bundle2.getCommunityInfo,
+            leaveCommunityUseCase: bundle2.leaveCommunity,
+          ),
     ),
 
     // VChat Provider
@@ -333,4 +370,37 @@ class ChatProviders {
               ),
     ),
   ];
+}
+
+// Helper classes to bundle use cases
+class _ChatProfileUseCaseBundle1 {
+  final GetCommunityMembers getCommunityMembers;
+  final GetMemberRequests getMemberRequests;
+  final AddMembers addMembers;
+  final RemoveMember removeMember;
+  final ApproveRequest approveRequest;
+  final RejectRequest rejectRequest;
+
+  _ChatProfileUseCaseBundle1({
+    required this.getCommunityMembers,
+    required this.getMemberRequests,
+    required this.addMembers,
+    required this.removeMember,
+    required this.approveRequest,
+    required this.rejectRequest,
+  });
+}
+
+class _ChatProfileUseCaseBundle2 {
+  final SendFriendRequest sendFriendRequest;
+  final GetFriends getFriends;
+  final GetCommunityInfo getCommunityInfo;
+  final LeaveCommunity leaveCommunity;
+
+  _ChatProfileUseCaseBundle2({
+    required this.sendFriendRequest,
+    required this.getFriends,
+    required this.getCommunityInfo,
+    required this.leaveCommunity,
+  });
 }

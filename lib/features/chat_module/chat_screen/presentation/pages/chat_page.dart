@@ -41,9 +41,6 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     if (!_isInitialized) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         final provider = context.read<ChatProvider>();
-
-        // Always initialize the chat, even if it's the same ID
-        // This ensures proper cleanup and fresh state
         provider.setLoading(true);
         provider.initializeChat(widget.chatId).then((_) {
           if (mounted) {
@@ -59,8 +56,6 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   @override
   void didUpdateWidget(ChatPage oldWidget) {
     super.didUpdateWidget(oldWidget);
-
-    // Reset initialization flag when chat changes
     if (oldWidget.chatId != widget.chatId) {
       _isInitialized = false;
       _initializeChat();
@@ -115,11 +110,9 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
         backgroundColor: Theme.of(context).colorScheme.surface,
         body: Consumer<ChatProvider>(
           builder: (context, provider, _) {
-            // Show loading state while initializing or if loading and no messages
             if (!_isInitialized && provider.isLoading) {
               return _buildOptimizedLoadingState(context, provider);
             }
-
             final isBotChat = provider.isBotChat;
             final chatName = provider.currentChat?.users.isNotEmpty == true
                 ? provider.currentChat!.users.first.name
@@ -135,6 +128,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                   chatImage: chatImage,
                   isGroup: widget.isGroup,
                   isBotChat: isBotChat,
+                  chatId: widget.chatId,
                   onBackPressed: () => context.pop(),
                   onMenuPressed: () {},
                 ),
@@ -167,6 +161,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
             isBotChat: false,
             onBackPressed: () => context.pop(),
             onMenuPressed: () {},
+            chatId: widget.chatId,
           ),
           Expanded(child: _buildLoadingMessages(context)),
           ChatInput(chatId: widget.chatId, isBotChat: false),
