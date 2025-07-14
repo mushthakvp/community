@@ -2,6 +2,24 @@ import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 
 import '../../core/network/api_client_wrapper.dart';
+import '../../core/network/network_info.dart';
+// Chat Profile Imports
+import '../../features/chat_module/chat_profile/data/datasources/chat_profile_local_datasource.dart';
+import '../../features/chat_module/chat_profile/data/datasources/chat_profile_remote_datasource.dart';
+import '../../features/chat_module/chat_profile/data/repositories/chat_profile_repository_impl.dart';
+import '../../features/chat_module/chat_profile/domain/repositories/chat_profile_repository.dart';
+import '../../features/chat_module/chat_profile/domain/usecases/add_members.dart';
+import '../../features/chat_module/chat_profile/domain/usecases/approve_request.dart';
+import '../../features/chat_module/chat_profile/domain/usecases/get_community_info.dart';
+import '../../features/chat_module/chat_profile/domain/usecases/get_community_members.dart';
+import '../../features/chat_module/chat_profile/domain/usecases/get_friends.dart';
+import '../../features/chat_module/chat_profile/domain/usecases/get_member_requests.dart';
+import '../../features/chat_module/chat_profile/domain/usecases/leave_community.dart';
+import '../../features/chat_module/chat_profile/domain/usecases/reject_request.dart';
+import '../../features/chat_module/chat_profile/domain/usecases/remove_member.dart';
+import '../../features/chat_module/chat_profile/domain/usecases/send_friend_request.dart';
+import '../../features/chat_module/chat_profile/presentation/providers/chat_profile_provider.dart';
+// Chat Screen Imports
 import '../../features/chat_module/chat_screen/data/datasources/chat_remote_datasource.dart';
 import '../../features/chat_module/chat_screen/data/datasources/socket_datasource.dart';
 import '../../features/chat_module/chat_screen/data/repositories/chat_repository_impl.dart';
@@ -10,6 +28,7 @@ import '../../features/chat_module/chat_screen/domain/usecases/fetch_messages.da
 import '../../features/chat_module/chat_screen/domain/usecases/send_message.dart';
 import '../../features/chat_module/chat_screen/domain/usecases/upload_media.dart';
 import '../../features/chat_module/chat_screen/presentation/providers/chat_provider.dart';
+// VChat Community Imports
 import '../../features/chat_module/vchat/data/datasources/community_remote_datasource.dart';
 import '../../features/chat_module/vchat/data/repositories/community_repository_impl.dart';
 import '../../features/chat_module/vchat/domain/repositories/community_repository.dart';
@@ -18,7 +37,7 @@ import '../../features/chat_module/vchat/domain/usecases/get_recommended_communi
 import '../../features/chat_module/vchat/domain/usecases/join_community.dart';
 import '../../features/chat_module/vchat/presentation/providers/vchat_provider.dart';
 
-/// Chat module providers for messaging and community features
+/// Enhanced Chat module providers for messaging, community features, and profile management
 class ChatProviders {
   static List<SingleChildWidget> get providers => [
     // ========================================
@@ -35,7 +54,22 @@ class ChatProviders {
     Provider<SocketDataSource>(create: (_) => SocketDataSourceImpl()),
 
     // ========================================
-    // CHAT SCREEN REPOSITORY
+    // CHAT PROFILE DATA SOURCES
+    // ========================================
+
+    // Chat Profile Remote Data Source (uses chat API client)
+    ProxyProvider<ApiClientWrapper, ChatProfileRemoteDataSource>(
+      update: (_, wrapper, __) =>
+          ChatProfileRemoteDataSourceImpl(apiClient: wrapper.chatClient),
+    ),
+
+    // Chat Profile Local Data Source
+    Provider<ChatProfileLocalDataSource>(
+      create: (_) => ChatProfileLocalDataSourceImpl(),
+    ),
+
+    // ========================================
+    // REPOSITORIES
     // ========================================
 
     // Chat Repository
@@ -44,6 +78,21 @@ class ChatProviders {
         remoteDataSource: remoteDataSource,
         socketDataSource: socketDataSource,
       ),
+    ),
+
+    // Chat Profile Repository
+    ProxyProvider3<
+      ChatProfileRemoteDataSource,
+      ChatProfileLocalDataSource,
+      NetworkInfo,
+      ChatProfileRepository
+    >(
+      update: (_, remoteDataSource, localDataSource, networkInfo, __) =>
+          ChatProfileRepositoryImpl(
+            remoteDataSource: remoteDataSource,
+            localDataSource: localDataSource,
+            networkInfo: networkInfo,
+          ),
     ),
 
     // ========================================
@@ -66,45 +115,57 @@ class ChatProviders {
     ),
 
     // ========================================
-    // CHAT SCREEN PROVIDER
+    // CHAT PROFILE USE CASES
     // ========================================
 
-    // Chat Provider
-    ChangeNotifierProxyProvider4<
-      FetchMessages,
-      SendMessage,
-      UploadMedia,
-      ChatRepository,
-      ChatProvider
-    >(
-      create: (context) => ChatProvider(
-        fetchMessages: context.read<FetchMessages>(),
-        sendMessage: context.read<SendMessage>(),
-        uploadMedia: context.read<UploadMedia>(),
-        chatRepository: context.read<ChatRepository>(),
-        fetchChatWithMessages: FetchChatWithMessages(
-          context.read<ChatRepository>(),
-        ),
-        socketDataSource: context.read<SocketDataSource>(),
-      ),
-      update:
-          (
-            _,
-            fetchMessages,
-            sendMessage,
-            uploadMedia,
-            chatRepository,
-            previous,
-          ) =>
-              previous ??
-              ChatProvider(
-                fetchMessages: fetchMessages,
-                sendMessage: sendMessage,
-                uploadMedia: uploadMedia,
-                chatRepository: chatRepository,
-                fetchChatWithMessages: FetchChatWithMessages(chatRepository),
-                socketDataSource: SocketDataSourceImpl(),
-              ),
+    // Get Community Members Use Case
+    ProxyProvider<ChatProfileRepository, GetCommunityMembers>(
+      update: (_, repository, __) => GetCommunityMembers(repository),
+    ),
+
+    // Get Member Requests Use Case
+    ProxyProvider<ChatProfileRepository, GetMemberRequests>(
+      update: (_, repository, __) => GetMemberRequests(repository),
+    ),
+
+    // Add Members Use Case
+    ProxyProvider<ChatProfileRepository, AddMembers>(
+      update: (_, repository, __) => AddMembers(repository),
+    ),
+
+    // Remove Member Use Case
+    ProxyProvider<ChatProfileRepository, RemoveMember>(
+      update: (_, repository, __) => RemoveMember(repository),
+    ),
+
+    // Approve Request Use Case
+    ProxyProvider<ChatProfileRepository, ApproveRequest>(
+      update: (_, repository, __) => ApproveRequest(repository),
+    ),
+
+    // Reject Request Use Case
+    ProxyProvider<ChatProfileRepository, RejectRequest>(
+      update: (_, repository, __) => RejectRequest(repository),
+    ),
+
+    // Send Friend Request Use Case
+    ProxyProvider<ChatProfileRepository, SendFriendRequest>(
+      update: (_, repository, __) => SendFriendRequest(repository),
+    ),
+
+    // Get Friends Use Case
+    ProxyProvider<ChatProfileRepository, GetFriends>(
+      update: (_, repository, __) => GetFriends(repository),
+    ),
+
+    // Get Community Info Use Case
+    ProxyProvider<ChatProfileRepository, GetCommunityInfo>(
+      update: (_, repository, __) => GetCommunityInfo(repository),
+    ),
+
+    // Leave Community Use Case
+    ProxyProvider<ChatProfileRepository, LeaveCommunity>(
+      update: (_, repository, __) => LeaveCommunity(repository),
     ),
 
     // ========================================
@@ -147,8 +208,102 @@ class ChatProviders {
     ),
 
     // ========================================
-    // VCHAT COMMUNITY PROVIDER
+    // PROVIDERS
     // ========================================
+
+    // Chat Provider
+    ChangeNotifierProxyProvider4<
+      FetchMessages,
+      SendMessage,
+      UploadMedia,
+      ChatRepository,
+      ChatProvider
+    >(
+      create: (context) => ChatProvider(
+        fetchMessages: context.read<FetchMessages>(),
+        sendMessage: context.read<SendMessage>(),
+        uploadMedia: context.read<UploadMedia>(),
+        chatRepository: context.read<ChatRepository>(),
+        fetchChatWithMessages: FetchChatWithMessages(
+          context.read<ChatRepository>(),
+        ),
+        socketDataSource: context.read<SocketDataSource>(),
+      ),
+      update:
+          (
+            _,
+            fetchMessages,
+            sendMessage,
+            uploadMedia,
+            chatRepository,
+            previous,
+          ) =>
+              previous ??
+              ChatProvider(
+                fetchMessages: fetchMessages,
+                sendMessage: sendMessage,
+                uploadMedia: uploadMedia,
+                chatRepository: chatRepository,
+                fetchChatWithMessages: FetchChatWithMessages(chatRepository),
+                socketDataSource: SocketDataSourceImpl(),
+              ),
+    ),
+
+    // Chat Profile Provider
+    ChangeNotifierProxyProvider10<
+      GetCommunityMembers,
+      GetMemberRequests,
+      AddMembers,
+      RemoveMember,
+      ApproveRequest,
+      RejectRequest,
+      SendFriendRequest,
+      GetFriends,
+      GetCommunityInfo,
+      LeaveCommunity,
+      ChatProfileProvider
+    >(
+      create: (context) => ChatProfileProvider(
+        getCommunityMembersUseCase: context.read<GetCommunityMembers>(),
+        getMemberRequestsUseCase: context.read<GetMemberRequests>(),
+        addMembersUseCase: context.read<AddMembers>(),
+        removeMemberUseCase: context.read<RemoveMember>(),
+        approveRequestUseCase: context.read<ApproveRequest>(),
+        rejectRequestUseCase: context.read<RejectRequest>(),
+        sendFriendRequestUseCase: context.read<SendFriendRequest>(),
+        getFriendsUseCase: context.read<GetFriends>(),
+        getCommunityInfoUseCase: context.read<GetCommunityInfo>(),
+        leaveCommunityUseCase: context.read<LeaveCommunity>(),
+      ),
+      update:
+          (
+            _,
+            getCommunityMembers,
+            getMemberRequests,
+            addMembers,
+            removeMember,
+            approveRequest,
+            rejectRequest,
+            sendFriendRequest,
+            getFriends,
+            getCommunityInfo,
+            leaveCommunity,
+            previous,
+          ) =>
+              previous ??
+              ChatProfileProvider(
+                getCommunityMembersUseCase: getCommunityMembers,
+                getMemberRequestsUseCase: getMemberRequests,
+                addMembersUseCase: addMembers,
+                removeMemberUseCase: removeMember,
+                approveRequestUseCase: approveRequest,
+                rejectRequestUseCase: rejectRequest,
+                sendFriendRequestUseCase: sendFriendRequest,
+                getFriendsUseCase: getFriends,
+                getCommunityInfoUseCase: getCommunityInfo,
+                leaveCommunityUseCase: leaveCommunity,
+              ),
+    ),
 
     // VChat Provider
     ChangeNotifierProxyProvider3<
@@ -178,126 +333,4 @@ class ChatProviders {
               ),
     ),
   ];
-
-  /// Route paths constants
-  static const String vchatHomePath = '/chat';
-  static const String chatScreenPath = '/chat/:chatId';
-
-  /// Helper methods for chat navigation
-  static String buildChatScreenRoute(String chatId) {
-    return '/chat/$chatId';
-  }
-
-  /// Provider categories for analytics and organization
-  static const List<String> chatScreenProviders = [
-    'ChatRemoteDataSource',
-    'SocketDataSource',
-    'ChatRepository',
-    'FetchMessages',
-    'SendMessage',
-    'UploadMedia',
-    'ChatProvider',
-  ];
-
-  static const List<String> vchatProviders = [
-    'CommunityRemoteDataSource',
-    'CommunityRepository',
-    'GetRecommendedCommunities',
-    'GetMyGroups',
-    'JoinCommunity',
-    'VChatProvider',
-  ];
-
-  /// Helper methods to check provider categories
-  static bool isChatScreenProvider(String providerName) {
-    return chatScreenProviders.contains(providerName);
-  }
-
-  static bool isVChatProvider(String providerName) {
-    return vchatProviders.contains(providerName);
-  }
-
-  /// Get all chat providers
-  static List<String> get allChatProviders => [
-    ...chatScreenProviders,
-    ...vchatProviders,
-  ];
-
-  /// Validate if a given provider is valid chat provider
-  static bool isValidChatProvider(String providerName) {
-    return allChatProviders.contains(providerName);
-  }
-
-  /// Get provider display name from name
-  static String getProviderDisplayName(String providerName) {
-    switch (providerName) {
-      case 'ChatProvider':
-        return 'Chat Provider';
-      case 'VChatProvider':
-        return 'VChat Provider';
-      case 'ChatRepository':
-        return 'Chat Repository';
-      case 'CommunityRepository':
-        return 'Community Repository';
-      default:
-        return providerName;
-    }
-  }
-
-  /// Get provider description for UI
-  static String getProviderDescription(String providerName) {
-    switch (providerName) {
-      case 'ChatProvider':
-        return 'Manages chat messages and real-time communication';
-      case 'VChatProvider':
-        return 'Manages communities and group functionality';
-      case 'ChatRepository':
-        return 'Handles chat data operations and socket connections';
-      case 'CommunityRepository':
-        return 'Handles community data operations';
-      default:
-        return 'Chat module provider';
-    }
-  }
-
-  /// Build chat navigation menu items
-  static List<Map<String, dynamic>> getChatMenuItems() {
-    return [
-      {
-        'title': 'Communities',
-        'subtitle': 'Join and explore communities',
-        'path': vchatHomePath,
-        'icon': 'groups',
-        'enabled': true,
-      },
-      {
-        'title': 'Personal Chats',
-        'subtitle': 'Direct messages',
-        'path': '/personal-chat',
-        'icon': 'chat_bubble',
-        'enabled': true,
-      },
-    ];
-  }
-
-  /// Get breadcrumb for chat routes
-  static List<Map<String, String>> getBreadcrumb(String currentPath) {
-    final breadcrumbs = <Map<String, String>>[
-      {'title': 'Home', 'path': '/home'},
-    ];
-
-    if (currentPath.startsWith('/chat')) {
-      breadcrumbs.add({'title': 'Chat', 'path': vchatHomePath});
-
-      if (currentPath != vchatHomePath) {
-        // Extract chat ID if it's a specific chat
-        final segments = currentPath.split('/');
-        if (segments.length > 2) {
-          breadcrumbs.add({'title': 'Conversation', 'path': currentPath});
-        }
-      }
-    }
-
-    return breadcrumbs;
-  }
 }
