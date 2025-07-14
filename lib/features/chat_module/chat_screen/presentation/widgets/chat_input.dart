@@ -61,20 +61,25 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
   ChatInputType _determineInputType(ChatProvider provider) {
     final chat = provider.currentChat;
 
+    // If it's a bot chat, hide the input completely
     if (chat == null || chat.isBot) return ChatInputType.hidden;
 
+    // If user is creator or already in group, show normal input
     if (chat.isCreator || chat.isUserInGroup) {
       return ChatInputType.normal;
     }
 
+    // If user has requested but not yet in group, show request sent
     if (chat.isUserRequested && !chat.isUserInGroup) {
       return ChatInputType.requestSent;
     }
 
-    if (!chat.isUserInGroup) {
+    // If user is not in group and hasn't requested, show join request
+    if (!chat.isUserInGroup && !chat.isUserRequested) {
       return ChatInputType.joinRequest;
     }
 
+    // Default to normal input
     return ChatInputType.normal;
   }
 
@@ -93,7 +98,14 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
         top: false,
         child: Row(
           children: [
-            Icon(Icons.pending, color: Theme.of(context).colorScheme.primary),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.orange.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.pending, color: Colors.orange, size: 20),
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -104,6 +116,7 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
                     'Request Sent',
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
+                      color: Colors.orange,
                     ),
                   ),
                   Text(
@@ -116,6 +129,15 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
                   ),
                 ],
               ),
+            ),
+            // Add a refresh button to check status
+            IconButton(
+              onPressed: () => _refreshChatStatus(context),
+              icon: Icon(
+                Icons.refresh,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              tooltip: 'Refresh status',
             ),
           ],
         ),
@@ -665,6 +687,11 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
 
   void _handleJoinRequest(BuildContext context, ChatProvider provider) {
     provider.joinGroupOrBot(widget.chatId);
+  }
+
+  void _refreshChatStatus(BuildContext context) {
+    final provider = context.read<ChatProvider>();
+    provider.refreshChat(widget.chatId);
   }
 }
 

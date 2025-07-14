@@ -482,26 +482,41 @@ class ChatProvider extends ChangeNotifier {
 
   Future<void> joinGroupOrBot(String chatId) async {
     if (_isLoading) return;
-
     setLoading(true);
+    _clearError();
     try {
       final result = await chatRepository.joinGroup(chatId);
-      result.fold((failure) => _setError(failure.message), (_) {
-        _clearChatCache(chatId);
-        _setError(null);
-        Future.delayed(const Duration(milliseconds: 500), () {
-          initializeChat(chatId);
-        });
-      });
+      await result.fold(
+        (failure) async {
+          _setError(failure.message);
+        },
+        (_) async {
+          _clearChatCache(chatId);
+          _setError(null);
+          await forceRefreshChat(chatId);
+          debugPrint('Joined group or bot successfully');
+        },
+      );
     } catch (e) {
-      _setError(e.toString());
+      _setError('Failed to join group: $e');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
+  }
+
+  Future<void> forceRefreshChat(String chatId) async {
+    _setConnecting(true);
+    if (_currentChatId == chatId) {
+      _messages.clear();
+      _currentChat = null;
+      _processedMessageIds.clear();
+    }
+    await initializeChat(chatId);
+    _setConnecting(false);
   }
 
   Future<void> reconnectAndRejoin() async {
     if (_currentChatId == null) return;
-
     _setConnecting(true);
     try {
       await socketDataSource.connect();
