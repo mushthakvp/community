@@ -17,29 +17,36 @@ class ProfileHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      width: double.infinity,
+      padding: const EdgeInsets.only(
+        left: 24,
+        right: 24,
+        top: 60, // Reduced top padding
+        bottom: 10, // Reduced bottom padding
+      ),
       child: Column(
+        mainAxisSize: MainAxisSize.min, // Important: minimize space usage
         children: [
-          // Community Image
+          // Community Image - smaller size
           Container(
-            width: 120,
-            height: 120,
+            width: 80,
+            height: 80,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(60),
+              borderRadius: BorderRadius.circular(40),
               border: Border.all(
                 color: AppConstants.primary.withOpacity(0.3),
-                width: 3,
+                width: 2,
               ),
               boxShadow: [
                 BoxShadow(
                   color: AppConstants.primary.withOpacity(0.2),
-                  blurRadius: 20,
-                  spreadRadius: 2,
+                  blurRadius: 15,
+                  spreadRadius: 1,
                 ),
               ],
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(60),
+              borderRadius: BorderRadius.circular(40),
               child: communityInfo.image?.isNotEmpty == true
                   ? CachedNetworkImage(
                       imageUrl: communityInfo.image!,
@@ -49,7 +56,7 @@ class ProfileHeader extends StatelessWidget {
                         child: const Icon(
                           Icons.group,
                           color: Colors.white,
-                          size: 40,
+                          size: 30,
                         ),
                       ),
                       errorWidget: (context, url, error) => Container(
@@ -57,7 +64,7 @@ class ProfileHeader extends StatelessWidget {
                         child: const Icon(
                           Icons.group,
                           color: Colors.white,
-                          size: 40,
+                          size: 30,
                         ),
                       ),
                     )
@@ -73,47 +80,49 @@ class ProfileHeader extends StatelessWidget {
                       child: const Icon(
                         Icons.group,
                         color: Colors.white,
-                        size: 40,
+                        size: 30,
                       ),
                     ),
             ),
           ),
 
-          const SizedBox(height: 20),
+          const SizedBox(height: 12),
 
-          // Community Name
+          // Community Name - smaller font
           Text(
             communityInfo.name,
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 24,
+              fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
             textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
 
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
 
-          // Community ID
+          // Community ID - smaller
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
               color: Colors.grey[800]?.withOpacity(0.5),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
               'ID: ${communityInfo.communityId}',
               style: TextStyle(
                 color: Colors.grey[300],
-                fontSize: 14,
+                fontSize: 10,
                 fontWeight: FontWeight.w400,
               ),
             ),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
 
-          // Stats Row - Removed Status, kept Members and Role
+          // Stats Row - more compact
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
@@ -122,7 +131,12 @@ class ProfileHeader extends StatelessWidget {
                 label: 'Members',
                 value: memberCount.toString(),
               ),
-              Container(width: 1, height: 40, color: Colors.grey[600]),
+              Container(
+                width: 1,
+                height: 30,
+                color: Colors.grey[600],
+                margin: const EdgeInsets.symmetric(horizontal: 15),
+              ),
               _buildStatItem(
                 icon: communityInfo.isCreator
                     ? Icons.admin_panel_settings
@@ -143,18 +157,19 @@ class ProfileHeader extends StatelessWidget {
     required String value,
   }) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, color: AppConstants.primary, size: 24),
-        const SizedBox(height: 4),
+        Icon(icon, color: AppConstants.primary, size: 18),
+        const SizedBox(height: 2),
         Text(
           value,
           style: const TextStyle(
             color: Colors.white,
-            fontSize: 16,
+            fontSize: 12,
             fontWeight: FontWeight.w600,
           ),
         ),
-        Text(label, style: TextStyle(color: Colors.grey[400], fontSize: 12)),
+        Text(label, style: TextStyle(color: Colors.grey[400], fontSize: 10)),
       ],
     );
   }

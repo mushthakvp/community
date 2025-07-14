@@ -11,7 +11,6 @@ import '../widgets/member_list_item.dart';
 import '../widgets/member_request_item.dart';
 import '../widgets/member_search_field.dart';
 import '../widgets/profile_header.dart';
-import 'members_list_page.dart';
 
 class ChatProfilePage extends StatefulWidget {
   final String chatId;
@@ -129,7 +128,7 @@ class _ChatProfilePageState extends State<ChatProfilePage>
       slivers: [
         // Sliver App Bar with Profile Header
         SliverAppBar(
-          expandedHeight: 350.0,
+          expandedHeight: 300.0,
           floating: false,
           pinned: true,
           elevation: 0,
@@ -138,19 +137,12 @@ class _ChatProfilePageState extends State<ChatProfilePage>
             onPressed: () => context.pop(),
             icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
           ),
-          title: const Text(
-            'Profile',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
           actions: [
             if (!isCreator && isUserInGroup)
               _buildLeaveCommunityButton(provider),
           ],
           flexibleSpace: FlexibleSpaceBar(
+            // Remove title to prevent overlap with profile text
             background: Container(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
@@ -169,42 +161,224 @@ class _ChatProfilePageState extends State<ChatProfilePage>
           ),
         ),
 
-        // Tab Bar (only for creators)
-        if (isCreator)
-          SliverPersistentHeader(
-            pinned: true,
-            delegate: _SliverTabBarDelegate(
-              TabBar(
-                controller: _tabController,
-                labelColor: Colors.white,
-                unselectedLabelColor: Colors.grey[400],
-                indicator: BoxDecoration(
-                  color: AppConstants.primary,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                indicatorSize: TabBarIndicatorSize.tab,
-                tabs: [
-                  Tab(text: 'Members (${provider.totalMemberCount})'),
-                  Tab(text: 'Requests (${provider.totalRequestCount})'),
+        // Tab selector for creators (improved design)
+        if (isCreator) ...[
+          SliverToBoxAdapter(
+            child: Container(
+              margin: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey[900],
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.grey[700]!, width: 0.5),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => _tabController.animateTo(0),
+                      child: AnimatedBuilder(
+                        animation: _tabController,
+                        builder: (context, child) {
+                          final isSelected = _tabController.index == 0;
+                          return Container(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? AppConstants.primary
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Text(
+                              'Members (${provider.totalMemberCount})',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: isSelected
+                                    ? Colors.white
+                                    : Colors.grey[400],
+                                fontWeight: isSelected
+                                    ? FontWeight.w600
+                                    : FontWeight.w400,
+                                fontSize: 14,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => _tabController.animateTo(1),
+                      child: AnimatedBuilder(
+                        animation: _tabController,
+                        builder: (context, child) {
+                          final isSelected = _tabController.index == 1;
+                          return Container(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? AppConstants.primary
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Text(
+                              'Requests (${provider.totalRequestCount})',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: isSelected
+                                    ? Colors.white
+                                    : Colors.grey[400],
+                                fontWeight: isSelected
+                                    ? FontWeight.w600
+                                    : FontWeight.w400,
+                                fontSize: 14,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
           ),
+        ],
 
-        // Content
-        if (isCreator)
-          SliverFillRemaining(
-            child: TabBarView(
-              controller: _tabController,
+        // Content based on tab selection or member view
+        if (isCreator) ...[
+          // Tab content for creators
+          AnimatedBuilder(
+            animation: _tabController,
+            builder: (context, child) {
+              if (_tabController.index == 0) {
+                return _buildMembersContent(provider);
+              } else {
+                return _buildRequestsContent(provider);
+              }
+            },
+          ),
+        ] else ...[
+          // Members content for regular users
+          _buildMembersContent(provider),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildMembersContent(ChatProfileProvider provider) {
+    return SliverList(
+      delegate: SliverChildListDelegate([
+        // Search Field
+        if (provider.totalMemberCount > 4)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: MemberSearchField(
+              controller: provider.memberSearchController,
+              onChanged: provider.searchMembers,
+              hintText: 'Search members...',
+            ),
+          ),
+
+        // Members List
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Column(
+            children: [
+              if (provider.hasMembers) ...[
+                for (int index = 0; index < provider.members.length; index++)
+                  MemberListItem(
+                    member: provider.members[index],
+                    isCreator: provider.isCreator,
+                    onRemove: null, // Removed functionality
+                    onSendFriendRequest:
+                        !provider.members[index].isFriend &&
+                            !provider.members[index].isRequested &&
+                            !provider.members[index].isCurrentUser
+                        ? () => provider.sendFriendRequestToUser(
+                            provider.members[index].id,
+                            index,
+                          )
+                        : null,
+                    onChat:
+                        provider.members[index].isFriend &&
+                            !provider.members[index].isCurrentUser
+                        ? () => _navigateToChat(provider.members[index])
+                        : null,
+                    isLoading: provider.isRequestLoading,
+                  ),
+              ] else ...[
+                const SizedBox(height: 100),
+                const Center(
+                  child: Column(
+                    children: [
+                      Icon(Icons.group_off, size: 64, color: Colors.grey),
+                      SizedBox(height: 16),
+                      Text(
+                        'No members found',
+                        style: TextStyle(color: Colors.grey, fontSize: 16),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+
+        // Bottom spacing
+        const SizedBox(height: 100),
+      ]),
+    );
+  }
+
+  Widget _buildRequestsContent(ChatProfileProvider provider) {
+    return SliverList(
+      delegate: SliverChildListDelegate([
+        if (provider.hasRequests) ...[
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
               children: [
-                _buildMembersTab(provider),
-                _buildRequestsTab(provider),
+                for (
+                  int index = 0;
+                  index < provider.memberRequests!.requests.length;
+                  index++
+                )
+                  MemberRequestItem(
+                    request: provider.memberRequests!.requests[index],
+                    onApprove: () => provider.approveJoinRequest(
+                      provider.memberRequests!.requests[index].id,
+                      index,
+                    ),
+                    onReject: () => provider.rejectJoinRequest(
+                      provider.memberRequests!.requests[index].id,
+                      index,
+                    ),
+                    isLoading: provider.isRequestLoading,
+                  ),
               ],
             ),
-          )
-        else
-          SliverToBoxAdapter(child: _buildMembersSection(provider)),
-      ],
+          ),
+        ] else ...[
+          const SizedBox(height: 100),
+          const Center(
+            child: Column(
+              children: [
+                Icon(Icons.inbox, size: 64, color: Colors.grey),
+                SizedBox(height: 16),
+                Text(
+                  'No pending requests',
+                  style: TextStyle(color: Colors.grey, fontSize: 16),
+                ),
+              ],
+            ),
+          ),
+        ],
+
+        // Bottom spacing
+        const SizedBox(height: 100),
+      ]),
     );
   }
 
@@ -228,163 +402,6 @@ class _ChatProfilePageState extends State<ChatProfilePage>
               fontWeight: FontWeight.w500,
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMembersTab(ChatProfileProvider provider) {
-    return Column(
-      children: [
-        // Search Field (removed Add Button)
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: MemberSearchField(
-            controller: provider.memberSearchController,
-            onChanged: provider.searchMembers,
-            hintText: 'Search members...',
-          ),
-        ),
-
-        // Members List
-        Expanded(child: _buildMembersList(provider)),
-      ],
-    );
-  }
-
-  Widget _buildRequestsTab(ChatProfileProvider provider) {
-    return RefreshIndicator(
-      onRefresh: provider.refreshRequests,
-      child: provider.hasRequests
-          ? ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: provider.memberRequests!.requests.length,
-              itemBuilder: (context, index) {
-                final request = provider.memberRequests!.requests[index];
-                return MemberRequestItem(
-                  request: request,
-                  onApprove: () =>
-                      provider.approveJoinRequest(request.id, index),
-                  onReject: () => provider.rejectJoinRequest(request.id, index),
-                  isLoading: provider.isRequestLoading,
-                );
-              },
-            )
-          : const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.inbox, size: 64, color: Colors.grey),
-                  SizedBox(height: 16),
-                  Text(
-                    'No pending requests',
-                    style: TextStyle(color: Colors.grey, fontSize: 16),
-                  ),
-                ],
-              ),
-            ),
-    );
-  }
-
-  Widget _buildMembersSection(ChatProfileProvider provider) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            children: [
-              Text(
-                'Members (${provider.totalMemberCount})',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const Spacer(),
-              if (provider.totalMemberCount > 10)
-                TextButton(
-                  onPressed: () => _navigateToMembersList(),
-                  child: const Text('View All'),
-                ),
-            ],
-          ),
-        ),
-
-        const SizedBox(height: 16),
-
-        if (provider.totalMemberCount > 4)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: MemberSearchField(
-              controller: provider.memberSearchController,
-              onChanged: provider.searchMembers,
-              hintText: 'Search members...',
-            ),
-          ),
-
-        const SizedBox(height: 16),
-
-        // Make members list scrollable
-        SizedBox(
-          height: MediaQuery.of(context).size.height * 0.6,
-          child: _buildMembersList(provider),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildMembersList(ChatProfileProvider provider) {
-    return RefreshIndicator(
-      onRefresh: provider.refreshMembers,
-      child: provider.hasMembers
-          ? ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: provider.members.length,
-              itemBuilder: (context, index) {
-                final member = provider.members[index];
-                return MemberListItem(
-                  member: member,
-                  isCreator: provider.isCreator,
-                  // Removed onRemove - no longer needed
-                  onRemove: null,
-                  onSendFriendRequest:
-                      !member.isFriend &&
-                          !member.isRequested &&
-                          !member.isCurrentUser
-                      ? () => provider.sendFriendRequestToUser(member.id, index)
-                      : null,
-                  onChat: member.isFriend && !member.isCurrentUser
-                      ? () => _navigateToChat(member)
-                      : null,
-                  isLoading: provider.isRequestLoading,
-                );
-              },
-            )
-          : const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.group_off, size: 64, color: Colors.grey),
-                  SizedBox(height: 16),
-                  Text(
-                    'No members found',
-                    style: TextStyle(color: Colors.grey, fontSize: 16),
-                  ),
-                ],
-              ),
-            ),
-    );
-  }
-
-  void _navigateToMembersList() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => MembersListPage(
-          communityId: widget.chatId,
-          communityName: widget.chatName ?? 'Community',
         ),
       ),
     );
@@ -415,47 +432,5 @@ class _ChatProfilePageState extends State<ChatProfilePage>
         }
       },
     );
-  }
-}
-
-// Custom Sliver Tab Bar Delegate for pinned tab bar
-class _SliverTabBarDelegate extends SliverPersistentHeaderDelegate {
-  final TabBar _tabBar;
-
-  _SliverTabBarDelegate(this._tabBar);
-
-  @override
-  double get minExtent => _tabBar.preferredSize.height + 20;
-  @override
-  double get maxExtent => _tabBar.preferredSize.height + 20;
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF1A1A1A), Color(0xFF0D0D0D)],
-        ),
-      ),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.grey[800],
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: _tabBar,
-      ),
-    );
-  }
-
-  @override
-  bool shouldRebuild(_SliverTabBarDelegate oldDelegate) {
-    return false;
   }
 }
