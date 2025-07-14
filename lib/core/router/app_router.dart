@@ -8,6 +8,7 @@ class AppRouter {
   static GoRouter get router => CoreRouter.router;
   static GlobalKey<NavigatorState> get rootNavigatorKey =>
       CoreRouter.rootNavigatorKey;
+
   static GlobalKey<NavigatorState> get shellNavigatorKey =>
       CoreRouter.shellNavigatorKey;
   static String get initialLocation =>

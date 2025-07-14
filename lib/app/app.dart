@@ -38,7 +38,6 @@ class _AppState extends State<App> with WidgetsBindingObserver {
 
   Future<void> _initializeApp() async {
     try {
-      // Check auth status
       final authProvider = context.read<AuthProvider>();
       await authProvider.checkAuthStatus();
     } catch (e) {
