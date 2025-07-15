@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:livera/core/services/cloudinary_service.dart';
@@ -58,7 +59,9 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
       '${ChatApiConstants.enterChat}$chatId',
     );
     final data = jsonDecode(response.body);
+    log(data.toString());
     final responseData = data['data'] ?? data;
+
     final groupDetails = responseData['groupDetails'] as Map<String, dynamic>;
     final messagesJson = responseData['messages'] as List<dynamic>;
 

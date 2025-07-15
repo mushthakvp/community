@@ -11,7 +11,7 @@ class ChatApiConstants {
   static const String getRecommendCommunity = 'getCommunities';
   static const String getMyGroupData = 'listHomeData';
   static const String createCommunity = 'createCommunity';
-  static const String enterChat = 'communityOpen/';
+  static const String enterChat = 'accessChat?friendId=';
   static const String editCommunity = 'editCommunity/';
   static const String getCommunityMembers = 'communityMembers/';
   static const String getCommunityMemberRequest = 'listJoinRequests/';
