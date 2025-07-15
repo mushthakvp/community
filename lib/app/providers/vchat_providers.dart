@@ -28,6 +28,23 @@ import '../../features/chat_module/chat_screen/domain/usecases/fetch_messages.da
 import '../../features/chat_module/chat_screen/domain/usecases/send_message.dart';
 import '../../features/chat_module/chat_screen/domain/usecases/upload_media.dart';
 import '../../features/chat_module/chat_screen/presentation/providers/chat_provider.dart';
+// Create Community Imports
+import '../../features/chat_module/create_community/data/datasources/community_remote_datasource.dart'
+    as create_community;
+import '../../features/chat_module/create_community/data/repositories/community_repository_impl.dart'
+    as create_community;
+import '../../features/chat_module/create_community/domain/repositories/community_repository.dart'
+    as create_community;
+import '../../features/chat_module/create_community/domain/usecases/create_community.dart';
+import '../../features/chat_module/create_community/domain/usecases/delete_community.dart';
+import '../../features/chat_module/create_community/domain/usecases/get_community_details.dart';
+import '../../features/chat_module/create_community/domain/usecases/join_community.dart'
+    as create_community;
+import '../../features/chat_module/create_community/domain/usecases/leave_community.dart'
+    as create_community;
+import '../../features/chat_module/create_community/domain/usecases/update_community.dart';
+import '../../features/chat_module/create_community/domain/usecases/upload_profile_image.dart';
+import '../../features/chat_module/create_community/presentation/providers/community_provider.dart';
 // VChat Community Imports
 import '../../features/chat_module/vchat/data/datasources/community_remote_datasource.dart';
 import '../../features/chat_module/vchat/data/repositories/community_repository_impl.dart';
@@ -37,7 +54,7 @@ import '../../features/chat_module/vchat/domain/usecases/get_recommended_communi
 import '../../features/chat_module/vchat/domain/usecases/join_community.dart';
 import '../../features/chat_module/vchat/presentation/providers/vchat_provider.dart';
 
-/// Enhanced Chat module providers for messaging, community features, and profile management
+/// Enhanced Chat module providers for messaging, community features, profile management, and community creation
 class ChatProviders {
   static List<SingleChildWidget> get providers => [
     // ========================================
@@ -69,6 +86,28 @@ class ChatProviders {
     ),
 
     // ========================================
+    // CREATE COMMUNITY DATA SOURCES
+    // ========================================
+
+    // Create Community Remote Data Source (uses chat API client)
+    ProxyProvider<ApiClientWrapper, create_community.CommunityRemoteDataSource>(
+      update: (_, wrapper, __) =>
+          create_community.CommunityRemoteDataSourceImpl(
+            apiClient: wrapper.chatClient,
+          ),
+    ),
+
+    // ========================================
+    // VCHAT COMMUNITY DATA SOURCES
+    // ========================================
+
+    // VChat Community Remote Data Source (uses chat API client)
+    ProxyProvider<ApiClientWrapper, CommunityRemoteDataSource>(
+      update: (_, wrapper, __) =>
+          CommunityRemoteDataSourceImpl(apiClient: wrapper.chatClient),
+    ),
+
+    // ========================================
     // REPOSITORIES
     // ========================================
 
@@ -93,6 +132,25 @@ class ChatProviders {
             localDataSource: localDataSource,
             networkInfo: networkInfo,
           ),
+    ),
+
+    // Create Community Repository
+    ProxyProvider2<
+      create_community.CommunityRemoteDataSource,
+      NetworkInfo,
+      create_community.CommunityRepository
+    >(
+      update: (_, remoteDataSource, networkInfo, __) =>
+          create_community.CommunityRepositoryImpl(
+            remoteDataSource: remoteDataSource,
+            networkInfo: networkInfo,
+          ),
+    ),
+
+    // VChat Community Repository
+    ProxyProvider<CommunityRemoteDataSource, CommunityRepository>(
+      update: (_, remoteDataSource, __) =>
+          CommunityRepositoryImpl(remoteDataSource: remoteDataSource),
     ),
 
     // ========================================
@@ -169,23 +227,49 @@ class ChatProviders {
     ),
 
     // ========================================
-    // VCHAT COMMUNITY DATA SOURCES
+    // CREATE COMMUNITY USE CASES
     // ========================================
 
-    // Community Remote Data Source (uses chat API client)
-    ProxyProvider<ApiClientWrapper, CommunityRemoteDataSource>(
-      update: (_, wrapper, __) =>
-          CommunityRemoteDataSourceImpl(apiClient: wrapper.chatClient),
+    // Create Community Use Case
+    ProxyProvider<create_community.CommunityRepository, CreateCommunity>(
+      update: (_, repository, __) => CreateCommunity(repository),
     ),
 
-    // ========================================
-    // VCHAT COMMUNITY REPOSITORY
-    // ========================================
+    // Update Community Use Case
+    ProxyProvider<create_community.CommunityRepository, UpdateCommunity>(
+      update: (_, repository, __) => UpdateCommunity(repository),
+    ),
 
-    // Community Repository
-    ProxyProvider<CommunityRemoteDataSource, CommunityRepository>(
-      update: (_, remoteDataSource, __) =>
-          CommunityRepositoryImpl(remoteDataSource: remoteDataSource),
+    // Get Community Details Use Case
+    ProxyProvider<create_community.CommunityRepository, GetCommunityDetails>(
+      update: (_, repository, __) => GetCommunityDetails(repository),
+    ),
+
+    // Delete Community Use Case
+    ProxyProvider<create_community.CommunityRepository, DeleteCommunity>(
+      update: (_, repository, __) => DeleteCommunity(repository),
+    ),
+
+    // Upload Profile Image Use Case
+    ProxyProvider<create_community.CommunityRepository, UploadProfileImage>(
+      update: (_, repository, __) => UploadProfileImage(repository),
+    ),
+
+    // Join Community Use Case (Create Community)
+    ProxyProvider<
+      create_community.CommunityRepository,
+      create_community.JoinCommunity
+    >(
+      update: (_, repository, __) => create_community.JoinCommunity(repository),
+    ),
+
+    // Leave Community Use Case (Create Community)
+    ProxyProvider<
+      create_community.CommunityRepository,
+      create_community.LeaveCommunity
+    >(
+      update: (_, repository, __) =>
+          create_community.LeaveCommunity(repository),
     ),
 
     // ========================================
@@ -202,7 +286,7 @@ class ChatProviders {
       update: (_, repository, __) => GetMyGroups(repository),
     ),
 
-    // Join Community Use Case
+    // Join Community Use Case (VChat)
     ProxyProvider<CommunityRepository, JoinCommunity>(
       update: (_, repository, __) => JoinCommunity(repository),
     ),
@@ -342,6 +426,77 @@ class ChatProviders {
           ),
     ),
 
+    // Community Use Case Bundle 1
+    ProxyProvider4<
+      CreateCommunity,
+      UpdateCommunity,
+      GetCommunityDetails,
+      UploadProfileImage,
+      _CommunityUseCaseBundle1
+    >(
+      update:
+          (
+            _,
+            createCommunity,
+            updateCommunity,
+            getCommunityDetails,
+            uploadProfileImage,
+            __,
+          ) => _CommunityUseCaseBundle1(
+            createCommunity: createCommunity,
+            updateCommunity: updateCommunity,
+            getCommunityDetails: getCommunityDetails,
+            uploadProfileImage: uploadProfileImage,
+          ),
+    ),
+
+    // Community Use Case Bundle 2
+    ProxyProvider3<
+      DeleteCommunity,
+      create_community.JoinCommunity,
+      create_community.LeaveCommunity,
+      _CommunityUseCaseBundle2
+    >(
+      update: (_, deleteCommunity, joinCommunity, leaveCommunity, __) =>
+          _CommunityUseCaseBundle2(
+            deleteCommunity: deleteCommunity,
+            joinCommunity: joinCommunity,
+            leaveCommunity: leaveCommunity,
+          ),
+    ),
+
+    // Community Provider (for creating/editing communities)
+    ChangeNotifierProxyProvider2<
+      _CommunityUseCaseBundle1,
+      _CommunityUseCaseBundle2,
+      CommunityProvider
+    >(
+      create: (context) {
+        final bundle1 = context.read<_CommunityUseCaseBundle1>();
+        final bundle2 = context.read<_CommunityUseCaseBundle2>();
+        return CommunityProvider(
+          createCommunityUseCase: bundle1.createCommunity,
+          updateCommunityUseCase: bundle1.updateCommunity,
+          getCommunityDetailsUseCase: bundle1.getCommunityDetails,
+          uploadProfileImageUseCase: bundle1.uploadProfileImage,
+          deleteCommunityUseCase: bundle2.deleteCommunity,
+          joinCommunityUseCase: bundle2.joinCommunity,
+          leaveCommunityUseCase: bundle2.leaveCommunity,
+        );
+      },
+      update: (_, bundle1, bundle2, previous) =>
+          previous ??
+          CommunityProvider(
+            createCommunityUseCase: bundle1.createCommunity,
+            updateCommunityUseCase: bundle1.updateCommunity,
+            getCommunityDetailsUseCase: bundle1.getCommunityDetails,
+            uploadProfileImageUseCase: bundle1.uploadProfileImage,
+            deleteCommunityUseCase: bundle2.deleteCommunity,
+            joinCommunityUseCase: bundle2.joinCommunity,
+            leaveCommunityUseCase: bundle2.leaveCommunity,
+          ),
+    ),
+
     // VChat Provider
     ChangeNotifierProxyProvider3<
       GetRecommendedCommunities,
@@ -401,6 +556,32 @@ class _ChatProfileUseCaseBundle2 {
     required this.sendFriendRequest,
     required this.getFriends,
     required this.getCommunityInfo,
+    required this.leaveCommunity,
+  });
+}
+
+class _CommunityUseCaseBundle1 {
+  final CreateCommunity createCommunity;
+  final UpdateCommunity updateCommunity;
+  final GetCommunityDetails getCommunityDetails;
+  final UploadProfileImage uploadProfileImage;
+
+  _CommunityUseCaseBundle1({
+    required this.createCommunity,
+    required this.updateCommunity,
+    required this.getCommunityDetails,
+    required this.uploadProfileImage,
+  });
+}
+
+class _CommunityUseCaseBundle2 {
+  final DeleteCommunity deleteCommunity;
+  final create_community.JoinCommunity joinCommunity;
+  final create_community.LeaveCommunity leaveCommunity;
+
+  _CommunityUseCaseBundle2({
+    required this.deleteCommunity,
+    required this.joinCommunity,
     required this.leaveCommunity,
   });
 }

@@ -4,6 +4,8 @@ import '../../../features/chat_module/chat_profile/presentation/pages/add_member
 import '../../../features/chat_module/chat_profile/presentation/pages/chat_profile_page.dart';
 import '../../../features/chat_module/chat_profile/presentation/pages/members_list_page.dart';
 import '../../../features/chat_module/chat_screen/presentation/pages/chat_page.dart';
+import '../../../features/chat_module/create_community/presentation/pages/create_community_screen.dart';
+import '../../../features/chat_module/create_community/presentation/pages/edit_community_screen.dart';
 import '../../../features/chat_module/vchat/presentation/pages/vchat_home_page.dart';
 
 class ChatRouter {
@@ -12,19 +14,37 @@ class ChatRouter {
   static const String chatScreenPath = '/chat';
   static const String personalChatPath = '/personal-chat';
   static const String createCommunityPath = '/create-community';
+  static const String editCommunityPath = '/edit-community';
 
   // Chat Profile Route Paths
   static const String chatProfilePath = '/chat-profile';
   static const String addMemberPath = '/add-member';
   static const String membersListPath = '/members-list';
 
-  /// Enhanced Chat module related routes with profile management
+  /// Enhanced Chat module related routes with profile management and community creation
   static List<RouteBase> get routes => [
     // ==================== VCHAT HOME ROUTE ====================
     GoRoute(
       path: vchatHomePath,
       name: 'vchatHome',
       builder: (context, state) => const VChatHomePage(),
+    ),
+
+    // ==================== CREATE COMMUNITY ROUTE ====================
+    GoRoute(
+      path: createCommunityPath,
+      name: 'createCommunity',
+      builder: (context, state) => const CreateCommunityScreen(),
+    ),
+
+    // ==================== EDIT COMMUNITY ROUTE ====================
+    GoRoute(
+      path: '$editCommunityPath/:communityId',
+      name: 'editCommunity',
+      builder: (context, state) {
+        final communityId = state.pathParameters['communityId']!;
+        return EditCommunityScreen(communityId: communityId);
+      },
     ),
 
     // ==================== CHAT SCREEN ROUTE ====================

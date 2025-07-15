@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:livera/core/constants/app_constants.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../../core/router/routers/chat_router.dart';
+import '../../../vchat/presentation/providers/vchat_provider.dart';
 import '../providers/community_provider.dart';
 import '../widgets/community_form_widget.dart';
 import '../widgets/community_image_picker_widget.dart';
@@ -26,91 +29,26 @@ class _CreateCommunityScreenState extends State<CreateCommunityScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Theme.of(context).colorScheme.primary.withOpacity(0.1),
-              Theme.of(context).colorScheme.surface,
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Consumer<CommunityProvider>(
-            builder: (context, provider, _) {
-              return Column(
-                children: [
-                  _buildAppBar(context, provider),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildHeader(context),
-                          const SizedBox(height: 32),
-                          _buildForm(context, provider),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-        ),
+      backgroundColor: AppConstants.white,
+      appBar: AppBar(
+        backgroundColor: AppConstants.white,
+        title: const Text('Create Community'),
+        centerTitle: true,
       ),
-    );
-  }
-
-  Widget _buildAppBar(BuildContext context, CommunityProvider provider) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).colorScheme.shadow.withOpacity(0.1),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          IconButton(
-            onPressed: () => context.pop(),
-            icon: Icon(
-              Icons.arrow_back_ios,
-              color: Theme.of(context).colorScheme.onSurface,
+      body: Consumer<CommunityProvider>(
+        builder: (context, provider, _) {
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHeader(context),
+                const SizedBox(height: 32),
+                _buildForm(context, provider),
+              ],
             ),
-            style: IconButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
-              padding: const EdgeInsets.all(8),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Text(
-            'Create Community',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
-          ),
-          const Spacer(),
-          if (provider.isLoading)
-            SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-            ),
-        ],
+          );
+        },
       ),
     );
   }
@@ -319,6 +257,7 @@ class _CreateCommunityScreenState extends State<CreateCommunityScreen> {
                     'Create Community',
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.w600,
+                      color: Theme.of(context).colorScheme.onPrimary,
                     ),
                   ),
                 ],
@@ -368,7 +307,13 @@ class _CreateCommunityScreenState extends State<CreateCommunityScreen> {
             ),
           ),
         );
-        context.pop();
+        if (context.mounted) {
+          context.push(ChatRouter.vchatHomePath);
+          final vChatProvider = context.read<VChatProvider?>();
+          if (vChatProvider != null) {
+            vChatProvider.refreshCurrentData();
+          }
+        }
       }
     } catch (e) {
       // Error is handled by the provider

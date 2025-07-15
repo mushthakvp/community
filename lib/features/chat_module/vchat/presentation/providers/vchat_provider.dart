@@ -230,6 +230,7 @@ class VChatProvider extends ChangeNotifier {
     }
   }
 
+  /// Refresh current data based on selected tab and filter
   void refreshCurrentData() {
     switch (_selectedTab) {
       case VChatTab.explore:
@@ -242,5 +243,55 @@ class VChatProvider extends ChangeNotifier {
         fetchMyGroups();
         break;
     }
+  }
+
+  /// Force refresh all data
+  Future<void> refreshAllData() async {
+    await Future.wait([
+      fetchRecommendedCommunities(),
+      fetchPopularCommunities(),
+      fetchMyGroups(),
+    ]);
+  }
+
+  /// Add a newly created community to the appropriate list
+  void addNewCommunity(CommunityEntity community) {
+    // Add to my groups if currently viewing my groups
+    if (_selectedTab == VChatTab.myGroup) {
+      _myGroups.insert(0, community);
+    }
+
+    // Also add to communities list for explore/popular tabs
+    _communities.insert(0, community);
+
+    notifyListeners();
+  }
+
+  /// Remove a community from all lists
+  void removeCommunity(String communityId) {
+    _communities.removeWhere((c) => c.id == communityId);
+    _myGroups.removeWhere((c) => c.id == communityId);
+    notifyListeners();
+  }
+
+  /// Update a community in all lists
+  void updateCommunity(CommunityEntity updatedCommunity) {
+    // Update in communities list
+    final communityIndex = _communities.indexWhere(
+      (c) => c.id == updatedCommunity.id,
+    );
+    if (communityIndex != -1) {
+      _communities[communityIndex] = updatedCommunity;
+    }
+
+    // Update in my groups list
+    final myGroupIndex = _myGroups.indexWhere(
+      (c) => c.id == updatedCommunity.id,
+    );
+    if (myGroupIndex != -1) {
+      _myGroups[myGroupIndex] = updatedCommunity;
+    }
+
+    notifyListeners();
   }
 }

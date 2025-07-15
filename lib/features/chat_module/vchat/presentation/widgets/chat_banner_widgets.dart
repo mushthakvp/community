@@ -339,31 +339,48 @@ class MyGroupBanner extends StatelessWidget {
           // Action Buttons Row
           Row(
             children: [
-              Flexible(
-                child: ElevatedButton.icon(
-                  onPressed: () {
+              Expanded(
+                child: GestureDetector(
+                  onTap: () {
                     context.push('/create-community');
                   },
-                  icon: const Icon(Icons.add_circle_outline, size: 16),
-                  label: const Text(
-                    'Create Community',
-                    style: TextStyle(fontSize: 11),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: const Color(0xFF134e5e),
+                  child: Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
+                      horizontal: 10,
+                      vertical: 16,
                     ),
-                    shape: RoundedRectangleBorder(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(18),
                     ),
-                    minimumSize: const Size(0, 32),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.add_circle_outline,
+                          size: 14,
+                          color: const Color(0xFF134e5e),
+                        ),
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            'Create Community',
+                            style: TextStyle(
+                              color: const Color(0xFF134e5e),
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-              const Spacer(),
+              const SizedBox(width: 12),
               Container(
                 width: 50,
                 height: 50,
@@ -491,7 +508,6 @@ class FeaturesBanner extends StatelessWidget {
   }
 }
 
-// Responsive Banner Container for consistent usage
 class ResponsiveBannerContainer extends StatelessWidget {
   final Widget child;
   final EdgeInsets? margin;
@@ -508,25 +524,6 @@ class ResponsiveBannerContainer extends StatelessWidget {
       width: double.infinity,
       margin: margin ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: child,
-    );
-  }
-}
-
-// Usage Example:
-class BannerUsageExample extends StatelessWidget {
-  const BannerUsageExample({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Column(
-        children: const [
-          ResponsiveBannerContainer(child: ExploreBanner()),
-          ResponsiveBannerContainer(child: PopularBanner()),
-          ResponsiveBannerContainer(child: MyGroupBanner()),
-          ResponsiveBannerContainer(child: FeaturesBanner()),
-        ],
-      ),
     );
   }
 }

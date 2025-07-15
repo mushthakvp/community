@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../vchat/presentation/providers/vchat_provider.dart';
 import '../../domain/entities/community_entity.dart';
 import '../../domain/usecases/create_community.dart';
 import '../../domain/usecases/delete_community.dart';
@@ -103,7 +104,7 @@ class CommunityProvider extends ChangeNotifier {
   }
 
   // Create community
-  Future<void> createCommunity() async {
+  Future<void> createCommunity({VChatProvider? vChatProvider}) async {
     if (!formKey.currentState!.validate()) return;
 
     _setState(CommunityState.loading);
@@ -121,12 +122,23 @@ class CommunityProvider extends ChangeNotifier {
     result.fold((failure) => _setError(failure.message), (community) {
       _currentCommunity = community;
       _setState(CommunityState.success);
+
+      // Notify VChat provider to refresh data
+      if (vChatProvider != null) {
+        // Convert to VChat CommunityEntity if needed
+        final vChatCommunity = _convertToVChatEntity(community);
+        vChatProvider.addNewCommunity(vChatCommunity);
+      }
+
       _clearForm();
     });
   }
 
   // Update community
-  Future<void> updateCommunity(String communityId) async {
+  Future<void> updateCommunity(
+    String communityId, {
+    VChatProvider? vChatProvider,
+  }) async {
     if (!formKey.currentState!.validate()) return;
 
     _setState(CommunityState.loading);
@@ -145,6 +157,12 @@ class CommunityProvider extends ChangeNotifier {
     result.fold((failure) => _setError(failure.message), (community) {
       _currentCommunity = community;
       _setState(CommunityState.success);
+
+      // Notify VChat provider to update data
+      if (vChatProvider != null) {
+        final vChatCommunity = _convertToVChatEntity(community);
+        vChatProvider.updateCommunity(vChatCommunity);
+      }
     });
   }
 
@@ -164,7 +182,10 @@ class CommunityProvider extends ChangeNotifier {
   }
 
   // Delete community
-  Future<void> deleteCommunity(String communityId) async {
+  Future<void> deleteCommunity(
+    String communityId, {
+    VChatProvider? vChatProvider,
+  }) async {
     _setState(CommunityState.loading);
 
     final result = await deleteCommunityUseCase(
@@ -174,6 +195,12 @@ class CommunityProvider extends ChangeNotifier {
     result.fold((failure) => _setError(failure.message), (_) {
       _currentCommunity = null;
       _setState(CommunityState.success);
+
+      // Notify VChat provider to remove community
+      if (vChatProvider != null) {
+        vChatProvider.removeCommunity(communityId);
+      }
+
       _clearForm();
     });
   }
@@ -277,6 +304,13 @@ class CommunityProvider extends ChangeNotifier {
         ),
       ),
     );
+  }
+
+  // Convert create_community entity to vchat entity
+  dynamic _convertToVChatEntity(CommunityEntity community) {
+    // This is a placeholder - you'll need to implement the actual conversion
+    // based on your VChat CommunityEntity structure
+    return community;
   }
 
   // Private methods

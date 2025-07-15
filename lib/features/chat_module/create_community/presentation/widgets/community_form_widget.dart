@@ -41,6 +41,7 @@ class CommunityFormWidget extends StatelessWidget {
 
   Widget _buildNameField(BuildContext context) {
     return TextFormField(
+      onTapOutside: (event) => FocusScope.of(context).unfocus(),
       controller: nameController,
       textCapitalization: TextCapitalization.words,
       decoration: InputDecoration(
@@ -125,6 +126,7 @@ class CommunityFormWidget extends StatelessWidget {
 
   Widget _buildDescriptionField(BuildContext context) {
     return TextFormField(
+      onTapOutside: (event) => FocusScope.of(context).unfocus(),
       controller: descriptionController,
       textCapitalization: TextCapitalization.sentences,
       maxLines: 4,
@@ -199,17 +201,21 @@ class CommunityFormWidget extends StatelessWidget {
             return Padding(
               padding: const EdgeInsets.only(top: 8),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'Help people understand what your community is about',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.onSurface.withOpacity(0.6),
-                      fontSize: 12,
+                  Expanded(
+                    child: Text(
+                      'Help people understand what your community is about',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withOpacity(0.6),
+                        fontSize: 12,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
                     ),
                   ),
+                  const SizedBox(width: 8),
                   Text(
                     '$currentLength/${maxLength ?? 500}',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
