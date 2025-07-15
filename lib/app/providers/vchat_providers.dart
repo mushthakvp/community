@@ -293,6 +293,17 @@ class ChatProviders {
       update: (_, repository, __) => JoinCommunity(repository),
     ),
 
+    // MISSING PROVIDERS - ADD THESE
+    // Accept Friend Request Use Case
+    ProxyProvider<CommunityRepository, AcceptFriendRequest>(
+      update: (_, repository, __) => AcceptFriendRequest(repository),
+    ),
+
+    // Reject Friend Request Use Case
+    ProxyProvider<CommunityRepository, RejectFriendRequest>(
+      update: (_, repository, __) => RejectFriendRequest(repository),
+    ),
+
     // ========================================
     // PROVIDERS
     // ========================================

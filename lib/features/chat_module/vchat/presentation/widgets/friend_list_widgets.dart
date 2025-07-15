@@ -136,16 +136,6 @@ class FriendListWidget extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(
-                  _getTimeString(friend),
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withOpacity(0.5),
-                    fontSize: 12,
-                  ),
-                ),
-                const SizedBox(height: 4),
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -511,47 +501,6 @@ class FriendListWidget extends StatelessWidget {
       return words[0][0].toUpperCase();
     } else {
       return '${words[0][0]}${words[1][0]}'.toUpperCase();
-    }
-  }
-
-  String _getTimeString(dynamic friend) {
-    if (friend is CommunityEntity) {
-      return '${friend.memberCount} members';
-    }
-
-    try {
-      final lastSeen = _safeGetDateTimeProperty(friend, 'lastSeen');
-      if (lastSeen != null) {
-        final now = DateTime.now();
-        final difference = now.difference(lastSeen);
-
-        if (difference.inMinutes < 60) {
-          return '${difference.inMinutes}m ago';
-        } else if (difference.inHours < 24) {
-          return '${difference.inHours}h ago';
-        } else {
-          return '${difference.inDays}d ago';
-        }
-      }
-    } catch (e) {
-      // Continue to fallback
-    }
-
-    final times = ['9:30 AM', '10:15 AM', '11:45 AM', '2:20 PM', 'Yesterday'];
-    final hash = (_extractFriendName(friend)).hashCode.abs();
-    return times[hash % times.length];
-  }
-
-  DateTime? _safeGetDateTimeProperty(dynamic object, String propertyName) {
-    try {
-      switch (propertyName) {
-        case 'lastSeen':
-          return object.lastSeen as DateTime?;
-        default:
-          return null;
-      }
-    } catch (e) {
-      return null;
     }
   }
 
