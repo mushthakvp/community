@@ -165,7 +165,7 @@ class VChatProvider extends ChangeNotifier {
         id: community.id,
         name: community.name,
         image: community.image,
-        memberCount: community.memberCount,
+        memberCount: community.memberCount + (isJoined ? 1 : -1),
         profileImages: community.profileImages,
         isJoined: isJoined,
         isCreated: community.isCreated,
@@ -179,7 +179,7 @@ class VChatProvider extends ChangeNotifier {
         id: community.id,
         name: community.name,
         image: community.image,
-        memberCount: community.memberCount,
+        memberCount: community.memberCount + (isJoined ? 1 : -1),
         profileImages: community.profileImages,
         isJoined: isJoined,
         isCreated: community.isCreated,
@@ -262,8 +262,18 @@ class VChatProvider extends ChangeNotifier {
     }
 
     // Also add to communities list for explore/popular tabs
-    _communities.insert(0, community);
+    // Mark as created by user
+    final updatedCommunity = CommunityEntity(
+      id: community.id,
+      name: community.name,
+      image: community.image,
+      memberCount: community.memberCount,
+      profileImages: community.profileImages,
+      isJoined: true,
+      isCreated: true,
+    );
 
+    _communities.insert(0, updatedCommunity);
     notifyListeners();
   }
 
@@ -293,5 +303,83 @@ class VChatProvider extends ChangeNotifier {
     }
 
     notifyListeners();
+  }
+
+  /// Handle friend request acceptance
+  Future<void> acceptFriendRequest(String requestId) async {
+    try {
+      if (_selectedFilter == MyGroupFilter.friendRequest) {
+        _myGroups.removeWhere(
+          (request) => (request.id == requestId || request.name == requestId),
+        );
+        notifyListeners();
+      }
+    } catch (e) {
+      _setError('Failed to accept friend request: ${e.toString()}');
+    }
+  }
+
+  /// Handle friend request rejection
+  Future<void> rejectFriendRequest(String requestId) async {
+    try {
+      if (_selectedFilter == MyGroupFilter.friendRequest) {
+        _myGroups.removeWhere(
+          (request) => (request.id == requestId || request.name == requestId),
+        );
+        notifyListeners();
+      }
+    } catch (e) {
+      _setError('Failed to reject friend request: ${e.toString()}');
+    }
+  }
+
+  /// Get current list based on selected tab and filter
+  List<CommunityEntity> getCurrentList() {
+    switch (_selectedTab) {
+      case VChatTab.explore:
+      case VChatTab.popular:
+        return _communities;
+      case VChatTab.myGroup:
+        return _myGroups;
+    }
+  }
+
+  /// Check if current list is empty
+  bool get isCurrentListEmpty => getCurrentList().isEmpty;
+
+  /// Get appropriate empty state message
+  String get emptyStateMessage {
+    switch (_selectedTab) {
+      case VChatTab.explore:
+        return 'No communities to explore';
+      case VChatTab.popular:
+        return 'No popular communities found';
+      case VChatTab.myGroup:
+        switch (_selectedFilter) {
+          case MyGroupFilter.recently:
+            return 'No recent activity';
+          case MyGroupFilter.joined:
+            return 'You haven\'t joined any communities yet';
+          case MyGroupFilter.friendRequest:
+            return 'No friend requests';
+          case MyGroupFilter.myFriends:
+            return 'No friends yet';
+        }
+    }
+  }
+
+  /// Force refresh specific data type
+  Future<void> forceRefreshCurrentData() async {
+    switch (_selectedTab) {
+      case VChatTab.explore:
+        await fetchRecommendedCommunities();
+        break;
+      case VChatTab.popular:
+        await fetchPopularCommunities();
+        break;
+      case VChatTab.myGroup:
+        await fetchMyGroups();
+        break;
+    }
   }
 }

@@ -31,9 +31,9 @@ class FriendListWidget extends StatelessWidget {
           itemBuilder: (context, index) {
             final friend = provider.myGroups[index];
             if (filter == MyGroupFilter.friendRequest) {
-              return _buildFriendRequestTile(context, friend, index);
+              return _buildFriendRequestTile(context, friend, index, provider);
             } else {
-              return _buildFriendTile(context, friend);
+              return _buildFriendTile(context, friend, provider);
             }
           },
         );
@@ -80,21 +80,30 @@ class FriendListWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildFriendTile(BuildContext context, dynamic friend) {
+  Widget _buildFriendTile(
+    BuildContext context,
+    dynamic friend,
+    VChatProvider provider,
+  ) {
+    // Extract friend data safely
+    final friendName = _extractFriendName(friend);
+    final friendImage = _extractFriendImage(friend);
+    final isOnline = _extractOnlineStatus(friend);
+
     return InkWell(
       onTap: () => _handleFriendTap(context, friend),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
-            _buildFriendAvatar(context, friend),
+            _buildFriendAvatar(context, friendName, friendImage),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    friend.name ?? 'Unknown',
+                    friendName,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                       fontSize: 16,
@@ -105,10 +114,14 @@ class FriendListWidget extends StatelessWidget {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      Icon(Icons.circle, size: 8, color: Colors.green),
+                      Icon(
+                        Icons.circle,
+                        size: 8,
+                        color: isOnline ? Colors.green : Colors.grey,
+                      ),
                       const SizedBox(width: 4),
                       Text(
-                        'Online',
+                        isOnline ? 'Online' : 'Offline',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Theme.of(
                             context,
@@ -165,13 +178,18 @@ class FriendListWidget extends StatelessWidget {
     BuildContext context,
     dynamic request,
     int index,
+    VChatProvider provider,
   ) {
+    // Extract request data safely
+    final requestName = _extractFriendName(request);
+    final requestImage = _extractFriendImage(request);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
           // Request avatar
-          _buildFriendAvatar(context, request),
+          _buildFriendAvatar(context, requestName, requestImage),
           const SizedBox(width: 12),
 
           // Request info
@@ -180,7 +198,7 @@ class FriendListWidget extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  request.name ?? 'Unknown',
+                  requestName,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                     fontSize: 16,
@@ -223,14 +241,14 @@ class FriendListWidget extends StatelessWidget {
                     context,
                     'Accept',
                     true,
-                    () => _handleAcceptRequest(context, request),
+                    () => _handleAcceptRequest(context, request, provider),
                   ),
                   const SizedBox(width: 8),
                   _buildRequestButton(
                     context,
                     'Reject',
                     false,
-                    () => _handleRejectRequest(context, request),
+                    () => _handleRejectRequest(context, request, provider),
                   ),
                 ],
               ),
@@ -241,7 +259,11 @@ class FriendListWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildFriendAvatar(BuildContext context, dynamic friend) {
+  Widget _buildFriendAvatar(
+    BuildContext context,
+    String name,
+    String? imageUrl,
+  ) {
     return Container(
       width: 50,
       height: 50,
@@ -252,25 +274,40 @@ class FriendListWidget extends StatelessWidget {
           color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
         ),
       ),
-      child: friend.image != null && friend.image!.isNotEmpty
+      child: imageUrl != null && imageUrl.isNotEmpty
           ? ClipOval(
               child: Image.network(
-                friend.image!,
+                imageUrl,
                 width: 50,
                 height: 50,
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Icon(
-                  Icons.person,
-                  size: 28,
-                  color: Theme.of(context).colorScheme.onPrimaryContainer,
-                ),
+                errorBuilder: (context, error, stackTrace) =>
+                    _buildInitialsAvatar(context, name),
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Center(
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  );
+                },
               ),
             )
-          : Icon(
-              Icons.person,
-              size: 28,
-              color: Theme.of(context).colorScheme.onPrimaryContainer,
-            ),
+          : _buildInitialsAvatar(context, name),
+    );
+  }
+
+  Widget _buildInitialsAvatar(BuildContext context, String name) {
+    final initials = _getInitials(name);
+    return Center(
+      child: Text(
+        initials,
+        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+          color: Theme.of(context).colorScheme.onPrimaryContainer,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 
@@ -326,43 +363,139 @@ class FriendListWidget extends StatelessWidget {
     );
   }
 
+  // Helper methods to safely extract data from friend objects
+  String _extractFriendName(dynamic friend) {
+    if (friend == null) return 'Unknown User';
+
+    // Try different possible property names
+    return friend.name ??
+        friend.groupName ??
+        friend.friendName ??
+        friend.userName ??
+        'Unknown User';
+  }
+
+  String? _extractFriendImage(dynamic friend) {
+    if (friend == null) return null;
+
+    // Try different possible property names for image
+    return friend.profileImage ??
+        friend.groupProfileImage ??
+        friend.image ??
+        friend.avatar;
+  }
+
+  bool _extractOnlineStatus(dynamic friend) {
+    if (friend == null) return false;
+
+    // Try to get online status, default to false
+    return friend.isOnline ?? false;
+  }
+
+  String _getInitials(String name) {
+    if (name.isEmpty) return 'U';
+
+    final words = name.trim().split(' ');
+    if (words.length == 1) {
+      return words[0][0].toUpperCase();
+    } else {
+      return '${words[0][0]}${words[1][0]}'.toUpperCase();
+    }
+  }
+
   String _getTimeString(dynamic friend) {
-    // Placeholder time - you can implement actual timestamp logic
+    // Try to get actual timestamp if available
+    if (friend?.lastSeen != null) {
+      final lastSeen = friend.lastSeen as DateTime?;
+      if (lastSeen != null) {
+        final now = DateTime.now();
+        final difference = now.difference(lastSeen);
+
+        if (difference.inMinutes < 60) {
+          return '${difference.inMinutes}m ago';
+        } else if (difference.inHours < 24) {
+          return '${difference.inHours}h ago';
+        } else {
+          return '${difference.inDays}d ago';
+        }
+      }
+    }
+
+    // Fallback to placeholder times
     final times = ['9:30 AM', '10:15 AM', '11:45 AM', '2:20 PM', 'Yesterday'];
-    return times[friend.name.hashCode % times.length];
+    final hash = (friend?.name ?? friend?.id ?? '').hashCode.abs();
+    return times[hash % times.length];
   }
 
   void _handleFriendTap(BuildContext context, dynamic friend) {
     // Navigate to personal chat
-    // context.push('/chat/${friend.id}');
+    final friendId = friend?.id ?? friend?._id;
+    if (friendId != null) {
+      // context.push('/chat/$friendId');
+    }
   }
 
   void _handleChatTap(BuildContext context, dynamic friend) {
     // Navigate to chat with friend
-    // context.push('/chat/${friend.id}');
+    final friendId = friend?.id ?? friend?._id;
+    if (friendId != null) {
+      // context.push('/chat/$friendId');
+    }
   }
 
-  void _handleAcceptRequest(BuildContext context, dynamic request) {
-    // Handle accept friend request
+  void _handleAcceptRequest(
+    BuildContext context,
+    dynamic request,
+    VChatProvider provider,
+  ) {
+    final requestName = _extractFriendName(request);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Accepted friend request from ${request.name}'),
+        content: Row(
+          children: [
+            Icon(Icons.check_circle, color: Colors.white, size: 20),
+            const SizedBox(width: 8),
+            Expanded(child: Text('Accepted friend request from $requestName')),
+          ],
+        ),
+        backgroundColor: Colors.green,
         duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
       ),
     );
+
+    // Refresh the friend requests
+    provider.fetchMyGroups();
   }
 
-  void _handleRejectRequest(BuildContext context, dynamic request) {
-    // Handle reject friend request
+  void _handleRejectRequest(
+    BuildContext context,
+    dynamic request,
+    VChatProvider provider,
+  ) {
+    final requestName = _extractFriendName(request);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Rejected friend request from ${request.name}'),
+        content: Row(
+          children: [
+            Icon(Icons.cancel, color: Colors.white, size: 20),
+            const SizedBox(width: 8),
+            Expanded(child: Text('Rejected friend request from $requestName')),
+          ],
+        ),
+        backgroundColor: Colors.orange,
         duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
       ),
     );
+
+    // Refresh the friend requests
+    provider.fetchMyGroups();
   }
 
   void _showFriendOptions(BuildContext context, dynamic friend) {
+    final friendName = _extractFriendName(friend);
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Theme.of(context).colorScheme.surface,
@@ -381,6 +514,30 @@ class FriendListWidget extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.outline,
                 borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Friend info header
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  _buildFriendAvatar(
+                    context,
+                    friendName,
+                    _extractFriendImage(friend),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      friendName,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 16),
@@ -447,12 +604,14 @@ class FriendListWidget extends StatelessWidget {
   }
 
   void _showRemoveFriendDialog(BuildContext context, dynamic friend) {
+    final friendName = _extractFriendName(friend);
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Remove Friend'),
         content: Text(
-          'Are you sure you want to remove ${friend.name} from your friends?',
+          'Are you sure you want to remove $friendName from your friends?',
         ),
         actions: [
           TextButton(
@@ -465,7 +624,7 @@ class FriendListWidget extends StatelessWidget {
               // Handle remove friend logic
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Removed ${friend.name} from friends'),
+                  content: Text('Removed $friendName from friends'),
                   duration: const Duration(seconds: 2),
                 ),
               );

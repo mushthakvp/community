@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../vchat/domain/entities/community_entity.dart' as vchat;
 import '../../../vchat/presentation/providers/vchat_provider.dart';
 import '../../domain/entities/community_entity.dart';
 import '../../domain/usecases/create_community.dart';
@@ -125,7 +126,7 @@ class CommunityProvider extends ChangeNotifier {
 
       // Notify VChat provider to refresh data
       if (vChatProvider != null) {
-        // Convert to VChat CommunityEntity if needed
+        // Convert to VChat CommunityEntity
         final vChatCommunity = _convertToVChatEntity(community);
         vChatProvider.addNewCommunity(vChatCommunity);
       }
@@ -307,10 +308,20 @@ class CommunityProvider extends ChangeNotifier {
   }
 
   // Convert create_community entity to vchat entity
-  dynamic _convertToVChatEntity(CommunityEntity community) {
-    // This is a placeholder - you'll need to implement the actual conversion
-    // based on your VChat CommunityEntity structure
-    return community;
+  vchat.CommunityEntity _convertToVChatEntity(CommunityEntity community) {
+    return vchat.CommunityEntity(
+      id: community.id,
+      name: community.name,
+      image: community.profileImage,
+      memberCount: community.members.length,
+      profileImages: community.members
+          .where((member) => member.profileImage != null)
+          .map((member) => member.profileImage!)
+          .take(5) // Limit to first 5 profile images
+          .toList(),
+      isJoined: community.isUserInGroup,
+      isCreated: community.isCreator,
+    );
   }
 
   // Private methods

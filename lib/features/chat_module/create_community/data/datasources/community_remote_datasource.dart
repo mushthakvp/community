@@ -82,8 +82,32 @@ class CommunityRemoteDataSourceImpl implements CommunityRemoteDataSource {
       final jsonResponse = json.decode(response.body);
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        if (jsonResponse['success'] == true && jsonResponse['data'] != null) {
-          return CommunityModel.fromJson(jsonResponse['data']);
+        if (jsonResponse['success'] == true) {
+          // Check if community data is returned
+          if (jsonResponse['data'] != null) {
+            return CommunityModel.fromJson(jsonResponse['data']);
+          } else if (jsonResponse['community'] != null) {
+            return CommunityModel.fromJson(jsonResponse['community']);
+          } else {
+            // Server only returned success status, create a minimal community model
+            return CommunityModel(
+              id: jsonResponse['communityId'] ?? '', // Some servers return ID
+              name: name,
+              description: description,
+              profileImage: profileImage,
+              shareLink: null,
+              members: const [],
+              isCreator: true,
+              isUserInGroup: true,
+              isUserRequested: false,
+              isUserAccepted: true,
+              isBot: false,
+              role: 'admin',
+              userWallpaper: null,
+              createdAt: DateTime.now(),
+              updatedAt: DateTime.now(),
+            );
+          }
         } else {
           throw ServerException(
             jsonResponse['message'] ?? 'Failed to create community',
