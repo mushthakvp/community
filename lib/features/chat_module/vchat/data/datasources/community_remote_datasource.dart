@@ -26,7 +26,6 @@ class CommunityRemoteDataSourceImpl implements CommunityRemoteDataSource {
     final response = await apiClient.get(
       '${ChatApiConstants.getRecommendCommunity}?status=$type',
     );
-
     final data = jsonDecode(response.body);
     final communitiesJson = data['data'] as List<dynamic>;
     return communitiesJson
@@ -39,7 +38,6 @@ class CommunityRemoteDataSourceImpl implements CommunityRemoteDataSource {
     final response = await apiClient.get(
       '${ChatApiConstants.getMyGroupData}?type=$type',
     );
-
     final data = jsonDecode(response.body);
     final groupsJson = data['data'] as List<dynamic>;
     return groupsJson.map((json) => CommunityModel.fromJson(json)).toList();

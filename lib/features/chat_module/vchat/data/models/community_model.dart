@@ -14,8 +14,8 @@ class CommunityModel extends CommunityEntity {
   factory CommunityModel.fromJson(Map<String, dynamic> json) {
     return CommunityModel(
       id: json['_id'] ?? '',
-      name: json['groupName'] ?? '',
-      image: json['groupProfileImage'],
+      name: json['name'] ?? json['groupName'] ?? '',
+      image: json['profileImage'] ?? json['groupProfileImage'],
       memberCount: json['memberCount'] ?? 0,
       profileImages:
           (json['profileImages'] as List<dynamic>?)
@@ -26,6 +26,7 @@ class CommunityModel extends CommunityEntity {
       isCreated: json['isCreated'] ?? false,
     );
   }
+
   Map<String, dynamic> toJson() {
     return {
       '_id': id,

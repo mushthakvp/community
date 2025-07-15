@@ -84,7 +84,6 @@ class VChatProvider extends ChangeNotifier {
   Future<void> fetchPopularCommunities() async {
     _setLoading(true);
     _clearError();
-
     try {
       final result = await getRecommendedCommunities(
         GetRecommendedCommunitiesParams(type: 'popular'),
@@ -97,14 +96,12 @@ class VChatProvider extends ChangeNotifier {
     } catch (e) {
       _setError(e.toString());
     }
-
     _setLoading(false);
   }
 
   Future<void> fetchMyGroups() async {
     _setLoading(true);
     _clearError();
-
     try {
       final filterType = _getFilterType(_selectedFilter);
       final result = await getMyGroups(GetMyGroupsParams(type: filterType));
@@ -123,19 +120,16 @@ class VChatProvider extends ChangeNotifier {
   Future<void> joinCommunityById(String communityId) async {
     _joiningStates[communityId] = true;
     notifyListeners();
-
     try {
       final result = await joinCommunity(
         JoinCommunityParams(communityId: communityId),
       );
-
       result.fold(
         (failure) {
           _setError(failure.message);
         },
         (_) {
           _updateCommunityJoinStatus(communityId, true);
-
           switch (_selectedTab) {
             case VChatTab.explore:
               fetchRecommendedCommunities();
@@ -171,7 +165,6 @@ class VChatProvider extends ChangeNotifier {
         isCreated: community.isCreated,
       );
     }
-
     final myGroupIndex = _myGroups.indexWhere((c) => c.id == communityId);
     if (myGroupIndex != -1) {
       final community = _myGroups[myGroupIndex];
@@ -230,7 +223,6 @@ class VChatProvider extends ChangeNotifier {
     }
   }
 
-  /// Refresh current data based on selected tab and filter
   void refreshCurrentData() {
     switch (_selectedTab) {
       case VChatTab.explore:
@@ -245,7 +237,6 @@ class VChatProvider extends ChangeNotifier {
     }
   }
 
-  /// Force refresh all data
   Future<void> refreshAllData() async {
     await Future.wait([
       fetchRecommendedCommunities(),
@@ -254,15 +245,10 @@ class VChatProvider extends ChangeNotifier {
     ]);
   }
 
-  /// Add a newly created community to the appropriate list
   void addNewCommunity(CommunityEntity community) {
-    // Add to my groups if currently viewing my groups
     if (_selectedTab == VChatTab.myGroup) {
       _myGroups.insert(0, community);
     }
-
-    // Also add to communities list for explore/popular tabs
-    // Mark as created by user
     final updatedCommunity = CommunityEntity(
       id: community.id,
       name: community.name,
@@ -277,35 +263,28 @@ class VChatProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Remove a community from all lists
   void removeCommunity(String communityId) {
     _communities.removeWhere((c) => c.id == communityId);
     _myGroups.removeWhere((c) => c.id == communityId);
     notifyListeners();
   }
 
-  /// Update a community in all lists
   void updateCommunity(CommunityEntity updatedCommunity) {
-    // Update in communities list
     final communityIndex = _communities.indexWhere(
       (c) => c.id == updatedCommunity.id,
     );
     if (communityIndex != -1) {
       _communities[communityIndex] = updatedCommunity;
     }
-
-    // Update in my groups list
     final myGroupIndex = _myGroups.indexWhere(
       (c) => c.id == updatedCommunity.id,
     );
     if (myGroupIndex != -1) {
       _myGroups[myGroupIndex] = updatedCommunity;
     }
-
     notifyListeners();
   }
 
-  /// Handle friend request acceptance
   Future<void> acceptFriendRequest(String requestId) async {
     try {
       if (_selectedFilter == MyGroupFilter.friendRequest) {
@@ -319,7 +298,6 @@ class VChatProvider extends ChangeNotifier {
     }
   }
 
-  /// Handle friend request rejection
   Future<void> rejectFriendRequest(String requestId) async {
     try {
       if (_selectedFilter == MyGroupFilter.friendRequest) {
@@ -333,7 +311,6 @@ class VChatProvider extends ChangeNotifier {
     }
   }
 
-  /// Get current list based on selected tab and filter
   List<CommunityEntity> getCurrentList() {
     switch (_selectedTab) {
       case VChatTab.explore:

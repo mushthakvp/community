@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../domain/entities/community_entity.dart';
 import '../providers/vchat_provider.dart';
 
 class FriendListWidget extends StatelessWidget {
@@ -85,11 +86,9 @@ class FriendListWidget extends StatelessWidget {
     dynamic friend,
     VChatProvider provider,
   ) {
-    // Extract friend data safely
     final friendName = _extractFriendName(friend);
     final friendImage = _extractFriendImage(friend);
     final isOnline = _extractOnlineStatus(friend);
-
     return InkWell(
       onTap: () => _handleFriendTap(context, friend),
       child: Container(
@@ -147,7 +146,6 @@ class FriendListWidget extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                // Action buttons in a row
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -180,19 +178,14 @@ class FriendListWidget extends StatelessWidget {
     int index,
     VChatProvider provider,
   ) {
-    // Extract request data safely
     final requestName = _extractFriendName(request);
     final requestImage = _extractFriendImage(request);
-
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
-          // Request avatar
           _buildFriendAvatar(context, requestName, requestImage),
           const SizedBox(width: 12),
-
-          // Request info
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -219,8 +212,6 @@ class FriendListWidget extends StatelessWidget {
               ],
             ),
           ),
-
-          // Action section for friend requests
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -363,33 +354,125 @@ class FriendListWidget extends StatelessWidget {
     );
   }
 
-  // Helper methods to safely extract data from friend objects
+  // FIXED: Helper methods to safely extract data from friend objects
   String _extractFriendName(dynamic friend) {
     if (friend == null) return 'Unknown User';
 
-    // Try different possible property names
-    return friend.name ??
-        friend.groupName ??
-        friend.friendName ??
-        friend.userName ??
-        'Unknown User';
+    // Handle CommunityEntity specifically
+    if (friend is CommunityEntity) {
+      return friend.name;
+    }
+
+    // Handle Map (JSON) objects
+    if (friend is Map<String, dynamic>) {
+      return friend['name'] ??
+          friend['groupName'] ??
+          friend['friendName'] ??
+          friend['userName'] ??
+          'Unknown User';
+    }
+
+    // For other object types, try accessing properties safely
+    try {
+      return _safeGetStringProperty(friend, 'name') ??
+          _safeGetStringProperty(friend, 'groupName') ??
+          _safeGetStringProperty(friend, 'friendName') ??
+          _safeGetStringProperty(friend, 'userName') ??
+          'Unknown User';
+    } catch (e) {
+      return 'Unknown User';
+    }
   }
 
+  // FIXED: Safe image extraction method
   String? _extractFriendImage(dynamic friend) {
     if (friend == null) return null;
 
-    // Try different possible property names for image
-    return friend.profileImage ??
-        friend.groupProfileImage ??
-        friend.image ??
-        friend.avatar;
+    // Handle CommunityEntity specifically (this fixes the main error)
+    if (friend is CommunityEntity) {
+      return friend.image;
+    }
+
+    // Handle Map (JSON) objects
+    if (friend is Map<String, dynamic>) {
+      return friend['image'] ??
+          friend['groupProfileImage'] ??
+          friend['profileImage'] ??
+          friend['avatar'];
+    }
+
+    // For other object types, try accessing properties safely
+    try {
+      return _safeGetStringProperty(friend, 'image') ??
+          _safeGetStringProperty(friend, 'groupProfileImage') ??
+          _safeGetStringProperty(friend, 'profileImage') ??
+          _safeGetStringProperty(friend, 'avatar');
+    } catch (e) {
+      return null;
+    }
   }
 
   bool _extractOnlineStatus(dynamic friend) {
     if (friend == null) return false;
 
-    // Try to get online status, default to false
-    return friend.isOnline ?? false;
+    // Handle CommunityEntity - communities are not "online"
+    if (friend is CommunityEntity) {
+      return false;
+    }
+
+    // Handle Map (JSON) objects
+    if (friend is Map<String, dynamic>) {
+      return friend['isOnline'] ?? false;
+    }
+
+    // For other object types, try accessing properties safely
+    try {
+      return _safeGetBoolProperty(friend, 'isOnline') ?? false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // Helper method to safely get string properties
+  String? _safeGetStringProperty(dynamic object, String propertyName) {
+    try {
+      switch (propertyName) {
+        case 'name':
+          return object.name as String?;
+        case 'groupName':
+          return object.groupName as String?;
+        case 'friendName':
+          return object.friendName as String?;
+        case 'userName':
+          return object.userName as String?;
+        case 'image':
+          return object.image as String?;
+        case 'groupProfileImage':
+          return object.groupProfileImage as String?;
+        case 'profileImage':
+          return object.profileImage as String?;
+        case 'avatar':
+          return object.avatar as String?;
+        default:
+          return null;
+      }
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // Helper method to safely get boolean properties
+  bool? _safeGetBoolProperty(dynamic object, String propertyName) {
+    try {
+      switch (propertyName) {
+        case 'isOnline':
+          return object.isOnline as bool?;
+        default:
+          return null;
+      }
+    } catch (e) {
+      return null;
+    }
   }
 
   String _getInitials(String name) {
@@ -404,9 +487,14 @@ class FriendListWidget extends StatelessWidget {
   }
 
   String _getTimeString(dynamic friend) {
+    // Handle CommunityEntity - show member count instead of time
+    if (friend is CommunityEntity) {
+      return '${friend.memberCount} members';
+    }
+
     // Try to get actual timestamp if available
-    if (friend?.lastSeen != null) {
-      final lastSeen = friend.lastSeen as DateTime?;
+    try {
+      final lastSeen = _safeGetDateTimeProperty(friend, 'lastSeen');
       if (lastSeen != null) {
         final now = DateTime.now();
         final difference = now.difference(lastSeen);
@@ -419,28 +507,57 @@ class FriendListWidget extends StatelessWidget {
           return '${difference.inDays}d ago';
         }
       }
+    } catch (e) {
+      // Continue to fallback
     }
 
     // Fallback to placeholder times
     final times = ['9:30 AM', '10:15 AM', '11:45 AM', '2:20 PM', 'Yesterday'];
-    final hash = (friend?.name ?? friend?.id ?? '').hashCode.abs();
+    final hash = (_extractFriendName(friend)).hashCode.abs();
     return times[hash % times.length];
   }
 
+  // Helper method to safely get DateTime properties
+  DateTime? _safeGetDateTimeProperty(dynamic object, String propertyName) {
+    try {
+      switch (propertyName) {
+        case 'lastSeen':
+          return object.lastSeen as DateTime?;
+        default:
+          return null;
+      }
+    } catch (e) {
+      return null;
+    }
+  }
+
   void _handleFriendTap(BuildContext context, dynamic friend) {
-    // Navigate to personal chat
-    final friendId = friend?.id ?? friend?._id;
+    // Handle different types of friend objects
+    String? friendId;
+
+    if (friend is CommunityEntity) {
+      friendId = friend.id;
+    } else if (friend is Map<String, dynamic>) {
+      friendId = friend['id'] ?? friend['_id'];
+    } else {
+      try {
+        friendId =
+            _safeGetStringProperty(friend, 'id') ??
+            _safeGetStringProperty(friend, '_id');
+      } catch (e) {
+        friendId = null;
+      }
+    }
+
     if (friendId != null) {
-      // context.push('/chat/$friendId');
+      // // Navigate to chat - you can implement your navigation logic here
+      // // context.push('/chat/$friendId');
+      // print('Navigate to chat with friend: $friendId');
     }
   }
 
   void _handleChatTap(BuildContext context, dynamic friend) {
-    // Navigate to chat with friend
-    final friendId = friend?.id ?? friend?._id;
-    if (friendId != null) {
-      // context.push('/chat/$friendId');
-    }
+    _handleFriendTap(context, friend);
   }
 
   void _handleAcceptRequest(
@@ -453,7 +570,7 @@ class FriendListWidget extends StatelessWidget {
       SnackBar(
         content: Row(
           children: [
-            Icon(Icons.check_circle, color: Colors.white, size: 20),
+            const Icon(Icons.check_circle, color: Colors.white, size: 20),
             const SizedBox(width: 8),
             Expanded(child: Text('Accepted friend request from $requestName')),
           ],
@@ -463,8 +580,6 @@ class FriendListWidget extends StatelessWidget {
         behavior: SnackBarBehavior.floating,
       ),
     );
-
-    // Refresh the friend requests
     provider.fetchMyGroups();
   }
 
@@ -478,7 +593,7 @@ class FriendListWidget extends StatelessWidget {
       SnackBar(
         content: Row(
           children: [
-            Icon(Icons.cancel, color: Colors.white, size: 20),
+            const Icon(Icons.cancel, color: Colors.white, size: 20),
             const SizedBox(width: 8),
             Expanded(child: Text('Rejected friend request from $requestName')),
           ],
@@ -488,14 +603,11 @@ class FriendListWidget extends StatelessWidget {
         behavior: SnackBarBehavior.floating,
       ),
     );
-
-    // Refresh the friend requests
     provider.fetchMyGroups();
   }
 
   void _showFriendOptions(BuildContext context, dynamic friend) {
     final friendName = _extractFriendName(friend);
-
     showModalBottomSheet(
       context: context,
       backgroundColor: Theme.of(context).colorScheme.surface,
@@ -507,7 +619,6 @@ class FriendListWidget extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Handle bar
             Container(
               width: 40,
               height: 4,
@@ -517,8 +628,6 @@ class FriendListWidget extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-
-            // Friend info header
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
@@ -541,8 +650,6 @@ class FriendListWidget extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-
-            // Options
             _buildOptionTile(
               context,
               icon: Icons.chat_bubble_outline,
