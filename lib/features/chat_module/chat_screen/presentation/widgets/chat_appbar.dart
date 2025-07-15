@@ -8,6 +8,7 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String? chatImage;
   final bool isGroup;
   final bool isBotChat;
+  final bool isPersonalChat;
   final VoidCallback onBackPressed;
   final VoidCallback onMenuPressed;
 
@@ -17,6 +18,7 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.chatImage,
     this.isGroup = false,
     this.isBotChat = false,
+    this.isPersonalChat = false,
     required this.onBackPressed,
     required this.onMenuPressed,
     required this.chatId,
@@ -42,7 +44,7 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
         style: IconButton.styleFrom(foregroundColor: Colors.white),
       ),
       title: GestureDetector(
-        onTap: (isGroup && !isBotChat)
+        onTap: (isGroup && !isBotChat && !isPersonalChat)
             ? () => _navigateToProfile(context)
             : null,
         child: Row(
@@ -80,7 +82,22 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
                     ),
                   ),
 
-                if (!isBotChat && !isGroup)
+                if (isPersonalChat)
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: Container(
+                      width: 12,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color: Colors.green,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 1.5),
+                      ),
+                    ),
+                  ),
+
+                if (!isBotChat && !isGroup && !isPersonalChat)
                   Positioned(
                     bottom: 0,
                     right: 0,
@@ -124,13 +141,17 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
                           size: 16,
                         ),
                       ],
-                      if (isGroup && !isBotChat) ...[
+                      if (isGroup && !isBotChat && !isPersonalChat) ...[
                         const SizedBox(width: 4),
                         const Icon(
                           Icons.group,
                           color: Colors.white70,
                           size: 16,
                         ),
+                      ],
+                      if (isPersonalChat) ...[
+                        const SizedBox(width: 4),
+                        const Icon(Icons.lock, color: Colors.white70, size: 16),
                       ],
                     ],
                   ),
@@ -149,6 +170,7 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   IconData _getChatIcon() {
     if (isBotChat) return Icons.smart_toy;
+    if (isPersonalChat) return Icons.person;
     if (isGroup) return Icons.group;
     return Icons.person;
   }
@@ -156,6 +178,8 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
   String _getSubtitleText() {
     if (isBotChat) {
       return 'Bot • Always available';
+    } else if (isPersonalChat) {
+      return 'Personal chat • Private';
     } else if (isGroup) {
       return 'Group • Tap for group info';
     } else {
@@ -164,7 +188,7 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   void _navigateToProfile(BuildContext context) {
-    if (isGroup && !isBotChat) {
+    if (isGroup && !isBotChat && !isPersonalChat) {
       context.push(
         '${ChatRouter.chatProfilePath}/$chatId',
         extra: {

@@ -1,13 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../data/datasources/socket_datasource.dart';
 import '../providers/chat_provider.dart';
 
 class ChatInput extends StatefulWidget {
   final String chatId;
   final bool isBotChat;
+  final ChatType chatType;
+  final bool isPersonalChat;
 
-  const ChatInput({super.key, required this.chatId, this.isBotChat = false});
+  const ChatInput({
+    super.key,
+    required this.chatId,
+    this.isBotChat = false,
+    this.chatType = ChatType.community,
+    this.isPersonalChat = false,
+  });
 
   @override
   State<ChatInput> createState() => _ChatInputState();
@@ -63,6 +72,11 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
 
     // If it's a bot chat, hide the input completely
     if (chat == null || chat.isBot) return ChatInputType.hidden;
+
+    // If it's a personal chat, always show normal input
+    if (widget.isPersonalChat || widget.chatType == ChatType.personal) {
+      return ChatInputType.normal;
+    }
 
     // If user is creator or already in group, show normal input
     if (chat.isCreator || chat.isUserInGroup) {
@@ -377,7 +391,9 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
         textCapitalization: TextCapitalization.sentences,
         textInputAction: TextInputAction.newline,
         decoration: InputDecoration(
-          hintText: 'Type a message...',
+          hintText: widget.isPersonalChat
+              ? 'Type a personal message...'
+              : 'Type a message...',
           hintStyle: TextStyle(
             color: Theme.of(
               context,
@@ -397,7 +413,7 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
         },
         onSubmitted: (_) {
           if (_isTyping) {
-            provider.sendTextMessage(widget.chatId);
+            provider.sendTextMessage(widget.chatId, chatType: widget.chatType);
             setState(() {
               _isTyping = false;
             });
@@ -496,7 +512,10 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
               ],
             ),
             child: IconButton(
-              onPressed: () => provider.stopRecording(widget.chatId),
+              onPressed: () => provider.stopRecording(
+                widget.chatId,
+                chatType: widget.chatType,
+              ),
               icon: const Icon(Icons.send),
               style: IconButton.styleFrom(
                 foregroundColor: Colors.white,
@@ -555,7 +574,10 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
       child: IconButton(
         onPressed: _isTyping
             ? () {
-                provider.sendTextMessage(widget.chatId);
+                provider.sendTextMessage(
+                  widget.chatId,
+                  chatType: widget.chatType,
+                );
                 setState(() {
                   _isTyping = false;
                 });
@@ -608,7 +630,11 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
                   color: Colors.pink,
                   onTap: () {
                     Navigator.pop(context);
-                    provider.pickImage(widget.chatId, fromCamera: true);
+                    provider.pickImage(
+                      widget.chatId,
+                      fromCamera: true,
+                      chatType: widget.chatType,
+                    );
                   },
                 ),
                 _buildAttachmentOption(
@@ -618,7 +644,10 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
                   color: Colors.purple,
                   onTap: () {
                     Navigator.pop(context);
-                    provider.pickImage(widget.chatId);
+                    provider.pickImage(
+                      widget.chatId,
+                      chatType: widget.chatType,
+                    );
                   },
                 ),
                 _buildAttachmentOption(
@@ -628,7 +657,7 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
                   color: Colors.blue,
                   onTap: () {
                     Navigator.pop(context);
-                    provider.pickFile(widget.chatId);
+                    provider.pickFile(widget.chatId, chatType: widget.chatType);
                   },
                 ),
               ],
@@ -691,7 +720,7 @@ class _ChatInputState extends State<ChatInput> with TickerProviderStateMixin {
 
   void _refreshChatStatus(BuildContext context) {
     final provider = context.read<ChatProvider>();
-    provider.refreshChat(widget.chatId);
+    provider.refreshChat(widget.chatId, chatType: widget.chatType);
   }
 }
 

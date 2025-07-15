@@ -7,6 +7,8 @@ import '../../../../../core/constants/chat_api_constants.dart';
 import '../../../../../core/services/storage_service.dart';
 import '../models/message_model.dart';
 
+enum ChatType { community, personal }
+
 abstract class SocketDataSource {
   Future<void> connect();
   Future<void> disconnect();
@@ -15,9 +17,13 @@ abstract class SocketDataSource {
     required String content,
     String? mediaUrl,
     String? mediaType,
+    required ChatType chatType,
   });
   Stream<MessageModel> listenToNewMessages(String chatId);
-  Future<void> joinRoom(String chatId);
+  Future<void> joinRoom(
+    String chatId, {
+    ChatType chatType = ChatType.community,
+  });
   Future<void> leaveRoom(String chatId);
   bool get isConnected;
 }
@@ -33,14 +39,16 @@ class SocketDataSourceImpl implements SocketDataSource {
   static const int maxReconnectAttempts = 5;
   static const Duration reconnectDelay = Duration(seconds: 2);
 
-  // Track current room to avoid conflicts
   String? _currentRoomId;
+  ChatType _currentChatType = ChatType.community;
   final Set<String> _joinedRooms = <String>{};
+  final Map<String, ChatType> _roomTypes = <String, ChatType>{};
 
   @override
   bool get isConnected => _isConnected && _socket?.connected == true;
 
   String? get currentRoom => _currentRoomId;
+  ChatType get currentChatType => _currentChatType;
 
   @override
   Future<void> connect() async {
@@ -123,6 +131,7 @@ class SocketDataSourceImpl implements SocketDataSource {
         }
         final rawData = data as Map<String, dynamic>;
         String? messageRoomId;
+
         if (rawData.containsKey('community') &&
             rawData['community'] != null &&
             rawData['community'].toString().isNotEmpty) {
@@ -140,10 +149,14 @@ class SocketDataSourceImpl implements SocketDataSource {
         if (messageRoomId == null || messageRoomId.isEmpty) {
           return;
         }
+
         final messageData = Map<String, dynamic>.from(rawData);
         messageData['chat'] = messageRoomId;
         final message = MessageModel.fromJson(messageData);
-        final shouldEmit = _shouldEmitMessage(messageRoomId);
+        final shouldEmit = _shouldEmitMessage(
+          messageRoomId,
+          ChatType.community,
+        );
         if (shouldEmit) {
           if (!_messageController.isClosed) {
             _messageController.add(message);
@@ -156,8 +169,46 @@ class SocketDataSourceImpl implements SocketDataSource {
       }
     });
 
-    _socket!.on('userJoinedRoom', (data) {});
+    _socket!.on('message_received_singleChat', (data) {
+      try {
+        if (data == null) {
+          return;
+        }
+        final rawData = data as Map<String, dynamic>;
+        String? messageRoomId;
+        if (rawData.containsKey('chat') &&
+            rawData['chat'] != null &&
+            rawData['chat'].toString().isNotEmpty) {
+          messageRoomId = rawData['chat'].toString();
+        } else if (rawData.containsKey('chatId') &&
+            rawData['chatId'] != null &&
+            rawData['chatId'].toString().isNotEmpty) {
+          messageRoomId = rawData['chatId'].toString();
+        } else if (rawData.containsKey('friendId') &&
+            rawData['friendId'] != null &&
+            rawData['friendId'].toString().isNotEmpty) {
+          messageRoomId = rawData['friendId'].toString();
+        }
+        if (messageRoomId == null || messageRoomId.isEmpty) {
+          return;
+        }
+        final messageData = Map<String, dynamic>.from(rawData);
+        messageData['chat'] = messageRoomId;
+        final message = MessageModel.fromJson(messageData);
+        final shouldEmit = _shouldEmitMessage(messageRoomId, ChatType.personal);
+        if (shouldEmit) {
+          if (!_messageController.isClosed) {
+            _messageController.add(message);
+          }
+        }
+      } catch (e, stackTrace) {
+        debugPrint(
+          'Error in _socket!.on("message_received_singleChat"): $e trace $stackTrace',
+        );
+      }
+    });
 
+    _socket!.on('userJoinedRoom', (data) {});
     _socket!.on('userLeftRoom', (data) {});
 
     _socket!.onReconnect((attempt) {
@@ -172,11 +223,12 @@ class SocketDataSourceImpl implements SocketDataSource {
     });
   }
 
-  bool _shouldEmitMessage(String messageRoomId) {
-    if (_currentRoomId == messageRoomId) {
+  bool _shouldEmitMessage(String messageRoomId, ChatType messageType) {
+    if (_currentRoomId == messageRoomId && _currentChatType == messageType) {
       return true;
     }
-    if (_joinedRooms.contains(messageRoomId)) {
+    if (_joinedRooms.contains(messageRoomId) &&
+        _roomTypes[messageRoomId] == messageType) {
       return true;
     }
     return false;
@@ -246,6 +298,7 @@ class SocketDataSourceImpl implements SocketDataSource {
     required String content,
     String? mediaUrl,
     String? mediaType,
+    required ChatType chatType,
   }) async {
     if (!isConnected) {
       await connect();
@@ -261,15 +314,24 @@ class SocketDataSourceImpl implements SocketDataSource {
       if (token == null || userId == null) {
         throw Exception('User not authenticated');
       }
-      final data = {
-        'communityId': chatId,
+      final data = <String, dynamic>{
         'token': token,
         'msg': content,
         'media': mediaUrl ?? '',
         'ext': mediaType ?? '',
       };
-      _socket!.emit('newMessageCommunity', data);
-
+      String eventName;
+      switch (chatType) {
+        case ChatType.community:
+          data['communityId'] = chatId;
+          eventName = 'newMessageCommunity';
+          break;
+        case ChatType.personal:
+          data['friendId'] = chatId;
+          eventName = 'newMessageSingleChat';
+          break;
+      }
+      _socket!.emit(eventName, data);
       return MessageModel(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         chatId: chatId,
@@ -295,36 +357,41 @@ class SocketDataSourceImpl implements SocketDataSource {
   }
 
   @override
-  Future<void> joinRoom(String chatId) async {
+  Future<void> joinRoom(
+    String chatId, {
+    ChatType chatType = ChatType.community,
+  }) async {
     if (!isConnected) {
       await connect();
       if (!isConnected) {
         throw Exception('Socket not connected');
       }
     }
-
     try {
       final token = await StorageService.getToken();
       if (token == null) {
         throw Exception('User not authenticated');
       }
-
-      // Leave current room if different
       if (_currentRoomId != null && _currentRoomId != chatId) {
         await leaveRoom(_currentRoomId!);
       }
-
-      // Update tracking before joining
       _currentRoomId = chatId;
+      _currentChatType = chatType;
       _joinedRooms.add(chatId);
-
-      _socket!.emit('setup', {'chatId': chatId, 'token': token});
-
-      // Wait for the room join to complete
+      _roomTypes[chatId] = chatType;
+      final joinData = {'chatId': chatId, 'token': token};
+      switch (chatType) {
+        case ChatType.community:
+          _socket!.emit('setup', joinData);
+          break;
+        case ChatType.personal:
+          _socket!.emit('join', joinData);
+          break;
+      }
       await Future.delayed(const Duration(milliseconds: 1000));
     } catch (e) {
-      // Remove from tracking if join failed
       _joinedRooms.remove(chatId);
+      _roomTypes.remove(chatId);
       if (_currentRoomId == chatId) {
         _currentRoomId = null;
       }
@@ -335,12 +402,18 @@ class SocketDataSourceImpl implements SocketDataSource {
   @override
   Future<void> leaveRoom(String chatId) async {
     if (_socket == null) return;
-
     try {
-      _socket!.emit('leave', {'chatId': chatId});
-
+      final chatType = _roomTypes[chatId] ?? ChatType.community;
+      switch (chatType) {
+        case ChatType.community:
+          _socket!.emit('leave', {'chatId': chatId});
+          break;
+        case ChatType.personal:
+          _socket!.emit('leave_single_chat', {'chatId': chatId});
+          break;
+      }
       _joinedRooms.remove(chatId);
-
+      _roomTypes.remove(chatId);
       if (_currentRoomId == chatId) {
         _currentRoomId = null;
       }
@@ -352,14 +425,22 @@ class SocketDataSourceImpl implements SocketDataSource {
   // Helper method to rejoin all rooms after reconnection
   Future<void> _rejoinAllRooms() async {
     if (_joinedRooms.isEmpty) return;
-
-    final roomsToRejoin = List<String>.from(_joinedRooms);
-    for (final roomId in roomsToRejoin) {
+    final roomsToRejoin = Map<String, ChatType>.from(_roomTypes);
+    for (final entry in roomsToRejoin.entries) {
+      final roomId = entry.key;
+      final chatType = entry.value;
       try {
-        // Don't use joinRoom here as it would clear _currentRoomId
         final token = await StorageService.getToken();
         if (token != null) {
-          _socket!.emit('setup', {'chatId': roomId, 'token': token});
+          final joinData = {'chatId': roomId, 'token': token};
+          switch (chatType) {
+            case ChatType.community:
+              _socket!.emit('setup', joinData);
+              break;
+            case ChatType.personal:
+              _socket!.emit('join', joinData);
+              break;
+          }
           await Future.delayed(const Duration(milliseconds: 500));
         }
       } catch (e) {
@@ -375,6 +456,7 @@ class SocketDataSourceImpl implements SocketDataSource {
       await leaveRoom(roomId);
     }
     _currentRoomId = null;
+    _roomTypes.clear();
   }
 
   // Add method to manually reconnect
@@ -387,9 +469,13 @@ class SocketDataSourceImpl implements SocketDataSource {
   // Method to clear all room tracking
   void clearRoomTracking() {
     _joinedRooms.clear();
+    _roomTypes.clear();
     _currentRoomId = null;
   }
 
   // Get list of joined rooms for debugging
   Set<String> get joinedRooms => Set.from(_joinedRooms);
+
+  // Get room types for debugging
+  Map<String, ChatType> get roomTypes => Map.from(_roomTypes);
 }

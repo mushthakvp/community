@@ -41,6 +41,7 @@ class ChatProvider extends ChangeNotifier {
   final Map<String, ChatCacheData> _memoryCache = {};
 
   String? _currentChatId;
+  ChatType _currentChatType = ChatType.community;
   List<MessageEntity> _messages = [];
   ChatEntity? _currentChat;
   bool _isLoading = false;
@@ -105,6 +106,7 @@ class ChatProvider extends ChangeNotifier {
   List<MessageEntity> get messages => _messages;
   ChatEntity? get currentChat => _currentChat;
   String? get currentChatId => _currentChatId;
+  ChatType get currentChatType => _currentChatType;
   bool get isLoading => _isLoading;
   bool get isRecording => _isRecording;
   bool get isUploading => _isUploading;
@@ -114,8 +116,12 @@ class ChatProvider extends ChangeNotifier {
   int get recordingDuration => _recordingDuration;
   bool get hasText => messageController.text.trim().isNotEmpty;
   bool get isBotChat => _currentChat?.isBot ?? false;
-  bool get canSendMessages =>
-      _currentChat?.isCreator == true || _currentChat?.isUserInGroup == true;
+  bool get canSendMessages {
+    if (_currentChatType == ChatType.personal) return true;
+    return _currentChat?.isCreator == true ||
+        _currentChat?.isUserInGroup == true;
+  }
+
   bool get isRequestSent =>
       _currentChat?.isUserRequested == true &&
       _currentChat?.isUserInGroup == false;
@@ -143,6 +149,7 @@ class ChatProvider extends ChangeNotifier {
     _optimisticTimers.clear();
 
     _currentChatId = null;
+    _currentChatType = ChatType.community;
     _messages.clear();
     _currentChat = null;
     _optimisticMessages.clear();
@@ -158,15 +165,20 @@ class ChatProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> initializeChat(String chatId) async {
+  Future<void> initializeChat(
+    String chatId, {
+    ChatType chatType = ChatType.community,
+  }) async {
     if (_isInitializing) return;
     if (_currentChatId != null && _currentChatId != chatId) {
       _clearCurrentChat();
       await Future.delayed(const Duration(milliseconds: 100));
     }
-    if (_currentChatId == chatId && _messages.isNotEmpty) {
+    if (_currentChatId == chatId &&
+        _currentChatType == chatType &&
+        _messages.isNotEmpty) {
       await _ensureSocketConnection();
-      await _joinSocketRoom(chatId);
+      await _joinSocketRoom(chatId, chatType);
       if (_messageSubscription == null) {
         _setupMessageListener(chatId);
       }
@@ -175,6 +187,7 @@ class ChatProvider extends ChangeNotifier {
     }
     _isInitializing = true;
     _currentChatId = chatId;
+    _currentChatType = chatType;
     setLoading(true);
     _clearError();
     _shouldAutoScroll = true;
@@ -182,6 +195,7 @@ class ChatProvider extends ChangeNotifier {
     _messages.clear();
     _currentChat = null;
     notifyListeners();
+
     ChatCacheData? cachedData;
     try {
       try {
@@ -193,18 +207,22 @@ class ChatProvider extends ChangeNotifier {
       } catch (e) {
         // Cache error handled
       }
+
       if (cachedData != null) {
         _currentChat = cachedData.chat;
         _messages = List.from(cachedData.messages);
         notifyListeners();
         _scrollToBottomIfNeeded();
       }
+
       await _ensureSocketConnection();
-      await _joinSocketRoom(chatId);
+      await _joinSocketRoom(chatId, chatType);
       _setupMessageListener(chatId);
+
       final result = await fetchChatWithMessages(
         FetchChatWithMessagesParams(chatId: chatId),
       );
+
       result.fold(
         (failure) {
           if (cachedData == null) {
@@ -270,9 +288,9 @@ class ChatProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> _joinSocketRoom(String chatId) async {
+  Future<void> _joinSocketRoom(String chatId, ChatType chatType) async {
     try {
-      await socketDataSource.joinRoom(chatId);
+      await socketDataSource.joinRoom(chatId, chatType: chatType);
       _connectedChatId = chatId;
       await Future.delayed(const Duration(milliseconds: 500));
     } catch (e) {
@@ -392,10 +410,13 @@ class ChatProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> sendTextMessage(String chatId) async {
+  Future<void> sendTextMessage(String chatId, {ChatType? chatType}) async {
     final content = messageController.text.trim();
     if (content.isEmpty || _isSending) return;
-    if (!canSendMessages) {
+
+    final messageType = chatType ?? _currentChatType;
+
+    if (messageType == ChatType.community && !canSendMessages) {
       _setError('You cannot send messages to this chat');
       return;
     }
@@ -404,19 +425,25 @@ class ChatProvider extends ChangeNotifier {
       _setError('Not connected to chat server. Reconnecting...');
       try {
         await _ensureSocketConnection();
-        await _joinSocketRoom(chatId);
+        await _joinSocketRoom(chatId, messageType);
       } catch (e) {
         _setError('Failed to connect to chat server');
         return;
       }
     }
+
     _setSending(true);
     messageController.clear();
     _shouldAutoScroll = true;
     _isUserScrolling = false;
+
     try {
       final result = await sendMessage(
-        SendMessageParams(chatId: chatId, content: content),
+        SendMessageParams(
+          chatId: chatId,
+          content: content,
+          chatType: messageType,
+        ),
       );
       result.fold((failure) => _setError(failure.message), (message) {
         _addOptimisticMessage(message);
@@ -433,11 +460,14 @@ class ChatProvider extends ChangeNotifier {
   Future<void> sendMediaMessage(
     String chatId,
     File file,
-    String mediaType,
-  ) async {
+    String mediaType, {
+    ChatType? chatType,
+  }) async {
     if (_isUploading) return;
 
-    if (!canSendMessages) {
+    final messageType = chatType ?? _currentChatType;
+
+    if (messageType == ChatType.community && !canSendMessages) {
       _setError('You cannot send media to this chat');
       return;
     }
@@ -465,6 +495,7 @@ class ChatProvider extends ChangeNotifier {
             content: '',
             mediaUrl: mediaUrl,
             mediaType: mediaType,
+            chatType: messageType,
           ),
         );
 
@@ -504,14 +535,15 @@ class ChatProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> forceRefreshChat(String chatId) async {
+  Future<void> forceRefreshChat(String chatId, {ChatType? chatType}) async {
     _setConnecting(true);
+    final messageType = chatType ?? _currentChatType;
     if (_currentChatId == chatId) {
       _messages.clear();
       _currentChat = null;
       _processedMessageIds.clear();
     }
-    await initializeChat(chatId);
+    await initializeChat(chatId, chatType: messageType);
     _setConnecting(false);
   }
 
@@ -520,7 +552,7 @@ class ChatProvider extends ChangeNotifier {
     _setConnecting(true);
     try {
       await socketDataSource.connect();
-      await _joinSocketRoom(_currentChatId!);
+      await _joinSocketRoom(_currentChatId!, _currentChatType);
       _setupMessageListener(_currentChatId!);
     } catch (e) {
       _setError('Failed to reconnect: $e');
@@ -567,13 +599,18 @@ class ChatProvider extends ChangeNotifier {
     _memoryCache.remove(chatId);
   }
 
-  Future<void> refreshChat(String chatId) async {
+  Future<void> refreshChat(String chatId, {ChatType? chatType}) async {
     _clearChatCache(chatId);
-    await initializeChat(chatId);
+    await initializeChat(chatId, chatType: chatType ?? _currentChatType);
   }
 
-  Future<void> pickImage(String chatId, {bool fromCamera = false}) async {
-    if (!canSendMessages) {
+  Future<void> pickImage(
+    String chatId, {
+    bool fromCamera = false,
+    ChatType? chatType,
+  }) async {
+    final messageType = chatType ?? _currentChatType;
+    if (messageType == ChatType.community && !canSendMessages) {
       _setError('You cannot send images to this chat');
       return;
     }
@@ -588,15 +625,21 @@ class ChatProvider extends ChangeNotifier {
       if (image != null) {
         final file = File(image.path);
         final extension = path.extension(image.path).toLowerCase();
-        await sendMediaMessage(chatId, file, extension.substring(1));
+        await sendMediaMessage(
+          chatId,
+          file,
+          extension.substring(1),
+          chatType: messageType,
+        );
       }
     } catch (e) {
       _setError('Failed to pick image: $e');
     }
   }
 
-  Future<void> pickFile(String chatId) async {
-    if (!canSendMessages) {
+  Future<void> pickFile(String chatId, {ChatType? chatType}) async {
+    final messageType = chatType ?? _currentChatType;
+    if (messageType == ChatType.community && !canSendMessages) {
       _setError('You cannot send files to this chat');
       return;
     }
@@ -618,7 +661,7 @@ class ChatProvider extends ChangeNotifier {
       if (result != null && result.files.single.path != null) {
         final file = File(result.files.single.path!);
         final extension = result.files.single.extension ?? 'file';
-        await sendMediaMessage(chatId, file, extension);
+        await sendMediaMessage(chatId, file, extension, chatType: messageType);
       }
     } catch (e) {
       _setError('Failed to pick file: $e');
@@ -626,7 +669,7 @@ class ChatProvider extends ChangeNotifier {
   }
 
   Future<void> startRecording() async {
-    if (!canSendMessages) {
+    if (_currentChatType == ChatType.community && !canSendMessages) {
       _setError('You cannot send voice messages to this chat');
       return;
     }
@@ -652,7 +695,7 @@ class ChatProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> stopRecording(String chatId) async {
+  Future<void> stopRecording(String chatId, {ChatType? chatType}) async {
     if (!_isRecording) return;
     try {
       await _audioRecorder.stop();
@@ -660,7 +703,7 @@ class ChatProvider extends ChangeNotifier {
       if (_recordingPath != null && _recordingDuration > 0) {
         final file = File(_recordingPath!);
         if (await file.exists()) {
-          await sendMediaMessage(chatId, file, 'm4a');
+          await sendMediaMessage(chatId, file, 'm4a', chatType: chatType);
         }
       }
       _resetRecording();
@@ -672,7 +715,6 @@ class ChatProvider extends ChangeNotifier {
 
   Future<void> cancelRecording() async {
     if (!_isRecording) return;
-
     try {
       await _audioRecorder.stop();
       _stopRecordingTimer();
@@ -692,18 +734,16 @@ class ChatProvider extends ChangeNotifier {
   Future<void> deleteMessage(String messageId) async {
     try {
       _messages.removeWhere((message) => message.id == messageId);
-
       if (_currentChatId != null && _memoryCache.containsKey(_currentChatId)) {
         _memoryCache[_currentChatId]!.messages.removeWhere(
           (message) => message.id == messageId,
         );
       }
-
       notifyListeners();
     } catch (e) {
       _setError('Failed to delete message: $e');
       if (_currentChatId != null) {
-        initializeChat(_currentChatId!);
+        initializeChat(_currentChatId!, chatType: _currentChatType);
       }
     }
   }
@@ -795,21 +835,15 @@ class ChatProvider extends ChangeNotifier {
   @override
   void dispose() {
     _clearCurrentChat();
-
     _recordingTimer?.cancel();
     _scrollTimer?.cancel();
-
-    // Clean up optimistic timers
     _optimisticTimers.forEach((key, timer) => timer.cancel());
     _optimisticTimers.clear();
-
     _audioRecorder.dispose();
     messageController.dispose();
     scrollController.dispose();
     focusNode.dispose();
-
     socketDataSource.disconnect().catchError((e) {});
-
     super.dispose();
   }
 }

@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 
 import '../../../../../core/error/failures.dart';
+import '../../data/datasources/socket_datasource.dart';
 import '../entities/chat_entity.dart';
 import '../entities/message_entity.dart';
 
@@ -12,6 +13,7 @@ abstract class ChatRepository {
     required String content,
     String? mediaUrl,
     String? mediaType,
+    ChatType chatType = ChatType.community,
   });
   Future<Either<Failure, String>> uploadMedia(String filePath);
   Stream<MessageEntity> listenToNewMessages(String chatId);

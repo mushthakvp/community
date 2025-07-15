@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../shared/utils/message_utils.dart';
+import '../../data/datasources/socket_datasource.dart';
 import '../providers/chat_provider.dart';
 import '../widgets/chat_appbar.dart';
 import '../widgets/chat_input.dart';
@@ -13,6 +14,8 @@ class ChatPage extends StatefulWidget {
   final String chatName;
   final String? chatImage;
   final bool isGroup;
+  final bool isPersonalChat;
+  final ChatType chatType;
 
   const ChatPage({
     super.key,
@@ -20,6 +23,8 @@ class ChatPage extends StatefulWidget {
     required this.chatName,
     this.chatImage,
     this.isGroup = false,
+    this.isPersonalChat = false,
+    this.chatType = ChatType.community,
   });
 
   @override
@@ -42,7 +47,9 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         final provider = context.read<ChatProvider>();
         provider.setLoading(true);
-        provider.initializeChat(widget.chatId).then((_) {
+        provider.initializeChat(widget.chatId, chatType: widget.chatType).then((
+          _,
+        ) {
           if (mounted) {
             setState(() {
               _isInitialized = true;
@@ -56,7 +63,8 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   @override
   void didUpdateWidget(ChatPage oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.chatId != widget.chatId) {
+    if (oldWidget.chatId != widget.chatId ||
+        oldWidget.chatType != widget.chatType) {
       _isInitialized = false;
       _initializeChat();
     }
@@ -129,15 +137,22 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                   isGroup: widget.isGroup,
                   isBotChat: isBotChat,
                   chatId: widget.chatId,
+                  isPersonalChat: widget.isPersonalChat,
                   onBackPressed: () => context.pop(),
                   onMenuPressed: () {},
                 ),
                 _buildConnectionStatus(provider),
                 if (isBotChat) _buildBotChatBanner(context),
+                if (widget.isPersonalChat) _buildPersonalChatBanner(context),
                 Expanded(
                   child: _buildMessagesArea(context, provider, isBotChat),
                 ),
-                ChatInput(chatId: widget.chatId, isBotChat: isBotChat),
+                ChatInput(
+                  chatId: widget.chatId,
+                  isBotChat: isBotChat,
+                  chatType: widget.chatType,
+                  isPersonalChat: widget.isPersonalChat,
+                ),
               ],
             );
           },
@@ -159,12 +174,18 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
             chatImage: widget.chatImage,
             isGroup: widget.isGroup,
             isBotChat: false,
+            isPersonalChat: widget.isPersonalChat,
             onBackPressed: () => context.pop(),
             onMenuPressed: () {},
             chatId: widget.chatId,
           ),
           Expanded(child: _buildLoadingMessages(context)),
-          ChatInput(chatId: widget.chatId, isBotChat: false),
+          ChatInput(
+            chatId: widget.chatId,
+            isBotChat: false,
+            chatType: widget.chatType,
+            isPersonalChat: widget.isPersonalChat,
+          ),
         ],
       ),
     );
@@ -285,7 +306,10 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 ElevatedButton(
-                  onPressed: () => provider.initializeChat(widget.chatId),
+                  onPressed: () => provider.initializeChat(
+                    widget.chatId,
+                    chatType: widget.chatType,
+                  ),
                   child: const Text('Retry'),
                 ),
                 const SizedBox(width: 16),
@@ -307,22 +331,30 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              isBotChat ? Icons.smart_toy : Icons.chat_bubble_outline,
+              widget.isPersonalChat
+                  ? Icons.chat_bubble_outline
+                  : (isBotChat ? Icons.smart_toy : Icons.chat_bubble_outline),
               size: 64,
               color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
             ),
             const SizedBox(height: 16),
             Text(
-              isBotChat ? 'No messages from this bot yet' : 'No messages yet',
+              widget.isPersonalChat
+                  ? 'No messages yet'
+                  : (isBotChat
+                        ? 'No messages from this bot yet'
+                        : 'No messages yet'),
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                 color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              isBotChat
-                  ? 'This bot will send you messages here'
-                  : 'Start a conversation!',
+              widget.isPersonalChat
+                  ? 'Start a personal conversation!'
+                  : (isBotChat
+                        ? 'This bot will send you messages here'
+                        : 'Start a conversation!'),
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
               ),
@@ -335,7 +367,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     final groupedMessages = MessageUtils.groupMessagesByDate(provider.messages);
     return RefreshIndicator(
       onRefresh: () async {
-        await provider.refreshChat(widget.chatId);
+        await provider.refreshChat(widget.chatId, chatType: widget.chatType);
       },
       child: ListView.builder(
         controller: provider.scrollController,
@@ -364,8 +396,10 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                 ),
               ),
               ...group.messages.map(
-                (message) =>
-                    MessageBubble(message: message, isGroup: widget.isGroup),
+                (message) => MessageBubble(
+                  message: message,
+                  isGroup: widget.isGroup && !widget.isPersonalChat,
+                ),
               ),
             ],
           );
@@ -407,6 +441,48 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
             color: Theme.of(
               context,
             ).colorScheme.onPrimaryContainer.withOpacity(0.7),
+            size: 16,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPersonalChatBanner(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Theme.of(
+          context,
+        ).colorScheme.secondaryContainer.withOpacity(0.7),
+        border: Border(
+          bottom: BorderSide(
+            color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.person,
+            color: Theme.of(context).colorScheme.onSecondaryContainer,
+            size: 20,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Personal chat with ${widget.chatName}',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSecondaryContainer,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          Icon(
+            Icons.lock_outline,
+            color: Theme.of(
+              context,
+            ).colorScheme.onSecondaryContainer.withOpacity(0.7),
             size: 16,
           ),
         ],

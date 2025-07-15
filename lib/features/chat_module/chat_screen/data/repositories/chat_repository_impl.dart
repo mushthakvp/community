@@ -69,6 +69,7 @@ class ChatRepositoryImpl implements ChatRepository {
     required String content,
     String? mediaUrl,
     String? mediaType,
+    ChatType chatType = ChatType.community,
   }) async {
     try {
       if (socketDataSource is SocketDataSourceImpl) {
@@ -77,7 +78,7 @@ class ChatRepositoryImpl implements ChatRepository {
           await socketDataSource.connect();
         }
         if (socketImpl.currentRoom != chatId) {
-          await socketDataSource.joinRoom(chatId);
+          await socketDataSource.joinRoom(chatId, chatType: chatType);
         }
       }
       final message = await socketDataSource.sendMessage(
@@ -85,6 +86,7 @@ class ChatRepositoryImpl implements ChatRepository {
         content: content,
         mediaUrl: mediaUrl,
         mediaType: mediaType,
+        chatType: chatType,
       );
       return Right(message);
     } on ServerException catch (e) {
