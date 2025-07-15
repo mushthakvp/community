@@ -14,6 +14,8 @@ abstract class CommunityRemoteDataSource {
     required String description,
     String? image,
   });
+  Future<void> acceptFriendRequest(String requestId);
+  Future<void> rejectFriendRequest(String requestId);
 }
 
 class CommunityRemoteDataSourceImpl implements CommunityRemoteDataSource {
@@ -51,6 +53,16 @@ class CommunityRemoteDataSourceImpl implements CommunityRemoteDataSource {
   @override
   Future<void> leaveCommunity(String communityId) async {
     await apiClient.post('${ChatApiConstants.leftCommunity}$communityId');
+  }
+
+  @override
+  Future<void> acceptFriendRequest(String requestId) async {
+    await apiClient.post('${ChatApiConstants.acceptFriendRequest}$requestId');
+  }
+
+  @override
+  Future<void> rejectFriendRequest(String requestId) async {
+    await apiClient.post('${ChatApiConstants.rejectFriendRequest}$requestId');
   }
 
   @override

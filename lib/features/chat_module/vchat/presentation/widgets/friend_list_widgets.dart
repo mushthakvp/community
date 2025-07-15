@@ -180,6 +180,9 @@ class FriendListWidget extends StatelessWidget {
   ) {
     final requestName = _extractFriendName(request);
     final requestImage = _extractFriendImage(request);
+    final requestId = _extractRequestId(request);
+    final isProcessing = provider.isProcessingRequest(requestId);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
@@ -225,24 +228,37 @@ class FriendListWidget extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildRequestButton(
-                    context,
-                    'Accept',
-                    true,
-                    () => _handleAcceptRequest(context, request, provider),
+              if (isProcessing)
+                const SizedBox(
+                  width: 120,
+                  height: 32,
+                  child: Center(
+                    child: SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
                   ),
-                  const SizedBox(width: 8),
-                  _buildRequestButton(
-                    context,
-                    'Reject',
-                    false,
-                    () => _handleRejectRequest(context, request, provider),
-                  ),
-                ],
-              ),
+                )
+              else
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildRequestButton(
+                      context,
+                      'Accept',
+                      true,
+                      () => _handleAcceptRequest(context, request, provider),
+                    ),
+                    const SizedBox(width: 8),
+                    _buildRequestButton(
+                      context,
+                      'Reject',
+                      false,
+                      () => _handleRejectRequest(context, request, provider),
+                    ),
+                  ],
+                ),
             ],
           ),
         ],
@@ -354,16 +370,14 @@ class FriendListWidget extends StatelessWidget {
     );
   }
 
-  // FIXED: Helper methods to safely extract data from friend objects
+  // Helper methods to safely extract data from friend objects
   String _extractFriendName(dynamic friend) {
     if (friend == null) return 'Unknown User';
 
-    // Handle CommunityEntity specifically
     if (friend is CommunityEntity) {
       return friend.name;
     }
 
-    // Handle Map (JSON) objects
     if (friend is Map<String, dynamic>) {
       return friend['name'] ??
           friend['groupName'] ??
@@ -372,7 +386,6 @@ class FriendListWidget extends StatelessWidget {
           'Unknown User';
     }
 
-    // For other object types, try accessing properties safely
     try {
       return _safeGetStringProperty(friend, 'name') ??
           _safeGetStringProperty(friend, 'groupName') ??
@@ -384,16 +397,13 @@ class FriendListWidget extends StatelessWidget {
     }
   }
 
-  // FIXED: Safe image extraction method
   String? _extractFriendImage(dynamic friend) {
     if (friend == null) return null;
 
-    // Handle CommunityEntity specifically (this fixes the main error)
     if (friend is CommunityEntity) {
       return friend.image;
     }
 
-    // Handle Map (JSON) objects
     if (friend is Map<String, dynamic>) {
       return friend['image'] ??
           friend['groupProfileImage'] ??
@@ -401,7 +411,6 @@ class FriendListWidget extends StatelessWidget {
           friend['avatar'];
     }
 
-    // For other object types, try accessing properties safely
     try {
       return _safeGetStringProperty(friend, 'image') ??
           _safeGetStringProperty(friend, 'groupProfileImage') ??
@@ -412,20 +421,37 @@ class FriendListWidget extends StatelessWidget {
     }
   }
 
+  String _extractRequestId(dynamic friend) {
+    if (friend == null) return '';
+
+    if (friend is CommunityEntity) {
+      return friend.id;
+    }
+
+    if (friend is Map<String, dynamic>) {
+      return friend['id'] ?? friend['_id'] ?? '';
+    }
+
+    try {
+      return _safeGetStringProperty(friend, 'id') ??
+          _safeGetStringProperty(friend, '_id') ??
+          '';
+    } catch (e) {
+      return '';
+    }
+  }
+
   bool _extractOnlineStatus(dynamic friend) {
     if (friend == null) return false;
 
-    // Handle CommunityEntity - communities are not "online"
     if (friend is CommunityEntity) {
       return false;
     }
 
-    // Handle Map (JSON) objects
     if (friend is Map<String, dynamic>) {
       return friend['isOnline'] ?? false;
     }
 
-    // For other object types, try accessing properties safely
     try {
       return _safeGetBoolProperty(friend, 'isOnline') ?? false;
     } catch (e) {
@@ -433,7 +459,6 @@ class FriendListWidget extends StatelessWidget {
     }
   }
 
-  // Helper method to safely get string properties
   String? _safeGetStringProperty(dynamic object, String propertyName) {
     try {
       switch (propertyName) {
@@ -453,6 +478,10 @@ class FriendListWidget extends StatelessWidget {
           return object.profileImage as String?;
         case 'avatar':
           return object.avatar as String?;
+        case 'id':
+          return object.id as String?;
+        case '_id':
+          return object._id as String?;
         default:
           return null;
       }
@@ -461,7 +490,6 @@ class FriendListWidget extends StatelessWidget {
     }
   }
 
-  // Helper method to safely get boolean properties
   bool? _safeGetBoolProperty(dynamic object, String propertyName) {
     try {
       switch (propertyName) {
@@ -487,12 +515,10 @@ class FriendListWidget extends StatelessWidget {
   }
 
   String _getTimeString(dynamic friend) {
-    // Handle CommunityEntity - show member count instead of time
     if (friend is CommunityEntity) {
       return '${friend.memberCount} members';
     }
 
-    // Try to get actual timestamp if available
     try {
       final lastSeen = _safeGetDateTimeProperty(friend, 'lastSeen');
       if (lastSeen != null) {
@@ -511,13 +537,11 @@ class FriendListWidget extends StatelessWidget {
       // Continue to fallback
     }
 
-    // Fallback to placeholder times
     final times = ['9:30 AM', '10:15 AM', '11:45 AM', '2:20 PM', 'Yesterday'];
     final hash = (_extractFriendName(friend)).hashCode.abs();
     return times[hash % times.length];
   }
 
-  // Helper method to safely get DateTime properties
   DateTime? _safeGetDateTimeProperty(dynamic object, String propertyName) {
     try {
       switch (propertyName) {
@@ -532,27 +556,10 @@ class FriendListWidget extends StatelessWidget {
   }
 
   void _handleFriendTap(BuildContext context, dynamic friend) {
-    // Handle different types of friend objects
-    String? friendId;
-
-    if (friend is CommunityEntity) {
-      friendId = friend.id;
-    } else if (friend is Map<String, dynamic>) {
-      friendId = friend['id'] ?? friend['_id'];
-    } else {
-      try {
-        friendId =
-            _safeGetStringProperty(friend, 'id') ??
-            _safeGetStringProperty(friend, '_id');
-      } catch (e) {
-        friendId = null;
-      }
-    }
-
-    if (friendId != null) {
-      // // Navigate to chat - you can implement your navigation logic here
-      // // context.push('/chat/$friendId');
-      // print('Navigate to chat with friend: $friendId');
+    String? friendId = _extractRequestId(friend);
+    if (friendId.isNotEmpty) {
+      // Navigate to chat if needed
+      // context.push('/chat/$friendId');
     }
   }
 
@@ -565,22 +572,29 @@ class FriendListWidget extends StatelessWidget {
     dynamic request,
     VChatProvider provider,
   ) {
+    final requestId = _extractRequestId(request);
     final requestName = _extractFriendName(request);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.check_circle, color: Colors.white, size: 20),
-            const SizedBox(width: 8),
-            Expanded(child: Text('Accepted friend request from $requestName')),
-          ],
-        ),
-        backgroundColor: Colors.green,
-        duration: const Duration(seconds: 2),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-    provider.fetchMyGroups();
+
+    if (requestId.isNotEmpty) {
+      provider
+          .acceptFriendRequestById(requestId)
+          .then((_) {
+            // Show success message
+            if (provider.error == null) {
+              _showSuccessSnackBar(
+                context,
+                'Accepted friend request from $requestName',
+                Colors.green,
+                Icons.check_circle,
+              );
+            } else {
+              _showErrorSnackBar(context, provider.error!);
+            }
+          })
+          .catchError((error) {
+            _showErrorSnackBar(context, 'Failed to accept friend request');
+          });
+    }
   }
 
   void _handleRejectRequest(
@@ -588,22 +602,68 @@ class FriendListWidget extends StatelessWidget {
     dynamic request,
     VChatProvider provider,
   ) {
+    final requestId = _extractRequestId(request);
     final requestName = _extractFriendName(request);
+
+    if (requestId.isNotEmpty) {
+      provider
+          .rejectFriendRequestById(requestId)
+          .then((_) {
+            // Show success message
+            if (provider.error == null) {
+              _showSuccessSnackBar(
+                context,
+                'Rejected friend request from $requestName',
+                Colors.orange,
+                Icons.cancel,
+              );
+            } else {
+              _showErrorSnackBar(context, provider.error!);
+            }
+          })
+          .catchError((error) {
+            _showErrorSnackBar(context, 'Failed to reject friend request');
+          });
+    }
+  }
+
+  void _showSuccessSnackBar(
+    BuildContext context,
+    String message,
+    Color color,
+    IconData icon,
+  ) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.cancel, color: Colors.white, size: 20),
+            Icon(icon, color: Colors.white, size: 20),
             const SizedBox(width: 8),
-            Expanded(child: Text('Rejected friend request from $requestName')),
+            Expanded(child: Text(message)),
           ],
         ),
-        backgroundColor: Colors.orange,
+        backgroundColor: color,
         duration: const Duration(seconds: 2),
         behavior: SnackBarBehavior.floating,
       ),
     );
-    provider.fetchMyGroups();
+  }
+
+  void _showErrorSnackBar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.error, color: Colors.white, size: 20),
+            const SizedBox(width: 8),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 3),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   void _showFriendOptions(BuildContext context, dynamic friend) {
@@ -728,7 +788,6 @@ class FriendListWidget extends StatelessWidget {
           FilledButton(
             onPressed: () {
               Navigator.pop(context);
-              // Handle remove friend logic
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text('Removed $friendName from friends'),

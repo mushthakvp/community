@@ -49,9 +49,11 @@ import '../../features/chat_module/create_community/presentation/providers/commu
 import '../../features/chat_module/vchat/data/datasources/community_remote_datasource.dart';
 import '../../features/chat_module/vchat/data/repositories/community_repository_impl.dart';
 import '../../features/chat_module/vchat/domain/repositories/community_repository.dart';
+import '../../features/chat_module/vchat/domain/usecases/accept_friend_request.dart';
 import '../../features/chat_module/vchat/domain/usecases/get_my_groups.dart';
 import '../../features/chat_module/vchat/domain/usecases/get_recommended_communities.dart';
 import '../../features/chat_module/vchat/domain/usecases/join_community.dart';
+import '../../features/chat_module/vchat/domain/usecases/reject_friend_request.dart';
 import '../../features/chat_module/vchat/presentation/providers/vchat_provider.dart';
 
 /// Enhanced Chat module providers for messaging, community features, profile management, and community creation
@@ -498,16 +500,20 @@ class ChatProviders {
     ),
 
     // VChat Provider
-    ChangeNotifierProxyProvider3<
+    ChangeNotifierProxyProvider5<
       GetRecommendedCommunities,
       GetMyGroups,
       JoinCommunity,
+      AcceptFriendRequest,
+      RejectFriendRequest,
       VChatProvider
     >(
       create: (context) => VChatProvider(
         getRecommendedCommunities: context.read<GetRecommendedCommunities>(),
         getMyGroups: context.read<GetMyGroups>(),
         joinCommunity: context.read<JoinCommunity>(),
+        acceptFriendRequest: context.read<AcceptFriendRequest>(),
+        rejectFriendRequest: context.read<RejectFriendRequest>(),
       ),
       update:
           (
@@ -515,6 +521,8 @@ class ChatProviders {
             getRecommendedCommunities,
             getMyGroups,
             joinCommunity,
+            acceptFriendRequest,
+            rejectFriendRequest,
             previous,
           ) =>
               previous ??
@@ -522,6 +530,8 @@ class ChatProviders {
                 getRecommendedCommunities: getRecommendedCommunities,
                 getMyGroups: getMyGroups,
                 joinCommunity: joinCommunity,
+                acceptFriendRequest: acceptFriendRequest,
+                rejectFriendRequest: rejectFriendRequest,
               ),
     ),
   ];

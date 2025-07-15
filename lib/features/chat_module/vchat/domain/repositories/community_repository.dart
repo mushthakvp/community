@@ -15,4 +15,6 @@ abstract class CommunityRepository {
     required String description,
     String? image,
   });
+  Future<Either<Failure, void>> acceptFriendRequest(String requestId);
+  Future<Either<Failure, void>> rejectFriendRequest(String requestId);
 }

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../../domain/entities/community_entity.dart';
+import '../../domain/usecases/accept_friend_request.dart';
 import '../../domain/usecases/get_my_groups.dart';
 import '../../domain/usecases/get_recommended_communities.dart';
 import '../../domain/usecases/join_community.dart';
+import '../../domain/usecases/reject_friend_request.dart';
 
 enum VChatTab { explore, popular, myGroup }
 
@@ -13,11 +15,15 @@ class VChatProvider extends ChangeNotifier {
   final GetRecommendedCommunities getRecommendedCommunities;
   final GetMyGroups getMyGroups;
   final JoinCommunity joinCommunity;
+  final AcceptFriendRequest acceptFriendRequest;
+  final RejectFriendRequest rejectFriendRequest;
 
   VChatProvider({
     required this.getRecommendedCommunities,
     required this.getMyGroups,
     required this.joinCommunity,
+    required this.acceptFriendRequest,
+    required this.rejectFriendRequest,
   });
 
   VChatTab _selectedTab = VChatTab.explore;
@@ -28,7 +34,9 @@ class VChatProvider extends ChangeNotifier {
   String? _error;
 
   final Map<String, bool> _joiningStates = {};
+  final Map<String, bool> _processingRequests = {};
 
+  // Getters
   VChatTab get selectedTab => _selectedTab;
   MyGroupFilter get selectedFilter => _selectedFilter;
   List<CommunityEntity> get communities => _communities;
@@ -37,6 +45,8 @@ class VChatProvider extends ChangeNotifier {
   String? get error => _error;
 
   bool isJoining(String communityId) => _joiningStates[communityId] ?? false;
+  bool isProcessingRequest(String requestId) =>
+      _processingRequests[requestId] ?? false;
 
   void changeTab(VChatTab tab) {
     _selectedTab = tab;
@@ -147,6 +157,72 @@ class VChatProvider extends ChangeNotifier {
       _setError(e.toString());
     } finally {
       _joiningStates[communityId] = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> acceptFriendRequestById(String requestId) async {
+    _processingRequests[requestId] = true;
+    notifyListeners();
+
+    try {
+      final result = await acceptFriendRequest(
+        AcceptFriendRequestParams(requestId: requestId),
+      );
+
+      result.fold(
+        (failure) {
+          _setError(failure.message);
+        },
+        (_) {
+          // Remove the request from the list
+          if (_selectedFilter == MyGroupFilter.friendRequest) {
+            _myGroups.removeWhere((request) {
+              return request.id == requestId;
+            });
+          }
+
+          // Refresh the current data
+          fetchMyGroups();
+        },
+      );
+    } catch (e) {
+      _setError(e.toString());
+    } finally {
+      _processingRequests[requestId] = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> rejectFriendRequestById(String requestId) async {
+    _processingRequests[requestId] = true;
+    notifyListeners();
+
+    try {
+      final result = await rejectFriendRequest(
+        RejectFriendRequestParams(requestId: requestId),
+      );
+
+      result.fold(
+        (failure) {
+          _setError(failure.message);
+        },
+        (_) {
+          // Remove the request from the list
+          if (_selectedFilter == MyGroupFilter.friendRequest) {
+            _myGroups.removeWhere((request) {
+              return request.id == requestId;
+            });
+          }
+
+          // Refresh the current data
+          fetchMyGroups();
+        },
+      );
+    } catch (e) {
+      _setError(e.toString());
+    } finally {
+      _processingRequests[requestId] = false;
       notifyListeners();
     }
   }
@@ -283,32 +359,6 @@ class VChatProvider extends ChangeNotifier {
       _myGroups[myGroupIndex] = updatedCommunity;
     }
     notifyListeners();
-  }
-
-  Future<void> acceptFriendRequest(String requestId) async {
-    try {
-      if (_selectedFilter == MyGroupFilter.friendRequest) {
-        _myGroups.removeWhere(
-          (request) => (request.id == requestId || request.name == requestId),
-        );
-        notifyListeners();
-      }
-    } catch (e) {
-      _setError('Failed to accept friend request: ${e.toString()}');
-    }
-  }
-
-  Future<void> rejectFriendRequest(String requestId) async {
-    try {
-      if (_selectedFilter == MyGroupFilter.friendRequest) {
-        _myGroups.removeWhere(
-          (request) => (request.id == requestId || request.name == requestId),
-        );
-        notifyListeners();
-      }
-    } catch (e) {
-      _setError('Failed to reject friend request: ${e.toString()}');
-    }
   }
 
   List<CommunityEntity> getCurrentList() {
