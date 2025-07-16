@@ -10,6 +10,7 @@ import 'routers/main_app_router.dart';
 import 'routers/notification_router.dart';
 import 'routers/profile_router.dart';
 import 'routers/spin_router.dart';
+import 'routers/vcart_router.dart';
 import 'routers/vhub_router.dart';
 import 'routers/vizzle_router.dart';
 import 'routers/vjob_router.dart';
@@ -47,6 +48,7 @@ class CoreRouter {
       ...ChatRouter.routes,
       ...ProfileRouter.routes,
       ...NotificationRouter.routes,
+      ...VCartRouter.routes,
     ],
   );
 

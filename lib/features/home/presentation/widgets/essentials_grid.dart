@@ -1,3 +1,4 @@
+// lib/features/home/presentation/widgets/essentials_grid.dart (Updated)
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -5,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/route_constants.dart';
+import '../../../../core/router/routers/vcart_router.dart';
 import '../../../../core/widgets/common/text_widget.dart';
 
 class EssentialsGrid extends StatelessWidget {
@@ -65,9 +67,10 @@ class EssentialsGrid extends StatelessWidget {
         image:
             "https://res.cloudinary.com/fouvtycloud/image/upload/v1751013407/Vivera-New/ecommerceLogo_hszwpi.gif",
         name: "V - Cart",
-        route: '/v-cart',
+        route: VCartRouter.vcartHomePath,
         description: "Shop online with exclusive deals",
         isExternal: false,
+        isNavigationRoute: true,
       ),
     ];
   }
@@ -210,19 +213,20 @@ class EssentialsGrid extends StatelessWidget {
     if (item.isExternal) {
       _launchExternalApp(context, item);
     } else if (item.isNavigationRoute) {
-      // Navigate to the route using GoRouter
-      context.push(item.route);
+      if (item.route == VCartRouter.vcartHomePath) {
+        context.push(VCartRouter.vcartHomePath);
+      } else {
+        context.push(item.route);
+      }
     } else {
       _navigateToRoute(context, item.route);
     }
   }
 
   void _navigateToRoute(BuildContext context, String route) {
-    // Handle internal navigation for other items
     switch (route) {
       case '/v-cart':
-        // Navigate to ecommerce section
-        _showComingSoon(context, "V-Cart");
+        context.push(VCartRouter.vcartHomePath);
         break;
       default:
         _showComingSoon(context, "Feature");
@@ -235,23 +239,19 @@ class EssentialsGrid extends StatelessWidget {
     EssentialItem item,
   ) async {
     try {
-      // Try to launch the app using URL scheme
       if (item.route.isNotEmpty) {
         final Uri uri = Uri.parse(item.route);
         final bool launched = await launchUrl(
           uri,
           mode: LaunchMode.externalApplication,
         );
-
         if (!launched) {
-          // If app is not installed, open the appropriate store
           _openAppStore(context, item);
         }
       } else {
         _openAppStore(context, item);
       }
     } catch (e) {
-      // If there's any error, try to open the store
       _openAppStore(context, item);
     }
   }

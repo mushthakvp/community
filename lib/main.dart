@@ -23,9 +23,7 @@ Future<void> main() async {
 
 class CommunityApp extends StatelessWidget with FittorAppMixin {
   final List<SingleChildWidget> providers;
-
   const CommunityApp({super.key, required this.providers});
-
   @override
   Widget responsive(BuildContext context) {
     return MultiProvider(providers: providers, child: const App());
@@ -33,6 +31,6 @@ class CommunityApp extends StatelessWidget with FittorAppMixin {
 }
 
 void _initializeCoreGetXDependencies() {
-  Get.put<NetworkInfo>(NetworkInfoImpl(Connectivity()));
-  Get.put<ApiClient>(ApiClient.main());
+  Get.put<NetworkInfo>(NetworkInfoImpl(Connectivity()), permanent: true);
+  Get.put<ApiClient>(ApiClient.main(), permanent: true);
 }
