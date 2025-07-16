@@ -43,7 +43,7 @@ class AppProviders {
       ...VizzleProviders.providers,
       ...VHubProviders.providers,
       ...VJobProviders.providers,
-      ...ChatProviders.providers, // Added chat providers
+      ...ChatProviders.providers,
       ...NotificationProviders.providers,
     ];
   }
