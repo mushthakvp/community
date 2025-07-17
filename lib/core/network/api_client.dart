@@ -3,13 +3,14 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
+import '../../features/vcart/core/constants/vcart_constants.dart';
 import '../constants/api_constants.dart';
 import '../constants/chat_api_constants.dart';
 import '../error/exceptions.dart';
 import '../services/storage_service.dart';
 import 'network_info.dart';
 
-enum ApiClientType { main, chat }
+enum ApiClientType { main, chat, vcart }
 
 class ApiClient {
   late http.Client _client;
@@ -38,6 +39,14 @@ class ApiClient {
       baseUrl: ChatApiConstants.chatBaseUrl,
       networkInfo: networkInfo,
       clientType: ApiClientType.chat,
+    );
+  }
+
+  factory ApiClient.vcart({NetworkInfo? networkInfo}) {
+    return ApiClient(
+      baseUrl: VCartConstants.baseUrl,
+      networkInfo: networkInfo,
+      clientType: ApiClientType.vcart,
     );
   }
 

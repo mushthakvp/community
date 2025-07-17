@@ -43,16 +43,6 @@ class VCartHomeAppBar extends StatelessWidget implements PreferredSizeWidget {
               fontWeight: FontWeight.bold,
             ),
           ),
-          const Spacer(),
-          if (onNotificationTap != null)
-            IconButton(
-              onPressed: onNotificationTap,
-              icon: const Icon(
-                Icons.notifications_outlined,
-                color: VCartColors.textPrimary,
-                size: 24,
-              ),
-            ),
         ],
       ),
       bottom: PreferredSize(

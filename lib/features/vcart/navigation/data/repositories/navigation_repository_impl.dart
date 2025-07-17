@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import 'package:flutter/material.dart';
 
 import '../../../../../core/error/failures.dart';
 import '../../../../../core/services/storage_service.dart';
@@ -18,21 +19,30 @@ class NavigationRepositoryImpl implements NavigationRepository {
         const NavItemModel(
           id: 0,
           label: 'Home',
-          icon: '🏠',
+          iconData: Icons.home_outlined,
+          activeIconData: Icons.home,
           route: '/home',
           isActive: true,
         ),
         const NavItemModel(
           id: 1,
           label: 'Categories',
-          icon: '📂',
+          iconData: Icons.category_outlined,
+          activeIconData: Icons.category,
           route: '/categories',
         ),
-        const NavItemModel(id: 2, label: 'Cart', icon: '🛒', route: '/cart'),
+        const NavItemModel(
+          id: 2,
+          label: 'Cart',
+          iconData: Icons.shopping_cart_outlined,
+          activeIconData: Icons.shopping_cart,
+          route: '/cart',
+        ),
         const NavItemModel(
           id: 3,
           label: 'Profile',
-          icon: '👤',
+          iconData: Icons.person_outline,
+          activeIconData: Icons.person,
           route: '/profile',
         ),
       ];

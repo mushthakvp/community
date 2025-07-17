@@ -32,5 +32,5 @@ class CommunityApp extends StatelessWidget with FittorAppMixin {
 
 void _initializeCoreGetXDependencies() {
   Get.put<NetworkInfo>(NetworkInfoImpl(Connectivity()), permanent: true);
-  Get.put<ApiClient>(ApiClient.main(), permanent: true);
+  Get.put<ApiClient>(ApiClient.vcart(), permanent: true);
 }

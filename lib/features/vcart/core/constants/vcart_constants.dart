@@ -4,7 +4,7 @@ class VCartConstants {
   static const String appVersion = '1.0.0';
 
   // API Configuration
-  static const String baseUrl = 'http://192.168.3.6:8003/';
+  static const String baseUrl = 'https://api.v-cart.liveraapp.com/';
   static const int timeoutDuration = 30;
   static const int retryAttempts = 3;
 

@@ -12,22 +12,55 @@ class VCartProviderBridge extends StatefulWidget {
 }
 
 class _VCartProviderBridgeState extends State<VCartProviderBridge> {
+  bool _isInitialized = false;
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      VCartGetXBridge.initializeVCartDependencies(context);
-    });
+    _initializeDependencies();
+  }
+
+  Future<void> _initializeDependencies() async {
+    try {
+      // Wait for the next frame to ensure context is available
+      await Future.delayed(Duration.zero);
+
+      if (mounted) {
+        VCartGetXBridge.initializeVCartDependencies(context);
+        setState(() {
+          _isInitialized = true;
+        });
+      }
+    } catch (e) {
+      // Handle initialization error
+      debugPrint('VCart initialization error: $e');
+      if (mounted) {
+        setState(() {
+          _isInitialized = true; // Allow rendering even if init fails
+        });
+      }
+    }
   }
 
   @override
   void dispose() {
-    VCartGetXBridge.disposeVCartDependencies();
+    if (_isInitialized) {
+      VCartGetXBridge.disposeVCartDependencies();
+    }
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    if (!_isInitialized) {
+      return const Scaffold(
+        backgroundColor: Color(0xFF000000),
+        body: Center(
+          child: CircularProgressIndicator(color: Color(0xFFF0B90A)),
+        ),
+      );
+    }
+
     return widget.child;
   }
 }

@@ -4,7 +4,8 @@ class NavItemModel extends NavItem {
   const NavItemModel({
     required super.id,
     required super.label,
-    required super.icon,
+    super.iconData,
+    super.activeIconData,
     required super.route,
     super.isActive,
   });
@@ -13,19 +14,12 @@ class NavItemModel extends NavItem {
     return NavItemModel(
       id: json['id'] ?? 0,
       label: json['label'] ?? '',
-      icon: json['icon'] ?? '',
       route: json['route'] ?? '',
       isActive: json['isActive'] ?? false,
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'label': label,
-      'icon': icon,
-      'route': route,
-      'isActive': isActive,
-    };
+    return {'id': id, 'label': label, 'route': route, 'isActive': isActive};
   }
 }

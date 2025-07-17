@@ -19,7 +19,9 @@ class CategoryGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (categories.isEmpty) return const SizedBox.shrink();
+    if (categories.isEmpty) {
+      return const SliverToBoxAdapter(child: SizedBox.shrink());
+    }
 
     return SliverPadding(
       padding: context.horizontalPadding,
