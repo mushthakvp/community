@@ -34,3 +34,5 @@ void _initializeCoreGetXDependencies() {
   Get.put<NetworkInfo>(NetworkInfoImpl(Connectivity()), permanent: true);
   Get.put<ApiClient>(ApiClient.vcart(), permanent: true);
 }
+
+// Chat Personal Start
