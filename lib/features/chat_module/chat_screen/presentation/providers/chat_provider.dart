@@ -19,6 +19,8 @@ import '../../domain/usecases/fetch_messages.dart';
 import '../../domain/usecases/send_message.dart';
 import '../../domain/usecases/upload_media.dart';
 
+enum ChatType { group, personal, bot }
+
 class ChatProvider extends ChangeNotifier {
   final FetchMessages fetchMessages;
   final FetchChatWithMessages fetchChatWithMessages;
@@ -40,7 +42,9 @@ class ChatProvider extends ChangeNotifier {
 
   final Map<String, ChatCacheData> _memoryCache = {};
 
+  // Current chat state
   String? _currentChatId;
+  ChatType _currentChatType = ChatType.group;
   List<MessageEntity> _messages = [];
   ChatEntity? _currentChat;
   bool _isLoading = false;
@@ -102,9 +106,11 @@ class ChatProvider extends ChangeNotifier {
     }
   }
 
+  // Getters
   List<MessageEntity> get messages => _messages;
   ChatEntity? get currentChat => _currentChat;
   String? get currentChatId => _currentChatId;
+  ChatType get currentChatType => _currentChatType;
   bool get isLoading => _isLoading;
   bool get isRecording => _isRecording;
   bool get isUploading => _isUploading;
@@ -114,15 +120,30 @@ class ChatProvider extends ChangeNotifier {
   int get recordingDuration => _recordingDuration;
   bool get hasText => messageController.text.trim().isNotEmpty;
   bool get isBotChat => _currentChat?.isBot ?? false;
-  bool get canSendMessages =>
-      _currentChat?.isCreator == true || _currentChat?.isUserInGroup == true;
+  bool get isPersonalChat => _currentChatType == ChatType.personal;
+  bool get isGroupChat => _currentChatType == ChatType.group;
+
+  bool get canSendMessages {
+    switch (_currentChatType) {
+      case ChatType.personal:
+        return true; // Always can send personal messages
+      case ChatType.bot:
+        return false; // Cannot send to bots
+      case ChatType.group:
+        return _currentChat?.isCreator == true ||
+            _currentChat?.isUserInGroup == true;
+    }
+  }
+
   bool get isRequestSent =>
       _currentChat?.isUserRequested == true &&
       _currentChat?.isUserInGroup == false;
+
   bool get needsJoinRequest =>
       !canSendMessages &&
       !isRequestSent &&
       (_currentChat?.isBot == true || _currentChat?.isGroup == true);
+
   bool get isSocketConnected => socketDataSource is SocketDataSourceImpl
       ? (socketDataSource as SocketDataSourceImpl).isConnected
       : false;
@@ -143,6 +164,7 @@ class ChatProvider extends ChangeNotifier {
     _optimisticTimers.clear();
 
     _currentChatId = null;
+    _currentChatType = ChatType.group;
     _messages.clear();
     _currentChat = null;
     _optimisticMessages.clear();
@@ -158,12 +180,27 @@ class ChatProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> initializeChat(String chatId) async {
+  Future<void> initializeChat(
+    String chatId, {
+    ChatType? chatType,
+    bool isPersonal = false,
+  }) async {
     if (_isInitializing) return;
+
+    // Determine chat type
+    if (chatType != null) {
+      _currentChatType = chatType;
+    } else if (isPersonal) {
+      _currentChatType = ChatType.personal;
+    } else {
+      _currentChatType = ChatType.group; // Default to group
+    }
+
     if (_currentChatId != null && _currentChatId != chatId) {
       _clearCurrentChat();
       await Future.delayed(const Duration(milliseconds: 100));
     }
+
     if (_currentChatId == chatId && _messages.isNotEmpty) {
       await _ensureSocketConnection();
       await _joinSocketRoom(chatId);
@@ -173,6 +210,7 @@ class ChatProvider extends ChangeNotifier {
       _scrollToBottomIfNeeded();
       return;
     }
+
     _isInitializing = true;
     _currentChatId = chatId;
     setLoading(true);
@@ -182,6 +220,7 @@ class ChatProvider extends ChangeNotifier {
     _messages.clear();
     _currentChat = null;
     notifyListeners();
+
     ChatCacheData? cachedData;
     try {
       try {
@@ -193,18 +232,22 @@ class ChatProvider extends ChangeNotifier {
       } catch (e) {
         // Cache error handled
       }
+
       if (cachedData != null) {
         _currentChat = cachedData.chat;
         _messages = List.from(cachedData.messages);
         notifyListeners();
         _scrollToBottomIfNeeded();
       }
+
       await _ensureSocketConnection();
       await _joinSocketRoom(chatId);
       _setupMessageListener(chatId);
+
       final result = await fetchChatWithMessages(
         FetchChatWithMessagesParams(chatId: chatId),
       );
+
       result.fold(
         (failure) {
           if (cachedData == null) {
@@ -221,6 +264,14 @@ class ChatProvider extends ChangeNotifier {
             for (final message in newMessages) {
               _processedMessageIds.add(message.id);
             }
+
+            // Determine chat type from chat data
+            if (_currentChat?.isBot == true) {
+              _currentChatType = ChatType.bot;
+            } else if (_currentChat?.isGroup == false) {
+              _currentChatType = ChatType.personal;
+            }
+
             _updateCache(chatId, _currentChat!, _messages);
             notifyListeners();
             _scrollToBottomIfNeeded();
@@ -272,7 +323,12 @@ class ChatProvider extends ChangeNotifier {
 
   Future<void> _joinSocketRoom(String chatId) async {
     try {
-      await socketDataSource.joinRoom(chatId);
+      if (_currentChatType == ChatType.personal) {
+        // For personal chat, join using friendId instead of chatId
+        await socketDataSource.joinPersonalChat(chatId);
+      } else {
+        await socketDataSource.joinRoom(chatId);
+      }
       _connectedChatId = chatId;
       await Future.delayed(const Duration(milliseconds: 500));
     } catch (e) {
@@ -290,6 +346,7 @@ class ChatProvider extends ChangeNotifier {
     if (_processedMessageIds.contains(message.id)) {
       return;
     }
+
     final existingIndex = _messages.indexWhere((m) => m.id == message.id);
     if (existingIndex != -1) {
       _messages[existingIndex] = message;
@@ -297,12 +354,15 @@ class ChatProvider extends ChangeNotifier {
       _messages.add(message);
       _messages.sort((a, b) => a.createdAt.compareTo(b.createdAt));
     }
+
     _processedMessageIds.add(message.id);
     _updateCacheWithNewMessage(_currentChatId!, message);
     notifyListeners();
+
     if (_shouldAutoScroll && !_isUserScrolling) {
       _scrollToBottomSmooth();
     }
+
     if (!message.isCurrentUser) {
       markMessagesAsRead();
     }
@@ -312,6 +372,7 @@ class ChatProvider extends ChangeNotifier {
     if (_currentChatId == null || message.chatId != _currentChatId) {
       return;
     }
+
     final optimisticId =
         'optimistic_${DateTime.now().millisecondsSinceEpoch}_${message.content.hashCode}';
     final optimisticMessage = MessageEntity(
@@ -327,11 +388,13 @@ class ChatProvider extends ChangeNotifier {
       isDeleted: message.isDeleted,
       isCurrentUser: message.isCurrentUser,
     );
+
     _optimisticMessages[optimisticId] = optimisticMessage;
     _messages.add(optimisticMessage);
     _shouldAutoScroll = true;
     notifyListeners();
     _scrollToBottomSmooth();
+
     _optimisticTimers[optimisticId] = Timer(const Duration(seconds: 30), () {
       _optimisticMessages.remove(optimisticId);
       _optimisticTimers.remove(optimisticId);
@@ -395,6 +458,7 @@ class ChatProvider extends ChangeNotifier {
   Future<void> sendTextMessage(String chatId) async {
     final content = messageController.text.trim();
     if (content.isEmpty || _isSending) return;
+
     if (!canSendMessages) {
       _setError('You cannot send messages to this chat');
       return;
@@ -410,14 +474,17 @@ class ChatProvider extends ChangeNotifier {
         return;
       }
     }
+
     _setSending(true);
     messageController.clear();
     _shouldAutoScroll = true;
     _isUserScrolling = false;
+
     try {
       final result = await sendMessage(
         SendMessageParams(chatId: chatId, content: content),
       );
+
       result.fold((failure) => _setError(failure.message), (message) {
         _addOptimisticMessage(message);
         _updateCacheWithNewMessage(chatId, message);
@@ -634,11 +701,13 @@ class ChatProvider extends ChangeNotifier {
       final directory = await getApplicationDocumentsDirectory();
       final fileName = 'audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
       _recordingPath = path.join(directory.path, fileName);
+
       const config = RecordConfig(
         encoder: AudioEncoder.aacLc,
         bitRate: 128000,
         sampleRate: 44100,
       );
+
       await _audioRecorder.start(config, path: _recordingPath!);
       _isRecording = true;
       _recordingDuration = 0;
@@ -792,6 +861,45 @@ class ChatProvider extends ChangeNotifier {
     }
   }
 
+  String getChatDisplayName() {
+    switch (_currentChatType) {
+      case ChatType.personal:
+        // For personal chat, get the friend's name from users array
+        final otherUser = _currentChat?.users.firstWhere(
+          (user) => user.id != StorageService.userId,
+          orElse: () => _currentChat!.users.first,
+        );
+        return otherUser?.name ?? 'Personal Chat';
+      case ChatType.group:
+      case ChatType.bot:
+        return _currentChat?.groupName ?? 'Group Chat';
+    }
+  }
+
+  String? getChatDisplayImage() {
+    switch (_currentChatType) {
+      case ChatType.personal:
+        // For personal chat, get the friend's profile image from users array
+        final otherUser = _currentChat?.users.firstWhere(
+          (user) => user.id != StorageService.userId,
+          orElse: () => _currentChat!.users.first,
+        );
+        return otherUser?.profileImage;
+      case ChatType.group:
+      case ChatType.bot:
+        return _currentChat?.groupImage;
+    }
+  }
+
+  bool isPersonalChatOnline() {
+    if (_currentChatType != ChatType.personal) return false;
+    final otherUser = _currentChat?.users.firstWhere(
+      (user) => user.id != StorageService.userId,
+      orElse: () => _currentChat!.users.first,
+    );
+    return otherUser?.isOnline ?? false;
+  }
+
   @override
   void dispose() {
     _clearCurrentChat();
@@ -799,7 +907,6 @@ class ChatProvider extends ChangeNotifier {
     _recordingTimer?.cancel();
     _scrollTimer?.cancel();
 
-    // Clean up optimistic timers
     _optimisticTimers.forEach((key, timer) => timer.cancel());
     _optimisticTimers.clear();
 

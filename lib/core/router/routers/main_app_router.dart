@@ -4,7 +4,7 @@ import '../../../features/home/presentation/pages/home_page.dart';
 import '../../../features/profile/presentation/pages/profile_page.dart';
 import '../../../features/promos/presentation/pages/promos_page.dart';
 import '../../../features/redemption/presentation/pages/redemption_page.dart';
-import '../../../features/splash/presentation/pages/splash_page.dart';
+import '../../../features/splash/splash_page.dart';
 import '../../../features/vizzle/home/presentation/pages/vizzle_home_page.dart';
 import '../../constants/route_constants.dart';
 
