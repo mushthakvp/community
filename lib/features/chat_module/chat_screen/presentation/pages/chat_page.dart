@@ -1,3 +1,5 @@
+// lib/features/chat_module/chat_screen/presentation/pages/chat_page.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -154,9 +156,23 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
         backgroundColor: Theme.of(context).colorScheme.surface,
         body: Consumer<ChatProvider>(
           builder: (context, provider, _) {
+            // Show loading state if still initializing
             if (!_isInitialized && provider.isLoading) {
               return _buildOptimizedLoadingState(context, provider);
             }
+
+            // Show error state if personal chat is not supported
+            if (provider.isPersonalChat && !provider.isPersonalChatSupported) {
+              return _buildPersonalChatNotSupportedState(context, provider);
+            }
+
+            // Show error state if there's a critical error and no cached data
+            if (provider.error != null &&
+                provider.messages.isEmpty &&
+                !provider.isLoading) {
+              return _buildErrorState(context, provider);
+            }
+
             final chatName = _getChatName(provider);
             final chatImage = _getChatImage(provider);
             final isBotChat = provider.isBotChat;
@@ -175,7 +191,8 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                 ),
                 _buildConnectionStatus(provider),
                 if (isBotChat) _buildBotChatBanner(context),
-                if (isPersonalChat) _buildPersonalChatBanner(context, provider),
+                if (isPersonalChat && provider.isPersonalChatSupported)
+                  _buildPersonalChatBanner(context, provider),
                 Expanded(
                   child: _buildMessagesArea(context, provider, isBotChat),
                 ),
@@ -219,6 +236,150 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
           Expanded(child: _buildLoadingMessages(context)),
           ChatInput(chatId: widget.chatId, isBotChat: false),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPersonalChatNotSupportedState(
+    BuildContext context,
+    ChatProvider provider,
+  ) {
+    return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      appBar: AppBar(
+        title: Text(widget.chatName),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
+        ),
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.chat_bubble_outline,
+                size: 80,
+                color: Theme.of(context).colorScheme.error,
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'Personal Chat Not Available',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.error,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Personal chat feature is not supported in this version of the app. Please update to the latest version or contact support for assistance.',
+                style: Theme.of(context).textTheme.bodyLarge,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 32),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => context.pop(),
+                      icon: const Icon(Icons.arrow_back),
+                      label: const Text('Go Back'),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        provider.refreshChat(widget.chatId);
+                      },
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Retry'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorState(BuildContext context, ChatProvider provider) {
+    return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      appBar: AppBar(
+        title: Text(widget.chatName),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
+        ),
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.error_outline,
+                size: 80,
+                color: Theme.of(context).colorScheme.error,
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'Failed to Load Chat',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.error,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                provider.error ??
+                    'An unexpected error occurred while loading the chat.',
+                style: Theme.of(context).textTheme.bodyLarge,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 32),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => context.pop(),
+                      icon: const Icon(Icons.arrow_back),
+                      label: const Text('Go Back'),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        provider.clearError();
+                        provider.initializeChat(
+                          widget.chatId,
+                          chatType: provider.currentChatType,
+                        );
+                      },
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Retry'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
