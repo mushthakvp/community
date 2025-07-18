@@ -7,7 +7,7 @@ import '../../domain/entities/community_member_entity.dart';
 class MemberListItem extends StatelessWidget {
   final CommunityMemberEntity member;
   final bool isCreator;
-  final VoidCallback? onRemove; // This will be null now
+  final VoidCallback? onRemove; 
   final VoidCallback? onSendFriendRequest;
   final VoidCallback? onChat;
   final bool isLoading;

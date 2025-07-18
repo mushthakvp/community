@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/vchat_provider.dart';
@@ -349,6 +350,7 @@ class FriendListWidget extends StatelessWidget {
     );
   }
 
+  // FIXED: Updated to handle CommunityModel which uses 'image' instead of 'profileImage'
   String _extractFriendName(dynamic friend) {
     if (friend == null) return 'Unknown User';
     return friend.name ??
@@ -358,12 +360,40 @@ class FriendListWidget extends StatelessWidget {
         'Unknown User';
   }
 
+  // FIXED: Safe extraction of friend image using try-catch to handle different model types
   String? _extractFriendImage(dynamic friend) {
     if (friend == null) return null;
-    return friend.profileImage ??
-        friend.groupProfileImage ??
-        friend.image ??
-        friend.avatar;
+
+    // Try different property names safely
+    try {
+      // First try 'image' (for CommunityModel)
+      if (friend.image != null) return friend.image;
+    } catch (e) {
+      // image property doesn't exist, continue
+    }
+
+    try {
+      // Try 'profileImage' (for other models)
+      if (friend.profileImage != null) return friend.profileImage;
+    } catch (e) {
+      // profileImage property doesn't exist, continue
+    }
+
+    try {
+      // Try 'groupProfileImage'
+      if (friend.groupProfileImage != null) return friend.groupProfileImage;
+    } catch (e) {
+      // groupProfileImage property doesn't exist, continue
+    }
+
+    try {
+      // Try 'avatar'
+      if (friend.avatar != null) return friend.avatar;
+    } catch (e) {
+      // avatar property doesn't exist, continue
+    }
+
+    return null;
   }
 
   bool _extractOnlineStatus(dynamic friend) {
@@ -404,15 +434,32 @@ class FriendListWidget extends StatelessWidget {
   void _handleFriendTap(BuildContext context, dynamic friend) {
     final friendId = friend?.id ?? friend?._id;
     if (friendId != null) {
-      // context.push('/chat/$friendId');
+      // Navigate to personal chat using correct route
+      context.push(
+        '/chat/$friendId',
+        extra: {
+          'chatName': _extractFriendName(friend),
+          'chatImage': _extractFriendImage(friend),
+          'isGroup': false,
+          'isPersonal': true,
+        },
+      );
     }
   }
 
   void _handleChatTap(BuildContext context, dynamic friend) {
-    // Navigate to chat with friend
     final friendId = friend?.id ?? friend?._id;
     if (friendId != null) {
-      // context.push('/chat/$friendId');
+      // Navigate to personal chat using correct route
+      context.push(
+        '/chat/$friendId',
+        extra: {
+          'chatName': _extractFriendName(friend),
+          'chatImage': _extractFriendImage(friend),
+          'isGroup': false,
+          'isPersonal': true,
+        },
+      );
     }
   }
 

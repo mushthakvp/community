@@ -4,6 +4,7 @@ import '../../../features/chat_module/chat_profile/presentation/pages/add_member
 import '../../../features/chat_module/chat_profile/presentation/pages/chat_profile_page.dart';
 import '../../../features/chat_module/chat_profile/presentation/pages/members_list_page.dart';
 import '../../../features/chat_module/chat_screen/presentation/pages/chat_page.dart';
+import '../../../features/chat_module/chat_screen/presentation/providers/chat_provider.dart';
 import '../../../features/chat_module/create_community/presentation/pages/create_community_screen.dart';
 import '../../../features/chat_module/create_community/presentation/pages/edit_community_screen.dart';
 import '../../../features/chat_module/vchat/presentation/pages/vchat_home_page.dart';
@@ -59,12 +60,24 @@ class ChatRouter {
         final chatImage = queryParams['chatImage'] ?? extra['chatImage'];
         final isGroup =
             queryParams['isGroup'] == 'true' || extra['isGroup'] == true;
+        final isPersonal =
+            queryParams['isPersonal'] == 'true' || extra['isPersonal'] == true;
+
+        // Determine chat type based on parameters
+        ChatType? chatType;
+        if (isPersonal) {
+          chatType = ChatType.personal;
+        } else if (isGroup) {
+          chatType = ChatType.group;
+        }
 
         return ChatPage(
           chatId: chatId,
           chatName: chatName,
           chatImage: chatImage,
           isGroup: isGroup,
+          isPersonal: isPersonal,
+          chatType: chatType,
         );
       },
     ),

@@ -154,12 +154,13 @@ class MembersListPage extends StatelessWidget {
   }
 
   void _navigateToChat(BuildContext context, member) {
-    context.pushNamed(
-      'singleChat',
-      pathParameters: {'chatId': member.id},
-      queryParameters: {
+    context.push(
+      '/chat/${member.id}',
+      extra: {
         'chatName': member.name,
         'chatImage': member.profileImage ?? '',
+        'isGroup': false,
+        'isPersonal': true,
       },
     );
   }

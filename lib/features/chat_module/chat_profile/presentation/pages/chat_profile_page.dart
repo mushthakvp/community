@@ -408,12 +408,13 @@ class _ChatProfilePageState extends State<ChatProfilePage>
   }
 
   void _navigateToChat(member) {
-    context.pushNamed(
-      'singleChat',
-      pathParameters: {'chatId': member.id},
-      queryParameters: {
+    context.push(
+      '/chat/${member.id}',
+      extra: {
         'chatName': member.name,
         'chatImage': member.profileImage ?? '',
+        'isGroup': false,
+        'isPersonal': true,
       },
     );
   }
