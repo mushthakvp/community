@@ -42,33 +42,71 @@ class CommunityRemoteDataSourceImpl implements CommunityRemoteDataSource {
     );
     final data = jsonDecode(response.body);
     final groupsJson = data['data'] as List<dynamic>;
-    if (type == 'friends' || type == 'request') {
-      return groupsJson.map((json) {
-        try {
+    return groupsJson.map((json) {
+      try {
+        if (type == 'friends' || type == 'request') {
           if (json.containsKey('isOnline') ||
               json.containsKey('lastSeen') ||
               json.containsKey('friendName') ||
-              json.containsKey('userName')) {
+              json.containsKey('userName') ||
+              json.containsKey('email') ||
+              json.containsKey('phone') ||
+              (!json.containsKey('memberCount') &&
+                  !json.containsKey('groupName'))) {
             return FriendModel.fromJson(json);
-          } else {
-            return CommunityModel.fromJson(json);
-          }
-        } catch (e) {
-          try {
-            return CommunityModel.fromJson(json);
-          } catch (e2) {
-            return FriendModel(
-              id: json['_id'] ?? json['id'] ?? '',
-              name: json['name'] ?? json['groupName'] ?? 'Unknown',
-              profileImage: json['profileImage'] ?? json['groupProfileImage'],
-              isOnline: false,
-            );
           }
         }
-      }).toList();
-    } else {
-      return groupsJson.map((json) => CommunityModel.fromJson(json)).toList();
-    }
+        if (json.containsKey('memberCount') ||
+            json.containsKey('groupName') ||
+            json.containsKey('groupProfileImage')) {
+          return CommunityModel.fromJson(json);
+        }
+        if (type == 'friends' || type == 'request') {
+          return FriendModel(
+            id: json['_id'] ?? json['id'] ?? '',
+            name:
+                json['name'] ??
+                json['userName'] ??
+                json['friendName'] ??
+                'Unknown',
+            profileImage:
+                json['profileImage'] ?? json['avatar'] ?? json['image'],
+            isOnline: json['isOnline'] ?? false,
+            lastSeen: json['lastSeen'] != null
+                ? DateTime.tryParse(json['lastSeen'])
+                : null,
+            status: json['status'],
+            email: json['email'],
+            phone: json['phone'],
+          );
+        } else {
+          return CommunityModel.fromJson(json);
+        }
+      } catch (e) {
+        if (type == 'friends' || type == 'request') {
+          return FriendModel(
+            id: json['_id'] ?? json['id'] ?? '',
+            name:
+                json['name'] ??
+                json['groupName'] ??
+                json['userName'] ??
+                'Unknown',
+            profileImage:
+                json['profileImage'] ??
+                json['groupProfileImage'] ??
+                json['avatar'],
+            isOnline: false,
+          );
+        } else {
+          return CommunityModel(
+            id: json['_id'] ?? json['id'] ?? '',
+            name: json['groupName'] ?? json['name'] ?? 'Unknown',
+            image: json['groupProfileImage'] ?? json['profileImage'],
+            memberCount: json['memberCount'] ?? 0,
+          );
+        }
+      }
+    }).toList();
   }
 
   @override
