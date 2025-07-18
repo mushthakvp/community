@@ -1,7 +1,10 @@
+// lib/features/chat_module/vchat/presentation/widgets/friend_list_widgets.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../data/models/friend_model.dart';
+import '../../domain/entities/community_entity.dart';
 import '../providers/vchat_provider.dart';
 
 class FriendListWidget extends StatelessWidget {
@@ -85,6 +88,7 @@ class FriendListWidget extends StatelessWidget {
     final friendName = _extractFriendName(friend);
     final friendImage = _extractFriendImage(friend);
     final isOnline = _extractOnlineStatus(friend);
+
     return InkWell(
       onTap: () => _handleFriendTap(context, friend),
       child: Container(
@@ -350,55 +354,98 @@ class FriendListWidget extends StatelessWidget {
     );
   }
 
-  // FIXED: Updated to handle CommunityModel which uses 'image' instead of 'profileImage'
+  // FIXED: Safe extraction methods that handle different model types
   String _extractFriendName(dynamic friend) {
     if (friend == null) return 'Unknown User';
-    return friend.name ??
-        friend.groupName ??
-        friend.friendName ??
-        friend.userName ??
-        'Unknown User';
+
+    // Handle FriendModel
+    if (friend is FriendModel) {
+      return friend.name;
+    }
+
+    // Handle CommunityEntity
+    if (friend is CommunityEntity) {
+      return friend.name;
+    }
+
+    // Handle dynamic objects by trying different property names
+    try {
+      return friend.name ??
+          friend.groupName ??
+          friend.friendName ??
+          friend.userName ??
+          friend.displayName ??
+          'Unknown User';
+    } catch (e) {
+      return 'Unknown User';
+    }
   }
 
-  // FIXED: Safe extraction of friend image using try-catch to handle different model types
   String? _extractFriendImage(dynamic friend) {
     if (friend == null) return null;
 
-    // Try different property names safely
-    try {
-      // First try 'image' (for CommunityModel)
-      if (friend.image != null) return friend.image;
-    } catch (e) {
-      // image property doesn't exist, continue
+    // Handle FriendModel
+    if (friend is FriendModel) {
+      return friend.profileImage;
     }
 
-    try {
-      // Try 'profileImage' (for other models)
-      if (friend.profileImage != null) return friend.profileImage;
-    } catch (e) {
-      // profileImage property doesn't exist, continue
+    // Handle CommunityEntity
+    if (friend is CommunityEntity) {
+      return friend.image;
     }
 
+    // Handle dynamic objects by trying different property names safely
     try {
-      // Try 'groupProfileImage'
-      if (friend.groupProfileImage != null) return friend.groupProfileImage;
+      return friend.profileImage ??
+          friend.image ??
+          friend.groupProfileImage ??
+          friend.avatar;
     } catch (e) {
-      // groupProfileImage property doesn't exist, continue
+      return null;
     }
-
-    try {
-      // Try 'avatar'
-      if (friend.avatar != null) return friend.avatar;
-    } catch (e) {
-      // avatar property doesn't exist, continue
-    }
-
-    return null;
   }
 
   bool _extractOnlineStatus(dynamic friend) {
     if (friend == null) return false;
-    return friend.isOnline ?? false;
+
+    // Handle FriendModel
+    if (friend is FriendModel) {
+      return friend.isOnline;
+    }
+
+    // Handle CommunityEntity (communities don't have online status)
+    if (friend is CommunityEntity) {
+      return false;
+    }
+
+    // Handle dynamic objects safely
+    try {
+      return friend.isOnline == true;
+    } catch (e) {
+      // If accessing isOnline fails (NoSuchMethodError), return false
+      return false;
+    }
+  }
+
+  String _extractId(dynamic friend) {
+    if (friend == null) return '';
+
+    // Handle FriendModel
+    if (friend is FriendModel) {
+      return friend.id;
+    }
+
+    // Handle CommunityEntity
+    if (friend is CommunityEntity) {
+      return friend.id;
+    }
+
+    // Handle dynamic objects
+    try {
+      return friend.id ?? friend._id ?? '';
+    } catch (e) {
+      return '';
+    }
   }
 
   String _getInitials(String name) {
@@ -412,28 +459,29 @@ class FriendListWidget extends StatelessWidget {
   }
 
   String _getTimeString(dynamic friend) {
-    if (friend?.lastSeen != null) {
-      final lastSeen = friend.lastSeen as DateTime?;
-      if (lastSeen != null) {
-        final now = DateTime.now();
-        final difference = now.difference(lastSeen);
-        if (difference.inMinutes < 60) {
-          return '${difference.inMinutes}m ago';
-        } else if (difference.inHours < 24) {
-          return '${difference.inHours}h ago';
-        } else {
-          return '${difference.inDays}d ago';
-        }
+    // Handle FriendModel
+    if (friend is FriendModel && friend.lastSeen != null) {
+      final now = DateTime.now();
+      final difference = now.difference(friend.lastSeen!);
+      if (difference.inMinutes < 60) {
+        return '${difference.inMinutes}m ago';
+      } else if (difference.inHours < 24) {
+        return '${difference.inHours}h ago';
+      } else {
+        return '${difference.inDays}d ago';
       }
     }
+
+    // For other types or when lastSeen is null, return mock time
     final times = ['9:30 AM', '10:15 AM', '11:45 AM', '2:20 PM', 'Yesterday'];
-    final hash = (friend?.name ?? friend?.id ?? '').hashCode.abs();
+    final name = _extractFriendName(friend);
+    final hash = name.hashCode.abs();
     return times[hash % times.length];
   }
 
   void _handleFriendTap(BuildContext context, dynamic friend) {
-    final friendId = friend?.id ?? friend?._id;
-    if (friendId != null) {
+    final friendId = _extractId(friend);
+    if (friendId.isNotEmpty) {
       // Navigate to personal chat using correct route
       context.push(
         '/chat/$friendId',
@@ -448,8 +496,8 @@ class FriendListWidget extends StatelessWidget {
   }
 
   void _handleChatTap(BuildContext context, dynamic friend) {
-    final friendId = friend?.id ?? friend?._id;
-    if (friendId != null) {
+    final friendId = _extractId(friend);
+    if (friendId.isNotEmpty) {
       // Navigate to personal chat using correct route
       context.push(
         '/chat/$friendId',
@@ -473,7 +521,7 @@ class FriendListWidget extends StatelessWidget {
       SnackBar(
         content: Row(
           children: [
-            Icon(Icons.check_circle, color: Colors.white, size: 20),
+            const Icon(Icons.check_circle, color: Colors.white, size: 20),
             const SizedBox(width: 8),
             Expanded(child: Text('Accepted friend request from $requestName')),
           ],
@@ -496,7 +544,7 @@ class FriendListWidget extends StatelessWidget {
       SnackBar(
         content: Row(
           children: [
-            Icon(Icons.cancel, color: Colors.white, size: 20),
+            const Icon(Icons.cancel, color: Colors.white, size: 20),
             const SizedBox(width: 8),
             Expanded(child: Text('Rejected friend request from $requestName')),
           ],

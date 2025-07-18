@@ -30,9 +30,7 @@ class CommunityRepositoryImpl implements CommunityRepository {
   }
 
   @override
-  Future<Either<Failure, List<CommunityEntity>>> getMyGroups(
-    String type,
-  ) async {
+  Future<Either<Failure, List<dynamic>>> getMyGroups(String type) async {
     try {
       final groups = await remoteDataSource.getMyGroups(type);
       return Right(groups);

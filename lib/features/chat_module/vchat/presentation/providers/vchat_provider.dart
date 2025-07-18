@@ -23,7 +23,7 @@ class VChatProvider extends ChangeNotifier {
   VChatTab _selectedTab = VChatTab.explore;
   MyGroupFilter _selectedFilter = MyGroupFilter.recently;
   List<CommunityEntity> _communities = [];
-  List<CommunityEntity> _myGroups = [];
+  List<dynamic> _myGroups = [];
   bool _isLoading = false;
   String? _error;
 
@@ -32,7 +32,7 @@ class VChatProvider extends ChangeNotifier {
   VChatTab get selectedTab => _selectedTab;
   MyGroupFilter get selectedFilter => _selectedFilter;
   List<CommunityEntity> get communities => _communities;
-  List<CommunityEntity> get myGroups => _myGroups;
+  List<dynamic> get myGroups => _myGroups;
   bool get isLoading => _isLoading;
   String? get error => _error;
 
@@ -172,18 +172,32 @@ class VChatProvider extends ChangeNotifier {
       );
     }
 
-    final myGroupIndex = _myGroups.indexWhere((c) => c.id == communityId);
+    // Handle myGroups which can be either CommunityEntity or other types
+    final myGroupIndex = _myGroups.indexWhere((item) {
+      if (item is CommunityEntity) {
+        return item.id == communityId;
+      }
+      // For other types, try to access id property
+      try {
+        return item.id == communityId;
+      } catch (e) {
+        return false;
+      }
+    });
+
     if (myGroupIndex != -1) {
-      final community = _myGroups[myGroupIndex];
-      _myGroups[myGroupIndex] = CommunityEntity(
-        id: community.id,
-        name: community.name,
-        image: community.image,
-        memberCount: community.memberCount + (isJoined ? 1 : -1),
-        profileImages: community.profileImages,
-        isJoined: isJoined,
-        isCreated: community.isCreated,
-      );
+      final item = _myGroups[myGroupIndex];
+      if (item is CommunityEntity) {
+        _myGroups[myGroupIndex] = CommunityEntity(
+          id: item.id,
+          name: item.name,
+          image: item.image,
+          memberCount: item.memberCount + (isJoined ? 1 : -1),
+          profileImages: item.profileImages,
+          isJoined: isJoined,
+          isCreated: item.isCreated,
+        );
+      }
     }
   }
 
@@ -223,7 +237,17 @@ class VChatProvider extends ChangeNotifier {
       return _communities.firstWhere((c) => c.id == communityId);
     } catch (e) {
       try {
-        return _myGroups.firstWhere((c) => c.id == communityId);
+        final item = _myGroups.firstWhere((item) {
+          if (item is CommunityEntity) {
+            return item.id == communityId;
+          }
+          try {
+            return item.id == communityId;
+          } catch (e) {
+            return false;
+          }
+        });
+        return item is CommunityEntity ? item : null;
       } catch (e) {
         return null;
       }
@@ -280,7 +304,16 @@ class VChatProvider extends ChangeNotifier {
   /// Remove a community from all lists
   void removeCommunity(String communityId) {
     _communities.removeWhere((c) => c.id == communityId);
-    _myGroups.removeWhere((c) => c.id == communityId);
+    _myGroups.removeWhere((item) {
+      if (item is CommunityEntity) {
+        return item.id == communityId;
+      }
+      try {
+        return item.id == communityId;
+      } catch (e) {
+        return false;
+      }
+    });
     notifyListeners();
   }
 
@@ -295,9 +328,16 @@ class VChatProvider extends ChangeNotifier {
     }
 
     // Update in my groups list
-    final myGroupIndex = _myGroups.indexWhere(
-      (c) => c.id == updatedCommunity.id,
-    );
+    final myGroupIndex = _myGroups.indexWhere((item) {
+      if (item is CommunityEntity) {
+        return item.id == updatedCommunity.id;
+      }
+      try {
+        return item.id == updatedCommunity.id;
+      } catch (e) {
+        return false;
+      }
+    });
     if (myGroupIndex != -1) {
       _myGroups[myGroupIndex] = updatedCommunity;
     }
@@ -309,9 +349,13 @@ class VChatProvider extends ChangeNotifier {
   Future<void> acceptFriendRequest(String requestId) async {
     try {
       if (_selectedFilter == MyGroupFilter.friendRequest) {
-        _myGroups.removeWhere(
-          (request) => (request.id == requestId || request.name == requestId),
-        );
+        _myGroups.removeWhere((request) {
+          try {
+            return request.id == requestId || request.name == requestId;
+          } catch (e) {
+            return false;
+          }
+        });
         notifyListeners();
       }
     } catch (e) {
@@ -323,9 +367,13 @@ class VChatProvider extends ChangeNotifier {
   Future<void> rejectFriendRequest(String requestId) async {
     try {
       if (_selectedFilter == MyGroupFilter.friendRequest) {
-        _myGroups.removeWhere(
-          (request) => (request.id == requestId || request.name == requestId),
-        );
+        _myGroups.removeWhere((request) {
+          try {
+            return request.id == requestId || request.name == requestId;
+          } catch (e) {
+            return false;
+          }
+        });
         notifyListeners();
       }
     } catch (e) {
@@ -334,7 +382,7 @@ class VChatProvider extends ChangeNotifier {
   }
 
   /// Get current list based on selected tab and filter
-  List<CommunityEntity> getCurrentList() {
+  List<dynamic> getCurrentList() {
     switch (_selectedTab) {
       case VChatTab.explore:
       case VChatTab.popular:

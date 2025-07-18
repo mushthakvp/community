@@ -3,10 +3,11 @@ import 'dart:convert';
 import '../../../../../core/constants/chat_api_constants.dart';
 import '../../../../../core/network/api_client.dart';
 import '../models/community_model.dart';
+import '../models/friend_model.dart';
 
 abstract class CommunityRemoteDataSource {
   Future<List<CommunityModel>> getRecommendedCommunities(String type);
-  Future<List<CommunityModel>> getMyGroups(String type);
+  Future<List<dynamic>> getMyGroups(String type);
   Future<void> joinCommunity(String communityId);
   Future<void> leaveCommunity(String communityId);
   Future<CommunityModel> createCommunity({
@@ -35,14 +36,39 @@ class CommunityRemoteDataSourceImpl implements CommunityRemoteDataSource {
   }
 
   @override
-  Future<List<CommunityModel>> getMyGroups(String type) async {
+  Future<List<dynamic>> getMyGroups(String type) async {
     final response = await apiClient.get(
       '${ChatApiConstants.getMyGroupData}?type=$type',
     );
-
     final data = jsonDecode(response.body);
     final groupsJson = data['data'] as List<dynamic>;
-    return groupsJson.map((json) => CommunityModel.fromJson(json)).toList();
+    if (type == 'friends' || type == 'request') {
+      return groupsJson.map((json) {
+        try {
+          if (json.containsKey('isOnline') ||
+              json.containsKey('lastSeen') ||
+              json.containsKey('friendName') ||
+              json.containsKey('userName')) {
+            return FriendModel.fromJson(json);
+          } else {
+            return CommunityModel.fromJson(json);
+          }
+        } catch (e) {
+          try {
+            return CommunityModel.fromJson(json);
+          } catch (e2) {
+            return FriendModel(
+              id: json['_id'] ?? json['id'] ?? '',
+              name: json['name'] ?? json['groupName'] ?? 'Unknown',
+              profileImage: json['profileImage'] ?? json['groupProfileImage'],
+              isOnline: false,
+            );
+          }
+        }
+      }).toList();
+    } else {
+      return groupsJson.map((json) => CommunityModel.fromJson(json)).toList();
+    }
   }
 
   @override

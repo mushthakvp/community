@@ -7,7 +7,7 @@ abstract class CommunityRepository {
   Future<Either<Failure, List<CommunityEntity>>> getRecommendedCommunities(
     String type,
   );
-  Future<Either<Failure, List<CommunityEntity>>> getMyGroups(String type);
+  Future<Either<Failure, List<dynamic>>> getMyGroups(String type);
   Future<Either<Failure, void>> joinCommunity(String communityId);
   Future<Either<Failure, void>> leaveCommunity(String communityId);
   Future<Either<Failure, CommunityEntity>> createCommunity({
