@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:dartz/dartz.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -9,7 +10,9 @@ import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 
+import '../../../../../core/error/failures.dart';
 import '../../../../../core/services/storage_service.dart';
+import '../../../personal_chat/domain/repositories/personal_chat_repository.dart';
 import '../../../shared/cache/chat_cache_data.dart';
 import '../../data/datasources/socket_datasource.dart';
 import '../../domain/entities/chat_entity.dart';
@@ -28,6 +31,7 @@ class ChatProvider extends ChangeNotifier {
   final UploadMedia uploadMedia;
   final ChatRepository chatRepository;
   final SocketDataSource socketDataSource;
+  final PersonalChatRepository? personalChatRepository;
 
   ChatProvider({
     required this.fetchMessages,
@@ -36,6 +40,7 @@ class ChatProvider extends ChangeNotifier {
     required this.uploadMedia,
     required this.chatRepository,
     required this.socketDataSource,
+    this.personalChatRepository,
   }) {
     _initializeCache();
   }
@@ -186,21 +191,19 @@ class ChatProvider extends ChangeNotifier {
     bool isPersonal = false,
   }) async {
     if (_isInitializing) return;
-
-    // Determine chat type
     if (chatType != null) {
       _currentChatType = chatType;
     } else if (isPersonal) {
       _currentChatType = ChatType.personal;
     } else {
-      _currentChatType = ChatType.group; // Default to group
+      _currentChatType = chatId.length < 30
+          ? ChatType.personal
+          : ChatType.group;
     }
-
     if (_currentChatId != null && _currentChatId != chatId) {
       _clearCurrentChat();
       await Future.delayed(const Duration(milliseconds: 100));
     }
-
     if (_currentChatId == chatId && _messages.isNotEmpty) {
       await _ensureSocketConnection();
       await _joinSocketRoom(chatId);
@@ -210,7 +213,6 @@ class ChatProvider extends ChangeNotifier {
       _scrollToBottomIfNeeded();
       return;
     }
-
     _isInitializing = true;
     _currentChatId = chatId;
     setLoading(true);
@@ -220,7 +222,6 @@ class ChatProvider extends ChangeNotifier {
     _messages.clear();
     _currentChat = null;
     notifyListeners();
-
     ChatCacheData? cachedData;
     try {
       try {
@@ -232,53 +233,23 @@ class ChatProvider extends ChangeNotifier {
       } catch (e) {
         // Cache error handled
       }
-
       if (cachedData != null) {
         _currentChat = cachedData.chat;
         _messages = List.from(cachedData.messages);
         notifyListeners();
         _scrollToBottomIfNeeded();
       }
-
       await _ensureSocketConnection();
       await _joinSocketRoom(chatId);
       _setupMessageListener(chatId);
-
-      final result = await fetchChatWithMessages(
-        FetchChatWithMessagesParams(chatId: chatId),
-      );
-
-      result.fold(
-        (failure) {
-          if (cachedData == null) {
-            _setError(failure.message);
-          }
-        },
-        (data) {
-          if (_currentChatId == chatId) {
-            _currentChat = data['chat'] as ChatEntity;
-            final newMessages = data['messages'] as List<MessageEntity>;
-            _messages.clear();
-            _messages.addAll(newMessages);
-            _processedMessageIds.clear();
-            for (final message in newMessages) {
-              _processedMessageIds.add(message.id);
-            }
-
-            // Determine chat type from chat data
-            if (_currentChat?.isBot == true) {
-              _currentChatType = ChatType.bot;
-            } else if (_currentChat?.isGroup == false) {
-              _currentChatType = ChatType.personal;
-            }
-
-            _updateCache(chatId, _currentChat!, _messages);
-            notifyListeners();
-            _scrollToBottomIfNeeded();
-          }
-        },
-      );
+      if (_currentChatType == ChatType.personal) {
+        await _handlePersonalChatInitialization(chatId, cachedData);
+      } else {
+        debugPrint('Fetching group chat data for: $chatId');
+        await _handleGroupChatInitialization(chatId, cachedData);
+      }
     } catch (e) {
+      debugPrint('Error initializing chat: $e');
       if (cachedData == null && _currentChatId == chatId) {
         _setError(e.toString());
       }
@@ -288,22 +259,126 @@ class ChatProvider extends ChangeNotifier {
     _isInitializing = false;
   }
 
+  Future<void> _handlePersonalChatInitialization(
+    String chatId,
+    ChatCacheData? cachedData,
+  ) async {
+    debugPrint(
+      'Fetching personal chat data for: $chatId --- ${cachedData != null}',
+    );
+    if (personalChatRepository == null) {
+      debugPrint('Personal chat repository is null ---');
+      _setError('Personal chat not supported');
+      return;
+    }
+    debugPrint('Api Calling --- ');
+    final result = await personalChatRepository!.getPersonalChatWithMessages(
+      chatId,
+    );
+    result.fold(
+      (failure) {
+        debugPrint('Personal chat fetch failed: ${failure.message}');
+        if (cachedData == null) {
+          _setError(failure.message);
+        }
+      },
+      (data) {
+        debugPrint('Personal chat fetch successful');
+        if (_currentChatId == chatId) {
+          _currentChat = data['chat'] as ChatEntity;
+          final newMessages = data['messages'] as List<MessageEntity>;
+          _messages.clear();
+          _messages.addAll(newMessages);
+          _processedMessageIds.clear();
+          for (final message in newMessages) {
+            _processedMessageIds.add(message.id);
+          }
+
+          _updateCache(chatId, _currentChat!, _messages);
+          notifyListeners();
+          _scrollToBottomIfNeeded();
+          debugPrint('Personal chat initialized successfully');
+        }
+      },
+    );
+  }
+
+  Future<void> _handleGroupChatInitialization(
+    String chatId,
+    ChatCacheData? cachedData,
+  ) async {
+    final result = await fetchChatWithMessages(
+      FetchChatWithMessagesParams(chatId: chatId),
+    );
+
+    result.fold(
+      (failure) {
+        debugPrint('Group chat fetch failed: ${failure.message}');
+        if (cachedData == null) {
+          _setError(failure.message);
+        }
+      },
+      (data) {
+        if (_currentChatId == chatId) {
+          _currentChat = data['chat'] as ChatEntity;
+          final newMessages = data['messages'] as List<MessageEntity>;
+          _messages.clear();
+          _messages.addAll(newMessages);
+          _processedMessageIds.clear();
+          for (final message in newMessages) {
+            _processedMessageIds.add(message.id);
+          }
+
+          // Determine chat type from chat data
+          if (_currentChat?.isBot == true) {
+            _currentChatType = ChatType.bot;
+          } else if (_currentChat?.isGroup == false) {
+            _currentChatType = ChatType.personal;
+          }
+
+          _updateCache(chatId, _currentChat!, _messages);
+          notifyListeners();
+          _scrollToBottomIfNeeded();
+          debugPrint('Group chat initialized successfully');
+        }
+      },
+    );
+  }
+
   void _setupMessageListener(String chatId) {
     _messageSubscription?.cancel();
-    _messageSubscription = chatRepository
-        .listenToNewMessages(chatId)
-        .listen(
-          (message) {
-            if (_currentChatId == chatId && message.chatId == chatId) {
-              _onNewMessage(message);
-            }
-          },
-          onError: (error) {
-            if (_currentChatId == chatId) {
-              _setError('Connection error: $error');
-            }
-          },
-        );
+
+    if (_currentChatType == ChatType.personal) {
+      _messageSubscription = personalChatRepository
+          ?.listenToPersonalMessages()
+          .listen(
+            (message) {
+              if (_currentChatId == chatId && message.chatId == chatId) {
+                _onNewMessage(message);
+              }
+            },
+            onError: (error) {
+              if (_currentChatId == chatId) {
+                _setError('Connection error: $error');
+              }
+            },
+          );
+    } else {
+      _messageSubscription = chatRepository
+          .listenToNewMessages(chatId)
+          .listen(
+            (message) {
+              if (_currentChatId == chatId && message.chatId == chatId) {
+                _onNewMessage(message);
+              }
+            },
+            onError: (error) {
+              if (_currentChatId == chatId) {
+                _setError('Connection error: $error');
+              }
+            },
+          );
+    }
   }
 
   Future<void> _ensureSocketConnection() async {
@@ -324,15 +399,16 @@ class ChatProvider extends ChangeNotifier {
   Future<void> _joinSocketRoom(String chatId) async {
     try {
       if (_currentChatType == ChatType.personal) {
-        // For personal chat, join using friendId instead of chatId
+        debugPrint('Joining personal chat room: $chatId');
         await socketDataSource.joinPersonalChat(chatId);
       } else {
+        debugPrint('Joining group chat room: $chatId');
         await socketDataSource.joinRoom(chatId);
       }
       _connectedChatId = chatId;
       await Future.delayed(const Duration(milliseconds: 500));
     } catch (e) {
-      // Error handled silently
+      debugPrint('Error joining socket room: $e');
     }
   }
 
@@ -481,15 +557,34 @@ class ChatProvider extends ChangeNotifier {
     _isUserScrolling = false;
 
     try {
-      final result = await sendMessage(
-        SendMessageParams(chatId: chatId, content: content),
-      );
+      Either<Failure, MessageEntity> result;
 
-      result.fold((failure) => _setError(failure.message), (message) {
-        _addOptimisticMessage(message);
-        _updateCacheWithNewMessage(chatId, message);
-      });
+      if (_currentChatType == ChatType.personal) {
+        debugPrint('Sending personal message to: $chatId');
+        result = await personalChatRepository!.sendPersonalMessage(
+          receiverId: chatId,
+          content: content,
+        );
+      } else {
+        debugPrint('Sending group message to: $chatId');
+        result = await sendMessage(
+          SendMessageParams(chatId: chatId, content: content),
+        );
+      }
+
+      result.fold(
+        (failure) {
+          debugPrint('Send message failed: ${failure.message}');
+          _setError(failure.message);
+        },
+        (message) {
+          debugPrint('Message sent successfully');
+          _addOptimisticMessage(message);
+          _updateCacheWithNewMessage(chatId, message);
+        },
+      );
     } catch (e) {
+      debugPrint('Exception sending message: $e');
       _setError(e.toString());
       messageController.text = content;
     }
@@ -526,14 +621,25 @@ class ChatProvider extends ChangeNotifier {
       await uploadResult.fold((failure) async => _setError(failure.message), (
         mediaUrl,
       ) async {
-        final result = await sendMessage(
-          SendMessageParams(
-            chatId: chatId,
+        Either<Failure, MessageEntity> result;
+
+        if (_currentChatType == ChatType.personal) {
+          result = await personalChatRepository!.sendPersonalMessage(
+            receiverId: chatId,
             content: '',
             mediaUrl: mediaUrl,
             mediaType: mediaType,
-          ),
-        );
+          );
+        } else {
+          result = await sendMessage(
+            SendMessageParams(
+              chatId: chatId,
+              content: '',
+              mediaUrl: mediaUrl,
+              mediaType: mediaType,
+            ),
+          );
+        }
 
         result.fold((failure) => _setError(failure.message), (message) {
           _addOptimisticMessage(message);
@@ -636,7 +742,7 @@ class ChatProvider extends ChangeNotifier {
 
   Future<void> refreshChat(String chatId) async {
     _clearChatCache(chatId);
-    await initializeChat(chatId);
+    await initializeChat(chatId, chatType: _currentChatType);
   }
 
   Future<void> pickImage(String chatId, {bool fromCamera = false}) async {
@@ -772,7 +878,7 @@ class ChatProvider extends ChangeNotifier {
     } catch (e) {
       _setError('Failed to delete message: $e');
       if (_currentChatId != null) {
-        initializeChat(_currentChatId!);
+        initializeChat(_currentChatId!, chatType: _currentChatType);
       }
     }
   }

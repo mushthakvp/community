@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import '../../../../../core/constants/chat_api_constants.dart';
 import '../../../../../core/network/api_client.dart';
@@ -59,10 +60,9 @@ class PersonalChatRemoteDataSourceImpl implements PersonalChatRemoteDataSource {
     final response = await apiClient.get(
       '${ChatApiConstants.fetchAllMessagesSingleChat}$userId',
     );
-
     final data = jsonDecode(response.body);
+    log(response.body);
     final messagesJson = data['messages'] as List<dynamic>;
-
     return messagesJson.map((json) => MessageModel.fromJson(json)).toList();
   }
 
@@ -73,21 +73,14 @@ class PersonalChatRemoteDataSourceImpl implements PersonalChatRemoteDataSource {
     final response = await apiClient.get(
       '${ChatApiConstants.fetchAllMessagesSingleChat}$userId',
     );
-
     final data = jsonDecode(response.body);
-
-    // Extract chat and messages from response
     final chatData = data['chat'] as Map<String, dynamic>;
     final messagesJson = data['messages'] as List<dynamic>;
-
     final chat = PersonalChatModel.fromJson(chatData);
     final messages = messagesJson
         .map((json) => MessageModel.fromJson(json))
         .toList();
-
-    // Cache the chat info
     _cacheResult(userId, chat);
-
     return {'chat': chat, 'messages': messages};
   }
 

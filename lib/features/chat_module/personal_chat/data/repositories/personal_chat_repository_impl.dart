@@ -1,12 +1,16 @@
+import 'dart:developer';
+
 import 'package:dartz/dartz.dart';
 
 import '../../../../../core/error/exceptions.dart';
 import '../../../../../core/error/failures.dart';
+import '../../../../../core/services/storage_service.dart';
 import '../../../chat_screen/data/datasources/socket_datasource.dart';
 import '../../../chat_screen/domain/entities/message_entity.dart';
 import '../../domain/entities/personal_chat_entity.dart';
 import '../../domain/repositories/personal_chat_repository.dart';
 import '../datasources/personal_chat_remote_datasource.dart';
+import '../models/personal_chat_model.dart';
 
 class PersonalChatRepositoryImpl implements PersonalChatRepository {
   final PersonalChatRemoteDataSource remoteDataSource;
@@ -53,7 +57,26 @@ class PersonalChatRepositoryImpl implements PersonalChatRepository {
   ) async {
     try {
       final messages = await remoteDataSource.getPersonalChatMessages(userId);
-      return Right(messages);
+
+      // Update messages with current user flag
+      final currentUserId = await StorageService.getUserId();
+      final updatedMessages = messages.map((message) {
+        return MessageEntity(
+          id: message.id,
+          chatId: message.chatId,
+          senderId: message.senderId,
+          senderName: message.senderName,
+          senderImage: message.senderImage,
+          content: message.content,
+          mediaUrl: message.mediaUrl,
+          mediaType: message.mediaType,
+          createdAt: message.createdAt,
+          isDeleted: message.isDeleted,
+          isCurrentUser: message.senderId == currentUserId,
+        );
+      }).toList();
+
+      return Right(updatedMessages);
     } on ServerException catch (e) {
       return Left(ServerFailure(message: e.message));
     } on NetworkException catch (e) {
@@ -106,8 +129,29 @@ class PersonalChatRepositoryImpl implements PersonalChatRepository {
     String userId,
   ) async {
     try {
+      log("Getting");
       final result = await remoteDataSource.getPersonalChatWithMessages(userId);
-      return Right(result);
+      final personalChatModel = result['chat'] as PersonalChatModel;
+      final chatEntity = personalChatModel.toChatEntity();
+      final currentUserId = await StorageService.getUserId();
+      final messages = result['messages'] as List<MessageEntity>;
+      final updatedMessages = messages.map((message) {
+        return MessageEntity(
+          id: message.id,
+          chatId: message.chatId,
+          senderId: message.senderId,
+          senderName: message.senderName,
+          senderImage: message.senderImage,
+          content: message.content,
+          mediaUrl: message.mediaUrl,
+          mediaType: message.mediaType,
+          createdAt: message.createdAt,
+          isDeleted: message.isDeleted,
+          isCurrentUser: message.senderId == currentUserId,
+        );
+      }).toList();
+
+      return Right({'chat': chatEntity, 'messages': updatedMessages});
     } on ServerException catch (e) {
       return Left(ServerFailure(message: e.message));
     } on NetworkException catch (e) {

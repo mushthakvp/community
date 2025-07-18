@@ -1,4 +1,3 @@
-// lib/features/chat_module/vchat/presentation/widgets/friend_list_widgets.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -481,15 +480,21 @@ class FriendListWidget extends StatelessWidget {
 
   void _handleFriendTap(BuildContext context, dynamic friend) {
     final friendId = _extractId(friend);
+    final friendName = _extractFriendName(friend);
+    final friendImage = _extractFriendImage(friend);
+
     if (friendId.isNotEmpty) {
-      // Navigate to personal chat using correct route
+      debugPrint('Navigating to personal chat: $friendId');
+
+      // Navigate to personal chat with explicit parameters
       context.push(
         '/chat/$friendId',
         extra: {
-          'chatName': _extractFriendName(friend),
-          'chatImage': _extractFriendImage(friend),
+          'chatName': friendName,
+          'chatImage': friendImage,
           'isGroup': false,
           'isPersonal': true,
+          'chatType': 'personal', // Add this to be explicit
         },
       );
     }
@@ -497,15 +502,21 @@ class FriendListWidget extends StatelessWidget {
 
   void _handleChatTap(BuildContext context, dynamic friend) {
     final friendId = _extractId(friend);
+    final friendName = _extractFriendName(friend);
+    final friendImage = _extractFriendImage(friend);
+
     if (friendId.isNotEmpty) {
-      // Navigate to personal chat using correct route
+      debugPrint('Starting chat with friend: $friendId');
+
+      // Navigate to personal chat with explicit parameters
       context.push(
         '/chat/$friendId',
         extra: {
-          'chatName': _extractFriendName(friend),
-          'chatImage': _extractFriendImage(friend),
+          'chatName': friendName,
+          'chatImage': friendImage,
           'isGroup': false,
           'isPersonal': true,
+          'chatType': 'personal', // Add this to be explicit
         },
       );
     }

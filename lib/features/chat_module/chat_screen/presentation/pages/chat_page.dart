@@ -50,22 +50,47 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
         final provider = context.read<ChatProvider>();
         provider.setLoading(true);
 
-        // Determine chat type
-        ChatType chatType =
-            widget.chatType ??
-            (widget.isPersonal
-                ? ChatType.personal
-                : widget.isGroup
-                ? ChatType.group
-                : ChatType.group);
+        // Determine chat type based on the passed parameters
+        ChatType chatType;
 
-        provider.initializeChat(widget.chatId, chatType: chatType).then((_) {
-          if (mounted) {
-            setState(() {
-              _isInitialized = true;
+        if (widget.chatType != null) {
+          // Use explicitly passed chat type
+          chatType = widget.chatType!;
+        } else if (widget.isPersonal) {
+          // Personal chat explicitly set
+          chatType = ChatType.personal;
+        } else if (widget.isGroup) {
+          // Group chat explicitly set
+          chatType = ChatType.group;
+        } else {
+          // Auto-detect based on chatId length (heuristic)
+          // Adjust this logic based on your ID patterns
+          chatType = widget.chatId.length < 30
+              ? ChatType.personal
+              : ChatType.group;
+        }
+
+        debugPrint(
+          'ChatPage - Initializing chat: ${widget.chatId}, type: $chatType, isPersonal: ${widget.isPersonal}',
+        );
+
+        provider
+            .initializeChat(widget.chatId, chatType: chatType)
+            .then((_) {
+              if (mounted) {
+                setState(() {
+                  _isInitialized = true;
+                });
+              }
+            })
+            .catchError((error) {
+              debugPrint('Error initializing chat: $error');
+              if (mounted) {
+                setState(() {
+                  _isInitialized = true;
+                });
+              }
             });
-          }
-        });
       });
     }
   }
@@ -419,7 +444,10 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
               spacing: 12,
               children: [
                 ElevatedButton(
-                  onPressed: () => provider.initializeChat(widget.chatId),
+                  onPressed: () => provider.initializeChat(
+                    widget.chatId,
+                    chatType: provider.currentChatType,
+                  ),
                   child: const Text('Retry'),
                 ),
                 if (!provider.isSocketConnected)
