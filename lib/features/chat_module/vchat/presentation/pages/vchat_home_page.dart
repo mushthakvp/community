@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../shared/widgets/shimmer_widgets.dart';
+import '../../domain/entities/community_entity.dart';
 import '../providers/vchat_provider.dart';
 import '../widgets/chat_appbar_widget.dart';
 import '../widgets/chat_banner_widgets.dart';
@@ -143,19 +144,30 @@ class _VChatHomePageState extends State<VChatHomePage> {
   }
 
   Widget _buildMyGroupContent(VChatProvider provider) {
+    // FIXED: Handle friends and friend requests separately
     if (provider.selectedFilter == MyGroupFilter.friendRequest ||
         provider.selectedFilter == MyGroupFilter.myFriends) {
       return FriendListWidget(filter: provider.selectedFilter);
     }
 
-    return _buildCommunitiesList(provider.myGroups, provider.isLoading);
+    // For recently and joined filters, filter only CommunityEntity objects
+    final communities = provider.myGroups
+        .whereType<CommunityEntity>()
+        .cast<CommunityEntity>()
+        .toList();
+
+    return _buildCommunitiesList(communities, provider.isLoading);
   }
 
   Widget _buildCommunitiesContent(VChatProvider provider) {
     return _buildCommunitiesList(provider.communities, provider.isLoading);
   }
 
-  Widget _buildCommunitiesList(List<dynamic> communities, bool isLoading) {
+  // FIXED: Changed parameter type to specifically handle CommunityEntity list
+  Widget _buildCommunitiesList(
+    List<CommunityEntity> communities,
+    bool isLoading,
+  ) {
     if (isLoading && communities.isEmpty) {
       return const ChatShimmerWidget();
     }
@@ -197,6 +209,7 @@ class _VChatHomePageState extends State<VChatHomePage> {
       separatorBuilder: (_, __) => Divider(),
       itemBuilder: (context, index) {
         final community = communities[index];
+        // FIXED: Now we're guaranteed to pass CommunityEntity to CommunityTileWidget
         return CommunityTileWidget(community: community);
       },
     );
