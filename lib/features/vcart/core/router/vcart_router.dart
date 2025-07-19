@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../../categories/presentation/pages/categories_page.dart';
 import '../../home/presentation/pages/home_page.dart';
 import '../../navigation/presentation/pages/main_navigation_page.dart';
+import '../../product_overview/presentation/controllers/product_overview_controller.dart';
 import '../../product_overview/presentation/pages/product_overview_page.dart';
 
 class VCartRouter {
@@ -36,8 +37,24 @@ class VCartRouter {
       GetPage(name: vcartSearch, page: () => const VCartSearchPage()),
       GetPage(
         name: '$vcartProduct/:id',
-        page: () =>
-            VCartProductOverviewPage(productId: Get.parameters['id'] ?? ''),
+        page: () {
+          final productId = Get.parameters['id'] ?? '';
+          // Ensure controller is available when navigating to product page
+          Get.lazyPut<VCartProductOverviewController>(
+            () => Get.find<VCartProductOverviewController>(),
+            fenix: true,
+          );
+          return VCartProductOverviewPage(productId: productId);
+        },
+        binding: BindingsBuilder(() {
+          // Initialize product overview controller if not already present
+          if (!Get.isRegistered<VCartProductOverviewController>()) {
+            Get.lazyPut<VCartProductOverviewController>(
+              () => Get.find<VCartProductOverviewController>(),
+              fenix: true,
+            );
+          }
+        }),
       ),
       GetPage(name: vcartCategory, page: () => VCartCategoriesPage()),
     ];
@@ -76,6 +93,14 @@ class VCartRouter {
     } else {
       Get.offAllNamed(vcartHome);
     }
+  }
+
+  // Check if current route is within VCart
+  static bool get isInVCartContext {
+    final currentRoute = Get.currentRoute;
+    return currentRoute.startsWith('/vcart') ||
+        currentRoute.startsWith('/product') ||
+        currentRoute == vcartHome;
   }
 }
 

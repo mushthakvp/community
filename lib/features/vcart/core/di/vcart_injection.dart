@@ -46,8 +46,12 @@ class VCartInjection {
     // Data Sources
     Get.lazyPut<HomeRemoteDataSource>(
       () => HomeRemoteDataSourceImpl(apiClient: Get.find<ApiClient>()),
+      fenix: true, // Allows recreation if deleted
     );
-    Get.lazyPut<HomeLocalDataSource>(() => HomeLocalDataSourceImpl());
+    Get.lazyPut<HomeLocalDataSource>(
+      () => HomeLocalDataSourceImpl(),
+      fenix: true,
+    );
 
     // Repository
     Get.lazyPut<HomeRepository>(
@@ -56,30 +60,34 @@ class VCartInjection {
         localDataSource: Get.find<HomeLocalDataSource>(),
         networkInfo: Get.find<NetworkInfo>(),
       ),
+      fenix: true,
     );
 
     // Use Cases
-    Get.lazyPut(() => GetHomeData(Get.find<HomeRepository>()));
-    Get.lazyPut(() => GetLocation(Get.find<HomeRepository>()));
+    Get.lazyPut(() => GetHomeData(Get.find<HomeRepository>()), fenix: true);
+    Get.lazyPut(() => GetLocation(Get.find<HomeRepository>()), fenix: true);
 
-    // Controller
-    Get.lazyPut(
-      () => VCartHomeController(
+    // Controller - Use put instead of lazyPut for immediate creation
+    Get.put(
+      VCartHomeController(
         getHomeDataUseCase: Get.find<GetHomeData>(),
         getLocationUseCase: Get.find<GetLocation>(),
       ),
+      permanent: true,
     );
   }
 
   static void _initializeNavigationDependencies() {
     // Repository
-    Get.lazyPut<NavigationRepository>(() => NavigationRepositoryImpl());
+    Get.lazyPut<NavigationRepository>(
+      () => NavigationRepositoryImpl(),
+      fenix: true,
+    );
 
-    // Controller
-    Get.lazyPut(
-      () => VCartBottomNavController(
-        repository: Get.find<NavigationRepository>(),
-      ),
+    // Controller - Use put instead of lazyPut for immediate creation
+    Get.put(
+      VCartBottomNavController(repository: Get.find<NavigationRepository>()),
+      permanent: true,
     );
   }
 
@@ -87,9 +95,11 @@ class VCartInjection {
     // Data Sources
     Get.lazyPut<CategoriesRemoteDataSource>(
       () => CategoriesRemoteDataSourceImpl(apiClient: Get.find<ApiClient>()),
+      fenix: true,
     );
     Get.lazyPut<CategoriesLocalDataSource>(
       () => CategoriesLocalDataSourceImpl(),
+      fenix: true,
     );
 
     // Repository
@@ -99,23 +109,32 @@ class VCartInjection {
         localDataSource: Get.find<CategoriesLocalDataSource>(),
         networkInfo: Get.find<NetworkInfo>(),
       ),
+      fenix: true,
     );
 
     // Use Cases
-    Get.lazyPut(() => GetSections(Get.find<CategoriesRepository>()));
-    Get.lazyPut(() => GetCategoriesBySection(Get.find<CategoriesRepository>()));
+    Get.lazyPut(
+      () => GetSections(Get.find<CategoriesRepository>()),
+      fenix: true,
+    );
+    Get.lazyPut(
+      () => GetCategoriesBySection(Get.find<CategoriesRepository>()),
+      fenix: true,
+    );
     Get.lazyPut(
       () => GetSubCategoriesByCategory(Get.find<CategoriesRepository>()),
+      fenix: true,
     );
 
-    // Controller
-    Get.lazyPut(
-      () => VCartCategoriesController(
+    // Controller - Use put instead of lazyPut for immediate creation
+    Get.put(
+      VCartCategoriesController(
         getSectionsUseCase: Get.find<GetSections>(),
         getCategoriesBySectionUseCase: Get.find<GetCategoriesBySection>(),
         getSubCategoriesByCategoryUseCase:
             Get.find<GetSubCategoriesByCategory>(),
       ),
+      permanent: true,
     );
   }
 
@@ -124,9 +143,11 @@ class VCartInjection {
     Get.lazyPut<ProductOverviewRemoteDataSource>(
       () =>
           ProductOverviewRemoteDataSourceImpl(apiClient: Get.find<ApiClient>()),
+      fenix: true,
     );
     Get.lazyPut<ProductOverviewLocalDataSource>(
       () => ProductOverviewLocalDataSourceImpl(),
+      fenix: true,
     );
 
     // Repository
@@ -136,15 +157,28 @@ class VCartInjection {
         localDataSource: Get.find<ProductOverviewLocalDataSource>(),
         networkInfo: Get.find<NetworkInfo>(),
       ),
+      fenix: true,
     );
 
     // Use Cases
-    Get.lazyPut(() => GetProductDetail(Get.find<ProductOverviewRepository>()));
-    Get.lazyPut(() => GetProductReviews(Get.find<ProductOverviewRepository>()));
-    Get.lazyPut(() => AddToCart(Get.find<ProductOverviewRepository>()));
-    Get.lazyPut(() => ToggleWishlist(Get.find<ProductOverviewRepository>()));
+    Get.lazyPut(
+      () => GetProductDetail(Get.find<ProductOverviewRepository>()),
+      fenix: true,
+    );
+    Get.lazyPut(
+      () => GetProductReviews(Get.find<ProductOverviewRepository>()),
+      fenix: true,
+    );
+    Get.lazyPut(
+      () => AddToCart(Get.find<ProductOverviewRepository>()),
+      fenix: true,
+    );
+    Get.lazyPut(
+      () => ToggleWishlist(Get.find<ProductOverviewRepository>()),
+      fenix: true,
+    );
 
-    // Controller
+    // Controller - Use lazyPut for product overview as it's created on demand
     Get.lazyPut(
       () => VCartProductOverviewController(
         getProductDetailUseCase: Get.find<GetProductDetail>(),
@@ -152,39 +186,20 @@ class VCartInjection {
         addToCartUseCase: Get.find<AddToCart>(),
         toggleWishlistUseCase: Get.find<ToggleWishlist>(),
       ),
+      fenix: true,
     );
   }
 
   static void dispose() {
-    // Home
-    Get.delete<VCartHomeController>();
-    Get.delete<GetHomeData>();
-    Get.delete<GetLocation>();
-    Get.delete<HomeRepository>();
-    Get.delete<HomeRemoteDataSource>();
-    Get.delete<HomeLocalDataSource>();
-
-    // Navigation
-    Get.delete<VCartBottomNavController>();
-    Get.delete<NavigationRepository>();
-
-    // Categories
-    Get.delete<VCartCategoriesController>();
-    Get.delete<GetSections>();
-    Get.delete<GetCategoriesBySection>();
-    Get.delete<GetSubCategoriesByCategory>();
-    Get.delete<CategoriesRepository>();
-    Get.delete<CategoriesRemoteDataSource>();
-    Get.delete<CategoriesLocalDataSource>();
-
-    // Product Overview
-    Get.delete<VCartProductOverviewController>();
-    Get.delete<GetProductDetail>();
-    Get.delete<GetProductReviews>();
-    Get.delete<AddToCart>();
-    Get.delete<ToggleWishlist>();
-    Get.delete<ProductOverviewRepository>();
-    Get.delete<ProductOverviewRemoteDataSource>();
-    Get.delete<ProductOverviewLocalDataSource>();
+    if (Get.isRegistered<VCartProductOverviewController>()) {
+      Get.delete<VCartProductOverviewController>();
+    }
+    Get.delete<GetProductDetail>(force: true);
+    Get.delete<GetProductReviews>(force: true);
+    Get.delete<AddToCart>(force: true);
+    Get.delete<ToggleWishlist>(force: true);
+    Get.delete<ProductOverviewRepository>(force: true);
+    Get.delete<ProductOverviewRemoteDataSource>(force: true);
+    Get.delete<ProductOverviewLocalDataSource>(force: true);
   }
 }

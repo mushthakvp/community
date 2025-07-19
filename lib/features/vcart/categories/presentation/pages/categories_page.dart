@@ -14,7 +14,9 @@ class VCartCategoriesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Ensure controller is initialized before building
     return GetBuilder<VCartCategoriesController>(
+      init: Get.find<VCartCategoriesController>(),
       builder: (controller) {
         return Scaffold(
           backgroundColor: VCartColors.background,

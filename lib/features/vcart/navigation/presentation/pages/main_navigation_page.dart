@@ -6,7 +6,7 @@ import '../../../../../core/constants/route_constants.dart';
 import '../../../core/constants/vcart_colors.dart';
 import '../controllers/bottom_nav_controller.dart';
 
-class VCartMainNavigationPage extends StatelessWidget {
+class VCartMainNavigationPage extends StatefulWidget {
   final List<Widget> pages;
   final VoidCallback? onMarketplaceTap;
 
@@ -17,18 +17,33 @@ class VCartMainNavigationPage extends StatelessWidget {
   });
 
   @override
+  State<VCartMainNavigationPage> createState() =>
+      _VCartMainNavigationPageState();
+}
+
+class _VCartMainNavigationPageState extends State<VCartMainNavigationPage> {
+  late VCartBottomNavController controller;
+
+  @override
+  void initState() {
+    super.initState();
+    // Ensure controller is properly initialized
+    controller = Get.find<VCartBottomNavController>();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return GetBuilder<VCartBottomNavController>(
-      init: Get.find<VCartBottomNavController>(),
-      builder: (controller) {
+      init: controller,
+      builder: (navController) {
         return Scaffold(
           backgroundColor: VCartColors.background,
           body: PageView(
-            controller: controller.pageController,
+            controller: navController.pageController,
             onPageChanged: (index) {
-              controller.setCurrentIndex(index);
+              navController.setCurrentIndex(index);
             },
-            children: pages,
+            children: widget.pages,
           ),
           floatingActionButton: FloatingActionButton(
             shape: const CircleBorder(),
@@ -50,17 +65,17 @@ class VCartMainNavigationPage extends StatelessWidget {
               height: 60,
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Obx(() {
-                if (controller.isLoading || controller.navItems.isEmpty) {
+                if (navController.isLoading || navController.navItems.isEmpty) {
                   return const SizedBox.shrink();
                 }
                 return Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildNavItem(controller.navItems[0], controller),
-                    _buildNavItem(controller.navItems[1], controller),
+                    _buildNavItem(navController.navItems[0], navController),
+                    _buildNavItem(navController.navItems[1], navController),
                     const SizedBox(width: 40),
-                    _buildNavItem(controller.navItems[2], controller),
-                    _buildNavItem(controller.navItems[3], controller),
+                    _buildNavItem(navController.navItems[2], navController),
+                    _buildNavItem(navController.navItems[3], navController),
                   ],
                 );
               }),
@@ -75,7 +90,9 @@ class VCartMainNavigationPage extends StatelessWidget {
     final isSelected = controller.currentIndex == item.id;
 
     return GestureDetector(
-      onTap: () => controller.setCurrentIndex(item.id),
+      onTap: () {
+        controller.setCurrentIndex(item.id);
+      },
       behavior: HitTestBehavior.opaque,
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
