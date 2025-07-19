@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
@@ -21,15 +22,32 @@ class VCartSearchPage extends StatefulWidget {
   State<VCartSearchPage> createState() => _VCartSearchPageState();
 }
 
-class _VCartSearchPageState extends State<VCartSearchPage> {
+class _VCartSearchPageState extends State<VCartSearchPage>
+    with WidgetsBindingObserver {
   final ScrollController _scrollController = ScrollController();
   late VCartSearchController controller;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     controller = Get.find<VCartSearchController>();
     _setupScrollController();
+
+    // Override system back button for this page
+    _setupSystemBackHandler();
+  }
+
+  void _setupSystemBackHandler() {
+    // Listen for system back button
+    SystemChannels.navigation.setMethodCallHandler((call) async {
+      if (call.method == 'routePopped') {
+        debugPrint('🔙 Search Page: System back detected via SystemChannels');
+        VCartRouterG.backInVCart();
+        return true;
+      }
+      return null;
+    });
   }
 
   void _setupScrollController() {
@@ -45,41 +63,59 @@ class _VCartSearchPageState extends State<VCartSearchPage> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _scrollController.dispose();
+    // Reset system channel handler
+    SystemChannels.navigation.setMethodCallHandler(null);
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: VCartColors.background,
-      body: GetBuilder<VCartSearchController>(
-        init: controller,
-        builder: (controller) {
-          return Obx(() {
-            if (controller.hasError) {
-              return VCartErrorWidget(
-                message: controller.errorMessage,
-                onRetry: () => controller.refreshData(),
-              );
-            }
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    debugPrint('🔄 Search Page: App lifecycle state changed to $state');
+  }
 
-            return CustomScrollView(
-              controller: _scrollController,
-              slivers: [
-                _buildAppBar(),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: context.defaultPadding,
-                    child: controller.isSearched
-                        ? _buildSearchResults()
-                        : _buildSearchHome(),
+  @override
+  Widget build(BuildContext context) {
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (bool didPop) {
+        if (!didPop) {
+          debugPrint('🔙 Search Page: PopScope system back pressed');
+          VCartRouterG.backInVCart();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: VCartColors.background,
+        body: GetBuilder<VCartSearchController>(
+          init: controller,
+          builder: (controller) {
+            return Obx(() {
+              if (controller.hasError) {
+                return VCartErrorWidget(
+                  message: controller.errorMessage,
+                  onRetry: () => controller.refreshData(),
+                );
+              }
+
+              return CustomScrollView(
+                controller: _scrollController,
+                slivers: [
+                  _buildAppBar(),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: context.defaultPadding,
+                      child: controller.isSearched
+                          ? _buildSearchResults()
+                          : _buildSearchHome(),
+                    ),
                   ),
-                ),
-              ],
-            );
-          });
-        },
+                ],
+              );
+            });
+          },
+        ),
       ),
     );
   }
@@ -90,6 +126,7 @@ class _VCartSearchPageState extends State<VCartSearchPage> {
       pinned: true,
       floating: true,
       expandedHeight: 120.0,
+      automaticallyImplyLeading: false,
       leading: Padding(
         padding: const EdgeInsets.only(left: 8.0),
         child: IconButton(
@@ -104,7 +141,10 @@ class _VCartSearchPageState extends State<VCartSearchPage> {
               child: Icon(Icons.arrow_back, color: VCartColors.textPrimary),
             ),
           ),
-          onPressed: () => VCartRouterG.backInVCart(),
+          onPressed: () {
+            debugPrint('🔙 Search Page: App bar back pressed');
+            VCartRouterG.backInVCart();
+          },
         ),
       ),
       title: const Text(

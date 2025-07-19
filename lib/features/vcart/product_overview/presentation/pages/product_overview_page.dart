@@ -86,7 +86,6 @@ class _VCartProductOverviewPageState extends State<VCartProductOverviewPage>
         }
       });
     }
-
     if (shouldShowAppBar != _showAppBar) {
       setState(() {
         _showAppBar = shouldShowAppBar;
@@ -106,12 +105,10 @@ class _VCartProductOverviewPageState extends State<VCartProductOverviewPage>
   Widget build(BuildContext context) {
     return GetBuilder<VCartProductOverviewController>(
       builder: (controller) {
-        return PopScope(
-          canPop: false, // Prevent default back behavior
-          onPopInvoked: (bool didPop) {
-            if (!didPop) {
-              _handleBackPress();
-            }
+        return WillPopScope(
+          onWillPop: () async {
+            _handleBackPress();
+            return false;
           },
           child: Scaffold(
             backgroundColor: VCartColors.background,
@@ -199,6 +196,6 @@ class _VCartProductOverviewPageState extends State<VCartProductOverviewPage>
   }
 
   void _handleBackPress() {
-    VCartRouterG.backToVCartHome();
+    VCartRouterG.backInVCart();
   }
 }

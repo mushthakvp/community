@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../../core/constants/route_constants.dart';
 import '../../../core/constants/vcart_colors.dart';
+import '../../../core/router/vcart_router.dart';
 import '../controllers/bottom_nav_controller.dart';
 
 class VCartMainNavigationPage extends StatefulWidget {
@@ -30,23 +32,49 @@ class _VCartMainNavigationPageState extends State<VCartMainNavigationPage>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     controller = Get.find<VCartBottomNavController>();
-
-    // Ensure we're on the home tab when entering VCart
     WidgetsBinding.instance.addPostFrameCallback((_) {
       controller.resetToHome();
+      VCartRouterG.resetNavigationFlags();
     });
+    _setupSystemBackHandler();
+  }
+
+  void _setupSystemBackHandler() {
+    SystemChannels.navigation.setMethodCallHandler((call) async {
+      if (call.method == 'routePopped') {
+        debugPrint(
+          '🔙 Main Navigation: System back detected via SystemChannels',
+        );
+        await _handleSystemBack();
+        return true;
+      }
+      return null;
+    });
+  }
+
+  Future<void> _handleSystemBack() async {
+    debugPrint('🔙 Main Navigation: Handle system back');
+    debugPrint('Current tab index: ${controller.currentIndex}');
+    debugPrint('Is in VCart context: ${VCartRouterG.isInVCartContext}');
+    if (controller.currentIndex != 0) {
+      debugPrint('Not on home tab, switching to home');
+      controller.setCurrentIndex(0);
+    } else {
+      debugPrint('On home tab, staying in VCart');
+    }
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    SystemChannels.navigation.setMethodCallHandler(null);
     super.dispose();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    // Reset to home when app becomes active
+    debugPrint('🔄 Main Navigation: App lifecycle state changed to $state');
     if (state == AppLifecycleState.resumed) {
       controller.resetToHome();
     }
@@ -58,10 +86,11 @@ class _VCartMainNavigationPageState extends State<VCartMainNavigationPage>
       init: controller,
       builder: (navController) {
         return PopScope(
-          canPop: false, // Prevent default back behavior
-          onPopInvoked: (bool didPop) {
+          canPop: false,
+          onPopInvoked: (bool didPop) async {
             if (!didPop) {
-              _handleBackPress();
+              debugPrint('🔙 Main Navigation: PopScope system back pressed');
+              await _handleSystemBack();
             }
           },
           child: Scaffold(
@@ -76,6 +105,9 @@ class _VCartMainNavigationPageState extends State<VCartMainNavigationPage>
             floatingActionButton: FloatingActionButton(
               shape: const CircleBorder(),
               onPressed: () {
+                debugPrint(
+                  '🏠 Main Navigation: Floating action button pressed - exiting VCart',
+                );
                 if (context.mounted) {
                   try {
                     context.go(RouteConstants.home);
@@ -127,25 +159,6 @@ class _VCartMainNavigationPageState extends State<VCartMainNavigationPage>
         );
       },
     );
-  }
-
-  void _handleBackPress() {
-    // Handle back press within VCart main navigation
-    if (controller.currentIndex != 0) {
-      // If not on home tab, go to home tab
-      controller.setCurrentIndex(0);
-    } else {
-      // If on home tab, exit VCart and go to main app
-      if (context.mounted) {
-        try {
-          context.go(RouteConstants.home);
-        } catch (e) {
-          if (widget.onMarketplaceTap != null) {
-            widget.onMarketplaceTap!();
-          }
-        }
-      }
-    }
   }
 
   Widget _buildNavItem(dynamic item, VCartBottomNavController controller) {

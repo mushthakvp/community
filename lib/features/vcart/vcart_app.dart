@@ -26,6 +26,30 @@ class VCartApp extends StatelessWidget {
           ],
         ),
         getPages: VCartRouterG.getPages(),
+        navigatorObservers: [VCartRouterG.observer],
+        onGenerateRoute: (settings) {
+          debugPrint('🛣️ VCart: Generate route for ${settings.name}');
+          return null;
+        },
+        unknownRoute: GetPage(
+          name: '/unknown',
+          page: () => const VCartMainNavigationPage(
+            pages: [
+              VCartHomePage(),
+              VCartCategoriesPage(),
+              VCartCartPage(),
+              VCartProfilePage(),
+            ],
+          ),
+        ),
+        enableLog: true,
+        logWriterCallback: (text, {bool isError = false}) {
+          if (text.contains('ROUTE') ||
+              text.contains('GOING') ||
+              text.contains('CLOSE')) {
+            debugPrint('🛣️ GetX Route: $text');
+          }
+        },
       ),
     );
   }
