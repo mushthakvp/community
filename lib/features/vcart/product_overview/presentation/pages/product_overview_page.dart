@@ -106,10 +106,12 @@ class _VCartProductOverviewPageState extends State<VCartProductOverviewPage>
   Widget build(BuildContext context) {
     return GetBuilder<VCartProductOverviewController>(
       builder: (controller) {
-        return WillPopScope(
-          onWillPop: () async {
-            _handleBackPress();
-            return false;
+        return PopScope(
+          canPop: false, // Prevent default back behavior
+          onPopInvoked: (bool didPop) {
+            if (!didPop) {
+              _handleBackPress();
+            }
           },
           child: Scaffold(
             backgroundColor: VCartColors.background,
@@ -197,15 +199,6 @@ class _VCartProductOverviewPageState extends State<VCartProductOverviewPage>
   }
 
   void _handleBackPress() {
-    final currentRoute = Get.currentRoute;
-    if (currentRoute.startsWith('/vcart') || currentRoute.contains('product')) {
-      VCartRouterG.backToVCartHome();
-    } else {
-      if (Navigator.canPop(context)) {
-        Navigator.pop(context);
-      } else {
-        VCartRouterG.backToVCartHome();
-      }
-    }
+    VCartRouterG.backToVCartHome();
   }
 }

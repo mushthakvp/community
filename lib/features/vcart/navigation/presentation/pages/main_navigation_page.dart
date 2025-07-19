@@ -57,16 +57,12 @@ class _VCartMainNavigationPageState extends State<VCartMainNavigationPage>
     return GetBuilder<VCartBottomNavController>(
       init: controller,
       builder: (navController) {
-        return WillPopScope(
-          onWillPop: () async {
-            // Handle back press within VCart
-            if (navController.currentIndex != 0) {
-              // If not on home tab, go to home tab
-              navController.setCurrentIndex(0);
-              return false;
+        return PopScope(
+          canPop: false, // Prevent default back behavior
+          onPopInvoked: (bool didPop) {
+            if (!didPop) {
+              _handleBackPress();
             }
-            // If on home tab, allow normal back navigation
-            return true;
           },
           child: Scaffold(
             backgroundColor: VCartColors.background,
@@ -131,6 +127,25 @@ class _VCartMainNavigationPageState extends State<VCartMainNavigationPage>
         );
       },
     );
+  }
+
+  void _handleBackPress() {
+    // Handle back press within VCart main navigation
+    if (controller.currentIndex != 0) {
+      // If not on home tab, go to home tab
+      controller.setCurrentIndex(0);
+    } else {
+      // If on home tab, exit VCart and go to main app
+      if (context.mounted) {
+        try {
+          context.go(RouteConstants.home);
+        } catch (e) {
+          if (widget.onMarketplaceTap != null) {
+            widget.onMarketplaceTap!();
+          }
+        }
+      }
+    }
   }
 
   Widget _buildNavItem(dynamic item, VCartBottomNavController controller) {

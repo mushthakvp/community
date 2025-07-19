@@ -99,45 +99,47 @@ class VCartRouterG {
 
   static void backInVCart() {
     final currentRoute = Get.currentRoute;
-
-    // If we're in a VCart route, handle navigation properly
     if (currentRoute.startsWith('/vcart')) {
       if (currentRoute == vcartHome) {
-        // If already at VCart home, don't navigate
         return;
       } else if (_isVCartSubRoute(currentRoute)) {
-        // If in a VCart sub-route, go back to VCart home
         _resetBottomNavToHome();
         Get.offAllNamed(vcartHome);
       } else if (Get.key.currentState?.canPop() ?? false) {
-        // If can pop, just go back
-        Get.back();
+        final canPop = Get.key.currentState?.canPop() ?? false;
+        if (canPop) {
+          final routeHistory = Get.previousRoute;
+          if (routeHistory.startsWith('/vcart')) {
+            Get.back();
+          } else {
+            _resetBottomNavToHome();
+            Get.offAllNamed(vcartHome);
+          }
+        } else {
+          _resetBottomNavToHome();
+          Get.offAllNamed(vcartHome);
+        }
       } else {
-        // Otherwise go to VCart home
         _resetBottomNavToHome();
         Get.offAllNamed(vcartHome);
       }
     } else {
-      // If not in VCart, go to VCart home
       _resetBottomNavToHome();
       Get.offAllNamed(vcartHome);
     }
   }
 
-  // Helper method to reset bottom navigation to home tab
   static void _resetBottomNavToHome() {
     try {
       if (Get.isRegistered<VCartBottomNavController>()) {
         final bottomNavController = Get.find<VCartBottomNavController>();
-        bottomNavController.setCurrentIndex(0); // Set to home tab
+        bottomNavController.setCurrentIndex(0);
       }
     } catch (e) {
-      // If controller not found, ignore error
       debugPrint('Bottom nav controller not found: $e');
     }
   }
 
-  // Helper method to check if current route is a VCart sub-route
   static bool _isVCartSubRoute(String route) {
     return route == vcartSearch ||
         route == vcartWishlist ||
@@ -145,11 +147,10 @@ class VCartRouterG {
         route == vcartCategory;
   }
 
-  // Check if current route is within VCart
   static bool get isInVCartContext {
     final currentRoute = Get.currentRoute;
     return currentRoute.startsWith('/vcart') ||
-        currentRoute.startsWith('/product') ||
+        currentRoute.startsWith(vcartProduct) ||
         currentRoute == vcartHome;
   }
 }
