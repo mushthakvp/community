@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:developer';
 
 import '../../../../../core/error/exceptions.dart';
 import '../../../../../core/network/api_client.dart';
@@ -19,7 +18,6 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
   Future<HomeDataModel> getHomeData() async {
     try {
       final response = await apiClient.get(VCartEndpoints.homeData);
-      log('Response: ${response.body}');
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         return HomeDataModel.fromJson(data);

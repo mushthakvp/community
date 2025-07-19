@@ -97,8 +97,8 @@ class _VChatHomePageState extends State<VChatHomePage> {
     final filters = [
       MyGroupFilter.recently,
       MyGroupFilter.joined,
-      MyGroupFilter.friendRequest,
-      MyGroupFilter.myFriends,
+      // MyGroupFilter.friendRequest,
+      // MyGroupFilter.myFriends,
     ];
 
     return SizedBox(

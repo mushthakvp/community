@@ -45,6 +45,10 @@ import '../../features/chat_module/create_community/domain/usecases/leave_commun
 import '../../features/chat_module/create_community/domain/usecases/update_community.dart';
 import '../../features/chat_module/create_community/domain/usecases/upload_profile_image.dart';
 import '../../features/chat_module/create_community/presentation/providers/community_provider.dart';
+// Personal Chat Imports - ADD THESE IMPORTS
+import '../../features/chat_module/personal_chat/data/datasources/personal_chat_remote_datasource.dart';
+import '../../features/chat_module/personal_chat/data/repositories/personal_chat_repository_impl.dart';
+import '../../features/chat_module/personal_chat/domain/repositories/personal_chat_repository.dart';
 // VChat Community Imports
 import '../../features/chat_module/vchat/data/datasources/community_remote_datasource.dart';
 import '../../features/chat_module/vchat/data/repositories/community_repository_impl.dart';
@@ -83,6 +87,16 @@ class ChatProviders {
     // Chat Profile Local Data Source
     Provider<ChatProfileLocalDataSource>(
       create: (_) => ChatProfileLocalDataSourceImpl(),
+    ),
+
+    // ========================================
+    // PERSONAL CHAT DATA SOURCES - ADD THESE
+    // ========================================
+
+    // Personal Chat Remote Data Source (uses chat API client)
+    ProxyProvider<ApiClientWrapper, PersonalChatRemoteDataSource>(
+      update: (_, wrapper, __) =>
+          PersonalChatRemoteDataSourceImpl(apiClient: wrapper.chatClient),
     ),
 
     // ========================================
@@ -131,6 +145,19 @@ class ChatProviders {
             remoteDataSource: remoteDataSource,
             localDataSource: localDataSource,
             networkInfo: networkInfo,
+          ),
+    ),
+
+    // Personal Chat Repository - ADD THIS
+    ProxyProvider2<
+      PersonalChatRemoteDataSource,
+      SocketDataSource,
+      PersonalChatRepository
+    >(
+      update: (_, remoteDataSource, socketDataSource, __) =>
+          PersonalChatRepositoryImpl(
+            remoteDataSource: remoteDataSource,
+            socketDataSource: socketDataSource,
           ),
     ),
 
@@ -295,12 +322,13 @@ class ChatProviders {
     // PROVIDERS
     // ========================================
 
-    // Chat Provider
-    ChangeNotifierProxyProvider4<
+    // Chat Provider - UPDATED TO INCLUDE PersonalChatRepository
+    ChangeNotifierProxyProvider5<
       FetchMessages,
       SendMessage,
       UploadMedia,
       ChatRepository,
+      PersonalChatRepository,
       ChatProvider
     >(
       create: (context) => ChatProvider(
@@ -312,6 +340,7 @@ class ChatProviders {
           context.read<ChatRepository>(),
         ),
         socketDataSource: context.read<SocketDataSource>(),
+        personalChatRepository: context.read<PersonalChatRepository>(),
       ),
       update:
           (
@@ -320,6 +349,7 @@ class ChatProviders {
             sendMessage,
             uploadMedia,
             chatRepository,
+            personalChatRepository,
             previous,
           ) =>
               previous ??
@@ -330,6 +360,7 @@ class ChatProviders {
                 chatRepository: chatRepository,
                 fetchChatWithMessages: FetchChatWithMessages(chatRepository),
                 socketDataSource: SocketDataSourceImpl(),
+                personalChatRepository: personalChatRepository,
               ),
     ),
 

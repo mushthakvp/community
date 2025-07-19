@@ -47,13 +47,7 @@ class ChatAppBarWidget extends StatelessWidget {
                     ),
                   ),
                   const Spacer(),
-                  Row(
-                    children: [
-                      _buildTabSelector(context),
-                      const SizedBox(width: 12),
-                      _buildPersonalChatButton(context),
-                    ],
-                  ),
+                  Row(children: [_buildTabSelector(context)]),
                 ],
               ),
             ],
@@ -94,10 +88,7 @@ class ChatAppBarWidget extends StatelessWidget {
               return DropdownMenuItem(
                 value: tab,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -126,26 +117,6 @@ class ChatAppBarWidget extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-
-  Widget _buildPersonalChatButton(BuildContext context) {
-    return IconButton(
-      onPressed: () {
-        // Navigate to personal chat list
-        context.push('/personal-chat');
-      },
-      icon: Icon(
-        Icons.chat_bubble_outline,
-        color: Theme.of(context).colorScheme.onPrimary,
-      ),
-      style: IconButton.styleFrom(
-        backgroundColor: Theme.of(
-          context,
-        ).colorScheme.onPrimary.withOpacity(0.15),
-        padding: const EdgeInsets.all(12),
-      ),
-      tooltip: 'Personal Chats',
     );
   }
 

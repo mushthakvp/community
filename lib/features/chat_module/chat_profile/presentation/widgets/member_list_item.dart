@@ -7,7 +7,7 @@ import '../../domain/entities/community_member_entity.dart';
 class MemberListItem extends StatelessWidget {
   final CommunityMemberEntity member;
   final bool isCreator;
-  final VoidCallback? onRemove; 
+  final VoidCallback? onRemove;
   final VoidCallback? onSendFriendRequest;
   final VoidCallback? onChat;
   final bool isLoading;
@@ -179,78 +179,78 @@ class MemberListItem extends StatelessWidget {
           ),
 
           // Action Buttons - Removed Remove Member option
-          if (!member.isCurrentUser) ...[
-            const SizedBox(width: 12),
-            _buildActionButtons(),
-          ],
+          // if (!member.isCurrentUser) ...[
+          //   const SizedBox(width: 12),
+          //   _buildActionButtons(),
+          // ],
         ],
       ),
     );
   }
 
-  Widget _buildActionButtons() {
-    if (isLoading) {
-      return const SizedBox(
-        width: 20,
-        height: 20,
-        child: CircularProgressIndicator(strokeWidth: 2),
-      );
-    }
+  // Widget _buildActionButtons() {
+  //   if (isLoading) {
+  //     return const SizedBox(
+  //       width: 20,
+  //       height: 20,
+  //       child: CircularProgressIndicator(strokeWidth: 2),
+  //     );
+  //   }
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Chat Button (for friends)
-        if (member.isFriend && onChat != null) ...[
-          GestureDetector(
-            onTap: onChat,
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppConstants.primary,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(Icons.chat, color: Colors.white, size: 16),
-            ),
-          ),
-          const SizedBox(width: 8),
-        ],
+  //   return Row(
+  //     mainAxisSize: MainAxisSize.min,
+  //     children: [
+  //       // Chat Button (for friends)
+  //       if (member.isFriend && onChat != null) ...[
+  //         GestureDetector(
+  //           onTap: onChat,
+  //           child: Container(
+  //             padding: const EdgeInsets.all(8),
+  //             decoration: BoxDecoration(
+  //               color: AppConstants.primary,
+  //               borderRadius: BorderRadius.circular(8),
+  //             ),
+  //             child: const Icon(Icons.chat, color: Colors.white, size: 16),
+  //           ),
+  //         ),
+  //         const SizedBox(width: 8),
+  //       ],
 
-        // Friend Request Button
-        if (!member.isFriend &&
-            !member.isRequested &&
-            onSendFriendRequest != null)
-          GestureDetector(
-            onTap: onSendFriendRequest,
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.blue.withOpacity(0.3)),
-              ),
-              child: const Icon(Icons.person_add, color: Colors.blue, size: 16),
-            ),
-          ),
+  //       // Friend Request Button
+  //       if (!member.isFriend &&
+  //           !member.isRequested &&
+  //           onSendFriendRequest != null)
+  //         GestureDetector(
+  //           onTap: onSendFriendRequest,
+  //           child: Container(
+  //             padding: const EdgeInsets.all(8),
+  //             decoration: BoxDecoration(
+  //               color: Colors.blue.withOpacity(0.2),
+  //               borderRadius: BorderRadius.circular(8),
+  //               border: Border.all(color: Colors.blue.withOpacity(0.3)),
+  //             ),
+  //             child: const Icon(Icons.person_add, color: Colors.blue, size: 16),
+  //           ),
+  //         ),
 
-        // Request Sent Indicator
-        if (member.isRequested)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.orange.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Text(
-              'Sent',
-              style: TextStyle(
-                color: Colors.orange,
-                fontSize: 10,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-      ],
-    );
-  }
+  //       // Request Sent Indicator
+  //       if (member.isRequested)
+  //         Container(
+  //           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+  //           decoration: BoxDecoration(
+  //             color: Colors.orange.withOpacity(0.2),
+  //             borderRadius: BorderRadius.circular(8),
+  //           ),
+  //           child: const Text(
+  //             'Sent',
+  //             style: TextStyle(
+  //               color: Colors.orange,
+  //               fontSize: 10,
+  //               fontWeight: FontWeight.w500,
+  //             ),
+  //           ),
+  //         ),
+  //     ],
+  //   );
+  // }
 }
