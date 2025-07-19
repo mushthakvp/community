@@ -6,6 +6,7 @@ import 'core/bridge/vcart_provider_bridge.dart';
 import 'core/router/vcart_router.dart';
 import 'home/presentation/pages/home_page.dart';
 import 'navigation/presentation/pages/main_navigation_page.dart';
+import 'profile/presentation/pages/profile_page.dart';
 
 class VCartApp extends StatelessWidget {
   const VCartApp({super.key});

@@ -33,6 +33,28 @@ import '../../product_overview/domain/usecases/get_product_detail.dart';
 import '../../product_overview/domain/usecases/get_product_reviews.dart';
 import '../../product_overview/domain/usecases/toggle_wishlist.dart';
 import '../../product_overview/presentation/controllers/product_overview_controller.dart';
+// Profile dependencies
+import '../../profile/data/datasources/profile_local_datasource.dart';
+import '../../profile/data/datasources/profile_remote_datasource.dart';
+import '../../profile/data/repositories/profile_repository_impl.dart';
+import '../../profile/domain/repositories/profile_repository.dart';
+import '../../profile/domain/usecases/get_profile_data.dart';
+import '../../profile/presentation/controllers/profile_controller.dart';
+// Search dependencies
+import '../../search/data/datasources/search_local_datasource.dart';
+import '../../search/data/datasources/search_remote_datasource.dart';
+import '../../search/data/repositories/search_repository_impl.dart';
+import '../../search/domain/repositories/search_repository.dart';
+import '../../search/domain/usecases/get_search_data.dart';
+import '../../search/domain/usecases/search_products.dart';
+import '../../search/presentation/controllers/search_controller.dart';
+// Wishlist dependencies
+import '../../wishlist/data/datasources/wishlist_remote_datasource.dart';
+import '../../wishlist/data/repositories/wishlist_repository_impl.dart';
+import '../../wishlist/domain/repositories/wishlist_repository.dart';
+import '../../wishlist/domain/usecases/get_wishlist_data.dart';
+import '../../wishlist/domain/usecases/toggle_wishlist_item.dart';
+import '../../wishlist/presentation/controllers/wishlist_controller.dart';
 
 class VCartInjection {
   static void init() {
@@ -40,13 +62,16 @@ class VCartInjection {
     _initializeNavigationDependencies();
     _initializeCategoriesDependencies();
     _initializeProductOverviewDependencies();
+    _initializeProfileDependencies();
+    _initializeSearchDependencies();
+    _initializeWishlistDependencies();
   }
 
   static void _initializeHomeDependencies() {
     // Data Sources
     Get.lazyPut<HomeRemoteDataSource>(
       () => HomeRemoteDataSourceImpl(apiClient: Get.find<ApiClient>()),
-      fenix: true, // Allows recreation if deleted
+      fenix: true,
     );
     Get.lazyPut<HomeLocalDataSource>(
       () => HomeLocalDataSourceImpl(),
@@ -67,7 +92,7 @@ class VCartInjection {
     Get.lazyPut(() => GetHomeData(Get.find<HomeRepository>()), fenix: true);
     Get.lazyPut(() => GetLocation(Get.find<HomeRepository>()), fenix: true);
 
-    // Controller - Use put instead of lazyPut for immediate creation
+    // Controller
     Get.put(
       VCartHomeController(
         getHomeDataUseCase: Get.find<GetHomeData>(),
@@ -84,7 +109,7 @@ class VCartInjection {
       fenix: true,
     );
 
-    // Controller - Use put instead of lazyPut for immediate creation
+    // Controller
     Get.put(
       VCartBottomNavController(repository: Get.find<NavigationRepository>()),
       permanent: true,
@@ -126,7 +151,7 @@ class VCartInjection {
       fenix: true,
     );
 
-    // Controller - Use put instead of lazyPut for immediate creation
+    // Controller
     Get.put(
       VCartCategoriesController(
         getSectionsUseCase: Get.find<GetSections>(),
@@ -178,7 +203,7 @@ class VCartInjection {
       fenix: true,
     );
 
-    // Controller - Use lazyPut for product overview as it's created on demand
+    // Controller
     Get.lazyPut(
       () => VCartProductOverviewController(
         getProductDetailUseCase: Get.find<GetProductDetail>(),
@@ -190,16 +215,144 @@ class VCartInjection {
     );
   }
 
+  static void _initializeProfileDependencies() {
+    // Data Sources
+    Get.lazyPut<ProfileRemoteDataSource>(
+      () => ProfileRemoteDataSourceImpl(apiClient: Get.find<ApiClient>()),
+      fenix: true,
+    );
+    Get.lazyPut<ProfileLocalDataSource>(
+      () => ProfileLocalDataSourceImpl(),
+      fenix: true,
+    );
+
+    // Repository
+    Get.lazyPut<ProfileRepository>(
+      () => ProfileRepositoryImpl(
+        remoteDataSource: Get.find<ProfileRemoteDataSource>(),
+        localDataSource: Get.find<ProfileLocalDataSource>(),
+        networkInfo: Get.find<NetworkInfo>(),
+      ),
+      fenix: true,
+    );
+
+    // Use Cases
+    Get.lazyPut(
+      () => GetProfileData(Get.find<ProfileRepository>()),
+      fenix: true,
+    );
+
+    // Controller
+    Get.put(
+      VCartProfileController(getProfileDataUseCase: Get.find<GetProfileData>()),
+      permanent: true,
+    );
+  }
+
+  static void _initializeSearchDependencies() {
+    // Data Sources
+    Get.lazyPut<SearchRemoteDataSource>(
+      () => SearchRemoteDataSourceImpl(apiClient: Get.find<ApiClient>()),
+      fenix: true,
+    );
+    Get.lazyPut<SearchLocalDataSource>(
+      () => SearchLocalDataSourceImpl(),
+      fenix: true,
+    );
+
+    // Repository
+    Get.lazyPut<SearchRepository>(
+      () => SearchRepositoryImpl(
+        remoteDataSource: Get.find<SearchRemoteDataSource>(),
+        localDataSource: Get.find<SearchLocalDataSource>(),
+        networkInfo: Get.find<NetworkInfo>(),
+      ),
+      fenix: true,
+    );
+
+    // Use Cases
+    Get.lazyPut(() => GetSearchData(Get.find<SearchRepository>()), fenix: true);
+    Get.lazyPut(
+      () => SearchProducts(Get.find<SearchRepository>()),
+      fenix: true,
+    );
+
+    // Controller
+    Get.put(
+      VCartSearchController(
+        getSearchDataUseCase: Get.find<GetSearchData>(),
+        searchProductsUseCase: Get.find<SearchProducts>(),
+      ),
+      permanent: true,
+    );
+  }
+
+  static void _initializeWishlistDependencies() {
+    // Data Sources
+    Get.lazyPut<WishlistRemoteDataSource>(
+      () => WishlistRemoteDataSourceImpl(apiClient: Get.find<ApiClient>()),
+      fenix: true,
+    );
+
+    // Repository
+    Get.lazyPut<WishlistRepository>(
+      () => WishlistRepositoryImpl(
+        remoteDataSource: Get.find<WishlistRemoteDataSource>(),
+        networkInfo: Get.find<NetworkInfo>(),
+      ),
+      fenix: true,
+    );
+
+    // Use Cases
+    Get.lazyPut(
+      () => GetWishlistData(Get.find<WishlistRepository>()),
+      fenix: true,
+    );
+    Get.lazyPut(
+      () => ToggleWishlistItem(Get.find<WishlistRepository>()),
+      fenix: true,
+    );
+
+    // Controller
+    Get.put(
+      VCartWishlistController(
+        getWishlistDataUseCase: Get.find<GetWishlistData>(),
+        toggleWishlistItemUseCase: Get.find<ToggleWishlistItem>(),
+      ),
+      permanent: true,
+    );
+  }
+
   static void dispose() {
+    // Dispose controllers that need cleanup
     if (Get.isRegistered<VCartProductOverviewController>()) {
       Get.delete<VCartProductOverviewController>();
     }
+
+    // Dispose use cases
     Get.delete<GetProductDetail>(force: true);
     Get.delete<GetProductReviews>(force: true);
     Get.delete<AddToCart>(force: true);
     Get.delete<ToggleWishlist>(force: true);
+    Get.delete<GetProfileData>(force: true);
+    Get.delete<GetSearchData>(force: true);
+    Get.delete<SearchProducts>(force: true);
+    Get.delete<GetWishlistData>(force: true);
+    Get.delete<ToggleWishlistItem>(force: true);
+
+    // Dispose repositories
     Get.delete<ProductOverviewRepository>(force: true);
+    Get.delete<ProfileRepository>(force: true);
+    Get.delete<SearchRepository>(force: true);
+    Get.delete<WishlistRepository>(force: true);
+
+    // Dispose data sources
     Get.delete<ProductOverviewRemoteDataSource>(force: true);
     Get.delete<ProductOverviewLocalDataSource>(force: true);
+    Get.delete<ProfileRemoteDataSource>(force: true);
+    Get.delete<ProfileLocalDataSource>(force: true);
+    Get.delete<SearchRemoteDataSource>(force: true);
+    Get.delete<SearchLocalDataSource>(force: true);
+    Get.delete<WishlistRemoteDataSource>(force: true);
   }
 }

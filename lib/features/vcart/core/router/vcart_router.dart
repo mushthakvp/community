@@ -6,6 +6,9 @@ import '../../home/presentation/pages/home_page.dart';
 import '../../navigation/presentation/pages/main_navigation_page.dart';
 import '../../product_overview/presentation/controllers/product_overview_controller.dart';
 import '../../product_overview/presentation/pages/product_overview_page.dart';
+import '../../profile/presentation/pages/profile_page.dart';
+import '../../search/presentation/pages/search_page.dart';
+import '../../wishlist/presentation/pages/wishlist_page.dart';
 
 class VCartRouter {
   static const String vcartHome = '/vcart';
@@ -14,6 +17,7 @@ class VCartRouter {
   static const String vcartCart = '/vcart/cart';
   static const String vcartProfile = '/vcart/profile';
   static const String vcartSearch = '/vcart/search';
+  static const String vcartWishlist = '/vcart/wishlist';
   static const String vcartProduct = '/product';
   static const String vcartCategory = '/vcart/category';
 
@@ -35,6 +39,7 @@ class VCartRouter {
       GetPage(name: vcartCart, page: () => const VCartCartPage()),
       GetPage(name: vcartProfile, page: () => const VCartProfilePage()),
       GetPage(name: vcartSearch, page: () => const VCartSearchPage()),
+      GetPage(name: vcartWishlist, page: () => const VCartWishlistPage()),
       GetPage(
         name: '$vcartProduct/:id',
         page: () {
@@ -56,7 +61,7 @@ class VCartRouter {
           }
         }),
       ),
-      GetPage(name: vcartCategory, page: () => VCartCategoriesPage()),
+      GetPage(name: vcartCategory, page: () => const VCartCategoriesPage()),
     ];
   }
 
@@ -76,6 +81,14 @@ class VCartRouter {
   static void toVCartSearch({String? query}) {
     final params = query != null ? {'q': query} : <String, String>{};
     Get.toNamed(vcartSearch, parameters: params);
+  }
+
+  static void toVCartWishlist() {
+    Get.toNamed(vcartWishlist);
+  }
+
+  static void toVCartProfile() {
+    Get.toNamed(vcartProfile);
   }
 
   static void backToVCartHome() {
@@ -104,7 +117,7 @@ class VCartRouter {
   }
 }
 
-// Placeholder pages for VCart
+// Updated placeholder pages for VCart
 class VCartCartPage extends StatelessWidget {
   const VCartCartPage({super.key});
 
@@ -124,62 +137,4 @@ class VCartCartPage extends StatelessWidget {
     ),
     backgroundColor: const Color(0xFF000000),
   );
-}
-
-class VCartProfilePage extends StatelessWidget {
-  const VCartProfilePage({super.key});
-
-  @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      title: const Text('VCart Profile'),
-      backgroundColor: const Color(0xFF000000),
-      foregroundColor: Colors.white,
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back),
-        onPressed: () => VCartRouter.backInVCart(),
-      ),
-    ),
-    body: const Center(
-      child: Text('VCart Profile Page', style: TextStyle(color: Colors.white)),
-    ),
-    backgroundColor: const Color(0xFF000000),
-  );
-}
-
-class VCartSearchPage extends StatelessWidget {
-  const VCartSearchPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final query = Get.parameters['q'] ?? '';
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('VCart Search'),
-        backgroundColor: const Color(0xFF000000),
-        foregroundColor: Colors.white,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => VCartRouter.backInVCart(),
-        ),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              'VCart Search Page',
-              style: TextStyle(color: Colors.white),
-            ),
-            if (query.isNotEmpty)
-              Text(
-                'Searching for: $query',
-                style: const TextStyle(color: Colors.grey),
-              ),
-          ],
-        ),
-      ),
-      backgroundColor: const Color(0xFF000000),
-    );
-  }
 }

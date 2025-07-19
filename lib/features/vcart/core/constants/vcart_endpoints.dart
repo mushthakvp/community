@@ -11,6 +11,7 @@ class VCartEndpoints {
   static const String searchData = 'user/get-search-pageData';
   static const String productData = 'user/get-product';
   static const String filterProductData = 'user/get-filtered-product-count';
+  static const String removeSearchedHistoryData = 'user/getHome';
 
   // Product Detail
   static String productDetail(String productId) =>
