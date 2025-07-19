@@ -2,13 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../categories/presentation/pages/categories_page.dart';
+import '../../filter_page/presentation/controllers/filter_page_controller.dart';
+import '../../filter_page/presentation/pages/filter_page.dart';
 import '../../home/presentation/pages/home_page.dart';
 import '../../navigation/presentation/controllers/bottom_nav_controller.dart';
 import '../../navigation/presentation/pages/main_navigation_page.dart';
+import '../../product_listing/presentation/controllers/product_listing_controller.dart';
+import '../../product_listing/presentation/pages/product_listing_page.dart';
 import '../../product_overview/presentation/controllers/product_overview_controller.dart';
 import '../../product_overview/presentation/pages/product_overview_page.dart';
 import '../../profile/presentation/pages/profile_page.dart';
 import '../../search/presentation/pages/search_page.dart';
+import '../../section_category/presentation/controllers/section_category_controller.dart';
+import '../../section_category/presentation/pages/section_category_page.dart';
 import '../../wishlist/presentation/pages/wishlist_page.dart';
 
 class VCartRouterG {
@@ -21,6 +27,9 @@ class VCartRouterG {
   static const String vcartWishlist = '/vcart/wishlist';
   static const String vcartProduct = '/vcart/product';
   static const String vcartCategory = '/vcart/category';
+  static const String vcartSectionCategory = '/vcart/section-category';
+  static const String vcartProductListing = '/vcart/products';
+  static const String vcartFilter = '/vcart/filter';
 
   static final List<String> _navigationHistory = [vcartHome];
   static bool _isNavigatingWithinVCart = false;
@@ -84,6 +93,94 @@ class VCartRouterG {
         }),
       ),
       GetPage(name: vcartCategory, page: () => const VCartCategoriesPage()),
+      GetPage(
+        name: '$vcartSectionCategory/:sectionId',
+        page: () {
+          final sectionId = Get.parameters['sectionId'] ?? '';
+          final title = Get.parameters['title'] ?? 'Categories';
+          if (!Get.isRegistered<VCartSectionCategoryController>()) {
+            Get.lazyPut<VCartSectionCategoryController>(
+              () => Get.find<VCartSectionCategoryController>(),
+              fenix: true,
+            );
+          }
+          return VCartSectionCategoryPage(title: title, sectionId: sectionId);
+        },
+        transition: Transition.rightToLeft,
+        transitionDuration: const Duration(milliseconds: 300),
+        middlewares: [VCartMiddleware()],
+        binding: BindingsBuilder(() {
+          if (!Get.isRegistered<VCartSectionCategoryController>()) {
+            Get.lazyPut<VCartSectionCategoryController>(
+              () => Get.find<VCartSectionCategoryController>(),
+              fenix: true,
+            );
+          }
+        }),
+      ),
+      GetPage(
+        name: vcartProductListing,
+        page: () {
+          final title = Get.parameters['title'] ?? 'Products';
+          final sectionId = Get.parameters['sectionId'];
+          final categoryId = Get.parameters['categoryId'];
+          final subCategoryId = Get.parameters['subCategoryId'];
+          final brandId = Get.parameters['brandId'];
+
+          if (!Get.isRegistered<VCartProductListingController>()) {
+            Get.lazyPut<VCartProductListingController>(
+              () => Get.find<VCartProductListingController>(),
+              fenix: true,
+            );
+          }
+
+          return VCartProductListingPage(
+            title: title,
+            sectionId: sectionId,
+            categoryId: categoryId,
+            subCategoryId: subCategoryId,
+            brandId: brandId,
+          );
+        },
+        transition: Transition.rightToLeft,
+        transitionDuration: const Duration(milliseconds: 300),
+        middlewares: [VCartMiddleware()],
+        binding: BindingsBuilder(() {
+          if (!Get.isRegistered<VCartProductListingController>()) {
+            Get.lazyPut<VCartProductListingController>(
+              () => Get.find<VCartProductListingController>(),
+              fenix: true,
+            );
+          }
+        }),
+      ),
+      GetPage(
+        name: vcartFilter,
+        page: () {
+          final sectionId = Get.parameters['sectionId'];
+          final brandId = Get.parameters['brandId'];
+
+          if (!Get.isRegistered<VCartFilterPageController>()) {
+            Get.lazyPut<VCartFilterPageController>(
+              () => Get.find<VCartFilterPageController>(),
+              fenix: true,
+            );
+          }
+
+          return VCartFilterPage(sectionId: sectionId, brandId: brandId);
+        },
+        transition: Transition.rightToLeft,
+        transitionDuration: const Duration(milliseconds: 300),
+        middlewares: [VCartMiddleware()],
+        binding: BindingsBuilder(() {
+          if (!Get.isRegistered<VCartFilterPageController>()) {
+            Get.lazyPut<VCartFilterPageController>(
+              () => Get.find<VCartFilterPageController>(),
+              fenix: true,
+            );
+          }
+        }),
+      ),
     ];
   }
 
@@ -108,6 +205,44 @@ class VCartRouterG {
     _isNavigatingWithinVCart = true;
     _addToHistory(vcartCategory);
     Get.toNamed(vcartCategory, parameters: {'id': categoryId});
+  }
+
+  static void toVCartSectionCategory(String sectionId, {String? title}) {
+    _isNavigatingWithinVCart = true;
+    final route = '$vcartSectionCategory/$sectionId';
+    _addToHistory(route);
+    Get.toNamed(route, parameters: {'title': title ?? 'Categories'});
+  }
+
+  static void toVCartProductListing({
+    String? title,
+    String? sectionId,
+    String? categoryId,
+    String? subCategoryId,
+    String? brandId,
+  }) {
+    _isNavigatingWithinVCart = true;
+    _addToHistory(vcartProductListing);
+
+    final parameters = <String, String>{};
+    if (title != null) parameters['title'] = title;
+    if (sectionId != null) parameters['sectionId'] = sectionId;
+    if (categoryId != null) parameters['categoryId'] = categoryId;
+    if (subCategoryId != null) parameters['subCategoryId'] = subCategoryId;
+    if (brandId != null) parameters['brandId'] = brandId;
+
+    Get.toNamed(vcartProductListing, parameters: parameters);
+  }
+
+  static void toVCartFilter({String? sectionId, String? brandId}) {
+    _isNavigatingWithinVCart = true;
+    _addToHistory(vcartFilter);
+
+    final parameters = <String, String>{};
+    if (sectionId != null) parameters['sectionId'] = sectionId;
+    if (brandId != null) parameters['brandId'] = brandId;
+
+    Get.toNamed(vcartFilter, parameters: parameters);
   }
 
   static void toVCartSearch({String? query}) {
@@ -204,6 +339,9 @@ class VCartRouterG {
         cleanRoute == vcartWishlist ||
         cleanRoute.startsWith(vcartProduct) ||
         cleanRoute == vcartCategory ||
+        cleanRoute.startsWith(vcartSectionCategory) ||
+        cleanRoute == vcartProductListing ||
+        cleanRoute == vcartFilter ||
         cleanRoute == '/' ||
         cleanRoute.isEmpty;
   }

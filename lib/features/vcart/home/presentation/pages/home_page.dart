@@ -1,3 +1,4 @@
+import 'package:fittor/fittor.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:skeletonizer/skeletonizer.dart';
@@ -8,7 +9,6 @@ import '../../../core/router/vcart_router.dart';
 import '../../../shared/presentation/widgets/error_widget.dart';
 import '../controllers/home_controller.dart';
 import '../widgets/banner_carousel.dart';
-import '../widgets/category_grid.dart';
 import '../widgets/home_app_bar.dart';
 import '../widgets/product_card.dart';
 import '../widgets/section_header.dart';
@@ -38,7 +38,7 @@ class VCartHomePage extends StatelessWidget {
                     onSearchTap: () => _navigateToSearch(),
                     onNotificationTap: () => _navigateToNotifications(),
                   ),
-                  _buildCategoriesSection(controller),
+                  SliverToBoxAdapter(child: 10.h),
                   _buildBannersSection(controller),
                   _buildPopularProductsSection(controller),
                   _buildTopBrandsSection(controller),
@@ -50,17 +50,6 @@ class VCartHomePage extends StatelessWidget {
           }),
         );
       },
-    );
-  }
-
-  Widget _buildCategoriesSection(VCartHomeController controller) {
-    if (controller.categories.isEmpty && !controller.isLoading) {
-      return const SliverToBoxAdapter(child: SizedBox.shrink());
-    }
-
-    return CategoryGrid(
-      categories: controller.categories.cast(),
-      onCategoryTap: (category) => _navigateToCategory(category),
     );
   }
 
@@ -92,7 +81,10 @@ class VCartHomePage extends StatelessWidget {
         children: [
           SectionHeader(
             title: 'Popular Products',
-            onSeeAllTap: () => _navigateToProductListing('popular'),
+            onSeeAllTap: () => _navigateToProductListing(
+              title: 'Popular Products',
+              type: 'popular',
+            ),
           ),
           SizedBox(
             height: 280,
@@ -135,7 +127,8 @@ class VCartHomePage extends StatelessWidget {
         children: [
           SectionHeader(
             title: 'Top Brands',
-            onSeeAllTap: () => _navigateToProductListing('brands'),
+            onSeeAllTap: () =>
+                _navigateToProductListing(title: 'Top Brands', type: 'brands'),
           ),
           SizedBox(
             height: 120,
@@ -147,7 +140,10 @@ class VCartHomePage extends StatelessWidget {
               itemCount: controller.topBrands.length,
               itemBuilder: (context, index) {
                 final brand = controller.topBrands[index];
-                return _buildBrandItem(brand);
+                return GestureDetector(
+                  onTap: () => _navigateToBrandProducts(brand),
+                  child: _buildBrandItem(brand),
+                );
               },
             ),
           ),
@@ -166,7 +162,10 @@ class VCartHomePage extends StatelessWidget {
         children: [
           SectionHeader(
             title: 'Top Selling Products',
-            onSeeAllTap: () => _navigateToProductListing('top-selling'),
+            onSeeAllTap: () => _navigateToProductListing(
+              title: 'Top Selling Products',
+              type: 'top-selling',
+            ),
           ),
           SizedBox(
             height: 280,
@@ -248,46 +247,74 @@ class VCartHomePage extends StatelessWidget {
     return const SliverToBoxAdapter(child: SizedBox(height: 100));
   }
 
-  // Updated navigation methods in home_page.dart
-
   // Navigation methods
+
   void _navigateToSearch() {
-    Get.toNamed(VCartRouterG.vcartSearch);
+    VCartRouterG.toVCartSearch();
   }
 
   void _navigateToNotifications() {
     Get.toNamed('/notifications');
   }
 
-  void _navigateToCategory(dynamic category) {
-    // VCartRouter.toVCartCategory(category.id);
-  }
-
   void _navigateToProductDetail(String productId) {
     VCartRouterG.toVCartProduct(productId);
   }
 
-  void _navigateToProductListing(String type) {
-    Get.toNamed('/products', parameters: {'type': type});
+  void _navigateToProductListing({
+    required String title,
+    String? type,
+    String? sectionId,
+    String? categoryId,
+    String? subCategoryId,
+    String? brandId,
+  }) {
+    // Navigate to product listing page with parameters
+    VCartRouterG.toVCartProductListing(
+      title: title,
+      sectionId: sectionId,
+      categoryId: categoryId,
+      subCategoryId: subCategoryId,
+      brandId: brandId,
+    );
+  }
+
+  void _navigateToBrandProducts(dynamic brand) {
+    // Navigate to products filtered by brand
+    VCartRouterG.toVCartProductListing(
+      title: '${brand.name} Products',
+      brandId: brand.id,
+    );
   }
 
   void _handleBannerTap(dynamic banner) {
     switch (banner.field?.toLowerCase()) {
       case 'product':
         if (banner.productId != null) {
-          // VCartRouter.toVCartProduct(banner.productId!);
+          VCartRouterG.toVCartProduct(banner.productId!);
         }
         break;
       case 'category':
         if (banner.categoryId != null) {
-          // VCartRouter.toVCartCategory(banner.categoryId!);
+          VCartRouterG.toVCartProductListing(
+            title: 'Category Products',
+            categoryId: banner.categoryId!,
+          );
         }
         break;
       case 'subcategory':
         if (banner.subCategoryId != null) {
-          Get.toNamed(
-            '/subcategory',
-            parameters: {'id': banner.subCategoryId!},
+          VCartRouterG.toVCartProductListing(
+            title: 'Subcategory Products',
+            subCategoryId: banner.subCategoryId!,
+          );
+        }
+        break;
+      case 'section':
+        if (banner.sectionId != null) {
+          VCartRouterG.toVCartSectionCategory(
+            banner.sectionId!,
+            title: 'Section Categories',
           );
         }
         break;

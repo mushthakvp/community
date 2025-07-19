@@ -11,6 +11,12 @@ import '../../categories/domain/usecases/get_categories_by_section.dart';
 import '../../categories/domain/usecases/get_sections.dart';
 import '../../categories/domain/usecases/get_subcategories_by_category.dart';
 import '../../categories/presentation/controllers/categories_controller.dart';
+// Filter Page dependencies
+import '../../filter_page/data/datasources/filter_page_remote_datasource.dart';
+import '../../filter_page/data/repositories/filter_page_repository_impl.dart';
+import '../../filter_page/domain/repositories/filter_page_repository.dart';
+import '../../filter_page/domain/usecases/get_filter_data.dart';
+import '../../filter_page/presentation/controllers/filter_page_controller.dart';
 // Home dependencies
 import '../../home/data/datasources/home_local_datasource.dart';
 import '../../home/data/datasources/home_remote_datasource.dart';
@@ -23,6 +29,13 @@ import '../../home/presentation/controllers/home_controller.dart';
 import '../../navigation/data/repositories/navigation_repository_impl.dart';
 import '../../navigation/domain/repositories/navigation_repository.dart';
 import '../../navigation/presentation/controllers/bottom_nav_controller.dart';
+// Product Listing dependencies
+import '../../product_listing/data/datasources/product_listing_remote_datasource.dart';
+import '../../product_listing/data/repositories/product_listing_repository_impl.dart';
+import '../../product_listing/domain/repositories/product_listing_repository.dart';
+import '../../product_listing/domain/usecases/get_filtered_product_count.dart';
+import '../../product_listing/domain/usecases/get_products.dart';
+import '../../product_listing/presentation/controllers/product_listing_controller.dart';
 // Product Overview dependencies
 import '../../product_overview/data/datasources/product_overview_local_datasource.dart';
 import '../../product_overview/data/datasources/product_overview_remote_datasource.dart';
@@ -48,6 +61,13 @@ import '../../search/domain/repositories/search_repository.dart';
 import '../../search/domain/usecases/get_search_data.dart';
 import '../../search/domain/usecases/search_products.dart';
 import '../../search/presentation/controllers/search_controller.dart';
+// Section Category dependencies
+import '../../section_category/data/datasources/section_category_remote_datasource.dart';
+import '../../section_category/data/repositories/section_category_repository_impl.dart';
+import '../../section_category/domain/repositories/section_category_repository.dart';
+import '../../section_category/domain/usecases/get_categories_by_section.dart'
+    as section_category;
+import '../../section_category/presentation/controllers/section_category_controller.dart';
 // Wishlist dependencies
 import '../../wishlist/data/datasources/wishlist_remote_datasource.dart';
 import '../../wishlist/data/repositories/wishlist_repository_impl.dart';
@@ -65,6 +85,9 @@ class VCartInjection {
     _initializeProfileDependencies();
     _initializeSearchDependencies();
     _initializeWishlistDependencies();
+    _initializeProductListingDependencies();
+    _initializeSectionCategoryDependencies();
+    _initializeFilterPageDependencies();
   }
 
   static void _initializeHomeDependencies() {
@@ -323,10 +346,122 @@ class VCartInjection {
     );
   }
 
+  static void _initializeProductListingDependencies() {
+    // Data Sources
+    Get.lazyPut<ProductListingRemoteDataSource>(
+      () =>
+          ProductListingRemoteDataSourceImpl(apiClient: Get.find<ApiClient>()),
+      fenix: true,
+    );
+
+    // Repository
+    Get.lazyPut<ProductListingRepository>(
+      () => ProductListingRepositoryImpl(
+        remoteDataSource: Get.find<ProductListingRemoteDataSource>(),
+        networkInfo: Get.find<NetworkInfo>(),
+      ),
+      fenix: true,
+    );
+
+    // Use Cases
+    Get.lazyPut(
+      () => GetProducts(Get.find<ProductListingRepository>()),
+      fenix: true,
+    );
+    Get.lazyPut(
+      () => GetFilteredProductCount(Get.find<ProductListingRepository>()),
+      fenix: true,
+    );
+
+    // Controller
+    Get.lazyPut(
+      () => VCartProductListingController(
+        getProductsUseCase: Get.find<GetProducts>(),
+        getFilteredProductCountUseCase: Get.find<GetFilteredProductCount>(),
+      ),
+      fenix: true,
+    );
+  }
+
+  static void _initializeSectionCategoryDependencies() {
+    // Data Sources
+    Get.lazyPut<SectionCategoryRemoteDataSource>(
+      () =>
+          SectionCategoryRemoteDataSourceImpl(apiClient: Get.find<ApiClient>()),
+      fenix: true,
+    );
+
+    // Repository
+    Get.lazyPut<SectionCategoryRepository>(
+      () => SectionCategoryRepositoryImpl(
+        remoteDataSource: Get.find<SectionCategoryRemoteDataSource>(),
+        networkInfo: Get.find<NetworkInfo>(),
+      ),
+      fenix: true,
+    );
+
+    // Use Cases
+    Get.lazyPut(
+      () => section_category.GetCategoriesBySection(
+        Get.find<SectionCategoryRepository>(),
+      ),
+      fenix: true,
+    );
+
+    // Controller
+    Get.lazyPut(
+      () => VCartSectionCategoryController(
+        getCategoriesBySectionUseCase:
+            Get.find<section_category.GetCategoriesBySection>(),
+      ),
+      fenix: true,
+    );
+  }
+
+  static void _initializeFilterPageDependencies() {
+    // Data Sources
+    Get.lazyPut<FilterPageRemoteDataSource>(
+      () => FilterPageRemoteDataSourceImpl(apiClient: Get.find<ApiClient>()),
+      fenix: true,
+    );
+
+    // Repository
+    Get.lazyPut<FilterPageRepository>(
+      () => FilterPageRepositoryImpl(
+        remoteDataSource: Get.find<FilterPageRemoteDataSource>(),
+        networkInfo: Get.find<NetworkInfo>(),
+      ),
+      fenix: true,
+    );
+
+    // Use Cases
+    Get.lazyPut(
+      () => GetFilterData(Get.find<FilterPageRepository>()),
+      fenix: true,
+    );
+
+    // Controller
+    Get.lazyPut(
+      () => VCartFilterPageController(
+        getFilterDataUseCase: Get.find<GetFilterData>(),
+      ),
+      fenix: true,
+    );
+  }
+
   static void dispose() {
     // Dispose controllers that need cleanup
     if (Get.isRegistered<VCartProductOverviewController>()) {
       Get.delete<VCartProductOverviewController>();
+    }
+    if (Get.isRegistered<VCartProductListingController>()) {
+      Get.delete<VCartProductListingController>();
+    }
+    if (Get.isRegistered<VCartSectionCategoryController>()) {
+      Get.delete<VCartSectionCategoryController>();
+    }
+    if (Get.isRegistered<VCartFilterPageController>()) {
+      Get.delete<VCartFilterPageController>();
     }
 
     // Dispose use cases
@@ -339,12 +474,19 @@ class VCartInjection {
     Get.delete<SearchProducts>(force: true);
     Get.delete<GetWishlistData>(force: true);
     Get.delete<ToggleWishlistItem>(force: true);
+    Get.delete<GetProducts>(force: true);
+    Get.delete<GetFilteredProductCount>(force: true);
+    Get.delete<section_category.GetCategoriesBySection>(force: true);
+    Get.delete<GetFilterData>(force: true);
 
     // Dispose repositories
     Get.delete<ProductOverviewRepository>(force: true);
     Get.delete<ProfileRepository>(force: true);
     Get.delete<SearchRepository>(force: true);
     Get.delete<WishlistRepository>(force: true);
+    Get.delete<ProductListingRepository>(force: true);
+    Get.delete<SectionCategoryRepository>(force: true);
+    Get.delete<FilterPageRepository>(force: true);
 
     // Dispose data sources
     Get.delete<ProductOverviewRemoteDataSource>(force: true);
@@ -354,5 +496,8 @@ class VCartInjection {
     Get.delete<SearchRemoteDataSource>(force: true);
     Get.delete<SearchLocalDataSource>(force: true);
     Get.delete<WishlistRemoteDataSource>(force: true);
+    Get.delete<ProductListingRemoteDataSource>(force: true);
+    Get.delete<SectionCategoryRemoteDataSource>(force: true);
+    Get.delete<FilterPageRemoteDataSource>(force: true);
   }
 }

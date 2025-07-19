@@ -44,7 +44,7 @@ class RelatedProductsSection extends StatelessWidget {
                 currencyCode: currencyCode,
                 onTap: () {
                   if (product.shareLink != null) {
-                    context.go(
+                    context.push(
                       '/product-detail?shareUrl=${product.shareLink}&isPersonal=$isPersonal',
                     );
                   }
