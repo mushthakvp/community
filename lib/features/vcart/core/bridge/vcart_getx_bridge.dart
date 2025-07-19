@@ -13,15 +13,12 @@ class VCartGetXBridge {
 
   static void initializeVCartDependencies(BuildContext context) {
     if (_isInitialized) return;
-
     try {
       final apiClient = Provider.of<ApiClient>(context, listen: false);
       final networkInfo = Provider.of<NetworkInfo>(context, listen: false);
       _initializeGetXDependencies(apiClient, networkInfo);
       _isInitialized = true;
     } catch (e) {
-      debugPrint('Failed to initialize VCart dependencies: $e');
-      // Try to initialize with GetX registered dependencies as fallback
       if (Get.isRegistered<ApiClient>() && Get.isRegistered<NetworkInfo>()) {
         VCartInjection.init();
         _isInitialized = true;
@@ -33,14 +30,12 @@ class VCartGetXBridge {
     ApiClient apiClient,
     NetworkInfo networkInfo,
   ) {
-    // Only put if not already registered
     if (!Get.isRegistered<ApiClient>()) {
       Get.put<ApiClient>(apiClient, permanent: true);
     }
     if (!Get.isRegistered<NetworkInfo>()) {
       Get.put<NetworkInfo>(networkInfo, permanent: true);
     }
-
     VCartInjection.init();
   }
 
@@ -49,15 +44,12 @@ class VCartGetXBridge {
 
     try {
       VCartInjection.dispose();
-
-      // Only delete if we put them
       if (Get.isRegistered<ApiClient>()) {
         Get.delete<ApiClient>();
       }
       if (Get.isRegistered<NetworkInfo>()) {
         Get.delete<NetworkInfo>();
       }
-
       _isInitialized = false;
     } catch (e) {
       debugPrint('Error disposing VCart dependencies: $e');

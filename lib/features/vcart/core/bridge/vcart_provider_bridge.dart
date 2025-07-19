@@ -22,9 +22,7 @@ class _VCartProviderBridgeState extends State<VCartProviderBridge> {
 
   Future<void> _initializeDependencies() async {
     try {
-      // Wait for the next frame to ensure context is available
       await Future.delayed(Duration.zero);
-
       if (mounted) {
         VCartGetXBridge.initializeVCartDependencies(context);
         setState(() {
@@ -32,11 +30,10 @@ class _VCartProviderBridgeState extends State<VCartProviderBridge> {
         });
       }
     } catch (e) {
-      // Handle initialization error
       debugPrint('VCart initialization error: $e');
       if (mounted) {
         setState(() {
-          _isInitialized = true; // Allow rendering even if init fails
+          _isInitialized = true;
         });
       }
     }
