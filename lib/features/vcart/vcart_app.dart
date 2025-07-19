@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'categories/presentation/pages/categories_page.dart';
 import 'core/bridge/vcart_provider_bridge.dart';
 import 'home/presentation/pages/home_page.dart';
 import 'navigation/presentation/pages/main_navigation_page.dart';
+import 'product_overview/presentation/pages/product_overview_page.dart';
 
 class VCartApp extends StatelessWidget {
   const VCartApp({super.key});
@@ -37,7 +39,7 @@ class VCartApp extends StatelessWidget {
       GetPage(
         name: '/product/:id',
         page: () =>
-            VCartProductDetailPage(productId: Get.parameters['id'] ?? ''),
+            VCartProductOverviewPage(productId: Get.parameters['id'] ?? ''),
       ),
       GetPage(
         name: '/category',
@@ -48,30 +50,7 @@ class VCartApp extends StatelessWidget {
   }
 }
 
-class VCartCategoriesPage extends StatelessWidget {
-  const VCartCategoriesPage({super.key});
-
-  @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      title: const Text('VCart Categories'),
-      backgroundColor: const Color(0xFF000000),
-      foregroundColor: Colors.white,
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back),
-        onPressed: () => Navigator.of(context).pop(),
-      ),
-    ),
-    body: const Center(
-      child: Text(
-        'VCart Categories Page',
-        style: TextStyle(color: Colors.white),
-      ),
-    ),
-    backgroundColor: const Color(0xFF000000),
-  );
-}
-
+// Placeholder pages remain the same as in the original VCart app
 class VCartCartPage extends StatelessWidget {
   const VCartCartPage({super.key});
 
@@ -120,7 +99,6 @@ class VCartSearchPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final query = Get.parameters['q'] ?? '';
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('VCart Search'),
@@ -152,44 +130,8 @@ class VCartSearchPage extends StatelessWidget {
   }
 }
 
-class VCartProductDetailPage extends StatelessWidget {
-  final String productId;
-
-  const VCartProductDetailPage({super.key, required this.productId});
-
-  @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      title: const Text('VCart Product'),
-      backgroundColor: const Color(0xFF000000),
-      foregroundColor: Colors.white,
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back),
-        onPressed: () => Navigator.of(context).pop(),
-      ),
-    ),
-    body: Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Text(
-            'VCart Product Detail Page',
-            style: TextStyle(color: Colors.white),
-          ),
-          Text(
-            'Product ID: $productId',
-            style: const TextStyle(color: Colors.grey),
-          ),
-        ],
-      ),
-    ),
-    backgroundColor: const Color(0xFF000000),
-  );
-}
-
 class VCartCategoryPage extends StatelessWidget {
   final String categoryId;
-
   const VCartCategoryPage({super.key, required this.categoryId});
 
   @override

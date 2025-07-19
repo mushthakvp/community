@@ -57,6 +57,7 @@ dependencies:
   audioplayers: ^6.5.0
   get: ^4.7.2
   skeletonizer: ^2.1.0+1
+  animate_do: ^4.2.0
 
 dev_dependencies:
   flutter_test:
