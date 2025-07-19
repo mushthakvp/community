@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 
 import '../../../core/constants/vcart_colors.dart';
+import '../../../core/router/vcart_router.dart';
 import '../controllers/product_listing_controller.dart';
 import 'sort_bottom_sheet.dart';
 
@@ -26,15 +26,7 @@ class SortFilterBar extends StatelessWidget {
           ),
         ),
         const Spacer(),
-        Obx(
-          () => Text(
-            '${controller.productCount} Products',
-            style: const TextStyle(
-              color: VCartColors.textSecondary,
-              fontSize: 12,
-            ),
-          ),
-        ),
+        // Removed the product count text display
         const Spacer(),
         OutlinedButton.icon(
           onPressed: () => _navigateToFilter(context),
@@ -62,6 +54,9 @@ class SortFilterBar extends StatelessWidget {
   }
 
   void _navigateToFilter(BuildContext context) {
-    Get.toNamed('/filter', arguments: controller.filterParams);
+    VCartRouterG.toVCartFilter(
+      sectionId: controller.filterParams.sectionId,
+      brandId: controller.filterParams.brandId,
+    );
   }
 }
