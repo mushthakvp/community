@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../../../../../core/error/failures.dart';
 import '../../../../../core/usecases/usecase.dart';
 import '../../domain/entities/home_data.dart';
+import '../../domain/entities/product.dart';
 import '../../domain/usecases/get_home_data.dart';
 import '../../domain/usecases/get_location.dart';
 
@@ -90,6 +91,75 @@ class VCartHomeController extends GetxController {
 
   Future<void> refreshData() async {
     await fetchHomeData(forceRefresh: true);
+  }
+
+  // Method to update wishlist status for products
+  void updateProductWishlistStatus(String productId, bool isWishlisted) {
+    if (homeData == null) return;
+
+    // Update popular products
+    final updatedPopularProducts = popularProducts.map((product) {
+      if (product is Product && product.id == productId) {
+        return Product(
+          id: product.id,
+          name: product.name,
+          description: product.description,
+          images: product.images,
+          price: product.price,
+          offerPrice: product.offerPrice,
+          commission: product.commission,
+          isActive: product.isActive,
+          categoryId: product.categoryId,
+          brandId: product.brandId,
+          specifications: product.specifications,
+          rating: product.rating,
+          reviewCount: product.reviewCount,
+          isWishlisted: isWishlisted, // Update the wishlist status
+          inStock: product.inStock,
+          stockCount: product.stockCount,
+        );
+      }
+      return product;
+    }).toList();
+
+    // Update top selling products
+    final updatedTopSellingProducts = topSellingProducts.map((product) {
+      if (product is Product && product.id == productId) {
+        return Product(
+          id: product.id,
+          name: product.name,
+          description: product.description,
+          images: product.images,
+          price: product.price,
+          offerPrice: product.offerPrice,
+          commission: product.commission,
+          isActive: product.isActive,
+          categoryId: product.categoryId,
+          brandId: product.brandId,
+          specifications: product.specifications,
+          rating: product.rating,
+          reviewCount: product.reviewCount,
+          isWishlisted: isWishlisted, // Update the wishlist status
+          inStock: product.inStock,
+          stockCount: product.stockCount,
+        );
+      }
+      return product;
+    }).toList();
+
+    // Create updated home data
+    final updatedHomeData = HomeData(
+      success: homeData!.success,
+      message: homeData!.message,
+      categories: homeData!.categories,
+      banners: homeData!.banners,
+      popularProducts: updatedPopularProducts.cast<Product>(),
+      topBrands: homeData!.topBrands,
+      topSellingProducts: updatedTopSellingProducts.cast<Product>(),
+      shippingAddress: homeData!.shippingAddress,
+    );
+
+    _homeData.value = updatedHomeData;
   }
 
   void _setLoading(bool value) {

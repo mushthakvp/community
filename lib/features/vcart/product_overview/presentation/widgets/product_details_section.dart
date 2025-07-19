@@ -1,5 +1,6 @@
 // lib/features/vcart/product_overview/presentation/widgets/product_details_section.dart
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:fittor/fittor.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:skeletonizer/skeletonizer.dart';
@@ -285,14 +286,19 @@ class ProductDetailsSection extends StatelessWidget {
           ),
         ),
         SizedBox(height: screenHeight * 0.01),
-        Text(
+        FitReadMore(
           controller.productDescription,
           style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w400,
             color: VCartColors.textSecondary,
           ),
+          trimLength: 350,
+          trimCollapsedText: 'Read more',
+          trimExpandedText: 'Show less',
+          colorClickableText: Colors.blue,
         ),
+        SizedBox(height: screenHeight * 0.03),
       ],
     );
   }

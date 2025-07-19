@@ -35,7 +35,6 @@ class VCartProductOverviewController extends GetxController {
   final _reviews = <Review>[].obs;
   final _errorMessage = ''.obs;
   final _hasError = false.obs;
-  final _tabIndex = 0.obs;
 
   // Review pagination variables
   final _hasMoreReviews = true.obs;
@@ -54,7 +53,6 @@ class VCartProductOverviewController extends GetxController {
   List<Review> get reviews => _reviews;
   String get errorMessage => _errorMessage.value;
   bool get hasError => _hasError.value;
-  int get tabIndex => _tabIndex.value;
   bool get hasMoreReviews => _hasMoreReviews.value;
   bool get isReviewsEmpty => _isReviewsEmpty.value;
   bool get isAddedWishList => productOverviewData?.isAddedWishList ?? false;
@@ -238,6 +236,10 @@ class VCartProductOverviewController extends GetxController {
 
   Future<void> toggleWishlist(BuildContext context) async {
     try {
+      // Optimistically update UI first
+      final currentWishlistState = isAddedWishList;
+      _updateWishlistState(!currentWishlistState);
+
       _isToggling.value = true;
 
       final result = await toggleWishlistUseCase(
@@ -246,27 +248,22 @@ class VCartProductOverviewController extends GetxController {
 
       result.fold(
         (failure) {
+          // Revert the optimistic update on failure
+          _updateWishlistState(currentWishlistState);
           _isToggling.value = false;
           context.showVCartSnackBar(failure.message, isError: true);
         },
         (success) {
           _isToggling.value = false;
-          if (success && productOverviewData != null) {
-            final updatedData = ProductOverviewData(
-              success: productOverviewData!.success,
-              message: productOverviewData!.message,
-              productDetail: productOverviewData!.productDetail,
-              isAddedWishList: !productOverviewData!.isAddedWishList,
-              reviews: productOverviewData!.reviews,
-              averageRating: productOverviewData!.averageRating,
-              totalReviews: productOverviewData!.totalReviews,
-            );
-
-            _productOverviewData.value = updatedData;
-
+          if (success) {
             context.showVCartSnackBar(
-              isAddedWishList ? 'Added to wishlist' : 'Removed from wishlist',
+              !currentWishlistState
+                  ? 'Added to wishlist'
+                  : 'Removed from wishlist',
             );
+          } else {
+            // Revert if the operation wasn't successful
+            _updateWishlistState(currentWishlistState);
           }
         },
       );
@@ -279,12 +276,24 @@ class VCartProductOverviewController extends GetxController {
     }
   }
 
-  void selectSize(ProductSize size) {
-    _selectedSize.value = size;
+  void _updateWishlistState(bool isWishlisted) {
+    if (productOverviewData != null) {
+      final updatedData = ProductOverviewData(
+        success: productOverviewData!.success,
+        message: productOverviewData!.message,
+        productDetail: productOverviewData!.productDetail,
+        isAddedWishList: isWishlisted,
+        reviews: productOverviewData!.reviews,
+        averageRating: productOverviewData!.averageRating,
+        totalReviews: productOverviewData!.totalReviews,
+      );
+
+      _productOverviewData.value = updatedData;
+    }
   }
 
-  void changeTabIndex(int index) {
-    _tabIndex.value = index;
+  void selectSize(ProductSize size) {
+    _selectedSize.value = size;
   }
 
   void clearReviewVariables() {

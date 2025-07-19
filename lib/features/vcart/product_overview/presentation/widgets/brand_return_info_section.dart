@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:fittor/fittor.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/vcart_colors.dart';
@@ -51,13 +52,17 @@ class BrandReturnInfoSection extends StatelessWidget {
                           color: VCartColors.textPrimary,
                         ),
                       ),
-                      Text(
-                        brand.description,
+                      FitReadMore(
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w400,
                           color: VCartColors.textPrimary,
                         ),
+                        brand.description,
+                        trimLength: 150,
+                        trimCollapsedText: 'Read more',
+                        trimExpandedText: 'Show less',
+                        colorClickableText: Colors.blue,
                       ),
                     ],
                   ),

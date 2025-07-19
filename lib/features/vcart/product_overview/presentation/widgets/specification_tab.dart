@@ -21,24 +21,16 @@ class SpecificationTab extends StatelessWidget {
       );
     }
 
-    return GridView.builder(
+    return ListView.separated(
       physics: const NeverScrollableScrollPhysics(),
       shrinkWrap: true,
-      padding: const EdgeInsets.all(10),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        mainAxisSpacing: 10,
-        crossAxisSpacing: 10,
-        childAspectRatio: 2.5,
-      ),
+      padding: EdgeInsets.zero,
       itemCount: specifications.length,
+      separatorBuilder: (context, index) =>
+          const Divider(color: VCartColors.border, height: 1),
       itemBuilder: (context, index) {
         final spec = specifications[index];
-        return _SpecificationItem(
-          title: spec.title,
-          data: spec.solution,
-          index: index,
-        );
+        return _SpecificationItem(title: spec.title, data: spec.solution);
       },
     );
   }
@@ -47,37 +39,37 @@ class SpecificationTab extends StatelessWidget {
 class _SpecificationItem extends StatelessWidget {
   final String title;
   final String data;
-  final int index;
 
-  const _SpecificationItem({
-    required this.title,
-    required this.data,
-    required this.index,
-  });
+  const _SpecificationItem({required this.title, required this.data});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 5),
-      child: Column(
-        crossAxisAlignment: index % 2 == 0
-            ? CrossAxisAlignment.start
-            : CrossAxisAlignment.end,
+      padding: const EdgeInsets.symmetric(vertical: 12.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w400,
-              color: VCartColors.textSecondary,
+          Expanded(
+            flex: 2,
+            child: Text(
+              title,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: VCartColors.textPrimary,
+              ),
             ),
           ),
-          Text(
-            data,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: VCartColors.textPrimary,
+          const SizedBox(width: 16),
+          Expanded(
+            flex: 3,
+            child: Text(
+              data,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+                color: VCartColors.textSecondary,
+              ),
             ),
           ),
         ],

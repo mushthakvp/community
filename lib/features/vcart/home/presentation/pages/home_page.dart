@@ -112,7 +112,7 @@ class VCartHomePage extends StatelessWidget {
                     child: ProductCard(
                       product: product,
                       onTap: () => _navigateToProductDetail(product.id),
-                      onWishlistTap: () => _toggleWishlist(product),
+                      onWishlistTap: () => _toggleWishlist(product, controller),
                     ),
                   ),
                 );
@@ -186,7 +186,7 @@ class VCartHomePage extends StatelessWidget {
                     child: ProductCard(
                       product: product,
                       onTap: () => _navigateToProductDetail(product.id),
-                      onWishlistTap: () => _toggleWishlist(product),
+                      onWishlistTap: () => _toggleWishlist(product, controller),
                     ),
                   ),
                 );
@@ -293,9 +293,11 @@ class VCartHomePage extends StatelessWidget {
     }
   }
 
-  void _toggleWishlist(dynamic product) {
-    Get.find<VCartHomeController>().showVCartSnackBar(
-      product.isWishlisted ? 'Removed from wishlist' : 'Added to wishlist',
+  void _toggleWishlist(dynamic product, VCartHomeController controller) {
+    final newWishlistState = !product.isWishlisted;
+    controller.updateProductWishlistStatus(product.id, newWishlistState);
+    controller.showVCartSnackBar(
+      newWishlistState ? 'Added to wishlist' : 'Removed from wishlist',
     );
   }
 }
