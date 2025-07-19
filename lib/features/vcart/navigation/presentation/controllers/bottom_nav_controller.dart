@@ -46,12 +46,18 @@ class VCartBottomNavController extends GetxController {
 
   Future<void> _loadCurrentIndex() async {
     final result = await repository.getCurrentIndex();
-    result.fold((failure) => {}, (index) => _currentIndex.value = index);
+    result.fold((failure) => {}, (index) {
+      _currentIndex.value = index;
+      _updateNavItemsActiveState(index);
+    });
   }
 
   void setCurrentIndex(int index) {
     if (index == _currentIndex.value) return;
+
     _currentIndex.value = index;
+
+    // Update page controller if it has clients
     if (pageController.hasClients) {
       pageController.animateToPage(
         index,
@@ -59,7 +65,11 @@ class VCartBottomNavController extends GetxController {
         curve: Curves.easeInOut,
       );
     }
+
+    // Save to repository
     repository.setCurrentIndex(index);
+
+    // Update nav items active state
     _updateNavItemsActiveState(index);
   }
 
@@ -77,7 +87,20 @@ class VCartBottomNavController extends GetxController {
     }).toList();
   }
 
+  // Method to reset to home tab from external calls
+  void resetToHome() {
+    setCurrentIndex(0);
+  }
+
+  // Method to force update current index without triggering page change
+  void forceUpdateIndex(int index) {
+    _currentIndex.value = index;
+    _updateNavItemsActiveState(index);
+    repository.setCurrentIndex(index);
+  }
+
   void _handleFailure(Failure failure) {
     _isLoading.value = false;
+    debugPrint('Navigation error: ${failure.message}');
   }
 }

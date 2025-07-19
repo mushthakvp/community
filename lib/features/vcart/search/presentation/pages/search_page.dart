@@ -53,7 +53,6 @@ class _VCartSearchPageState extends State<VCartSearchPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: VCartColors.background,
-      appBar: _buildAppBar(),
       body: GetBuilder<VCartSearchController>(
         init: controller,
         builder: (controller) {
@@ -65,14 +64,19 @@ class _VCartSearchPageState extends State<VCartSearchPage> {
               );
             }
 
-            return SingleChildScrollView(
+            return CustomScrollView(
               controller: _scrollController,
-              child: Padding(
-                padding: context.defaultPadding,
-                child: controller.isSearched
-                    ? _buildSearchResults()
-                    : _buildSearchHome(),
-              ),
+              slivers: [
+                _buildAppBar(),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: context.defaultPadding,
+                    child: controller.isSearched
+                        ? _buildSearchResults()
+                        : _buildSearchHome(),
+                  ),
+                ),
+              ],
             );
           });
         },
@@ -80,9 +84,12 @@ class _VCartSearchPageState extends State<VCartSearchPage> {
     );
   }
 
-  PreferredSizeWidget _buildAppBar() {
-    return AppBar(
+  Widget _buildAppBar() {
+    return SliverAppBar(
       backgroundColor: VCartColors.background,
+      pinned: true,
+      floating: true,
+      expandedHeight: 120.0,
       leading: Padding(
         padding: const EdgeInsets.only(left: 8.0),
         child: IconButton(
@@ -100,7 +107,6 @@ class _VCartSearchPageState extends State<VCartSearchPage> {
           onPressed: () => VCartRouterG.backInVCart(),
         ),
       ),
-      centerTitle: false,
       title: const Text(
         'Search',
         style: TextStyle(
@@ -109,6 +115,7 @@ class _VCartSearchPageState extends State<VCartSearchPage> {
           fontWeight: FontWeight.w400,
         ),
       ),
+      centerTitle: false,
       elevation: 0,
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(72),

@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import '../../categories/presentation/pages/categories_page.dart';
 import '../../home/presentation/pages/home_page.dart';
+import '../../navigation/presentation/controllers/bottom_nav_controller.dart';
 import '../../navigation/presentation/pages/main_navigation_page.dart';
 import '../../product_overview/presentation/controllers/product_overview_controller.dart';
 import '../../product_overview/presentation/pages/product_overview_page.dart';
@@ -66,6 +67,7 @@ class VCartRouterG {
   }
 
   static void toVCartHome() {
+    _resetBottomNavToHome();
     Get.offAllNamed(vcartHome);
   }
 
@@ -91,19 +93,56 @@ class VCartRouterG {
   }
 
   static void backToVCartHome() {
+    _resetBottomNavToHome();
     Get.offAllNamed(vcartHome);
   }
 
   static void backInVCart() {
-    if (Get.currentRoute.startsWith('/vcart')) {
-      if (Get.key.currentState?.canPop() ?? false) {
+    final currentRoute = Get.currentRoute;
+
+    // If we're in a VCart route, handle navigation properly
+    if (currentRoute.startsWith('/vcart')) {
+      if (currentRoute == vcartHome) {
+        // If already at VCart home, don't navigate
+        return;
+      } else if (_isVCartSubRoute(currentRoute)) {
+        // If in a VCart sub-route, go back to VCart home
+        _resetBottomNavToHome();
+        Get.offAllNamed(vcartHome);
+      } else if (Get.key.currentState?.canPop() ?? false) {
+        // If can pop, just go back
         Get.back();
       } else {
+        // Otherwise go to VCart home
+        _resetBottomNavToHome();
         Get.offAllNamed(vcartHome);
       }
     } else {
+      // If not in VCart, go to VCart home
+      _resetBottomNavToHome();
       Get.offAllNamed(vcartHome);
     }
+  }
+
+  // Helper method to reset bottom navigation to home tab
+  static void _resetBottomNavToHome() {
+    try {
+      if (Get.isRegistered<VCartBottomNavController>()) {
+        final bottomNavController = Get.find<VCartBottomNavController>();
+        bottomNavController.setCurrentIndex(0); // Set to home tab
+      }
+    } catch (e) {
+      // If controller not found, ignore error
+      debugPrint('Bottom nav controller not found: $e');
+    }
+  }
+
+  // Helper method to check if current route is a VCart sub-route
+  static bool _isVCartSubRoute(String route) {
+    return route == vcartSearch ||
+        route == vcartWishlist ||
+        route.startsWith(vcartProduct) ||
+        route == vcartCategory;
   }
 
   // Check if current route is within VCart

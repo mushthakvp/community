@@ -21,13 +21,35 @@ class VCartMainNavigationPage extends StatefulWidget {
       _VCartMainNavigationPageState();
 }
 
-class _VCartMainNavigationPageState extends State<VCartMainNavigationPage> {
+class _VCartMainNavigationPageState extends State<VCartMainNavigationPage>
+    with WidgetsBindingObserver {
   late VCartBottomNavController controller;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     controller = Get.find<VCartBottomNavController>();
+
+    // Ensure we're on the home tab when entering VCart
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.resetToHome();
+    });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    // Reset to home when app becomes active
+    if (state == AppLifecycleState.resumed) {
+      controller.resetToHome();
+    }
   }
 
   @override
@@ -35,62 +57,75 @@ class _VCartMainNavigationPageState extends State<VCartMainNavigationPage> {
     return GetBuilder<VCartBottomNavController>(
       init: controller,
       builder: (navController) {
-        return Scaffold(
-          backgroundColor: VCartColors.background,
-          body: PageView(
-            controller: navController.pageController,
-            onPageChanged: (index) {
-              navController.onPageChanged(index);
-            },
-            children: widget.pages,
-          ),
-          floatingActionButton: FloatingActionButton(
-            shape: const CircleBorder(),
-            onPressed: () {
-              if (context.mounted) {
-                try {
-                  context.go(RouteConstants.home);
-                } catch (e) {
-                  if (widget.onMarketplaceTap != null) {
-                    widget.onMarketplaceTap!();
+        return WillPopScope(
+          onWillPop: () async {
+            // Handle back press within VCart
+            if (navController.currentIndex != 0) {
+              // If not on home tab, go to home tab
+              navController.setCurrentIndex(0);
+              return false;
+            }
+            // If on home tab, allow normal back navigation
+            return true;
+          },
+          child: Scaffold(
+            backgroundColor: VCartColors.background,
+            body: PageView(
+              controller: navController.pageController,
+              onPageChanged: (index) {
+                navController.onPageChanged(index);
+              },
+              children: widget.pages,
+            ),
+            floatingActionButton: FloatingActionButton(
+              shape: const CircleBorder(),
+              onPressed: () {
+                if (context.mounted) {
+                  try {
+                    context.go(RouteConstants.home);
+                  } catch (e) {
+                    if (widget.onMarketplaceTap != null) {
+                      widget.onMarketplaceTap!();
+                    }
                   }
                 }
-              }
-            },
-            backgroundColor: VCartColors.primaryOpacity(0.2),
-            foregroundColor: VCartColors.onPrimary,
-            elevation: 4,
-            child: Image.asset(
-              'assets/animation/vivera-animation.gif',
-              errorBuilder: (context, error, stackTrace) {
-                return const Icon(Icons.home, color: VCartColors.primary);
               },
+              backgroundColor: VCartColors.primaryOpacity(0.2),
+              foregroundColor: VCartColors.onPrimary,
+              elevation: 4,
+              child: Image.asset(
+                'assets/animation/vivera-animation.gif',
+                errorBuilder: (context, error, stackTrace) {
+                  return const Icon(Icons.home, color: VCartColors.primary);
+                },
+              ),
             ),
-          ),
-          floatingActionButtonLocation:
-              FloatingActionButtonLocation.centerDocked,
-          bottomNavigationBar: BottomAppBar(
-            color: VCartColors.surface,
-            shape: const CircularNotchedRectangle(),
-            notchMargin: 6.0,
-            child: Container(
-              height: 60,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Obx(() {
-                if (navController.isLoading || navController.navItems.isEmpty) {
-                  return const SizedBox.shrink();
-                }
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _buildNavItem(navController.navItems[0], navController),
-                    _buildNavItem(navController.navItems[1], navController),
-                    const SizedBox(width: 40),
-                    _buildNavItem(navController.navItems[2], navController),
-                    _buildNavItem(navController.navItems[3], navController),
-                  ],
-                );
-              }),
+            floatingActionButtonLocation:
+                FloatingActionButtonLocation.centerDocked,
+            bottomNavigationBar: BottomAppBar(
+              color: VCartColors.surface,
+              shape: const CircularNotchedRectangle(),
+              notchMargin: 6.0,
+              child: Container(
+                height: 60,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Obx(() {
+                  if (navController.isLoading ||
+                      navController.navItems.isEmpty) {
+                    return const SizedBox.shrink();
+                  }
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildNavItem(navController.navItems[0], navController),
+                      _buildNavItem(navController.navItems[1], navController),
+                      const SizedBox(width: 40),
+                      _buildNavItem(navController.navItems[2], navController),
+                      _buildNavItem(navController.navItems[3], navController),
+                    ],
+                  );
+                }),
+              ),
             ),
           ),
         );

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 
 import '../../../core/constants/vcart_colors.dart';
 import '../controllers/search_controller.dart';
@@ -141,20 +140,18 @@ class _SearchFieldState extends State<SearchField> {
                   color: VCartColors.textSecondary,
                 ),
               ),
-              suffixIcon: Obx(() {
-                return widget.controller.searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(
-                          Icons.clear,
-                          color: VCartColors.textSecondary,
-                        ),
-                        onPressed: () {
-                          widget.controller.clearSearch();
-                          _hideRecentSearches();
-                        },
-                      )
-                    : const SizedBox.shrink();
-              }),
+              suffixIcon: widget.controller.searchController.text.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(
+                        Icons.clear,
+                        color: VCartColors.textSecondary,
+                      ),
+                      onPressed: () {
+                        widget.controller.clearSearch();
+                        _hideRecentSearches();
+                      },
+                    )
+                  : const SizedBox.shrink(),
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 16,
