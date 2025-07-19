@@ -10,7 +10,7 @@ import '../../profile/presentation/pages/profile_page.dart';
 import '../../search/presentation/pages/search_page.dart';
 import '../../wishlist/presentation/pages/wishlist_page.dart';
 
-class VCartRouter {
+class VCartRouterG {
   static const String vcartHome = '/vcart';
   static const String vcartHomePath = '/vcart/home';
   static const String vcartCategories = '/vcart/categories';
@@ -18,7 +18,7 @@ class VCartRouter {
   static const String vcartProfile = '/vcart/profile';
   static const String vcartSearch = '/vcart/search';
   static const String vcartWishlist = '/vcart/wishlist';
-  static const String vcartProduct = '/product';
+  static const String vcartProduct = '/vcart/product';
   static const String vcartCategory = '/vcart/category';
 
   static List<GetPage> getPages() {
@@ -44,15 +44,15 @@ class VCartRouter {
         name: '$vcartProduct/:id',
         page: () {
           final productId = Get.parameters['id'] ?? '';
-          // Ensure controller is available when navigating to product page
-          Get.lazyPut<VCartProductOverviewController>(
-            () => Get.find<VCartProductOverviewController>(),
-            fenix: true,
-          );
+          if (!Get.isRegistered<VCartProductOverviewController>()) {
+            Get.lazyPut<VCartProductOverviewController>(
+              () => Get.find<VCartProductOverviewController>(),
+              fenix: true,
+            );
+          }
           return VCartProductOverviewPage(productId: productId);
         },
         binding: BindingsBuilder(() {
-          // Initialize product overview controller if not already present
           if (!Get.isRegistered<VCartProductOverviewController>()) {
             Get.lazyPut<VCartProductOverviewController>(
               () => Get.find<VCartProductOverviewController>(),
@@ -65,7 +65,6 @@ class VCartRouter {
     ];
   }
 
-  // Navigation methods to ensure proper VCart context
   static void toVCartHome() {
     Get.offAllNamed(vcartHome);
   }
@@ -92,7 +91,6 @@ class VCartRouter {
   }
 
   static void backToVCartHome() {
-    // Navigate back to VCart home, removing all other routes
     Get.offAllNamed(vcartHome);
   }
 
@@ -117,7 +115,6 @@ class VCartRouter {
   }
 }
 
-// Updated placeholder pages for VCart
 class VCartCartPage extends StatelessWidget {
   const VCartCartPage({super.key});
 
@@ -129,7 +126,7 @@ class VCartCartPage extends StatelessWidget {
       foregroundColor: Colors.white,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back),
-        onPressed: () => VCartRouter.backInVCart(),
+        onPressed: () => VCartRouterG.backInVCart(),
       ),
     ),
     body: const Center(

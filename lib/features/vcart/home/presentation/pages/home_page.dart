@@ -4,6 +4,7 @@ import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../core/constants/vcart_colors.dart';
 import '../../../core/constants/vcart_constants.dart';
+import '../../../core/router/vcart_router.dart';
 import '../../../shared/presentation/widgets/error_widget.dart';
 import '../controllers/home_controller.dart';
 import '../widgets/banner_carousel.dart';
@@ -247,9 +248,11 @@ class VCartHomePage extends StatelessWidget {
     return const SliverToBoxAdapter(child: SizedBox(height: 100));
   }
 
+  // Updated navigation methods in home_page.dart
+
   // Navigation methods
   void _navigateToSearch() {
-    Get.toNamed('/search');
+    Get.toNamed(VCartRouterG.vcartSearch);
   }
 
   void _navigateToNotifications() {
@@ -257,11 +260,11 @@ class VCartHomePage extends StatelessWidget {
   }
 
   void _navigateToCategory(dynamic category) {
-    Get.toNamed('/category', parameters: {'id': category.id});
+    // VCartRouter.toVCartCategory(category.id);
   }
 
   void _navigateToProductDetail(String productId) {
-    Get.toNamed('/product/$productId');
+    VCartRouterG.toVCartProduct(productId);
   }
 
   void _navigateToProductListing(String type) {
@@ -272,12 +275,12 @@ class VCartHomePage extends StatelessWidget {
     switch (banner.field?.toLowerCase()) {
       case 'product':
         if (banner.productId != null) {
-          _navigateToProductDetail(banner.productId!);
+          // VCartRouter.toVCartProduct(banner.productId!);
         }
         break;
       case 'category':
         if (banner.categoryId != null) {
-          Get.toNamed('/category', parameters: {'id': banner.categoryId!});
+          // VCartRouter.toVCartCategory(banner.categoryId!);
         }
         break;
       case 'subcategory':

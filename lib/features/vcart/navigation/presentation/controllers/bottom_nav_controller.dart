@@ -10,17 +10,14 @@ class VCartBottomNavController extends GetxController {
 
   VCartBottomNavController({required this.repository});
 
-  // Observable variables
   final _currentIndex = 0.obs;
   final _navItems = <NavItem>[].obs;
   final _isLoading = false.obs;
 
-  // Getters
   int get currentIndex => _currentIndex.value;
   List<NavItem> get navItems => _navItems;
   bool get isLoading => _isLoading.value;
 
-  // Page controller for managing page transitions
   late PageController pageController;
 
   @override
@@ -49,29 +46,29 @@ class VCartBottomNavController extends GetxController {
 
   Future<void> _loadCurrentIndex() async {
     final result = await repository.getCurrentIndex();
-    result.fold(
-      (failure) => {}, // Ignore failure, use default index
-      (index) => _currentIndex.value = index,
-    );
+    result.fold((failure) => {}, (index) => _currentIndex.value = index);
   }
 
   void setCurrentIndex(int index) {
     if (index == _currentIndex.value) return;
-
     _currentIndex.value = index;
-
-    // Animate to page
-    pageController.animateToPage(
-      index,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    );
-
-    // Save to storage
+    if (pageController.hasClients) {
+      pageController.animateToPage(
+        index,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
     repository.setCurrentIndex(index);
-
-    // Update nav items active state
     _updateNavItemsActiveState(index);
+  }
+
+  void onPageChanged(int index) {
+    if (index != _currentIndex.value) {
+      _currentIndex.value = index;
+      repository.setCurrentIndex(index);
+      _updateNavItemsActiveState(index);
+    }
   }
 
   void _updateNavItemsActiveState(int activeIndex) {
@@ -82,6 +79,5 @@ class VCartBottomNavController extends GetxController {
 
   void _handleFailure(Failure failure) {
     _isLoading.value = false;
-    // Handle failure silently for navigation
   }
 }

@@ -199,12 +199,12 @@ class _VCartProductOverviewPageState extends State<VCartProductOverviewPage>
   void _handleBackPress() {
     final currentRoute = Get.currentRoute;
     if (currentRoute.startsWith('/vcart') || currentRoute.contains('product')) {
-      VCartRouter.backToVCartHome();
+      VCartRouterG.backToVCartHome();
     } else {
       if (Navigator.canPop(context)) {
         Navigator.pop(context);
       } else {
-        VCartRouter.backToVCartHome();
+        VCartRouterG.backToVCartHome();
       }
     }
   }

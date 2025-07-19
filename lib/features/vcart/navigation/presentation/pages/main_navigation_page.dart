@@ -27,7 +27,6 @@ class _VCartMainNavigationPageState extends State<VCartMainNavigationPage> {
   @override
   void initState() {
     super.initState();
-    // Ensure controller is properly initialized
     controller = Get.find<VCartBottomNavController>();
   }
 
@@ -41,19 +40,32 @@ class _VCartMainNavigationPageState extends State<VCartMainNavigationPage> {
           body: PageView(
             controller: navController.pageController,
             onPageChanged: (index) {
-              navController.setCurrentIndex(index);
+              navController.onPageChanged(index);
             },
             children: widget.pages,
           ),
           floatingActionButton: FloatingActionButton(
             shape: const CircleBorder(),
             onPressed: () {
-              context.go(RouteConstants.home);
+              if (context.mounted) {
+                try {
+                  context.go(RouteConstants.home);
+                } catch (e) {
+                  if (widget.onMarketplaceTap != null) {
+                    widget.onMarketplaceTap!();
+                  }
+                }
+              }
             },
             backgroundColor: VCartColors.primaryOpacity(0.2),
             foregroundColor: VCartColors.onPrimary,
             elevation: 4,
-            child: Image.asset('assets/animation/vivera-animation.gif'),
+            child: Image.asset(
+              'assets/animation/vivera-animation.gif',
+              errorBuilder: (context, error, stackTrace) {
+                return const Icon(Icons.home, color: VCartColors.primary);
+              },
+            ),
           ),
           floatingActionButtonLocation:
               FloatingActionButtonLocation.centerDocked,

@@ -25,7 +25,7 @@ class VCartApp extends StatelessWidget {
             VCartProfilePage(),
           ],
         ),
-        getPages: VCartRouter.getPages(),
+        getPages: VCartRouterG.getPages(),
       ),
     );
   }

@@ -146,7 +146,7 @@ class _VCartWishlistPageState extends State<VCartWishlistPage> {
               child: Icon(Icons.arrow_back, color: VCartColors.textPrimary),
             ),
           ),
-          onPressed: () => VCartRouter.backInVCart(),
+          onPressed: () => VCartRouterG.backInVCart(),
         ),
       ),
       centerTitle: false,
@@ -163,6 +163,6 @@ class _VCartWishlistPageState extends State<VCartWishlistPage> {
   }
 
   void _navigateToProductDetail(String productId) {
-    VCartRouter.toVCartProduct(productId);
+    VCartRouterG.toVCartProduct(productId);
   }
 }

@@ -97,7 +97,7 @@ class _VCartSearchPageState extends State<VCartSearchPage> {
               child: Icon(Icons.arrow_back, color: VCartColors.textPrimary),
             ),
           ),
-          onPressed: () => VCartRouter.backInVCart(),
+          onPressed: () => VCartRouterG.backInVCart(),
         ),
       ),
       centerTitle: false,
@@ -259,10 +259,10 @@ class _VCartSearchPageState extends State<VCartSearchPage> {
   }
 
   void _navigateToSection(String sectionId) {
-    VCartRouter.toVCartCategory(sectionId);
+    VCartRouterG.toVCartCategory(sectionId);
   }
 
   void _navigateToProduct(String productId) {
-    VCartRouter.toVCartProduct(productId);
+    VCartRouterG.toVCartProduct(productId);
   }
 }

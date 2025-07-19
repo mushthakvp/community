@@ -98,14 +98,12 @@ class VCartProfilePage extends StatelessWidget {
     );
   }
 
-  // Navigation methods
   void _navigateToOrders() {
-    // Navigate to orders page
     Get.toNamed('/orders');
   }
 
   void _navigateToWishlist() {
-    VCartRouter.toVCartCategory('wishlist');
+    Get.toNamed(VCartRouterG.vcartWishlist);
   }
 
   void _navigateToSavedAddress() {
