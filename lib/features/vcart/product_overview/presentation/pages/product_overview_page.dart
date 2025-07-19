@@ -114,7 +114,6 @@ class _VCartProductOverviewPageState extends State<VCartProductOverviewPage>
                 onRetry: () => controller.refreshData(widget.productId),
               );
             }
-
             return Skeletonizer(
               enabled: controller.isLoading,
               child: Stack(
