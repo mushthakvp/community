@@ -31,7 +31,7 @@ class ChatProvider extends ChangeNotifier {
   final UploadMedia uploadMedia;
   final ChatRepository chatRepository;
   final SocketDataSource socketDataSource;
-  final PersonalChatRepository? personalChatRepository;
+  final PersonalChatRepository personalChatRepository; // Made required
 
   ChatProvider({
     required this.fetchMessages,
@@ -40,7 +40,7 @@ class ChatProvider extends ChangeNotifier {
     required this.uploadMedia,
     required this.chatRepository,
     required this.socketDataSource,
-    this.personalChatRepository,
+    required this.personalChatRepository, // Made required
   }) {
     _initializeCache();
   }
@@ -102,8 +102,7 @@ class ChatProvider extends ChangeNotifier {
   bool get canSendMessages {
     switch (_currentChatType) {
       case ChatType.personal:
-        return personalChatRepository !=
-            null; // Only allow if repository is available
+        return true; // Always allow personal chat since we have repository
       case ChatType.bot:
         return false; // Cannot send to bots
       case ChatType.group:
@@ -125,8 +124,8 @@ class ChatProvider extends ChangeNotifier {
       ? (socketDataSource as SocketDataSourceImpl).isConnected
       : false;
 
-  // Check if personal chat is supported
-  bool get isPersonalChatSupported => personalChatRepository != null;
+  // Personal chat is now always supported
+  bool get isPersonalChatSupported => true;
 
   Future<void> _initializeCache() async {
     try {
@@ -168,7 +167,6 @@ class ChatProvider extends ChangeNotifier {
       _connectedChatId = null;
     }
 
-    // Clear all optimistic message timers
     _optimisticTimers.forEach((key, timer) => timer.cancel());
     _optimisticTimers.clear();
 
@@ -196,24 +194,25 @@ class ChatProvider extends ChangeNotifier {
   }) async {
     if (_isInitializing) return;
 
-    // Determine chat type
+    // Determine chat type with improved logic
     if (chatType != null) {
       _currentChatType = chatType;
     } else if (isPersonal) {
       _currentChatType = ChatType.personal;
     } else {
-      _currentChatType = chatId.length < 30
+      // Better heuristic: MongoDB ObjectIds are 24 characters
+      // Group/Community IDs are typically longer or have different patterns
+      _currentChatType =
+          (chatId.length == 24 &&
+              !chatId.contains('group') &&
+              !chatId.contains('community'))
           ? ChatType.personal
           : ChatType.group;
     }
 
-    // Check if personal chat is supported when trying to open personal chat
-    if (_currentChatType == ChatType.personal && !isPersonalChatSupported) {
-      _setError(
-        'Personal chat is not supported in this version. Please update the app or contact support.',
-      );
-      return;
-    }
+    debugPrint(
+      'Initializing chat: $chatId, type: $_currentChatType, isPersonal: $isPersonal',
+    );
 
     if (_currentChatId != null && _currentChatId != chatId) {
       _clearCurrentChat();
@@ -284,21 +283,11 @@ class ChatProvider extends ChangeNotifier {
     String chatId,
     ChatCacheData? cachedData,
   ) async {
-    debugPrint(
-      'Fetching personal chat data for: $chatId --- ${cachedData != null}',
-    );
-
-    if (!isPersonalChatSupported) {
-      debugPrint('Personal chat repository is null');
-      _setError(
-        'Personal chat feature is not available. Please update the app or contact support.',
-      );
-      return;
-    }
+    debugPrint('Fetching personal chat data for: $chatId');
 
     try {
-      debugPrint('Api Calling for personal chat');
-      final result = await personalChatRepository!.getPersonalChatWithMessages(
+      debugPrint('API Calling for personal chat');
+      final result = await personalChatRepository.getPersonalChatWithMessages(
         chatId,
       );
 
@@ -379,13 +368,20 @@ class ChatProvider extends ChangeNotifier {
   void _setupMessageListener(String chatId) {
     _messageSubscription?.cancel();
 
-    if (_currentChatType == ChatType.personal && isPersonalChatSupported) {
-      _messageSubscription = personalChatRepository!
+    if (_currentChatType == ChatType.personal) {
+      _messageSubscription = personalChatRepository
           .listenToPersonalMessages()
           .listen(
             (message) {
-              if (_currentChatId == chatId && message.chatId == chatId) {
-                _onNewMessage(message);
+              // For personal chat, check if message involves current chat user
+              if (_currentChatId == chatId) {
+                final currentUserId = StorageService.userId;
+                // Check if this message is from or to the current chat user
+                if (message.senderId == chatId ||
+                    (message.senderId == currentUserId &&
+                        message.chatId == chatId)) {
+                  _onNewMessage(message);
+                }
               }
             },
             onError: (error) {
@@ -429,7 +425,7 @@ class ChatProvider extends ChangeNotifier {
 
   Future<void> _joinSocketRoom(String chatId) async {
     try {
-      if (_currentChatType == ChatType.personal && isPersonalChatSupported) {
+      if (_currentChatType == ChatType.personal) {
         debugPrint('Joining personal chat room: $chatId');
         await socketDataSource.joinPersonalChat(chatId);
       } else {
@@ -444,12 +440,28 @@ class ChatProvider extends ChangeNotifier {
   }
 
   void _onNewMessage(MessageEntity message) {
-    if (StorageService.userId == message.senderId) {
+    final currentUserId = StorageService.userId;
+
+    // Skip if it's our own message (to avoid duplicates)
+    if (currentUserId == message.senderId) {
       return;
     }
-    if (_currentChatId == null || message.chatId != _currentChatId) {
-      return;
+
+    if (_currentChatId == null) return;
+
+    // For personal chat, check if message is relevant to current chat
+    if (_currentChatType == ChatType.personal) {
+      // Message is relevant if sender is the current chat user
+      if (message.senderId != _currentChatId) {
+        return;
+      }
+    } else {
+      // For group chat, check chat ID
+      if (message.chatId != _currentChatId) {
+        return;
+      }
     }
+
     if (_processedMessageIds.contains(message.id)) {
       return;
     }
@@ -567,11 +579,7 @@ class ChatProvider extends ChangeNotifier {
     if (content.isEmpty || _isSending) return;
 
     if (!canSendMessages) {
-      if (_currentChatType == ChatType.personal && !isPersonalChatSupported) {
-        _setError('Personal chat is not supported. Please update the app.');
-      } else {
-        _setError('You cannot send messages to this chat');
-      }
+      _setError('You cannot send messages to this chat');
       return;
     }
 
@@ -594,9 +602,9 @@ class ChatProvider extends ChangeNotifier {
     try {
       Either<Failure, MessageEntity> result;
 
-      if (_currentChatType == ChatType.personal && isPersonalChatSupported) {
+      if (_currentChatType == ChatType.personal) {
         debugPrint('Sending personal message to: $chatId');
-        result = await personalChatRepository!.sendPersonalMessage(
+        result = await personalChatRepository.sendPersonalMessage(
           receiverId: chatId,
           content: content,
         );
@@ -635,11 +643,7 @@ class ChatProvider extends ChangeNotifier {
     if (_isUploading) return;
 
     if (!canSendMessages) {
-      if (_currentChatType == ChatType.personal && !isPersonalChatSupported) {
-        _setError('Personal chat is not supported. Cannot send media.');
-      } else {
-        _setError('You cannot send media to this chat');
-      }
+      _setError('You cannot send media to this chat');
       return;
     }
 
@@ -662,8 +666,8 @@ class ChatProvider extends ChangeNotifier {
       ) async {
         Either<Failure, MessageEntity> result;
 
-        if (_currentChatType == ChatType.personal && isPersonalChatSupported) {
-          result = await personalChatRepository!.sendPersonalMessage(
+        if (_currentChatType == ChatType.personal) {
+          result = await personalChatRepository.sendPersonalMessage(
             receiverId: chatId,
             content: '',
             mediaUrl: mediaUrl,
@@ -692,105 +696,50 @@ class ChatProvider extends ChangeNotifier {
     _setUploading(false);
   }
 
-  Future<void> joinGroupOrBot(String chatId) async {
-    if (_isLoading) return;
-    setLoading(true);
-    _clearError();
-    try {
-      final result = await chatRepository.joinGroup(chatId);
-      await result.fold(
-        (failure) async {
-          _setError(failure.message);
-        },
-        (_) async {
-          _clearChatCache(chatId);
-          _setError(null);
-          await forceRefreshChat(chatId);
-          debugPrint('Joined group or bot successfully');
-        },
-      );
-    } catch (e) {
-      _setError('Failed to join group: $e');
-    } finally {
-      setLoading(false);
-    }
-  }
+  // Rest of the methods remain the same...
+  // [Include all other methods from your original ChatProvider]
 
-  Future<void> forceRefreshChat(String chatId) async {
-    _setConnecting(true);
-    if (_currentChatId == chatId) {
-      _messages.clear();
-      _currentChat = null;
-      _processedMessageIds.clear();
-    }
-    await initializeChat(chatId);
-    _setConnecting(false);
-  }
-
-  Future<void> reconnectAndRejoin() async {
-    if (_currentChatId == null) return;
-    _setConnecting(true);
-    try {
-      await socketDataSource.connect();
-      await _joinSocketRoom(_currentChatId!);
-      _setupMessageListener(_currentChatId!);
-    } catch (e) {
-      _setError('Failed to reconnect: $e');
-    } finally {
-      _setConnecting(false);
-    }
-  }
-
-  void _updateCache(
-    String chatId,
-    ChatEntity chat,
-    List<MessageEntity> messages,
-  ) {
-    try {
-      _memoryCache[chatId] = ChatCacheData(
-        chat: chat,
-        messages: List.from(messages),
-        lastUpdated: DateTime.now(),
-      );
-    } catch (e) {
-      // Cache error handled silently
-    }
-  }
-
-  void _updateCacheWithNewMessage(String chatId, MessageEntity message) {
-    try {
-      if (_memoryCache.containsKey(chatId)) {
-        final existingIndex = _memoryCache[chatId]!.messages.indexWhere(
-          (m) => m.id == message.id,
+  String getChatDisplayName() {
+    switch (_currentChatType) {
+      case ChatType.personal:
+        final otherUser = _currentChat?.users.firstWhere(
+          (user) => user.id != StorageService.userId,
+          orElse: () => _currentChat!.users.first,
         );
-        if (existingIndex != -1) {
-          _memoryCache[chatId]!.messages[existingIndex] = message;
-        } else {
-          _memoryCache[chatId]!.messages.add(message);
-        }
-        _memoryCache[chatId]!.lastUpdated = DateTime.now();
-      }
-    } catch (e) {
-      // Cache error handled silently
+        return otherUser?.name ?? 'Personal Chat';
+      case ChatType.group:
+      case ChatType.bot:
+        return _currentChat?.groupName ?? 'Group Chat';
     }
   }
 
-  void _clearChatCache(String chatId) {
-    _memoryCache.remove(chatId);
+  String? getChatDisplayImage() {
+    switch (_currentChatType) {
+      case ChatType.personal:
+        final otherUser = _currentChat?.users.firstWhere(
+          (user) => user.id != StorageService.userId,
+          orElse: () => _currentChat!.users.first,
+        );
+        return otherUser?.profileImage;
+      case ChatType.group:
+      case ChatType.bot:
+        return _currentChat?.groupImage;
+    }
   }
 
-  Future<void> refreshChat(String chatId) async {
-    _clearChatCache(chatId);
-    await initializeChat(chatId, chatType: _currentChatType);
+  bool isPersonalChatOnline() {
+    if (_currentChatType != ChatType.personal) return false;
+    final otherUser = _currentChat?.users.firstWhere(
+      (user) => user.id != StorageService.userId,
+      orElse: () => _currentChat!.users.first,
+    );
+    return otherUser?.isOnline ?? false;
   }
 
+  // Image and File Picker Methods
   Future<void> pickImage(String chatId, {bool fromCamera = false}) async {
     if (!canSendMessages) {
-      if (_currentChatType == ChatType.personal && !isPersonalChatSupported) {
-        _setError('Personal chat is not supported. Cannot send images.');
-      } else {
-        _setError('You cannot send images to this chat');
-      }
+      _setError('You cannot send images to this chat');
       return;
     }
     try {
@@ -813,11 +762,7 @@ class ChatProvider extends ChangeNotifier {
 
   Future<void> pickFile(String chatId) async {
     if (!canSendMessages) {
-      if (_currentChatType == ChatType.personal && !isPersonalChatSupported) {
-        _setError('Personal chat is not supported. Cannot send files.');
-      } else {
-        _setError('You cannot send files to this chat');
-      }
+      _setError('You cannot send files to this chat');
       return;
     }
     try {
@@ -845,15 +790,10 @@ class ChatProvider extends ChangeNotifier {
     }
   }
 
+  // Voice Recording Methods
   Future<void> startRecording() async {
     if (!canSendMessages) {
-      if (_currentChatType == ChatType.personal && !isPersonalChatSupported) {
-        _setError(
-          'Personal chat is not supported. Cannot send voice messages.',
-        );
-      } else {
-        _setError('You cannot send voice messages to this chat');
-      }
+      _setError('You cannot send voice messages to this chat');
       return;
     }
     try {
@@ -917,6 +857,73 @@ class ChatProvider extends ChangeNotifier {
     }
   }
 
+  void _stopRecordingTimer() {
+    _recordingTimer?.cancel();
+    _recordingTimer = null;
+  }
+
+  void _resetRecording() {
+    _isRecording = false;
+    _recordingDuration = 0;
+    _recordingPath = null;
+    notifyListeners();
+  }
+
+  // Group/Bot Management Methods
+  Future<void> joinGroupOrBot(String chatId) async {
+    if (_isLoading) return;
+    setLoading(true);
+    _clearError();
+    try {
+      final result = await chatRepository.joinGroup(chatId);
+      await result.fold(
+        (failure) async {
+          _setError(failure.message);
+        },
+        (_) async {
+          _clearChatCache(chatId);
+          _setError(null);
+          await forceRefreshChat(chatId);
+          debugPrint('Joined group or bot successfully');
+        },
+      );
+    } catch (e) {
+      _setError('Failed to join group: $e');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  Future<void> forceRefreshChat(String chatId) async {
+    _setConnecting(true);
+    if (_currentChatId == chatId) {
+      _messages.clear();
+      _currentChat = null;
+      _processedMessageIds.clear();
+    }
+    await initializeChat(chatId, chatType: _currentChatType);
+    _setConnecting(false);
+  }
+
+  Future<void> reconnectAndRejoin() async {
+    if (_currentChatId == null) return;
+    _setConnecting(true);
+    try {
+      await socketDataSource.connect();
+      await _joinSocketRoom(_currentChatId!);
+      _setupMessageListener(_currentChatId!);
+    } catch (e) {
+      _setError('Failed to reconnect: $e');
+    } finally {
+      _setConnecting(false);
+    }
+  }
+
+  Future<void> refreshChat(String chatId) async {
+    _clearChatCache(chatId);
+    await initializeChat(chatId, chatType: _currentChatType);
+  }
+
   Future<void> deleteMessage(String messageId) async {
     try {
       _messages.removeWhere((message) => message.id == messageId);
@@ -936,31 +943,39 @@ class ChatProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> markMessagesAsRead() async {
+  // Cache Management Methods
+  void _clearChatCache(String chatId) {
+    _memoryCache.remove(chatId);
+  }
+
+  // Utility Methods
+  void scrollToBottom() {
+    _shouldAutoScroll = true;
+    _isUserScrolling = false;
+    _scrollToBottomSmooth();
+  }
+
+  List<MessageEntity> searchMessages(String query) {
+    if (query.trim().isEmpty) return _messages;
+    final lowercaseQuery = query.toLowerCase();
+    return _messages
+        .where(
+          (message) =>
+              message.content.toLowerCase().contains(lowercaseQuery) ||
+              message.senderName.toLowerCase().contains(lowercaseQuery),
+        )
+        .toList();
+  }
+
+  MessageEntity? getMessageById(String messageId) {
     try {
-      final unreadMessages = _messages
-          .where((message) => !message.isCurrentUser && message.id.isNotEmpty)
-          .toList();
-      for (final message in unreadMessages) {
-        await chatRepository.markMessageAsRead(message.id);
-      }
+      return _messages.firstWhere((message) => message.id == messageId);
     } catch (e) {
-      // Error handled silently
+      return null;
     }
   }
 
-  void _stopRecordingTimer() {
-    _recordingTimer?.cancel();
-    _recordingTimer = null;
-  }
-
-  void _resetRecording() {
-    _isRecording = false;
-    _recordingDuration = 0;
-    _recordingPath = null;
-    notifyListeners();
-  }
-
+  // Setters and State Management
   void setLoading(bool loading) {
     _isLoading = loading;
     notifyListeners();
@@ -994,88 +1009,65 @@ class ChatProvider extends ChangeNotifier {
     _clearError();
   }
 
-  void scrollToBottom() {
-    _shouldAutoScroll = true;
-    _isUserScrolling = false;
-    _scrollToBottomSmooth();
-  }
-
-  List<MessageEntity> searchMessages(String query) {
-    if (query.trim().isEmpty) return _messages;
-    final lowercaseQuery = query.toLowerCase();
-    return _messages
-        .where(
-          (message) =>
-              message.content.toLowerCase().contains(lowercaseQuery) ||
-              message.senderName.toLowerCase().contains(lowercaseQuery),
-        )
-        .toList();
-  }
-
-  MessageEntity? getMessageById(String messageId) {
+  void _updateCache(
+    String chatId,
+    ChatEntity chat,
+    List<MessageEntity> messages,
+  ) {
     try {
-      return _messages.firstWhere((message) => message.id == messageId);
+      _memoryCache[chatId] = ChatCacheData(
+        chat: chat,
+        messages: List.from(messages),
+        lastUpdated: DateTime.now(),
+      );
     } catch (e) {
-      return null;
+      // Cache error handled silently
     }
   }
 
-  String getChatDisplayName() {
-    switch (_currentChatType) {
-      case ChatType.personal:
-        // For personal chat, get the friend's name from users array
-        final otherUser = _currentChat?.users.firstWhere(
-          (user) => user.id != StorageService.userId,
-          orElse: () => _currentChat!.users.first,
+  void _updateCacheWithNewMessage(String chatId, MessageEntity message) {
+    try {
+      if (_memoryCache.containsKey(chatId)) {
+        final existingIndex = _memoryCache[chatId]!.messages.indexWhere(
+          (m) => m.id == message.id,
         );
-        return otherUser?.name ?? 'Personal Chat';
-      case ChatType.group:
-      case ChatType.bot:
-        return _currentChat?.groupName ?? 'Group Chat';
+        if (existingIndex != -1) {
+          _memoryCache[chatId]!.messages[existingIndex] = message;
+        } else {
+          _memoryCache[chatId]!.messages.add(message);
+        }
+        _memoryCache[chatId]!.lastUpdated = DateTime.now();
+      }
+    } catch (e) {
+      // Cache error handled silently
     }
   }
 
-  String? getChatDisplayImage() {
-    switch (_currentChatType) {
-      case ChatType.personal:
-        // For personal chat, get the friend's profile image from users array
-        final otherUser = _currentChat?.users.firstWhere(
-          (user) => user.id != StorageService.userId,
-          orElse: () => _currentChat!.users.first,
-        );
-        return otherUser?.profileImage;
-      case ChatType.group:
-      case ChatType.bot:
-        return _currentChat?.groupImage;
+  Future<void> markMessagesAsRead() async {
+    try {
+      final unreadMessages = _messages
+          .where((message) => !message.isCurrentUser && message.id.isNotEmpty)
+          .toList();
+      for (final message in unreadMessages) {
+        await chatRepository.markMessageAsRead(message.id);
+      }
+    } catch (e) {
+      // Error handled silently
     }
-  }
-
-  bool isPersonalChatOnline() {
-    if (_currentChatType != ChatType.personal) return false;
-    final otherUser = _currentChat?.users.firstWhere(
-      (user) => user.id != StorageService.userId,
-      orElse: () => _currentChat!.users.first,
-    );
-    return otherUser?.isOnline ?? false;
   }
 
   @override
   void dispose() {
     _clearCurrentChat();
-
     _recordingTimer?.cancel();
     _scrollTimer?.cancel();
-
     _optimisticTimers.forEach((key, timer) => timer.cancel());
     _optimisticTimers.clear();
-
     _audioRecorder.dispose();
     messageController.dispose();
     scrollController.dispose();
     focusNode.dispose();
-
     socketDataSource.disconnect().catchError((e) {});
-
     super.dispose();
   }
 }

@@ -49,35 +49,23 @@ class ChatRouter {
     ),
 
     // ==================== CHAT SCREEN ROUTE ====================
+    // In your router configuration
     GoRoute(
       path: '$chatScreenPath/:chatId',
-      name: 'chatScreen',
+      name: 'chat',
       builder: (context, state) {
         final chatId = state.pathParameters['chatId']!;
-        final queryParams = state.uri.queryParameters;
-        final extra = state.extra as Map<String, dynamic>? ?? {};
-        final chatName = queryParams['chatName'] ?? extra['chatName'] ?? 'Chat';
-        final chatImage = queryParams['chatImage'] ?? extra['chatImage'];
-        final isGroup =
-            queryParams['isGroup'] == 'true' || extra['isGroup'] == true;
-        final isPersonal =
-            queryParams['isPersonal'] == 'true' || extra['isPersonal'] == true;
-
-        // Determine chat type based on parameters
-        ChatType? chatType;
-        if (isPersonal) {
-          chatType = ChatType.personal;
-        } else if (isGroup) {
-          chatType = ChatType.group;
-        }
+        final extra = state.extra as Map<String, dynamic>?;
 
         return ChatPage(
           chatId: chatId,
-          chatName: chatName,
-          chatImage: chatImage,
-          isGroup: isGroup,
-          isPersonal: isPersonal,
-          chatType: chatType,
+          chatName: extra?['chatName'] ?? 'Chat',
+          chatImage: extra?['chatImage'],
+          isGroup: extra?['isGroup'] ?? false,
+          isPersonal: extra?['isPersonal'] ?? false,
+          chatType: extra?['chatType'] == 'personal'
+              ? ChatType.personal
+              : (extra?['isGroup'] == true ? ChatType.group : null),
         );
       },
     ),

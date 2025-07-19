@@ -49,4 +49,10 @@ class ChatApiConstants {
   static const String getCoupons = 'user/getCoupons';
   static const String actionOnCoupons = 'user/actionOnCoupon/';
   static const String useCoupon = 'user/useCoupon/';
+
+  // Personal Chat Endpoints
+  static const String getPersonalChats = 'fetchChats';
+  static const String accessPersonalChat = 'accessChat';
+  static const String sendPersonalMessage = 'newMessageSingleChat';
+  static const String setupPersonalChat = 'setup';
 }

@@ -16,7 +16,6 @@ abstract class PersonalChatRemoteDataSource {
 class PersonalChatRemoteDataSourceImpl implements PersonalChatRemoteDataSource {
   final ApiClient apiClient;
 
-  // Cache for personal chat info
   final Map<String, PersonalChatModel> _personalChatCache = {};
   final Map<String, DateTime> _cacheTimestamps = {};
   static const Duration _cacheTimeout = Duration(minutes: 5);
@@ -37,31 +36,30 @@ class PersonalChatRemoteDataSourceImpl implements PersonalChatRemoteDataSource {
 
   @override
   Future<PersonalChatModel> getPersonalChat(String userId) async {
-    // Check cache first
     if (_isCacheValid(userId)) {
       return _personalChatCache[userId]!;
     }
 
     final response = await apiClient.get(
-      '${ChatApiConstants.getSingleChat}?friendId=$userId',
+      '${ChatApiConstants.accessPersonalChat}?friendId=$userId',
     );
 
     final data = jsonDecode(response.body);
     final chat = PersonalChatModel.fromJson(data['chat']);
 
-    // Cache the result
     _cacheResult(userId, chat);
-
     return chat;
   }
 
   @override
   Future<List<MessageModel>> getPersonalChatMessages(String userId) async {
     final response = await apiClient.get(
-      '${ChatApiConstants.fetchAllMessagesSingleChat}$userId',
+      '${ChatApiConstants.accessPersonalChat}?friendId=$userId',
     );
+
     final data = jsonDecode(response.body);
-    log(response.body);
+    log('Personal chat messages response: ${response.body}');
+
     final messagesJson = data['messages'] as List<dynamic>;
     return messagesJson.map((json) => MessageModel.fromJson(json)).toList();
   }
@@ -71,16 +69,22 @@ class PersonalChatRemoteDataSourceImpl implements PersonalChatRemoteDataSource {
     String userId,
   ) async {
     final response = await apiClient.get(
-      '${ChatApiConstants.fetchAllMessagesSingleChat}$userId',
+      '${ChatApiConstants.accessPersonalChat}?friendId=$userId',
     );
+
     final data = jsonDecode(response.body);
+    log('Personal chat with messages response: ${response.body}');
+
     final chatData = data['chat'] as Map<String, dynamic>;
     final messagesJson = data['messages'] as List<dynamic>;
+
     final chat = PersonalChatModel.fromJson(chatData);
     final messages = messagesJson
         .map((json) => MessageModel.fromJson(json))
         .toList();
+
     _cacheResult(userId, chat);
+
     return {'chat': chat, 'messages': messages};
   }
 

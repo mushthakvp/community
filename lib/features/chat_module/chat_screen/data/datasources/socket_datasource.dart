@@ -34,6 +34,9 @@ class SocketDataSourceImpl implements SocketDataSource {
   IO.Socket? _socket;
   final StreamController<MessageModel> _messageController =
       StreamController<MessageModel>.broadcast();
+  final StreamController<MessageModel> _personalMessageController =
+      StreamController<MessageModel>.broadcast();
+
   bool _isConnected = false;
   bool _isConnecting = false;
   Timer? _reconnectTimer;
@@ -41,23 +44,17 @@ class SocketDataSourceImpl implements SocketDataSource {
   static const int maxReconnectAttempts = 5;
   static const Duration reconnectDelay = Duration(seconds: 2);
 
-  // Track current room to avoid conflicts
   String? _currentRoomId;
   final Set<String> _joinedRooms = <String>{};
 
   @override
   bool get isConnected => _isConnected && _socket?.connected == true;
 
-  String? get currentRoom => _currentRoomId;
-
   @override
   Future<void> connect() async {
-    if (_isConnecting) {
-      return;
-    }
-    if (isConnected) {
-      return;
-    }
+    if (_isConnecting) return;
+    if (isConnected) return;
+
     _isConnecting = true;
     try {
       await _connectToSocket();
@@ -123,51 +120,33 @@ class SocketDataSourceImpl implements SocketDataSource {
       _scheduleReconnect();
     });
 
-    _socket!.onError((error) {
-      debugPrint('Socket error: $error');
-    });
-
     // Group/Community chat message listener
     _socket!.on('message_received_community', (data) {
       try {
-        if (data == null) {
-          return;
-        }
+        if (data == null) return;
+
         final rawData = data as Map<String, dynamic>;
         String? messageRoomId;
 
-        if (rawData.containsKey('community') &&
-            rawData['community'] != null &&
-            rawData['community'].toString().isNotEmpty) {
+        if (rawData.containsKey('community') && rawData['community'] != null) {
           messageRoomId = rawData['community'].toString();
-        } else if (rawData.containsKey('chatId') &&
-            rawData['chatId'] != null &&
-            rawData['chatId'].toString().isNotEmpty) {
+        } else if (rawData.containsKey('chatId') && rawData['chatId'] != null) {
           messageRoomId = rawData['chatId'].toString();
-        } else if (rawData.containsKey('communityId') &&
-            rawData['communityId'] != null &&
-            rawData['communityId'].toString().isNotEmpty) {
-          messageRoomId = rawData['communityId'].toString();
         }
 
-        if (messageRoomId == null || messageRoomId.isEmpty) {
-          return;
-        }
+        if (messageRoomId == null || messageRoomId.isEmpty) return;
 
         final messageData = Map<String, dynamic>.from(rawData);
         messageData['chat'] = messageRoomId;
         final message = MessageModel.fromJson(messageData);
-        final shouldEmit = _shouldEmitMessage(messageRoomId);
 
-        if (shouldEmit) {
+        if (_shouldEmitMessage(messageRoomId)) {
           if (!_messageController.isClosed) {
             _messageController.add(message);
           }
         }
       } catch (e, stackTrace) {
-        debugPrint(
-          'Error in _socket!.on("message_received_community"): $e trace $stackTrace',
-        );
+        debugPrint('Error in group message listener: $e trace $stackTrace');
       }
     });
 
@@ -177,11 +156,11 @@ class SocketDataSourceImpl implements SocketDataSource {
         if (data == null) return;
 
         final rawData = data as Map<String, dynamic>;
+        final currentUserId = StorageService.userId;
 
-        // For personal chat, determine chat ID from sender/receiver
-        String? chatId;
+        // Extract sender and receiver information
         String? senderId;
-        String? currentUserId = StorageService.userId;
+        String? chatId;
 
         if (rawData.containsKey('sender') && rawData['sender'] != null) {
           final sender = rawData['sender'];
@@ -190,7 +169,7 @@ class SocketDataSourceImpl implements SocketDataSource {
           }
         }
 
-        // For personal chat, use the other user's ID as chatId
+        // For personal chat, determine the chat ID
         if (senderId != null) {
           if (senderId == currentUserId) {
             // This is our own message, use receiver as chatId
@@ -211,6 +190,11 @@ class SocketDataSourceImpl implements SocketDataSource {
 
         final message = MessageModel.fromJson(messageData);
 
+        if (!_personalMessageController.isClosed) {
+          _personalMessageController.add(message);
+        }
+
+        // Also add to main message controller for unified handling
         if (!_messageController.isClosed) {
           _messageController.add(message);
         }
@@ -220,38 +204,11 @@ class SocketDataSourceImpl implements SocketDataSource {
         );
       }
     });
-
-    _socket!.on('userJoinedRoom', (data) {
-      debugPrint('User joined room: $data');
-    });
-
-    _socket!.on('userLeftRoom', (data) {
-      debugPrint('User left room: $data');
-    });
-
-    _socket!.onReconnect((attempt) {
-      debugPrint('Socket reconnected on attempt: $attempt');
-      _isConnected = true;
-      _reconnectAttempts = 0;
-    });
-
-    _socket!.onReconnectError((error) {
-      debugPrint('Socket reconnection error: $error');
-    });
-
-    _socket!.onReconnectFailed((_) {
-      debugPrint('Socket reconnection failed after all attempts');
-      _isConnected = false;
-    });
   }
 
   bool _shouldEmitMessage(String messageRoomId) {
-    if (_currentRoomId == messageRoomId) {
-      return true;
-    }
-    if (_joinedRooms.contains(messageRoomId)) {
-      return true;
-    }
+    if (_currentRoomId == messageRoomId) return true;
+    if (_joinedRooms.contains(messageRoomId)) return true;
     return false;
   }
 
@@ -321,6 +278,10 @@ class SocketDataSourceImpl implements SocketDataSource {
 
       if (!_messageController.isClosed) {
         await _messageController.close();
+      }
+
+      if (!_personalMessageController.isClosed) {
+        await _personalMessageController.close();
       }
     } catch (e) {
       debugPrint('Error during disconnect: $e');
@@ -403,7 +364,7 @@ class SocketDataSourceImpl implements SocketDataSource {
       }
 
       final data = {
-        'friendId': receiverId,
+        'chatId': receiverId, // For personal chat, use receiver ID as chat ID
         'token': token,
         'msg': content,
         'media': mediaUrl ?? '',
@@ -415,7 +376,7 @@ class SocketDataSourceImpl implements SocketDataSource {
 
       return MessageModel(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
-        chatId: receiverId, // For personal chat, use receiver ID as chat ID
+        chatId: receiverId,
         senderId: userId,
         senderName: 'You',
         content: content,
@@ -432,20 +393,13 @@ class SocketDataSourceImpl implements SocketDataSource {
   @override
   Stream<MessageModel> listenToNewMessages(String chatId) {
     return _messageController.stream.where((message) {
-      final matches = message.chatId == chatId;
-      return matches;
+      return message.chatId == chatId;
     });
   }
 
   @override
   Stream<MessageModel> listenToPersonalMessages() {
-    return _messageController.stream.where((message) {
-      // Personal messages can be identified by checking if it's not a group/community
-      // This is a simplified approach - you might need to adjust based on your backend
-      return !message.chatId.contains('group') &&
-          !message.chatId.contains('community') &&
-          message.chatId.length < 30; // Assuming personal chat IDs are shorter
-    });
+    return _personalMessageController.stream;
   }
 
   @override
@@ -463,22 +417,18 @@ class SocketDataSourceImpl implements SocketDataSource {
         throw Exception('User not authenticated');
       }
 
-      // Leave current room if different
       if (_currentRoomId != null && _currentRoomId != chatId) {
         await leaveRoom(_currentRoomId!);
       }
 
-      // Update tracking before joining
       _currentRoomId = chatId;
       _joinedRooms.add(chatId);
 
       debugPrint('Joining community room: $chatId');
       _socket!.emit('setup', {'chatId': chatId, 'token': token});
 
-      // Wait for the room join to complete
       await Future.delayed(const Duration(milliseconds: 1000));
     } catch (e) {
-      // Remove from tracking if join failed
       _joinedRooms.remove(chatId);
       if (_currentRoomId == chatId) {
         _currentRoomId = null;
@@ -502,21 +452,18 @@ class SocketDataSourceImpl implements SocketDataSource {
         throw Exception('User not authenticated');
       }
 
-      // Leave current room if different
       if (_currentRoomId != null && _currentRoomId != friendId) {
         await leaveRoom(_currentRoomId!);
       }
 
-      // Update tracking before joining
       _currentRoomId = friendId;
       _joinedRooms.add(friendId);
 
       debugPrint('Joining personal chat with friend: $friendId');
-      _socket!.emit('setup', {'friendId': friendId, 'token': token});
+      _socket!.emit('setup', {'chatId': friendId, 'token': token});
 
       await Future.delayed(const Duration(milliseconds: 1000));
     } catch (e) {
-      // Remove from tracking if join failed
       _joinedRooms.remove(friendId);
       if (_currentRoomId == friendId) {
         _currentRoomId = null;
@@ -543,7 +490,6 @@ class SocketDataSourceImpl implements SocketDataSource {
     }
   }
 
-  // Helper method to rejoin all rooms after reconnection
   Future<void> _rejoinAllRooms() async {
     if (_joinedRooms.isEmpty) return;
 
@@ -552,17 +498,8 @@ class SocketDataSourceImpl implements SocketDataSource {
       try {
         final token = await StorageService.getToken();
         if (token != null) {
-          // Determine if it's a personal chat or group chat
-          // This is a simplified approach - adjust based on your ID patterns
-          if (roomId.length < 30) {
-            // Assume it's a personal chat (shorter IDs)
-            debugPrint('Rejoining personal chat: $roomId');
-            _socket!.emit('setup', {'friendId': roomId, 'token': token});
-          } else {
-            // Assume it's a group/community chat
-            debugPrint('Rejoining community room: $roomId');
-            _socket!.emit('setup', {'chatId': roomId, 'token': token});
-          }
+          debugPrint('Rejoining room: $roomId');
+          _socket!.emit('setup', {'chatId': roomId, 'token': token});
           await Future.delayed(const Duration(milliseconds: 500));
         }
       } catch (e) {
@@ -571,7 +508,6 @@ class SocketDataSourceImpl implements SocketDataSource {
     }
   }
 
-  // Helper method to leave all rooms
   Future<void> _leaveAllRooms() async {
     final roomsToLeave = List<String>.from(_joinedRooms);
     for (final roomId in roomsToLeave) {
@@ -585,53 +521,5 @@ class SocketDataSourceImpl implements SocketDataSource {
     _reconnectAttempts = 0;
     await disconnect();
     await connect();
-  }
-
-  // Method to clear all room tracking
-  void clearRoomTracking() {
-    _joinedRooms.clear();
-    _currentRoomId = null;
-  }
-
-  // Get list of joined rooms for debugging
-  Set<String> get joinedRooms => Set.from(_joinedRooms);
-
-  // Method to check if currently in a specific room
-  bool isInRoom(String roomId) {
-    return _joinedRooms.contains(roomId);
-  }
-
-  // Method to get connection status info
-  Map<String, dynamic> getConnectionInfo() {
-    return {
-      'isConnected': isConnected,
-      'isConnecting': _isConnecting,
-      'reconnectAttempts': _reconnectAttempts,
-      'currentRoom': _currentRoomId,
-      'joinedRooms': _joinedRooms.toList(),
-      'socketConnected': _socket?.connected ?? false,
-    };
-  }
-
-  // Method to force emit a test message (for debugging)
-  void sendTestMessage() {
-    if (isConnected) {
-      _socket!.emit('test', {
-        'message': 'Test from client',
-        'timestamp': DateTime.now().toIso8601String(),
-      });
-    }
-  }
-
-  // Method to listen for specific events (for debugging)
-  void listenForEvent(String eventName, Function(dynamic) callback) {
-    _socket?.on(eventName, callback);
-  }
-
-  // Method to emit custom events
-  void emitEvent(String eventName, Map<String, dynamic> data) {
-    if (isConnected) {
-      _socket!.emit(eventName, data);
-    }
   }
 }
