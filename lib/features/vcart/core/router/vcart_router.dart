@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../cart/presentation/pages/cart_page.dart';
 import '../../categories/presentation/pages/categories_page.dart';
+import '../../coupons/presentation/controllers/coupons_controller.dart';
+import '../../coupons/presentation/pages/coupons_page.dart';
 import '../../filter_page/presentation/controllers/filter_page_controller.dart';
 import '../../filter_page/presentation/pages/filter_page.dart';
 import '../../home/presentation/pages/home_page.dart';
@@ -30,6 +33,7 @@ class VCartRouterG {
   static const String vcartSectionCategory = '/vcart/section-category';
   static const String vcartProductListing = '/vcart/products';
   static const String vcartFilter = '/vcart/filter';
+  static const String vcartCoupons = '/vcart/coupons';
 
   static final List<String> _navigationHistory = [vcartHome];
   static bool _isNavigatingWithinVCart = false;
@@ -181,6 +185,21 @@ class VCartRouterG {
           }
         }),
       ),
+      GetPage(
+        name: vcartCoupons,
+        page: () => const VCartCouponsPage(),
+        transition: Transition.rightToLeft,
+        transitionDuration: const Duration(milliseconds: 300),
+        middlewares: [VCartMiddleware()],
+        binding: BindingsBuilder(() {
+          if (!Get.isRegistered<VCartCouponsController>()) {
+            Get.lazyPut<VCartCouponsController>(
+              () => Get.find<VCartCouponsController>(),
+              fenix: true,
+            );
+          }
+        }),
+      ),
     ];
   }
 
@@ -192,6 +211,12 @@ class VCartRouterG {
     _navigationHistory.clear();
     _navigationHistory.add(vcartHome);
     Get.offAllNamed(vcartHome);
+  }
+
+  static Future<dynamic> toVCartCoupons() async {
+    _isNavigatingWithinVCart = true;
+    _addToHistory(vcartCoupons);
+    return Get.toNamed(vcartCoupons);
   }
 
   static void toVCartProduct(String productId) {
@@ -431,25 +456,4 @@ class VCartNavigatorObserver extends NavigatorObserver {
       '🔄 VCart Observer: Replaced route: ${oldRoute?.settings.name} -> ${newRoute?.settings.name}',
     );
   }
-}
-
-class VCartCartPage extends StatelessWidget {
-  const VCartCartPage({super.key});
-
-  @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      title: const Text('VCart Cart'),
-      backgroundColor: const Color(0xFF000000),
-      foregroundColor: Colors.white,
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back),
-        onPressed: () => VCartRouterG.backInVCart(),
-      ),
-    ),
-    body: const Center(
-      child: Text('VCart Cart Page', style: TextStyle(color: Colors.white)),
-    ),
-    backgroundColor: const Color(0xFF000000),
-  );
 }

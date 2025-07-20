@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'cart/presentation/pages/cart_page.dart';
 import 'categories/presentation/pages/categories_page.dart';
 import 'core/bridge/vcart_provider_bridge.dart';
 import 'core/router/vcart_router.dart';

@@ -3,6 +3,15 @@ import 'package:get/get.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/network_info.dart';
 // Categories dependencies
+import '../../cart/data/datasources/cart_local_datasource.dart';
+import '../../cart/data/datasources/cart_remote_datasource.dart';
+import '../../cart/data/repositories/cart_repository_impl.dart';
+import '../../cart/domain/repositories/cart_repository.dart';
+import '../../cart/domain/usecases/get_cart_data.dart';
+import '../../cart/domain/usecases/manage_coupon.dart';
+import '../../cart/domain/usecases/move_to_wishlist.dart';
+import '../../cart/domain/usecases/update_cart_item.dart';
+import '../../cart/presentation/controllers/cart_controller.dart';
 import '../../categories/data/datasources/categories_local_datasource.dart';
 import '../../categories/data/datasources/categories_remote_datasource.dart';
 import '../../categories/data/repositories/categories_repository_impl.dart';
@@ -12,6 +21,12 @@ import '../../categories/domain/usecases/get_sections.dart';
 import '../../categories/domain/usecases/get_subcategories_by_category.dart';
 import '../../categories/presentation/controllers/categories_controller.dart';
 // Filter Page dependencies
+import '../../coupons/data/datasources/coupons_remote_datasource.dart';
+import '../../coupons/data/repositories/coupons_repository_impl.dart';
+import '../../coupons/domain/repositories/coupons_repository.dart';
+import '../../coupons/domain/usecases/apply_coupon.dart';
+import '../../coupons/domain/usecases/get_coupons.dart';
+import '../../coupons/presentation/controllers/coupons_controller.dart';
 import '../../filter_page/data/datasources/filter_page_remote_datasource.dart';
 import '../../filter_page/data/repositories/filter_page_repository_impl.dart';
 import '../../filter_page/domain/repositories/filter_page_repository.dart';
@@ -88,6 +103,8 @@ class VCartInjection {
     _initializeProductListingDependencies();
     _initializeSectionCategoryDependencies();
     _initializeFilterPageDependencies();
+    _initializeCartDependencies(); // Add this
+    _initializeCouponsDependencies(); // Add this
   }
 
   static void _initializeHomeDependencies() {
@@ -446,6 +463,80 @@ class VCartInjection {
         getFilterDataUseCase: Get.find<GetFilterData>(),
       ),
       fenix: true,
+    );
+  }
+
+  static void _initializeCartDependencies() {
+    // Data Sources
+    Get.lazyPut<CartRemoteDataSource>(
+      () => CartRemoteDataSourceImpl(apiClient: Get.find<ApiClient>()),
+      fenix: true,
+    );
+    Get.lazyPut<CartLocalDataSource>(
+      () => CartLocalDataSourceImpl(),
+      fenix: true,
+    );
+
+    // Repository
+    Get.lazyPut<CartRepository>(
+      () => CartRepositoryImpl(
+        remoteDataSource: Get.find<CartRemoteDataSource>(),
+        localDataSource: Get.find<CartLocalDataSource>(),
+        networkInfo: Get.find<NetworkInfo>(),
+      ),
+      fenix: true,
+    );
+
+    // Use Cases
+    Get.lazyPut(() => GetCartData(Get.find<CartRepository>()), fenix: true);
+    Get.lazyPut(() => UpdateCartItem(Get.find<CartRepository>()), fenix: true);
+    Get.lazyPut(() => MoveToWishlist(Get.find<CartRepository>()), fenix: true);
+    Get.lazyPut(() => ApplyCoupon(Get.find<CartRepository>()), fenix: true);
+    Get.lazyPut(() => RemoveCoupon(Get.find<CartRepository>()), fenix: true);
+
+    // Controller
+    Get.put(
+      VCartCartController(
+        getCartDataUseCase: Get.find<GetCartData>(),
+        updateCartItemUseCase: Get.find<UpdateCartItem>(),
+        moveToWishlistUseCase: Get.find<MoveToWishlist>(),
+        applyCouponUseCase: Get.find<ApplyCoupon>(),
+        removeCouponUseCase: Get.find<RemoveCoupon>(),
+      ),
+      permanent: true,
+    );
+  }
+
+  static void _initializeCouponsDependencies() {
+    // Data Sources
+    Get.lazyPut<CouponsRemoteDataSource>(
+      () => CouponsRemoteDataSourceImpl(apiClient: Get.find<ApiClient>()),
+      fenix: true,
+    );
+
+    // Repository
+    Get.lazyPut<CouponsRepository>(
+      () => CouponsRepositoryImpl(
+        remoteDataSource: Get.find<CouponsRemoteDataSource>(),
+        networkInfo: Get.find<NetworkInfo>(),
+      ),
+      fenix: true,
+    );
+
+    // Use Cases
+    Get.lazyPut(() => GetCoupons(Get.find<CouponsRepository>()), fenix: true);
+    Get.lazyPut(
+      () => ApplyCouponUseCase(Get.find<CouponsRepository>()),
+      fenix: true,
+    );
+
+    // Controller
+    Get.put(
+      VCartCouponsController(
+        getCouponsUseCase: Get.find<GetCoupons>(),
+        applyCouponUseCase: Get.find<ApplyCouponUseCase>(),
+      ),
+      permanent: true,
     );
   }
 
