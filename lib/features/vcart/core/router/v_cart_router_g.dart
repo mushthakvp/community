@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/router/core_router.dart';
 import 'vcart_router.dart';
 
 class VCartRouterClassG {
@@ -22,16 +23,12 @@ class VCartRouterClassG {
 
   // Get current context
   static BuildContext _getContext() {
-    final context = navigatorKey.currentContext;
+    final context = CoreRouter.rootNavigatorKey.currentContext;
     if (context == null) {
       throw Exception('No context available for navigation');
     }
     return context;
   }
-
-  // Navigator key for accessing context
-  static final GlobalKey<NavigatorState> navigatorKey =
-      GlobalKey<NavigatorState>();
 
   // Set navigation state
   static void _setNavigatingFromVCart() {
@@ -183,7 +180,7 @@ class VCartRouterClassG {
 
   // Get current VCart route name
   static String? getCurrentVCartRoute() {
-    final context = navigatorKey.currentContext;
+    final context = CoreRouter.rootNavigatorKey.currentContext;
     if (context == null) return null;
 
     final location = GoRouterState.of(context).uri.toString();
