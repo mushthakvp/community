@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../core/constants/vcart_colors.dart';
+import '../../../core/router/vcart_router.dart';
 import '../../../core/utils/vcart_extensions.dart';
 import '../../../core/widgets/vcart_button.dart';
+import '../../../navigation/presentation/controllers/bottom_nav_controller.dart';
 import '../controllers/product_overview_controller.dart';
 
 class FloatingBottomSheet extends StatelessWidget {
@@ -30,12 +32,14 @@ class FloatingBottomSheet extends StatelessWidget {
           ),
           color: VCartColors.surfaceOpacity(0.9),
         ),
-        child: Row(
-          children: [
-            _buildPriceSection(),
-            const Spacer(),
-            _buildActionButton(context),
-          ],
+        child: Obx(
+          () => Row(
+            children: [
+              _buildPriceSection(),
+              const Spacer(),
+              _buildActionButton(context),
+            ],
+          ),
         ),
       ),
     );
@@ -88,7 +92,13 @@ class FloatingBottomSheet extends StatelessWidget {
       text: isInCart ? 'Go to Cart' : "Add to Cart",
       onPressed: () {
         if (isInCart) {
-          Get.toNamed('/cart');
+          VCartRouterG.toVCartHome();
+          try {
+            final bottomNavController = Get.find<VCartBottomNavController>();
+            bottomNavController.setCurrentIndex(2);
+          } catch (e) {
+            Get.toNamed('/vcart/cart');
+          }
         } else {
           controller.addToCart(context);
         }

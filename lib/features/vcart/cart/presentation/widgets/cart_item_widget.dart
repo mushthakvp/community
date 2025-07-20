@@ -206,34 +206,34 @@ class CartItemWidget extends StatelessWidget {
           ),
         ),
       ),
-      child: Row(
-        children: [
-          VCartButton(
-            text: "Move to Wishlist",
-            onPressed: isUpdating ? null : onMoveToWishlist,
-            type: VCartButtonType.tertiary,
-          ),
-          const Spacer(),
-          _buildQuantityControls(),
-          const SizedBox(width: 8),
-          IconButton(
-            onPressed: isUpdating ? null : onRemove,
-            icon: Container(
-              height: 32,
-              width: 32,
-              decoration: BoxDecoration(
-                color: VCartColors.error.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(
-                Icons.delete_outline,
-                color: VCartColors.error,
-                size: 18,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        child: Row(
+          children: [
+            // Move to Wishlist button with flexible width
+            Flexible(
+              flex: 2,
+              child: VCartButton(
+                text: "Move to Wishlist",
+                onPressed: isUpdating ? null : onMoveToWishlist,
+                type: VCartButtonType.tertiary,
+                height: 36,
               ),
             ),
-          ),
-          const SizedBox(width: 12),
-        ],
+
+            // Spacing
+            const SizedBox(width: 8),
+
+            // Quantity controls - fixed width
+            _buildQuantityControls(),
+
+            // Spacing
+            const SizedBox(width: 8),
+
+            // Delete button - fixed width
+            _buildDeleteButton(),
+          ],
+        ),
       ),
     );
   }
@@ -244,48 +244,86 @@ class CartItemWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         color: VCartColors.surface,
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          IconButton(
+          _buildQuantityButton(
+            icon: item.quantity <= 1 ? Icons.delete_outline : Icons.remove,
+            color: VCartColors.error,
             onPressed: isUpdating ? null : onDecrement,
-            icon: CircleAvatar(
-              backgroundColor: VCartColors.background,
-              radius: 12,
-              child: Icon(
-                item.quantity <= 1 ? Icons.delete_outline : Icons.remove,
-                color: VCartColors.error,
-                size: 16,
-              ),
-            ),
-            constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
-            padding: EdgeInsets.zero,
           ),
-          const SizedBox(width: 8),
+
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
+            constraints: const BoxConstraints(minWidth: 24),
+            padding: const EdgeInsets.symmetric(horizontal: 4),
             child: Text(
               item.quantity.toString(),
               style: const TextStyle(
-                fontSize: 16,
+                fontSize: 14,
                 fontWeight: FontWeight.w600,
                 color: VCartColors.textPrimary,
               ),
+              textAlign: TextAlign.center,
             ),
           ),
-          const SizedBox(width: 8),
-          IconButton(
+
+          _buildQuantityButton(
+            icon: Icons.add,
+            color: VCartColors.primary,
             onPressed: isUpdating ? null : onIncrement,
-            icon: const CircleAvatar(
-              backgroundColor: VCartColors.background,
-              radius: 12,
-              child: Icon(Icons.add, color: VCartColors.primary, size: 16),
-            ),
-            constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
-            padding: EdgeInsets.zero,
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildQuantityButton({
+    required IconData icon,
+    required Color color,
+    required VoidCallback? onPressed,
+  }) {
+    return SizedBox(
+      width: 32,
+      height: 32,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            decoration: BoxDecoration(
+              color: VCartColors.background,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 16),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDeleteButton() {
+    return SizedBox(
+      width: 40,
+      height: 40,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: isUpdating ? null : onRemove,
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            decoration: BoxDecoration(
+              color: VCartColors.error.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(
+              Icons.delete_outline,
+              color: VCartColors.error,
+              size: 18,
+            ),
+          ),
+        ),
       ),
     );
   }
