@@ -661,10 +661,23 @@ class VCartDI {
   }
 
   static Future<void> _verifyCriticalControllers() async {
-    final criticalControllers = [VCartBottomNavController, VCartCartController];
+    // Fixed: Use Get.isRegistered<Type>() instead of Get.isRegistered(tag: Type.toString())
+    final criticalControllers = <Type>[
+      VCartBottomNavController,
+      VCartCartController,
+    ];
 
     for (final controllerType in criticalControllers) {
-      if (!Get.isRegistered(tag: controllerType.toString())) {
+      bool isRegistered = false;
+
+      // Check registration for each controller type specifically
+      if (controllerType == VCartBottomNavController) {
+        isRegistered = Get.isRegistered<VCartBottomNavController>();
+      } else if (controllerType == VCartCartController) {
+        isRegistered = Get.isRegistered<VCartCartController>();
+      }
+
+      if (!isRegistered) {
         throw Exception(
           'Critical controller $controllerType failed to register',
         );
