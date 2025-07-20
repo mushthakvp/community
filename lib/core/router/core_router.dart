@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/vcart/core/router/vcart_router.dart';
 import '../constants/route_constants.dart';
 import '../widgets/navigation/bottom_navigation.dart';
 import 'route_helper.dart';
@@ -10,7 +11,6 @@ import 'routers/main_app_router.dart';
 import 'routers/notification_router.dart';
 import 'routers/profile_router.dart';
 import 'routers/spin_router.dart';
-import 'routers/vcart_router.dart';
 import 'routers/vhub_router.dart';
 import 'routers/vizzle_router.dart';
 import 'routers/vjob_router.dart';
@@ -48,7 +48,7 @@ class CoreRouter {
       ...ChatRouter.routes,
       ...ProfileRouter.routes,
       ...NotificationRouter.routes,
-      ...VCartRouter.routes,
+      ...VCartRouterClass.routes,
     ],
   );
 

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:livera/features/vcart/core/router/v_cart_router_g.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../core/constants/vcart_colors.dart';
-import '../../../core/router/vcart_router.dart';
 import '../../../core/utils/vcart_extensions.dart';
 import '../../../core/utils/vcart_helpers.dart';
 import '../../../shared/presentation/widgets/error_widget.dart';
@@ -43,7 +43,7 @@ class _VCartSearchPageState extends State<VCartSearchPage>
     SystemChannels.navigation.setMethodCallHandler((call) async {
       if (call.method == 'routePopped') {
         debugPrint('🔙 Search Page: System back detected via SystemChannels');
-        VCartRouterG.backInVCart();
+        VCartRouterClassG.backInVCart();
         return true;
       }
       return null;
@@ -83,7 +83,7 @@ class _VCartSearchPageState extends State<VCartSearchPage>
       onPopInvoked: (bool didPop) {
         if (!didPop) {
           debugPrint('🔙 Search Page: PopScope system back pressed');
-          VCartRouterG.backInVCart();
+          VCartRouterClassG.backInVCart();
         }
       },
       child: Scaffold(
@@ -143,7 +143,7 @@ class _VCartSearchPageState extends State<VCartSearchPage>
           ),
           onPressed: () {
             debugPrint('🔙 Search Page: App bar back pressed');
-            VCartRouterG.backInVCart();
+            VCartRouterClassG.backInVCart();
           },
         ),
       ),
@@ -306,10 +306,10 @@ class _VCartSearchPageState extends State<VCartSearchPage>
   }
 
   void _navigateToSection(String sectionId) {
-    VCartRouterG.toVCartCategory(sectionId);
+    VCartRouterClassG.toVCartCategory(sectionId);
   }
 
   void _navigateToProduct(String productId) {
-    VCartRouterG.toVCartProduct(productId);
+    VCartRouterClassG.toVCartProduct(productId);
   }
 }

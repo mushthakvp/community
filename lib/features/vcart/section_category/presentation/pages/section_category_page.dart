@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:livera/features/vcart/core/router/v_cart_router_g.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../core/constants/vcart_colors.dart';
-import '../../../core/router/vcart_router.dart';
 import '../../../core/utils/vcart_extensions.dart';
 import '../../../shared/presentation/widgets/error_widget.dart';
 import '../../../shared/presentation/widgets/maintenance_widget.dart';
@@ -99,7 +99,7 @@ class _VCartSectionCategoryPageState extends State<VCartSectionCategoryPage> {
       centerTitle: false,
       backgroundColor: VCartColors.background,
       leading: IconButton(
-        onPressed: () => VCartRouterG.backInVCart(),
+        onPressed: () => VCartRouterClassG.backInVCart(),
         icon: Container(
           height: 36,
           width: 36,

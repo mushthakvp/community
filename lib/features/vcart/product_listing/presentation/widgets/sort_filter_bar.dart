@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:livera/features/vcart/core/router/v_cart_router_g.dart';
 
 import '../../../core/constants/vcart_colors.dart';
-import '../../../core/router/vcart_router.dart';
 import '../controllers/product_listing_controller.dart';
 import 'sort_bottom_sheet.dart';
 
@@ -54,7 +54,7 @@ class SortFilterBar extends StatelessWidget {
   }
 
   void _navigateToFilter(BuildContext context) {
-    VCartRouterG.toVCartFilter(
+    VCartRouterClassG.toVCartFilter(
       sectionId: controller.filterParams.sectionId,
       brandId: controller.filterParams.brandId,
     );

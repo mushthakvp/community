@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:livera/features/vcart/core/router/v_cart_router_g.dart';
 
 import '../../../core/constants/vcart_colors.dart';
-import '../../../core/router/vcart_router.dart';
 import '../../../core/utils/vcart_extensions.dart';
 import '../../../core/widgets/vcart_button.dart';
 import '../../../navigation/presentation/controllers/bottom_nav_controller.dart';
@@ -92,7 +92,7 @@ class FloatingBottomSheet extends StatelessWidget {
       text: isInCart ? 'Go to Cart' : "Add to Cart",
       onPressed: () {
         if (isInCart) {
-          VCartRouterG.toVCartHome();
+          VCartRouterClassG.toVCartHome();
           try {
             final bottomNavController = Get.find<VCartBottomNavController>();
             bottomNavController.setCurrentIndex(2);

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:livera/features/vcart/core/router/v_cart_router_g.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../core/constants/vcart_colors.dart';
-import '../../../core/router/vcart_router.dart';
 import '../../../core/utils/vcart_extensions.dart';
 import '../../../core/widgets/vcart_text_field.dart';
 import '../../../shared/presentation/widgets/error_widget.dart';
@@ -71,7 +71,7 @@ class _VCartCouponsPageState extends State<VCartCouponsPage> {
       elevation: 0,
       centerTitle: false,
       leading: IconButton(
-        onPressed: () => VCartRouterG.backInVCart(),
+        onPressed: () => VCartRouterClassG.backInVCart(),
         icon: Container(
           height: 36,
           width: 36,

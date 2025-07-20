@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
+import 'package:livera/features/vcart/core/router/v_cart_router_g.dart';
 
 import '../../../../../core/constants/route_constants.dart';
 import '../../../core/constants/vcart_colors.dart';
-import '../../../core/router/vcart_router.dart';
 import '../controllers/bottom_nav_controller.dart';
 
 class VCartMainNavigationPage extends StatefulWidget {
@@ -34,7 +34,7 @@ class _VCartMainNavigationPageState extends State<VCartMainNavigationPage>
     controller = Get.find<VCartBottomNavController>();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       controller.resetToHome();
-      VCartRouterG.resetNavigationFlags();
+      VCartRouterClassG.resetNavigationFlags();
     });
     _setupSystemBackHandler();
   }
@@ -55,7 +55,7 @@ class _VCartMainNavigationPageState extends State<VCartMainNavigationPage>
   Future<void> _handleSystemBack() async {
     debugPrint('🔙 Main Navigation: Handle system back');
     debugPrint('Current tab index: ${controller.currentIndex}');
-    debugPrint('Is in VCart context: ${VCartRouterG.isInVCartContext}');
+    debugPrint('Is in VCart context: ${VCartRouterClassG.isInVCartContext}');
     if (controller.currentIndex != 0) {
       debugPrint('Not on home tab, switching to home');
       controller.setCurrentIndex(0);
@@ -147,7 +147,7 @@ class _VCartMainNavigationPageState extends State<VCartMainNavigationPage>
                         debugPrint(
                           '🏠 Main Navigation: Home tab tapped, resetting navigation flags',
                         );
-                        VCartRouterG.resetNavigationFlags();
+                        VCartRouterClassG.resetNavigationFlags();
                       }
                     },
                     type: BottomNavigationBarType.fixed,

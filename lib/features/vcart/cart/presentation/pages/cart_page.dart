@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:livera/features/vcart/core/router/v_cart_router_g.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../core/constants/vcart_colors.dart';
-import '../../../core/router/vcart_router.dart';
 import '../../../core/utils/vcart_extensions.dart';
 import '../../../core/widgets/vcart_button.dart';
 import '../../../shared/presentation/widgets/error_widget.dart';
@@ -59,7 +59,7 @@ class _VCartCartPageState extends State<VCartCartPage> {
       automaticallyImplyLeading: widget.showBackButton,
       leading: widget.showBackButton
           ? IconButton(
-              onPressed: () => VCartRouterG.backInVCart(),
+              onPressed: () => VCartRouterClassG.backInVCart(),
               icon: Container(
                 height: 36,
                 width: 36,

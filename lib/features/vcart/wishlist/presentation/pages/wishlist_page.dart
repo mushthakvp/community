@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:livera/features/vcart/core/router/v_cart_router_g.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../core/constants/vcart_colors.dart';
-import '../../../core/router/vcart_router.dart';
 import '../../../core/utils/vcart_extensions.dart';
 import '../../../core/utils/vcart_helpers.dart';
 import '../../../shared/presentation/widgets/error_widget.dart';
@@ -52,7 +52,7 @@ class _VCartWishlistPageState extends State<VCartWishlistPage> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        VCartRouterG.backInVCart();
+        VCartRouterClassG.backInVCart();
         return false;
       },
       child: Scaffold(
@@ -153,7 +153,7 @@ class _VCartWishlistPageState extends State<VCartWishlistPage> {
               child: Icon(Icons.arrow_back, color: VCartColors.textPrimary),
             ),
           ),
-          onPressed: () => VCartRouterG.backInVCart(),
+          onPressed: () => VCartRouterClassG.backInVCart(),
         ),
       ),
       centerTitle: false,
@@ -170,6 +170,6 @@ class _VCartWishlistPageState extends State<VCartWishlistPage> {
   }
 
   void _navigateToProductDetail(String productId) {
-    VCartRouterG.toVCartProduct(productId);
+    VCartRouterClassG.toVCartProduct(productId);
   }
 }

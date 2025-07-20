@@ -1,11 +1,11 @@
 import 'package:fittor/fittor.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:livera/features/vcart/core/router/v_cart_router_g.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../core/constants/vcart_colors.dart';
 import '../../../core/constants/vcart_constants.dart';
-import '../../../core/router/vcart_router.dart';
 import '../../../shared/presentation/widgets/error_widget.dart';
 import '../controllers/home_controller.dart';
 import '../widgets/banner_carousel.dart';
@@ -250,7 +250,7 @@ class VCartHomePage extends StatelessWidget {
   // Navigation methods
 
   void _navigateToSearch() {
-    VCartRouterG.toVCartSearch();
+    // VCartRouterClass.toVCartSearch();
   }
 
   void _navigateToNotifications() {
@@ -258,7 +258,7 @@ class VCartHomePage extends StatelessWidget {
   }
 
   void _navigateToProductDetail(String productId) {
-    VCartRouterG.toVCartProduct(productId);
+    VCartRouterClassG.toVCartProduct(productId);
   }
 
   void _navigateToProductListing({
@@ -270,7 +270,7 @@ class VCartHomePage extends StatelessWidget {
     String? brandId,
   }) {
     // Navigate to product listing page with parameters
-    VCartRouterG.toVCartProductListing(
+    VCartRouterClassG.toVCartProductListing(
       title: title,
       sectionId: sectionId,
       categoryId: categoryId,
@@ -281,7 +281,7 @@ class VCartHomePage extends StatelessWidget {
 
   void _navigateToBrandProducts(dynamic brand) {
     // Navigate to products filtered by brand
-    VCartRouterG.toVCartProductListing(
+    VCartRouterClassG.toVCartProductListing(
       title: '${brand.name} Products',
       brandId: brand.id,
     );
@@ -291,12 +291,12 @@ class VCartHomePage extends StatelessWidget {
     switch (banner.field?.toLowerCase()) {
       case 'product':
         if (banner.productId != null) {
-          VCartRouterG.toVCartProduct(banner.productId!);
+          VCartRouterClassG.toVCartProduct(banner.productId!);
         }
         break;
       case 'category':
         if (banner.categoryId != null) {
-          VCartRouterG.toVCartProductListing(
+          VCartRouterClassG.toVCartProductListing(
             title: 'Category Products',
             categoryId: banner.categoryId!,
           );
@@ -304,7 +304,7 @@ class VCartHomePage extends StatelessWidget {
         break;
       case 'subcategory':
         if (banner.subCategoryId != null) {
-          VCartRouterG.toVCartProductListing(
+          VCartRouterClassG.toVCartProductListing(
             title: 'Subcategory Products',
             subCategoryId: banner.subCategoryId!,
           );
@@ -312,7 +312,7 @@ class VCartHomePage extends StatelessWidget {
         break;
       case 'section':
         if (banner.sectionId != null) {
-          VCartRouterG.toVCartSectionCategory(
+          VCartRouterClassG.toVCartSectionCategory(
             banner.sectionId!,
             title: 'Section Categories',
           );

@@ -1,4 +1,3 @@
-// lib/features/home/presentation/widgets/essentials_grid.dart (Updated)
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -6,8 +5,9 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/route_constants.dart';
-import '../../../../core/router/routers/vcart_router.dart';
 import '../../../../core/widgets/common/text_widget.dart';
+import '../../../vcart/core/router/v_cart_router_g.dart';
+import '../../../vcart/core/router/vcart_router.dart';
 
 class EssentialsGrid extends StatelessWidget {
   const EssentialsGrid({super.key});
@@ -67,7 +67,7 @@ class EssentialsGrid extends StatelessWidget {
         image:
             "https://res.cloudinary.com/fouvtycloud/image/upload/v1751013407/Vivera-New/ecommerceLogo_hszwpi.gif",
         name: "V - Cart",
-        route: VCartRouter.vcartHomePath,
+        route: VCartRouterClass.home,
         description: "Shop online with exclusive deals",
         isExternal: false,
         isNavigationRoute: true,
@@ -213,24 +213,11 @@ class EssentialsGrid extends StatelessWidget {
     if (item.isExternal) {
       _launchExternalApp(context, item);
     } else if (item.isNavigationRoute) {
-      if (item.route == VCartRouter.vcartHomePath) {
-        context.push(VCartRouter.vcartHomePath);
+      if (item.route == VCartRouterClass.home) {
+        VCartRouterClassG.toVCartHome();
       } else {
         context.push(item.route);
       }
-    } else {
-      _navigateToRoute(context, item.route);
-    }
-  }
-
-  void _navigateToRoute(BuildContext context, String route) {
-    switch (route) {
-      case '/v-cart':
-        context.push(VCartRouter.vcartHomePath);
-        break;
-      default:
-        _showComingSoon(context, "Feature");
-        break;
     }
   }
 
@@ -283,17 +270,6 @@ class EssentialsGrid extends StatelessWidget {
     } catch (e) {
       _showErrorMessage(context, "Error opening app store");
     }
-  }
-
-  void _showComingSoon(BuildContext context, String featureName) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('$featureName - Coming Soon!'),
-        backgroundColor: AppConstants.appPrimaryColor,
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
-      ),
-    );
   }
 
   void _showErrorMessage(BuildContext context, String message) {

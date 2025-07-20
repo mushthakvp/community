@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:livera/features/vcart/core/router/v_cart_router_g.dart';
 
 import '../../../core/constants/vcart_colors.dart';
 import '../../../core/constants/vcart_constants.dart';
-import '../../../core/router/vcart_router.dart';
 import '../../../core/utils/vcart_extensions.dart';
 import '../../../core/widgets/vcart_text_field.dart';
 
@@ -55,7 +55,7 @@ class VCartHomeAppBar extends StatelessWidget implements PreferredSizeWidget {
             hintText: "Find your needed....",
             readOnly: true,
             onTap: () {
-              VCartRouterG.toVCartSearch();
+              VCartRouterClassG.toVCartSearch();
             },
             prefixIcon: const Icon(
               Icons.search,
