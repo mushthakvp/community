@@ -32,15 +32,33 @@ import '../../search/domain/usecases/search_products.dart';
 import '../../search/presentation/controllers/search_controller.dart';
 
 class VCartDI {
-  static void init() {
-    // Initialize all dependencies with lazy loading
-    _initDataSources();
-    _initRepositories();
-    _initUseCases();
-    _initControllers();
+  static bool _isInitialized = false;
+  static bool _isInitializing = false;
+
+  static bool get isInitialized => _isInitialized;
+  static bool get isInitializing => _isInitializing;
+
+  static Future<void> init() async {
+    if (_isInitialized || _isInitializing) {
+      return;
+    }
+
+    _isInitializing = true;
+
+    try {
+      await _initDataSources();
+      await _initRepositories();
+      await _initUseCases();
+      await _initControllers();
+      _isInitialized = true;
+    } catch (e) {
+      rethrow;
+    } finally {
+      _isInitializing = false;
+    }
   }
 
-  static void _initDataSources() {
+  static Future<void> _initDataSources() async {
     // Filter Page DataSources
     Get.lazyPut<FilterPageRemoteDataSource>(
       () => FilterPageRemoteDataSourceImpl(apiClient: Get.find<ApiClient>()),
@@ -77,7 +95,13 @@ class VCartDI {
     );
   }
 
-  static void _initRepositories() {
+  static Future<void> _initRepositories() async {
+    // Navigation Repository - Initialize first as it's critical
+    Get.lazyPut<NavigationRepository>(
+      () => NavigationRepositoryImpl(),
+      fenix: true,
+    );
+
     // Filter Page Repository
     Get.lazyPut<FilterPageRepository>(
       () => FilterPageRepositoryImpl(
@@ -94,12 +118,6 @@ class VCartDI {
         localDataSource: Get.find<HomeLocalDataSource>(),
         networkInfo: Get.find<NetworkInfo>(),
       ),
-      fenix: true,
-    );
-
-    // Navigation Repository
-    Get.lazyPut<NavigationRepository>(
-      () => NavigationRepositoryImpl(),
       fenix: true,
     );
 
@@ -123,7 +141,7 @@ class VCartDI {
     );
   }
 
-  static void _initUseCases() {
+  static Future<void> _initUseCases() async {
     // Filter Page Use Cases
     Get.lazyPut<GetFilterData>(
       () => GetFilterData(Get.find<FilterPageRepository>()),
@@ -164,12 +182,13 @@ class VCartDI {
     );
   }
 
-  static void _initControllers() {
-    // Bottom Navigation Controller - Put immediately as it's needed for main navigation
-    Get.put<VCartBottomNavController>(
-      VCartBottomNavController(repository: Get.find<NavigationRepository>()),
-      permanent: true,
-    );
+  static Future<void> _initControllers() async {
+    if (!Get.isRegistered<VCartBottomNavController>()) {
+      Get.put<VCartBottomNavController>(
+        VCartBottomNavController(repository: Get.find<NavigationRepository>()),
+        permanent: true,
+      );
+    }
 
     // Filter Page Controller - Lazy loaded
     Get.lazyPut<VCartFilterPageController>(
@@ -207,79 +226,81 @@ class VCartDI {
     );
   }
 
+  /// Initialize only the navigation controller for immediate use
+  static Future<void> initNavigationOnly() async {
+    try {
+      if (!Get.isRegistered<NavigationRepository>()) {
+        Get.lazyPut<NavigationRepository>(
+          () => NavigationRepositoryImpl(),
+          fenix: true,
+        );
+      }
+
+      if (!Get.isRegistered<VCartBottomNavController>()) {
+        Get.put<VCartBottomNavController>(
+          VCartBottomNavController(
+            repository: Get.find<NavigationRepository>(),
+          ),
+          permanent: true,
+        );
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Ensure navigation controller is available
+  static Future<VCartBottomNavController> ensureNavigationController() async {
+    if (!Get.isRegistered<VCartBottomNavController>()) {
+      await initNavigationOnly();
+    }
+    return Get.find<VCartBottomNavController>();
+  }
+
   /// Clear all VCart dependencies
   static void clearAll() {
     // Clear controllers
-    if (Get.isRegistered<VCartFilterPageController>()) {
-      Get.delete<VCartFilterPageController>();
-    }
-    if (Get.isRegistered<VCartHomeController>()) {
-      Get.delete<VCartHomeController>();
-    }
-    if (Get.isRegistered<VCartProductListingController>()) {
-      Get.delete<VCartProductListingController>();
-    }
-    if (Get.isRegistered<VCartSearchController>()) {
-      Get.delete<VCartSearchController>();
-    }
+    _clearController<VCartFilterPageController>();
+    _clearController<VCartHomeController>();
+    _clearController<VCartProductListingController>();
+    _clearController<VCartSearchController>();
     // Don't delete navigation controller as it's permanent
 
     // Clear use cases
-    if (Get.isRegistered<GetFilterData>()) {
-      Get.delete<GetFilterData>();
-    }
-    if (Get.isRegistered<GetHomeData>()) {
-      Get.delete<GetHomeData>();
-    }
-    if (Get.isRegistered<GetLocation>()) {
-      Get.delete<GetLocation>();
-    }
-    if (Get.isRegistered<GetProducts>()) {
-      Get.delete<GetProducts>();
-    }
-    if (Get.isRegistered<GetFilteredProductCount>()) {
-      Get.delete<GetFilteredProductCount>();
-    }
-    if (Get.isRegistered<GetSearchData>()) {
-      Get.delete<GetSearchData>();
-    }
-    if (Get.isRegistered<SearchProducts>()) {
-      Get.delete<SearchProducts>();
-    }
+    _clearDependency<GetFilterData>();
+    _clearDependency<GetHomeData>();
+    _clearDependency<GetLocation>();
+    _clearDependency<GetProducts>();
+    _clearDependency<GetFilteredProductCount>();
+    _clearDependency<GetSearchData>();
+    _clearDependency<SearchProducts>();
 
     // Clear repositories
-    if (Get.isRegistered<FilterPageRepository>()) {
-      Get.delete<FilterPageRepository>();
-    }
-    if (Get.isRegistered<HomeRepository>()) {
-      Get.delete<HomeRepository>();
-    }
-    if (Get.isRegistered<ProductListingRepository>()) {
-      Get.delete<ProductListingRepository>();
-    }
-    if (Get.isRegistered<SearchRepository>()) {
-      Get.delete<SearchRepository>();
-    }
+    _clearDependency<FilterPageRepository>();
+    _clearDependency<HomeRepository>();
+    _clearDependency<ProductListingRepository>();
+    _clearDependency<SearchRepository>();
     // Don't delete navigation repository as it's permanent
 
     // Clear data sources
-    if (Get.isRegistered<FilterPageRemoteDataSource>()) {
-      Get.delete<FilterPageRemoteDataSource>();
+    _clearDependency<FilterPageRemoteDataSource>();
+    _clearDependency<HomeRemoteDataSource>();
+    _clearDependency<HomeLocalDataSource>();
+    _clearDependency<ProductListingRemoteDataSource>();
+    _clearDependency<SearchRemoteDataSource>();
+    _clearDependency<SearchLocalDataSource>();
+    _isInitialized = false;
+  }
+
+  static void _clearController<T>() {
+    if (Get.isRegistered<T>()) {
+      Get.delete<T>();
     }
-    if (Get.isRegistered<HomeRemoteDataSource>()) {
-      Get.delete<HomeRemoteDataSource>();
-    }
-    if (Get.isRegistered<HomeLocalDataSource>()) {
-      Get.delete<HomeLocalDataSource>();
-    }
-    if (Get.isRegistered<ProductListingRemoteDataSource>()) {
-      Get.delete<ProductListingRemoteDataSource>();
-    }
-    if (Get.isRegistered<SearchRemoteDataSource>()) {
-      Get.delete<SearchRemoteDataSource>();
-    }
-    if (Get.isRegistered<SearchLocalDataSource>()) {
-      Get.delete<SearchLocalDataSource>();
+  }
+
+  static void _clearDependency<T>() {
+    if (Get.isRegistered<T>()) {
+      Get.delete<T>();
     }
   }
 
@@ -290,21 +311,53 @@ class VCartDI {
     }
   }
 
-  /// Check if all dependencies are properly registered
+  /// Check if all core dependencies are properly registered
   static bool areCoreDependenciesRegistered() {
-    return Get.isRegistered<NetworkInfo>() && Get.isRegistered<ApiClient>();
+    final coreRegistered =
+        Get.isRegistered<NetworkInfo>() && Get.isRegistered<ApiClient>();
+    return coreRegistered;
+  }
+
+  static bool isNavigationReady() {
+    final navRepoRegistered = Get.isRegistered<NavigationRepository>();
+    final navControllerRegistered =
+        Get.isRegistered<VCartBottomNavController>();
+    return navRepoRegistered && navControllerRegistered;
   }
 
   /// Initialize only core dependencies (useful for testing or minimal setup)
-  static void initCore() {
-    _initDataSources();
-    _initRepositories();
-    _initUseCases();
+  static Future<void> initCore() async {
+    try {
+      await _initDataSources();
+      await _initRepositories();
+      await _initUseCases();
 
-    // Only put the navigation controller immediately
-    Get.put<VCartBottomNavController>(
-      VCartBottomNavController(repository: Get.find<NavigationRepository>()),
-      permanent: true,
-    );
+      // Only put the navigation controller immediately
+      if (!Get.isRegistered<VCartBottomNavController>()) {
+        Get.put<VCartBottomNavController>(
+          VCartBottomNavController(
+            repository: Get.find<NavigationRepository>(),
+          ),
+          permanent: true,
+        );
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Get initialization status
+  static Map<String, bool> getInitializationStatus() {
+    return {
+      'isInitialized': _isInitialized,
+      'isInitializing': _isInitializing,
+      'navigationRepository': Get.isRegistered<NavigationRepository>(),
+      'navigationController': Get.isRegistered<VCartBottomNavController>(),
+      'homeController': Get.isRegistered<VCartHomeController>(),
+      'searchController': Get.isRegistered<VCartSearchController>(),
+      'filterController': Get.isRegistered<VCartFilterPageController>(),
+      'productListingController':
+          Get.isRegistered<VCartProductListingController>(),
+    };
   }
 }

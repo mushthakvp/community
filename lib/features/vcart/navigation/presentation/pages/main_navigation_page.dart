@@ -5,9 +5,13 @@ import 'package:go_router/go_router.dart';
 import 'package:livera/features/vcart/core/router/v_cart_router_g.dart';
 
 import '../../../../../core/constants/route_constants.dart';
+import '../../../cart/presentation/controllers/cart_controller.dart';
+import '../../../categories/presentation/controllers/categories_controller.dart';
 import '../../../core/bindings/vcart_bindings.dart';
 import '../../../core/constants/vcart_colors.dart';
+import '../../../core/di/vcart_dependency_injection.dart';
 import '../../../home/presentation/controllers/home_controller.dart';
+import '../../../profile/presentation/controllers/profile_controller.dart';
 import '../controllers/bottom_nav_controller.dart';
 
 class VCartMainNavigationPage extends StatefulWidget {
@@ -28,32 +32,93 @@ class VCartMainNavigationPage extends StatefulWidget {
 class _VCartMainNavigationPageState extends State<VCartMainNavigationPage>
     with WidgetsBindingObserver {
   VCartBottomNavController? controller;
+  bool _isInitializing = true;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _initializeController();
-    _setupSystemBackHandler();
+    _initializeAsync();
   }
 
-  void _initializeController() {
+  Future<void> _initializeAsync() async {
+    await _ensureDependenciesInitialized();
+    await _initializeController();
+    _setupSystemBackHandler();
+
+    if (mounted) {
+      setState(() {
+        _isInitializing = false;
+      });
+    }
+  }
+
+  Future<void> _ensureDependenciesInitialized() async {
+    // Check if core dependencies are registered
+    if (!VCartDI.areCoreDependenciesRegistered()) {
+      debugPrint('⚠️ Core dependencies not found, initializing VCart DI...');
+      VCartDI.init();
+
+      // Wait a bit to ensure dependencies are properly registered
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
+
+    // Ensure navigation controller is registered
+    if (!Get.isRegistered<VCartBottomNavController>()) {
+      debugPrint('⚠️ Navigation controller not found, re-initializing...');
+      VCartDI.init();
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
+  }
+
+  Future<void> _initializeController() async {
     try {
-      // The navigation controller should already be registered as permanent
+      // Try to get the controller with a timeout
+      await Future.delayed(const Duration(milliseconds: 50));
+
       if (Get.isRegistered<VCartBottomNavController>()) {
         controller = Get.find<VCartBottomNavController>();
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          controller?.resetToHome();
-          VCartRouterClassG.resetNavigationFlags();
+        debugPrint('✅ VCartBottomNavController found successfully');
 
-          // Preload the home controller for better performance
-          VCartControllerHelper.preloadController<VCartHomeController>();
+        // Schedule post-frame callback for initialization
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (controller != null && mounted) {
+            controller!.resetToHome();
+            VCartRouterClassG.resetNavigationFlags();
+            VCartControllerHelper.preloadController<VCartHomeController>();
+          }
         });
       } else {
-        debugPrint('VCartBottomNavController not found in GetX registry');
+        debugPrint(
+          '❌ VCartBottomNavController still not found after initialization',
+        );
+        // Try one more time with manual initialization
+        await _fallbackInitialization();
       }
     } catch (e) {
-      debugPrint('Error finding VCartBottomNavController: $e');
+      debugPrint('❌ Error finding VCartBottomNavController: $e');
+      await _fallbackInitialization();
+    }
+  }
+
+  Future<void> _fallbackInitialization() async {
+    try {
+      debugPrint('🔄 Attempting fallback initialization...');
+
+      // Force re-initialize the entire DI system
+      VCartDI.clearAll();
+      await Future.delayed(const Duration(milliseconds: 100));
+      VCartDI.init();
+      await Future.delayed(const Duration(milliseconds: 200));
+
+      if (Get.isRegistered<VCartBottomNavController>()) {
+        controller = Get.find<VCartBottomNavController>();
+        debugPrint('✅ Fallback initialization successful');
+      } else {
+        debugPrint('❌ Fallback initialization failed');
+      }
+    } catch (e) {
+      debugPrint('❌ Fallback initialization error: $e');
     }
   }
 
@@ -101,19 +166,18 @@ class _VCartMainNavigationPageState extends State<VCartMainNavigationPage>
   }
 
   void _onTabTapped(int index) {
-    // Ensure required controllers are loaded based on tab selection
     switch (index) {
       case 0: // Home
         VCartControllerHelper.ensureController<VCartHomeController>();
         break;
-      case 1: // Categories - you might have a categories controller
-        // VCartControllerHelper.ensureController<VCartCategoriesController>();
+      case 1: // Categories
+        VCartControllerHelper.ensureController<VCartCategoriesController>();
         break;
-      case 2: // Cart - you might have a cart controller
-        // VCartControllerHelper.ensureController<VCartCartController>();
+      case 2: // Cart
+        VCartControllerHelper.ensureController<VCartCartController>();
         break;
-      case 3: // Profile - you might have a profile controller
-        // VCartControllerHelper.ensureController<VCartProfileController>();
+      case 3: // Profile
+        VCartControllerHelper.ensureController<VCartProfileController>();
         break;
     }
 
@@ -126,21 +190,80 @@ class _VCartMainNavigationPageState extends State<VCartMainNavigationPage>
     }
   }
 
+  Widget _buildLoadingScreen() {
+    return const Scaffold(
+      backgroundColor: VCartColors.background,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(
+              color: VCartColors.primary,
+              strokeWidth: 3,
+            ),
+            SizedBox(height: 16),
+            Text(
+              'Initializing VCart...',
+              style: TextStyle(color: VCartColors.textSecondary, fontSize: 14),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorScreen() {
+    return Scaffold(
+      backgroundColor: VCartColors.background,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, color: VCartColors.error, size: 48),
+            const SizedBox(height: 16),
+            const Text(
+              'Failed to initialize VCart',
+              style: TextStyle(
+                color: VCartColors.textPrimary,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Please try again or restart the app',
+              style: TextStyle(color: VCartColors.textSecondary, fontSize: 14),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  _isInitializing = true;
+                });
+                _initializeAsync();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: VCartColors.primary,
+                foregroundColor: VCartColors.onPrimary,
+              ),
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    // If controller is not initialized, show loading or try to get it
+    // Show loading screen while initializing
+    if (_isInitializing) {
+      return _buildLoadingScreen();
+    }
+
+    // Show error screen if controller is still null after initialization
     if (controller == null) {
-      if (Get.isRegistered<VCartBottomNavController>()) {
-        controller = Get.find<VCartBottomNavController>();
-      } else {
-        // Show loading while dependencies are being initialized
-        return const Scaffold(
-          backgroundColor: VCartColors.background,
-          body: Center(
-            child: CircularProgressIndicator(color: VCartColors.primary),
-          ),
-        );
-      }
+      return _buildErrorScreen();
     }
 
     return GetBuilder<VCartBottomNavController>(
