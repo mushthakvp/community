@@ -7,7 +7,6 @@ import 'package:livera/features/vcart/core/router/v_cart_router_g.dart';
 import '../../../../../core/constants/route_constants.dart';
 import '../../../cart/presentation/controllers/cart_controller.dart';
 import '../../../categories/presentation/controllers/categories_controller.dart';
-import '../../../core/bindings/vcart_bindings.dart';
 import '../../../core/constants/vcart_colors.dart';
 import '../../../core/di/vcart_dependency_injection.dart';
 import '../../../home/presentation/controllers/home_controller.dart';
@@ -33,6 +32,7 @@ class _VCartMainNavigationPageState extends State<VCartMainNavigationPage>
     with WidgetsBindingObserver {
   VCartBottomNavController? controller;
   bool _isInitializing = true;
+  String? _initializationError;
 
   @override
   void initState() {
@@ -42,92 +42,137 @@ class _VCartMainNavigationPageState extends State<VCartMainNavigationPage>
   }
 
   Future<void> _initializeAsync() async {
-    await _ensureDependenciesInitialized();
-    await _initializeController();
-    _setupSystemBackHandler();
-
-    if (mounted) {
+    try {
       setState(() {
-        _isInitializing = false;
+        _isInitializing = true;
+        _initializationError = null;
       });
-    }
-  }
 
-  Future<void> _ensureDependenciesInitialized() async {
-    // Check if core dependencies are registered
-    if (!VCartDI.areCoreDependenciesRegistered()) {
-      debugPrint('⚠️ Core dependencies not found, initializing VCart DI...');
-      VCartDI.init();
+      debugPrint('🚀 Starting VCart Main Navigation initialization...');
 
-      // Wait a bit to ensure dependencies are properly registered
-      await Future.delayed(const Duration(milliseconds: 100));
-    }
+      // Step 1: Ensure core dependencies exist
+      await _ensureCoreDependencies();
 
-    // Ensure navigation controller is registered
-    if (!Get.isRegistered<VCartBottomNavController>()) {
-      debugPrint('⚠️ Navigation controller not found, re-initializing...');
-      VCartDI.init();
-      await Future.delayed(const Duration(milliseconds: 100));
-    }
-  }
+      // Step 2: Initialize VCart DI
+      await _initializeVCartDI();
 
-  Future<void> _initializeController() async {
-    try {
-      // Try to get the controller with a timeout
-      await Future.delayed(const Duration(milliseconds: 50));
+      // Step 3: Initialize navigation controller
+      await _initializeNavigationController();
 
-      if (Get.isRegistered<VCartBottomNavController>()) {
-        controller = Get.find<VCartBottomNavController>();
-        debugPrint('✅ VCartBottomNavController found successfully');
+      // Step 4: Setup system back handler
+      _setupSystemBackHandler();
 
-        // Schedule post-frame callback for initialization
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (controller != null && mounted) {
-            controller!.resetToHome();
-            VCartRouterClassG.resetNavigationFlags();
-            VCartControllerHelper.preloadController<VCartHomeController>();
-          }
+      debugPrint('✅ VCart Main Navigation initialization completed');
+
+      if (mounted) {
+        setState(() {
+          _isInitializing = false;
         });
-      } else {
-        debugPrint(
-          '❌ VCartBottomNavController still not found after initialization',
-        );
-        // Try one more time with manual initialization
-        await _fallbackInitialization();
       }
-    } catch (e) {
-      debugPrint('❌ Error finding VCartBottomNavController: $e');
-      await _fallbackInitialization();
+    } catch (e, stackTrace) {
+      debugPrint('❌ VCart Main Navigation initialization failed: $e');
+      debugPrint('Stack trace: $stackTrace');
+
+      if (mounted) {
+        setState(() {
+          _isInitializing = false;
+          _initializationError = e.toString();
+        });
+      }
     }
   }
 
-  Future<void> _fallbackInitialization() async {
-    try {
-      debugPrint('🔄 Attempting fallback initialization...');
+  Future<void> _ensureCoreDependencies() async {
+    // Wait a bit for core dependencies to be available
+    int attempts = 0;
+    const maxAttempts = 10;
 
-      // Force re-initialize the entire DI system
-      VCartDI.clearAll();
+    while (attempts < maxAttempts) {
+      if (VCartDI.areCoreDependenciesRegistered()) {
+        debugPrint('✅ Core dependencies are available');
+        return;
+      }
+
+      debugPrint(
+        '⏳ Waiting for core dependencies... (attempt ${attempts + 1})',
+      );
       await Future.delayed(const Duration(milliseconds: 100));
-      VCartDI.init();
-      await Future.delayed(const Duration(milliseconds: 200));
+      attempts++;
+    }
 
-      if (Get.isRegistered<VCartBottomNavController>()) {
-        controller = Get.find<VCartBottomNavController>();
-        debugPrint('✅ Fallback initialization successful');
-      } else {
-        debugPrint('❌ Fallback initialization failed');
+    throw Exception(
+      'Core dependencies (NetworkInfo, ApiClient) not available after $maxAttempts attempts',
+    );
+  }
+
+  Future<void> _initializeVCartDI() async {
+    if (VCartDI.isInitialized) {
+      debugPrint('✅ VCart DI already initialized');
+      return;
+    }
+
+    if (VCartDI.isInitializing) {
+      debugPrint('⏳ VCart DI initialization in progress, waiting...');
+      int attempts = 0;
+      const maxAttempts = 50; // 5 seconds max
+
+      while (VCartDI.isInitializing && attempts < maxAttempts) {
+        await Future.delayed(const Duration(milliseconds: 100));
+        attempts++;
+      }
+
+      if (VCartDI.isInitialized) {
+        debugPrint('✅ VCart DI initialization completed');
+        return;
+      }
+
+      if (attempts >= maxAttempts) {
+        throw Exception('VCart DI initialization timed out');
+      }
+    }
+
+    debugPrint('🔄 Initializing VCart DI...');
+    await VCartDI.init();
+    debugPrint('✅ VCart DI initialization completed successfully');
+  }
+
+  Future<void> _initializeNavigationController() async {
+    try {
+      // Ensure navigation controller is available
+      controller = await VCartDI.ensureNavigationController();
+      debugPrint('✅ Navigation controller initialized successfully');
+
+      // Schedule post-frame callback for initial setup
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (controller != null && mounted) {
+          controller!.resetToHome();
+          VCartRouterClassG.resetNavigationFlags();
+
+          // Pre-load home controller for better performance
+          _preloadHomeController();
+        }
+      });
+    } catch (e) {
+      throw Exception('Failed to initialize navigation controller: $e');
+    }
+  }
+
+  void _preloadHomeController() {
+    try {
+      if (Get.isRegistered<VCartHomeController>()) {
+        Get.find<VCartHomeController>();
+        debugPrint('✅ Home controller pre-loaded');
       }
     } catch (e) {
-      debugPrint('❌ Fallback initialization error: $e');
+      debugPrint('⚠️ Failed to pre-load home controller: $e');
+      // Not critical, continue
     }
   }
 
   void _setupSystemBackHandler() {
     SystemChannels.navigation.setMethodCallHandler((call) async {
       if (call.method == 'routePopped') {
-        debugPrint(
-          '🔙 Main Navigation: System back detected via SystemChannels',
-        );
+        debugPrint('🔙 Main Navigation: System back detected');
         await _handleSystemBack();
         return true;
       }
@@ -136,15 +181,12 @@ class _VCartMainNavigationPageState extends State<VCartMainNavigationPage>
   }
 
   Future<void> _handleSystemBack() async {
-    debugPrint('🔙 Main Navigation: Handle system back');
     if (controller != null) {
-      debugPrint('Current tab index: ${controller!.currentIndex}');
-      debugPrint('Is in VCart context: ${VCartRouterClassG.isInVCartContext}');
       if (controller!.currentIndex != 0) {
-        debugPrint('Not on home tab, switching to home');
+        debugPrint('🔙 Not on home tab, switching to home');
         controller!.setCurrentIndex(0);
       } else {
-        debugPrint('On home tab, staying in VCart');
+        debugPrint('🔙 On home tab, staying in VCart');
       }
     }
   }
@@ -159,41 +201,72 @@ class _VCartMainNavigationPageState extends State<VCartMainNavigationPage>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    debugPrint('🔄 Main Navigation: App lifecycle state changed to $state');
     if (state == AppLifecycleState.resumed && controller != null) {
       controller!.resetToHome();
     }
   }
 
   void _onTabTapped(int index) {
-    switch (index) {
-      case 0: // Home
-        VCartControllerHelper.ensureController<VCartHomeController>();
-        break;
-      case 1: // Categories
-        VCartControllerHelper.ensureController<VCartCategoriesController>();
-        break;
-      case 2: // Cart
-        VCartControllerHelper.ensureController<VCartCartController>();
-        break;
-      case 3: // Profile
-        VCartControllerHelper.ensureController<VCartProfileController>();
-        break;
-    }
+    // Ensure controllers are available for each tab
+    _ensureControllerForTab(index);
 
     controller?.setCurrentIndex(index);
+
     if (index == 0) {
-      debugPrint(
-        '🏠 Main Navigation: Home tab tapped, resetting navigation flags',
-      );
       VCartRouterClassG.resetNavigationFlags();
     }
   }
 
+  void _ensureControllerForTab(int index) {
+    try {
+      switch (index) {
+        case 0: // Home
+          if (Get.isRegistered<VCartHomeController>()) {
+            Get.find<VCartHomeController>();
+          }
+          break;
+        case 1: // Categories
+          if (Get.isRegistered<VCartCategoriesController>()) {
+            Get.find<VCartCategoriesController>();
+          }
+          break;
+        case 2: // Cart
+          if (Get.isRegistered<VCartCartController>()) {
+            Get.find<VCartCartController>();
+          }
+          break;
+        case 3: // Profile
+          if (Get.isRegistered<VCartProfileController>()) {
+            Get.find<VCartProfileController>();
+          }
+          break;
+      }
+    } catch (e) {
+      debugPrint('⚠️ Failed to ensure controller for tab $index: $e');
+      // Continue anyway, the individual pages will handle missing controllers
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Show loading screen while initializing
+    if (_isInitializing) {
+      return _buildLoadingScreen();
+    }
+
+    // Show error screen if initialization failed
+    if (_initializationError != null || controller == null) {
+      return _buildErrorScreen();
+    }
+
+    // Show normal navigation
+    return _buildMainNavigation();
+  }
+
   Widget _buildLoadingScreen() {
-    return const Scaffold(
+    return Scaffold(
       backgroundColor: VCartColors.background,
-      body: Center(
+      body: const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -216,56 +289,73 @@ class _VCartMainNavigationPageState extends State<VCartMainNavigationPage>
     return Scaffold(
       backgroundColor: VCartColors.background,
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline, color: VCartColors.error, size: 48),
-            const SizedBox(height: 16),
-            const Text(
-              'Failed to initialize VCart',
-              style: TextStyle(
-                color: VCartColors.textPrimary,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.error_outline,
+                color: VCartColors.error,
+                size: 48,
               ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Please try again or restart the app',
-              style: TextStyle(color: VCartColors.textSecondary, fontSize: 14),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  _isInitializing = true;
-                });
-                _initializeAsync();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: VCartColors.primary,
-                foregroundColor: VCartColors.onPrimary,
+              const SizedBox(height: 16),
+              const Text(
+                'Failed to initialize VCart',
+                style: TextStyle(
+                  color: VCartColors.textPrimary,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+                textAlign: TextAlign.center,
               ),
-              child: const Text('Retry'),
-            ),
-          ],
+              const SizedBox(height: 8),
+              Text(
+                _initializationError ?? 'Unknown error occurred',
+                style: const TextStyle(
+                  color: VCartColors.textSecondary,
+                  fontSize: 12,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: _initializeAsync,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: VCartColors.primary,
+                  foregroundColor: VCartColors.onPrimary,
+                ),
+                child: const Text('Retry'),
+              ),
+              const SizedBox(height: 12),
+              TextButton(
+                onPressed: () {
+                  if (widget.onMarketplaceTap != null) {
+                    widget.onMarketplaceTap!();
+                  } else {
+                    try {
+                      context.go(RouteConstants.home);
+                    } catch (e) {
+                      // Fallback navigation
+                      Navigator.of(context).pushReplacementNamed('/home');
+                    }
+                  }
+                },
+                child: const Text(
+                  'Go to Marketplace',
+                  style: TextStyle(color: VCartColors.textSecondary),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    // Show loading screen while initializing
-    if (_isInitializing) {
-      return _buildLoadingScreen();
-    }
-
-    // Show error screen if controller is still null after initialization
-    if (controller == null) {
-      return _buildErrorScreen();
-    }
-
+  Widget _buildMainNavigation() {
     return GetBuilder<VCartBottomNavController>(
       init: controller,
       builder: (navController) {
@@ -273,7 +363,6 @@ class _VCartMainNavigationPageState extends State<VCartMainNavigationPage>
           canPop: false,
           onPopInvoked: (bool didPop) async {
             if (!didPop) {
-              debugPrint('🔙 Main Navigation: PopScope system back pressed');
               await _handleSystemBack();
             }
           },
@@ -286,9 +375,7 @@ class _VCartMainNavigationPageState extends State<VCartMainNavigationPage>
             floatingActionButton: FloatingActionButton(
               shape: const CircleBorder(),
               onPressed: () {
-                debugPrint(
-                  '🏠 Main Navigation: Floating action button pressed - exiting VCart',
-                );
+                debugPrint('🏠 Floating action button pressed - exiting VCart');
                 if (context.mounted) {
                   try {
                     context.go(RouteConstants.home);
@@ -311,75 +398,74 @@ class _VCartMainNavigationPageState extends State<VCartMainNavigationPage>
             ),
             floatingActionButtonLocation:
                 FloatingActionButtonLocation.centerDocked,
-            bottomNavigationBar: BottomAppBar(
-              color: VCartColors.surface,
-              shape: const CircularNotchedRectangle(),
-              notchMargin: 6.0,
-              child: SizedBox(
-                height: 60,
-                child: Obx(() {
-                  if (navController.isLoading ||
-                      navController.navItems.isEmpty) {
-                    return const SizedBox.shrink();
-                  }
-
-                  return BottomNavigationBar(
-                    currentIndex: navController.currentIndex,
-                    onTap: _onTabTapped,
-                    type: BottomNavigationBarType.fixed,
-                    backgroundColor: Colors.transparent,
-                    elevation: 0,
-                    selectedItemColor: VCartColors.primary,
-                    unselectedItemColor: VCartColors.textSecondary,
-                    selectedFontSize: 12,
-                    unselectedFontSize: 10,
-                    selectedLabelStyle: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                    ),
-                    unselectedLabelStyle: const TextStyle(
-                      fontWeight: FontWeight.w400,
-                    ),
-                    items: [
-                      BottomNavigationBarItem(
-                        icon: Icon(
-                          navController.currentIndex == 0
-                              ? Icons.home
-                              : Icons.home_outlined,
-                        ),
-                        label: 'Home',
-                      ),
-                      BottomNavigationBarItem(
-                        icon: Icon(
-                          navController.currentIndex == 1
-                              ? Icons.category
-                              : Icons.category_outlined,
-                        ),
-                        label: 'Categories',
-                      ),
-                      BottomNavigationBarItem(
-                        icon: Icon(
-                          navController.currentIndex == 2
-                              ? Icons.shopping_cart
-                              : Icons.shopping_cart_outlined,
-                        ),
-                        label: 'Cart',
-                      ),
-                      BottomNavigationBarItem(
-                        icon: Icon(
-                          navController.currentIndex == 3
-                              ? Icons.person
-                              : Icons.person_outline,
-                        ),
-                        label: 'Profile',
-                      ),
-                    ],
-                  );
-                }),
-              ),
-            ),
+            bottomNavigationBar: _buildBottomNavigationBar(navController),
           ),
         );
       },
+    );
+  }
+
+  Widget _buildBottomNavigationBar(VCartBottomNavController navController) {
+    return BottomAppBar(
+      color: VCartColors.surface,
+      shape: const CircularNotchedRectangle(),
+      notchMargin: 6.0,
+      child: SizedBox(
+        height: 60,
+        child: Obx(() {
+          if (navController.isLoading || navController.navItems.isEmpty) {
+            return const SizedBox.shrink();
+          }
+
+          return BottomNavigationBar(
+            currentIndex: navController.currentIndex,
+            onTap: _onTabTapped,
+            type: BottomNavigationBarType.fixed,
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            selectedItemColor: VCartColors.primary,
+            unselectedItemColor: VCartColors.textSecondary,
+            selectedFontSize: 12,
+            unselectedFontSize: 10,
+            selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
+            unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w400),
+            items: [
+              BottomNavigationBarItem(
+                icon: Icon(
+                  navController.currentIndex == 0
+                      ? Icons.home
+                      : Icons.home_outlined,
+                ),
+                label: 'Home',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(
+                  navController.currentIndex == 1
+                      ? Icons.category
+                      : Icons.category_outlined,
+                ),
+                label: 'Categories',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(
+                  navController.currentIndex == 2
+                      ? Icons.shopping_cart
+                      : Icons.shopping_cart_outlined,
+                ),
+                label: 'Cart',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(
+                  navController.currentIndex == 3
+                      ? Icons.person
+                      : Icons.person_outline,
+                ),
+                label: 'Profile',
+              ),
+            ],
+          );
+        }),
+      ),
     );
   }
 }

@@ -4,6 +4,7 @@ import 'package:livera/features/vcart/core/router/v_cart_router_g.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../core/constants/vcart_colors.dart';
+import '../../../core/di/vcart_dependency_injection.dart';
 import '../../../core/utils/vcart_extensions.dart';
 import '../../../core/widgets/vcart_button.dart';
 import '../../../shared/presentation/widgets/error_widget.dart';
@@ -24,21 +25,50 @@ class VCartCartPage extends StatefulWidget {
 }
 
 class _VCartCartPageState extends State<VCartCartPage> {
-  late VCartCartController controller;
+  VCartCartController? controller;
+  bool isInitializing = true;
+  String? initializationError;
 
   @override
   void initState() {
     super.initState();
-    _initializeController();
+    _initializeAsync();
   }
 
-  void _initializeController() {
-    if (Get.isRegistered<VCartCartController>()) {
-      controller = Get.find<VCartCartController>();
-    } else {
-      // Initialize controller if not already registered
-      // This would be done through dependency injection
-      throw Exception('VCartCartController not registered');
+  Future<void> _initializeAsync() async {
+    try {
+      // Ensure VCart DI is initialized
+      if (!VCartDI.isInitialized) {
+        debugPrint('🔄 VCart DI not initialized, initializing now...');
+        await VCartDI.init();
+      }
+
+      // Wait a bit to ensure all dependencies are registered
+      await Future.delayed(const Duration(milliseconds: 100));
+
+      // Try to get the controller
+      if (Get.isRegistered<VCartCartController>()) {
+        controller = Get.find<VCartCartController>();
+        debugPrint('✅ VCartCartController found successfully');
+      } else {
+        throw Exception(
+          'VCartCartController not registered after DI initialization',
+        );
+      }
+
+      if (mounted) {
+        setState(() {
+          isInitializing = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('❌ Failed to initialize cart page: $e');
+      if (mounted) {
+        setState(() {
+          isInitializing = false;
+          initializationError = e.toString();
+        });
+      }
     }
   }
 
@@ -47,7 +77,7 @@ class _VCartCartPageState extends State<VCartCartPage> {
     return Scaffold(
       backgroundColor: VCartColors.background,
       appBar: _buildAppBar(),
-      body: Obx(() => _buildBody()),
+      body: _buildBody(),
     );
   }
 
@@ -87,14 +117,62 @@ class _VCartCartPageState extends State<VCartCartPage> {
   }
 
   Widget _buildBody() {
-    if (controller.hasError) {
-      return VCartErrorWidget(
-        message: controller.errorMessage,
-        onRetry: () => controller.refreshCartData(),
+    // Show loading while initializing
+    if (isInitializing) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(
+              color: VCartColors.primary,
+              strokeWidth: 3,
+            ),
+            SizedBox(height: 16),
+            Text(
+              'Loading cart...',
+              style: TextStyle(color: VCartColors.textSecondary, fontSize: 14),
+            ),
+          ],
+        ),
       );
     }
 
-    if (controller.isEmpty && !controller.isLoading) {
+    // Show error if initialization failed
+    if (initializationError != null || controller == null) {
+      return Center(
+        child: VCartErrorWidget(
+          message:
+              initializationError ??
+              'Cart service is not available. Please try again.',
+          onRetry: () {
+            setState(() {
+              isInitializing = true;
+              initializationError = null;
+            });
+            _initializeAsync();
+          },
+        ),
+      );
+    }
+
+    // Build normal cart UI
+    return GetBuilder<VCartCartController>(
+      init: controller,
+      builder: (cartController) {
+        return Obx(() => _buildCartContent(cartController));
+      },
+    );
+  }
+
+  Widget _buildCartContent(VCartCartController cartController) {
+    if (cartController.hasError) {
+      return VCartErrorWidget(
+        message: cartController.errorMessage,
+        onRetry: () => cartController.refreshCartData(),
+      );
+    }
+
+    if (cartController.isEmpty && !cartController.isLoading) {
       return const VCartMaintenanceWidget(
         imageUrl:
             'https://res.cloudinary.com/fouvtycloud/image/upload/v1732792361/Delivery_Service_1_gj5xfk.png',
@@ -105,17 +183,17 @@ class _VCartCartPageState extends State<VCartCartPage> {
     }
 
     return RefreshIndicator(
-      onRefresh: controller.refreshCartData,
+      onRefresh: cartController.refreshCartData,
       color: VCartColors.primary,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         child: Skeletonizer(
-          enabled: controller.isLoading,
+          enabled: cartController.isLoading,
           child: Column(
             children: [
-              if (controller.isNotEmpty) ...[
-                _buildCartItems(),
-                _buildCartFooter(),
+              if (cartController.isNotEmpty) ...[
+                _buildCartItems(cartController),
+                _buildCartFooter(cartController),
               ],
             ],
           ),
@@ -124,37 +202,39 @@ class _VCartCartPageState extends State<VCartCartPage> {
     );
   }
 
-  Widget _buildCartItems() {
+  Widget _buildCartItems(VCartCartController cartController) {
     return ListView.separated(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       padding: context.defaultPadding,
-      itemCount: controller.cartItems.length,
+      itemCount: cartController.cartItems.length,
       itemBuilder: (context, index) {
         return CartItemWidget(
-          item: controller.cartItems[index],
-          onIncrement: () => controller.incrementQuantity(
-            controller.cartItems[index],
+          item: cartController.cartItems[index],
+          onIncrement: () => cartController.incrementQuantity(
+            cartController.cartItems[index],
             context,
           ),
-          onDecrement: () => controller.decrementQuantity(
-            controller.cartItems[index],
+          onDecrement: () => cartController.decrementQuantity(
+            cartController.cartItems[index],
             context,
           ),
-          onRemove: () =>
-              controller.removeItem(controller.cartItems[index], context),
-          onMoveToWishlist: () => controller.moveItemToWishlist(
-            controller.cartItems[index],
+          onRemove: () => cartController.removeItem(
+            cartController.cartItems[index],
             context,
           ),
-          isUpdating: controller.isUpdating,
+          onMoveToWishlist: () => cartController.moveItemToWishlist(
+            cartController.cartItems[index],
+            context,
+          ),
+          isUpdating: cartController.isUpdating,
         );
       },
       separatorBuilder: (context, index) => const SizedBox(height: 16),
     );
   }
 
-  Widget _buildCartFooter() {
+  Widget _buildCartFooter(VCartCartController cartController) {
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(top: 16),
@@ -169,30 +249,30 @@ class _VCartCartPageState extends State<VCartCartPage> {
       child: Column(
         children: [
           // Coupon Section
-          if (controller.hasCoupon)
+          if (cartController.hasCoupon)
             AppliedCouponWidget(
-              couponData: controller.cartData!.couponData!,
-              onRemove: () => controller.removeCouponFromCart(context),
-              isLoading: controller.isUpdating,
+              couponData: cartController.cartData!.couponData!,
+              onRemove: () => cartController.removeCouponFromCart(context),
+              isLoading: cartController.isUpdating,
             )
           else
             CouponSelectorWidget(
               onCouponApplied: (couponId) =>
-                  controller.applyCouponWithId(couponId, context),
+                  cartController.applyCouponWithId(couponId, context),
             ),
 
           const SizedBox(height: 20),
 
           // Cart Summary
-          CartSummaryWidget(cartData: controller.cartData!),
+          CartSummaryWidget(cartData: cartController.cartData!),
 
           const SizedBox(height: 16),
 
           // Checkout Button
           VCartButton(
             text: "Proceed to Checkout",
-            onPressed: controller.isUpdating ? null : _onCheckoutPressed,
-            isLoading: controller.isUpdating,
+            onPressed: cartController.isUpdating ? null : _onCheckoutPressed,
+            isLoading: cartController.isUpdating,
             isExpanded: true,
             height: 55,
           ),

@@ -12,114 +12,176 @@ import '../../profile/presentation/controllers/profile_controller.dart';
 import '../../search/presentation/controllers/search_controller.dart';
 import '../../section_category/presentation/controllers/section_category_controller.dart';
 import '../../wishlist/presentation/controllers/wishlist_controller.dart';
+import '../di/vcart_dependency_injection.dart';
+
+/// Base binding with common functionality
+abstract class VCartBaseBinding extends Bindings {
+  Future<void> ensureVCartInitialized() async {
+    if (!VCartDI.isInitialized) {
+      await VCartDI.init();
+    }
+  }
+
+  T ensureController<T>() {
+    if (!Get.isRegistered<T>()) {
+      throw Exception(
+        'Controller $T is not registered. VCart DI may not be properly initialized.',
+      );
+    }
+    return Get.find<T>();
+  }
+}
 
 /// Binding for VCart Home page
-class VCartHomeBinding extends Bindings {
+class VCartHomeBinding extends VCartBaseBinding {
   @override
-  void dependencies() {
-    // The controller is already lazy-loaded in DI, this ensures it's available
-    Get.find<VCartHomeController>();
+  Future<void> dependencies() async {
+    await ensureVCartInitialized();
+    ensureController<VCartHomeController>();
   }
 }
 
 /// Binding for VCart Cart page
-class VCartCartBinding extends Bindings {
+class VCartCartBinding extends VCartBaseBinding {
   @override
-  void dependencies() {
-    // The controller is already lazy-loaded in DI, this ensures it's available
-    Get.find<VCartCartController>();
+  Future<void> dependencies() async {
+    try {
+      await ensureVCartInitialized();
+      ensureController<VCartCartController>();
+    } catch (e) {
+      if (!Get.isRegistered<VCartCartController>()) {
+        await VCartDI.init();
+        if (!Get.isRegistered<VCartCartController>()) {
+          throw Exception(
+            'VCartCartController could not be registered. Please restart the app.',
+          );
+        }
+      }
+      rethrow;
+    }
   }
 }
 
 /// Binding for VCart Categories page
-class VCartCategoriesBinding extends Bindings {
+class VCartCategoriesBinding extends VCartBaseBinding {
   @override
-  void dependencies() {
-    // The controller is already lazy-loaded in DI, this ensures it's available
-    Get.find<VCartCategoriesController>();
+  Future<void> dependencies() async {
+    await ensureVCartInitialized();
+    ensureController<VCartCategoriesController>();
   }
 }
 
 /// Binding for VCart Coupons page
-class VCartCouponsBinding extends Bindings {
+class VCartCouponsBinding extends VCartBaseBinding {
   @override
-  void dependencies() {
-    // The controller is already lazy-loaded in DI, this ensures it's available
-    Get.find<VCartCouponsController>();
+  Future<void> dependencies() async {
+    await ensureVCartInitialized();
+    ensureController<VCartCouponsController>();
   }
 }
 
 /// Binding for VCart Filter page
-class VCartFilterBinding extends Bindings {
+class VCartFilterBinding extends VCartBaseBinding {
   @override
-  void dependencies() {
-    // The controller is already lazy-loaded in DI, this ensures it's available
-    Get.find<VCartFilterPageController>();
+  Future<void> dependencies() async {
+    await ensureVCartInitialized();
+    ensureController<VCartFilterPageController>();
   }
 }
 
 /// Binding for VCart Product Listing page
-class VCartProductListingBinding extends Bindings {
+class VCartProductListingBinding extends VCartBaseBinding {
   @override
-  void dependencies() {
-    // The controller is already lazy-loaded in DI, this ensures it's available
-    Get.find<VCartProductListingController>();
+  Future<void> dependencies() async {
+    await ensureVCartInitialized();
+    ensureController<VCartProductListingController>();
   }
 }
 
 /// Binding for VCart Product Overview page
-class VCartProductOverviewBinding extends Bindings {
+class VCartProductOverviewBinding extends VCartBaseBinding {
   @override
-  void dependencies() {
-    // The controller is already lazy-loaded in DI, this ensures it's available
-    Get.find<VCartProductOverviewController>();
+  Future<void> dependencies() async {
+    await ensureVCartInitialized();
+    ensureController<VCartProductOverviewController>();
   }
 }
 
 /// Binding for VCart Profile page
-class VCartProfileBinding extends Bindings {
+class VCartProfileBinding extends VCartBaseBinding {
   @override
-  void dependencies() {
-    // The controller is already lazy-loaded in DI, this ensures it's available
-    Get.find<VCartProfileController>();
+  Future<void> dependencies() async {
+    await ensureVCartInitialized();
+    ensureController<VCartProfileController>();
   }
 }
 
 /// Binding for VCart Search page
-class VCartSearchBinding extends Bindings {
+class VCartSearchBinding extends VCartBaseBinding {
   @override
-  void dependencies() {
-    // The controller is already lazy-loaded in DI, this ensures it's available
-    Get.find<VCartSearchController>();
+  Future<void> dependencies() async {
+    await ensureVCartInitialized();
+    ensureController<VCartSearchController>();
   }
 }
 
 /// Binding for VCart Section Category page
-class VCartSectionCategoryBinding extends Bindings {
+class VCartSectionCategoryBinding extends VCartBaseBinding {
   @override
-  void dependencies() {
-    // The controller is already lazy-loaded in DI, this ensures it's available
-    Get.find<VCartSectionCategoryController>();
+  Future<void> dependencies() async {
+    await ensureVCartInitialized();
+    ensureController<VCartSectionCategoryController>();
   }
 }
 
 /// Binding for VCart Wishlist page
-class VCartWishlistBinding extends Bindings {
+class VCartWishlistBinding extends VCartBaseBinding {
   @override
-  void dependencies() {
-    // The controller is already lazy-loaded in DI, this ensures it's available
-    Get.find<VCartWishlistController>();
+  Future<void> dependencies() async {
+    await ensureVCartInitialized();
+    ensureController<VCartWishlistController>();
   }
 }
 
 /// Helper class for managing VCart controller lifecycle
 class VCartControllerHelper {
-  /// Ensure a specific controller is loaded
+  /// Ensure a specific controller is loaded with error handling
   static T ensureController<T>() {
     if (!Get.isRegistered<T>()) {
+      if (!VCartDI.isInitialized) {
+        VCartDI.init();
+        Future.delayed(const Duration(milliseconds: 100)).then((_) {
+          if (!Get.isRegistered<T>()) {
+            throw Exception(
+              'Controller $T is still not registered after VCart DI initialization. '
+              'Make sure VCartDI.init() is called properly.',
+            );
+          }
+        });
+      }
+
       throw Exception(
         'Controller $T is not registered. Make sure VCartDI.init() is called.',
       );
+    }
+    return Get.find<T>();
+  }
+
+  /// Ensure a controller is loaded with async handling
+  static Future<T> ensureControllerAsync<T>() async {
+    if (!Get.isRegistered<T>()) {
+      if (!VCartDI.isInitialized) {
+        await VCartDI.init();
+      }
+
+      // Wait a bit more for controller registration
+      await Future.delayed(const Duration(milliseconds: 100));
+
+      if (!Get.isRegistered<T>()) {
+        throw Exception(
+          'Controller $T could not be registered. Please restart the app.',
+        );
+      }
     }
     return Get.find<T>();
   }
@@ -141,37 +203,53 @@ class VCartControllerHelper {
 
   /// Check if controller is currently instantiated
   static bool isControllerInstantiated<T>() {
-    return Get.isRegistered<T>() && Get.find<T>(tag: null) != null;
+    try {
+      return Get.isRegistered<T>() && Get.find<T>(tag: null) != null;
+    } catch (e) {
+      return false;
+    }
   }
 
   /// Pre-load all VCart controllers for better performance
   static void preloadAllControllers() {
-    preloadController<VCartHomeController>();
-    preloadController<VCartCartController>();
-    preloadController<VCartCategoriesController>();
-    preloadController<VCartCouponsController>();
-    preloadController<VCartFilterPageController>();
-    preloadController<VCartProductListingController>();
-    preloadController<VCartProductOverviewController>();
-    preloadController<VCartProfileController>();
-    preloadController<VCartSearchController>();
-    preloadController<VCartSectionCategoryController>();
-    preloadController<VCartWishlistController>();
+    final controllers = [
+      VCartHomeController,
+      VCartCartController,
+      VCartCategoriesController,
+      VCartCouponsController,
+      VCartFilterPageController,
+      VCartProductListingController,
+      VCartProductOverviewController,
+      VCartProfileController,
+      VCartSearchController,
+      VCartSectionCategoryController,
+      VCartWishlistController,
+    ];
+
+    for (final controllerType in controllers) {
+      if (Get.isRegistered(tag: controllerType.toString())) {
+        Get.find(tag: controllerType.toString());
+      }
+    }
   }
 
   /// Check if all controllers are registered
   static bool areAllControllersRegistered() {
-    return Get.isRegistered<VCartHomeController>() &&
-        Get.isRegistered<VCartCartController>() &&
-        Get.isRegistered<VCartCategoriesController>() &&
-        Get.isRegistered<VCartCouponsController>() &&
-        Get.isRegistered<VCartFilterPageController>() &&
-        Get.isRegistered<VCartProductListingController>() &&
-        Get.isRegistered<VCartProductOverviewController>() &&
-        Get.isRegistered<VCartProfileController>() &&
-        Get.isRegistered<VCartSearchController>() &&
-        Get.isRegistered<VCartSectionCategoryController>() &&
-        Get.isRegistered<VCartWishlistController>();
+    final registrationChecks = [
+      Get.isRegistered<VCartHomeController>(),
+      Get.isRegistered<VCartCartController>(),
+      Get.isRegistered<VCartCategoriesController>(),
+      Get.isRegistered<VCartCouponsController>(),
+      Get.isRegistered<VCartFilterPageController>(),
+      Get.isRegistered<VCartProductListingController>(),
+      Get.isRegistered<VCartProductOverviewController>(),
+      Get.isRegistered<VCartProfileController>(),
+      Get.isRegistered<VCartSearchController>(),
+      Get.isRegistered<VCartSectionCategoryController>(),
+      Get.isRegistered<VCartWishlistController>(),
+    ];
+
+    return registrationChecks.every((isRegistered) => isRegistered);
   }
 
   /// Get registration status of all controllers
@@ -194,5 +272,18 @@ class VCartControllerHelper {
           Get.isRegistered<VCartSectionCategoryController>(),
       'VCartWishlistController': Get.isRegistered<VCartWishlistController>(),
     };
+  }
+
+  /// Initialize missing controllers
+  static Future<void> initializeMissingControllers() async {
+    final status = getControllerStatus();
+    final missingControllers = status.entries
+        .where((entry) => !entry.value)
+        .map((entry) => entry.key)
+        .toList();
+
+    if (missingControllers.isNotEmpty) {
+      await VCartDI.init();
+    }
   }
 }
