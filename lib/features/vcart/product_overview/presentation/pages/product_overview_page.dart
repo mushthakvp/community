@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:livera/features/vcart/core/router/v_cart_router_g.dart';
+import 'package:go_router/go_router.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../core/constants/vcart_colors.dart';
@@ -105,64 +105,58 @@ class _VCartProductOverviewPageState extends State<VCartProductOverviewPage>
   Widget build(BuildContext context) {
     return GetBuilder<VCartProductOverviewController>(
       builder: (controller) {
-        return WillPopScope(
-          onWillPop: () async {
-            _handleBackPress();
-            return false;
-          },
-          child: Scaffold(
-            backgroundColor: VCartColors.background,
-            body: Obx(() {
-              if (controller.hasError) {
-                return VCartErrorWidget(
-                  message: controller.errorMessage,
-                  onRetry: () => controller.refreshData(widget.productId),
-                );
-              }
-              return Skeletonizer(
-                enabled: controller.isLoading,
-                child: Stack(
-                  children: [
-                    SingleChildScrollView(
-                      controller: _scrollController,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          ProductImageCarousel(controller: controller),
-                          Padding(
-                            padding: context.defaultPadding,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                ProductDetailsSection(controller: controller),
-                                SizedBox(height: context.screenHeight * 0.01),
-                                ProductTabsSection(controller: controller),
-                                SizedBox(height: context.screenHeight * 0.02),
-                                BrandReturnInfoSection(controller: controller),
-                                SizedBox(height: context.screenHeight * 0.01),
-                                ReviewsSection(
-                                  controller: controller,
-                                  productId: widget.productId,
-                                ),
-                                SizedBox(height: context.screenHeight * 0.15),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    _buildAppBar(),
-                  ],
-                ),
+        return Scaffold(
+          backgroundColor: VCartColors.background,
+          body: Obx(() {
+            if (controller.hasError) {
+              return VCartErrorWidget(
+                message: controller.errorMessage,
+                onRetry: () => controller.refreshData(widget.productId),
               );
-            }),
-            bottomSheet: _showBottomSheet
-                ? FloatingBottomSheet(
-                    controller: controller,
-                    animation: _slideAnimation,
-                  )
-                : null,
-          ),
+            }
+            return Skeletonizer(
+              enabled: controller.isLoading,
+              child: Stack(
+                children: [
+                  SingleChildScrollView(
+                    controller: _scrollController,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        ProductImageCarousel(controller: controller),
+                        Padding(
+                          padding: context.defaultPadding,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              ProductDetailsSection(controller: controller),
+                              SizedBox(height: context.screenHeight * 0.01),
+                              ProductTabsSection(controller: controller),
+                              SizedBox(height: context.screenHeight * 0.02),
+                              BrandReturnInfoSection(controller: controller),
+                              SizedBox(height: context.screenHeight * 0.01),
+                              ReviewsSection(
+                                controller: controller,
+                                productId: widget.productId,
+                              ),
+                              SizedBox(height: context.screenHeight * 0.15),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  _buildAppBar(),
+                ],
+              ),
+            );
+          }),
+          bottomSheet: _showBottomSheet
+              ? FloatingBottomSheet(
+                  controller: controller,
+                  animation: _slideAnimation,
+                )
+              : null,
         );
       },
     );
@@ -189,13 +183,9 @@ class _VCartProductOverviewPageState extends State<VCartProductOverviewPage>
               ),
             ),
           ),
-          onPressed: _handleBackPress,
+          onPressed: () => context.pop(),
         ),
       ),
     );
-  }
-
-  void _handleBackPress() {
-    VCartRouterClassG.backInVCart();
   }
 }

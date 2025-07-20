@@ -222,43 +222,27 @@ class VCartProductOverviewController extends GetxController {
 
   Future<void> toggleWishlist(BuildContext context) async {
     try {
-      // Optimistically update UI first
       final currentWishlistState = isAddedWishList;
       _updateWishlistState(!currentWishlistState);
-
       _isToggling.value = true;
-
       final result = await toggleWishlistUseCase(
         ToggleWishlistParams(productId: productId),
       );
-
       result.fold(
         (failure) {
-          // Revert the optimistic update on failure
           _updateWishlistState(currentWishlistState);
           _isToggling.value = false;
-          context.showVCartSnackBar(failure.message, isError: true);
         },
         (success) {
           _isToggling.value = false;
           if (success) {
-            context.showVCartSnackBar(
-              !currentWishlistState
-                  ? 'Added to wishlist'
-                  : 'Removed from wishlist',
-            );
           } else {
-            // Revert if the operation wasn't successful
             _updateWishlistState(currentWishlistState);
           }
         },
       );
     } catch (e) {
       _isToggling.value = false;
-      context.showVCartSnackBar(
-        'Something went wrong. Please try again.',
-        isError: true,
-      );
     }
   }
 

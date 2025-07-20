@@ -39,17 +39,17 @@ class VCartRouterClassG {
   // Navigation methods
   static void toVCartHome() {
     _setNavigatingFromVCart();
-    GoRouter.of(_getContext()).go(VCartRouterClass.home);
+    GoRouter.of(_getContext()).push(VCartRouterClass.cart);
   }
 
   static void toVCartSearch() {
     _setNavigatingFromVCart();
-    GoRouter.of(_getContext()).go(VCartRouterClass.search);
+    GoRouter.of(_getContext()).push(VCartRouterClass.search);
   }
 
   static void toVCartCategories() {
     _setNavigatingFromVCart();
-    GoRouter.of(_getContext()).go(VCartRouterClass.categories);
+    GoRouter.of(_getContext()).push(VCartRouterClass.categories);
   }
 
   static void toVCartCategory(String categoryId, {String? title}) {
@@ -58,7 +58,7 @@ class VCartRouterClassG {
       path: '${VCartRouterClass.category}/$categoryId',
       queryParameters: title != null ? {'title': title} : null,
     );
-    GoRouter.of(_getContext()).go(uri.toString());
+    GoRouter.of(_getContext()).push(uri.toString());
   }
 
   static void toVCartSectionCategory(String sectionId, {String? title}) {
@@ -67,7 +67,7 @@ class VCartRouterClassG {
       path: '${VCartRouterClass.sectionCategory}/$sectionId',
       queryParameters: title != null ? {'title': title} : null,
     );
-    GoRouter.of(_getContext()).go(uri.toString());
+    GoRouter.of(_getContext()).push(uri.toString());
   }
 
   static void toVCartProductListing({
@@ -88,14 +88,14 @@ class VCartRouterClassG {
       path: VCartRouterClass.productListing,
       queryParameters: queryParams,
     );
-    GoRouter.of(_getContext()).go(uri.toString());
+    GoRouter.of(_getContext()).push(uri.toString());
   }
 
   static void toVCartProduct(String productId) {
     _setNavigatingFromVCart();
     GoRouter.of(
       _getContext(),
-    ).go('${VCartRouterClass.productDetail}/$productId');
+    ).push('${VCartRouterClass.productDetail}/$productId');
   }
 
   static void toVCartFilter({String? sectionId, String? brandId}) {
@@ -108,27 +108,27 @@ class VCartRouterClassG {
       path: VCartRouterClass.filter,
       queryParameters: queryParams.isNotEmpty ? queryParams : null,
     );
-    GoRouter.of(_getContext()).go(uri.toString());
+    GoRouter.of(_getContext()).push(uri.toString());
   }
 
   static void toVCartProfile() {
     _setNavigatingFromVCart();
-    GoRouter.of(_getContext()).go(VCartRouterClass.profile);
+    GoRouter.of(_getContext()).push(VCartRouterClass.profile);
   }
 
   static void toVCartCart() {
     _setNavigatingFromVCart();
-    GoRouter.of(_getContext()).go(VCartRouterClass.cart);
+    GoRouter.of(_getContext()).push(VCartRouterClass.cart);
   }
 
   static void toVCartWishlist() {
     _setNavigatingFromVCart();
-    GoRouter.of(_getContext()).go(VCartRouterClass.wishlist);
+    GoRouter.of(_getContext()).push(VCartRouterClass.wishlist);
   }
 
   static void toVCartCoupons() {
     _setNavigatingFromVCart();
-    GoRouter.of(_getContext()).go(VCartRouterClass.coupons);
+    GoRouter.of(_getContext()).push(VCartRouterClass.coupons);
   }
 
   // Push methods (for modal/dialog navigation)

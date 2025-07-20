@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:go_router/go_router.dart';
 import 'package:livera/features/vcart/core/router/v_cart_router_g.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
@@ -78,44 +79,35 @@ class _VCartSearchPageState extends State<VCartSearchPage>
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
-      onPopInvoked: (bool didPop) {
-        if (!didPop) {
-          debugPrint('🔙 Search Page: PopScope system back pressed');
-          VCartRouterClassG.backInVCart();
-        }
-      },
-      child: Scaffold(
-        backgroundColor: VCartColors.background,
-        body: GetBuilder<VCartSearchController>(
-          init: controller,
-          builder: (controller) {
-            return Obx(() {
-              if (controller.hasError) {
-                return VCartErrorWidget(
-                  message: controller.errorMessage,
-                  onRetry: () => controller.refreshData(),
-                );
-              }
-
-              return CustomScrollView(
-                controller: _scrollController,
-                slivers: [
-                  _buildAppBar(),
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: context.defaultPadding,
-                      child: controller.isSearched
-                          ? _buildSearchResults()
-                          : _buildSearchHome(),
-                    ),
-                  ),
-                ],
+    return Scaffold(
+      backgroundColor: VCartColors.background,
+      body: GetBuilder<VCartSearchController>(
+        init: controller,
+        builder: (controller) {
+          return Obx(() {
+            if (controller.hasError) {
+              return VCartErrorWidget(
+                message: controller.errorMessage,
+                onRetry: () => controller.refreshData(),
               );
-            });
-          },
-        ),
+            }
+
+            return CustomScrollView(
+              controller: _scrollController,
+              slivers: [
+                _buildAppBar(),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: context.defaultPadding,
+                    child: controller.isSearched
+                        ? _buildSearchResults()
+                        : _buildSearchHome(),
+                  ),
+                ),
+              ],
+            );
+          });
+        },
       ),
     );
   }
@@ -141,10 +133,7 @@ class _VCartSearchPageState extends State<VCartSearchPage>
               child: Icon(Icons.arrow_back, color: VCartColors.textPrimary),
             ),
           ),
-          onPressed: () {
-            debugPrint('🔙 Search Page: App bar back pressed');
-            VCartRouterClassG.backInVCart();
-          },
+          onPressed: () => context.pop(),
         ),
       ),
       title: const Text(

@@ -36,7 +36,7 @@ class VCartHomePage extends StatelessWidget {
                 slivers: [
                   VCartHomeAppBar(
                     onSearchTap: () => _navigateToSearch(),
-                    onNotificationTap: () => _navigateToNotifications(),
+                    onNotificationTap: () {},
                   ),
                   SliverToBoxAdapter(child: 10.h),
                   _buildBannersSection(controller),
@@ -250,11 +250,7 @@ class VCartHomePage extends StatelessWidget {
   // Navigation methods
 
   void _navigateToSearch() {
-    // VCartRouterClass.toVCartSearch();
-  }
-
-  void _navigateToNotifications() {
-    Get.toNamed('/notifications');
+    VCartRouterClassG.toVCartSearch();
   }
 
   void _navigateToProductDetail(String productId) {
@@ -269,7 +265,6 @@ class VCartHomePage extends StatelessWidget {
     String? subCategoryId,
     String? brandId,
   }) {
-    // Navigate to product listing page with parameters
     VCartRouterClassG.toVCartProductListing(
       title: title,
       sectionId: sectionId,
@@ -280,7 +275,6 @@ class VCartHomePage extends StatelessWidget {
   }
 
   void _navigateToBrandProducts(dynamic brand) {
-    // Navigate to products filtered by brand
     VCartRouterClassG.toVCartProductListing(
       title: '${brand.name} Products',
       brandId: brand.id,

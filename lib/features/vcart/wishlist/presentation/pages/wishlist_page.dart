@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:go_router/go_router.dart';
 import 'package:livera/features/vcart/core/router/v_cart_router_g.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
@@ -50,88 +51,81 @@ class _VCartWishlistPageState extends State<VCartWishlistPage> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        VCartRouterClassG.backInVCart();
-        return false;
-      },
-      child: Scaffold(
-        backgroundColor: VCartColors.background,
-        appBar: _buildAppBar(),
-        body: GetBuilder<VCartWishlistController>(
-          init: controller,
-          builder: (controller) {
-            return Obx(() {
-              if (controller.hasError) {
-                return VCartErrorWidget(
-                  message: controller.errorMessage,
-                  onRetry: () => controller.refreshData(),
-                );
-              }
+    return Scaffold(
+      backgroundColor: VCartColors.background,
+      appBar: _buildAppBar(),
+      body: GetBuilder<VCartWishlistController>(
+        init: controller,
+        builder: (controller) {
+          return Obx(() {
+            if (controller.hasError) {
+              return VCartErrorWidget(
+                message: controller.errorMessage,
+                onRetry: () => controller.refreshData(),
+              );
+            }
 
-              if (controller.wishlistItems.isEmpty && !controller.isLoading) {
-                return const VCartMaintenanceWidget(
-                  title: 'Your Wishlist is Empty',
-                  subtitle:
-                      'Browse our collection and add your favorites to keep track of them.',
-                );
-              }
+            if (controller.wishlistItems.isEmpty && !controller.isLoading) {
+              return const VCartMaintenanceWidget(
+                title: 'Your Wishlist is Empty',
+                subtitle:
+                    'Browse our collection and add your favorites to keep track of them.',
+              );
+            }
 
-              return Skeletonizer(
-                enabled: controller.isLoading,
-                child: SingleChildScrollView(
-                  controller: _scrollController,
-                  child: Padding(
-                    padding: context.defaultPadding,
-                    child: Column(
-                      children: [
-                        GridView.builder(
-                          physics: const NeverScrollableScrollPhysics(),
-                          shrinkWrap: true,
-                          gridDelegate:
-                              SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 2,
-                                mainAxisSpacing: 20,
-                                crossAxisSpacing: 20,
-                                childAspectRatio:
-                                    VCartHelpers.calculateChildAspectRatio(
-                                      context.screenWidth,
-                                      context.screenHeight,
-                                      multiplier: 0.25,
-                                    ),
+            return Skeletonizer(
+              enabled: controller.isLoading,
+              child: SingleChildScrollView(
+                controller: _scrollController,
+                child: Padding(
+                  padding: context.defaultPadding,
+                  child: Column(
+                    children: [
+                      GridView.builder(
+                        physics: const NeverScrollableScrollPhysics(),
+                        shrinkWrap: true,
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 20,
+                          crossAxisSpacing: 20,
+                          childAspectRatio:
+                              VCartHelpers.calculateChildAspectRatio(
+                                context.screenWidth,
+                                context.screenHeight,
+                                multiplier: 0.25,
                               ),
-                          itemCount: controller.wishlistItems.length,
-                          itemBuilder: (context, index) {
-                            final item = controller.wishlistItems[index];
-                            return WishlistItemCard(
-                              item: item,
-                              onTap: () =>
-                                  _navigateToProductDetail(item.product.id),
-                              onRemove: () => controller.removeFromWishlist(
-                                context,
-                                item.product.id,
-                                index,
-                              ),
-                            );
-                          },
                         ),
-                        if (controller.isLoading && controller.hasMoreData)
-                          const Padding(
-                            padding: EdgeInsets.all(16.0),
-                            child: Center(
-                              child: CircularProgressIndicator(
-                                color: VCartColors.primary,
-                              ),
+                        itemCount: controller.wishlistItems.length,
+                        itemBuilder: (context, index) {
+                          final item = controller.wishlistItems[index];
+                          return WishlistItemCard(
+                            item: item,
+                            onTap: () =>
+                                _navigateToProductDetail(item.product.id),
+                            onRemove: () => controller.removeFromWishlist(
+                              context,
+                              item.product.id,
+                              index,
+                            ),
+                          );
+                        },
+                      ),
+                      if (controller.isLoading && controller.hasMoreData)
+                        const Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              color: VCartColors.primary,
                             ),
                           ),
-                      ],
-                    ),
+                        ),
+                    ],
                   ),
                 ),
-              );
-            });
-          },
-        ),
+              ),
+            );
+          });
+        },
       ),
     );
   }
@@ -153,7 +147,7 @@ class _VCartWishlistPageState extends State<VCartWishlistPage> {
               child: Icon(Icons.arrow_back, color: VCartColors.textPrimary),
             ),
           ),
-          onPressed: () => VCartRouterClassG.backInVCart(),
+          onPressed: () => context.pop(),
         ),
       ),
       centerTitle: false,
