@@ -26,7 +26,7 @@ class VCartApp extends StatelessWidget {
             VCartProfilePage(),
           ],
         ),
-        getPages: VCartRouterG.getPages(),
+        getPages: VCartRouterG.,
         navigatorObservers: [VCartRouterG.observer],
         onGenerateRoute: (settings) {
           debugPrint('🛣️ VCart: Generate route for ${settings.name}');

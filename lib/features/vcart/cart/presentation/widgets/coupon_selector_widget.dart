@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/vcart_colors.dart';
-import '../../../core/router/vcart_router.dart';
 
 class CouponSelectorWidget extends StatelessWidget {
   final Function(String) onCouponApplied;
@@ -66,11 +65,10 @@ class CouponSelectorWidget extends StatelessWidget {
   }
 
   void _navigateToCoupons(BuildContext context) {
-    // Navigate to coupons page and wait for result
-    VCartRouterG.toVCartCoupons().then((result) {
-      if (result != null && result is String) {
-        onCouponApplied(result);
-      }
-    });
+    // VCartRouterG.toVCartCoupons().then((result) {
+    //   if (result != null && result is String) {
+    //     onCouponApplied(result);
+    //   }
+    // });
   }
 }
