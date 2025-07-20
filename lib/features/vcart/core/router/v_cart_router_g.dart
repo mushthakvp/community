@@ -39,7 +39,7 @@ class VCartRouterClassG {
   // Navigation methods
   static void toVCartHome() {
     _setNavigatingFromVCart();
-    GoRouter.of(_getContext()).push(VCartRouterClass.cart);
+    GoRouter.of(_getContext()).push(VCartRouterClass.home);
   }
 
   static void toVCartSearch() {

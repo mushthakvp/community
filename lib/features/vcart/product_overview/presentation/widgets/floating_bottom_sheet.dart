@@ -5,7 +5,6 @@ import 'package:livera/features/vcart/core/router/v_cart_router_g.dart';
 import '../../../core/constants/vcart_colors.dart';
 import '../../../core/utils/vcart_extensions.dart';
 import '../../../core/widgets/vcart_button.dart';
-import '../../../navigation/presentation/controllers/bottom_nav_controller.dart';
 import '../controllers/product_overview_controller.dart';
 
 class FloatingBottomSheet extends StatelessWidget {
@@ -92,13 +91,7 @@ class FloatingBottomSheet extends StatelessWidget {
       text: isInCart ? 'Go to Cart' : "Add to Cart",
       onPressed: () {
         if (isInCart) {
-          VCartRouterClassG.toVCartHome();
-          try {
-            final bottomNavController = Get.find<VCartBottomNavController>();
-            bottomNavController.setCurrentIndex(2);
-          } catch (e) {
-            Get.toNamed('/vcart/cart');
-          }
+          VCartRouterClassG.toVCartCart();
         } else {
           controller.addToCart(context);
         }
