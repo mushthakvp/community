@@ -5,7 +5,9 @@ import 'package:go_router/go_router.dart';
 import 'package:livera/features/vcart/core/router/v_cart_router_g.dart';
 
 import '../../../../../core/constants/route_constants.dart';
+import '../../../core/bindings/vcart_bindings.dart';
 import '../../../core/constants/vcart_colors.dart';
+import '../../../home/presentation/controllers/home_controller.dart';
 import '../controllers/bottom_nav_controller.dart';
 
 class VCartMainNavigationPage extends StatefulWidget {
@@ -37,11 +39,15 @@ class _VCartMainNavigationPageState extends State<VCartMainNavigationPage>
 
   void _initializeController() {
     try {
+      // The navigation controller should already be registered as permanent
       if (Get.isRegistered<VCartBottomNavController>()) {
         controller = Get.find<VCartBottomNavController>();
         WidgetsBinding.instance.addPostFrameCallback((_) {
           controller?.resetToHome();
           VCartRouterClassG.resetNavigationFlags();
+
+          // Preload the home controller for better performance
+          VCartControllerHelper.preloadController<VCartHomeController>();
         });
       } else {
         debugPrint('VCartBottomNavController not found in GetX registry');
@@ -91,6 +97,32 @@ class _VCartMainNavigationPageState extends State<VCartMainNavigationPage>
     debugPrint('🔄 Main Navigation: App lifecycle state changed to $state');
     if (state == AppLifecycleState.resumed && controller != null) {
       controller!.resetToHome();
+    }
+  }
+
+  void _onTabTapped(int index) {
+    // Ensure required controllers are loaded based on tab selection
+    switch (index) {
+      case 0: // Home
+        VCartControllerHelper.ensureController<VCartHomeController>();
+        break;
+      case 1: // Categories - you might have a categories controller
+        // VCartControllerHelper.ensureController<VCartCategoriesController>();
+        break;
+      case 2: // Cart - you might have a cart controller
+        // VCartControllerHelper.ensureController<VCartCartController>();
+        break;
+      case 3: // Profile - you might have a profile controller
+        // VCartControllerHelper.ensureController<VCartProfileController>();
+        break;
+    }
+
+    controller?.setCurrentIndex(index);
+    if (index == 0) {
+      debugPrint(
+        '🏠 Main Navigation: Home tab tapped, resetting navigation flags',
+      );
+      VCartRouterClassG.resetNavigationFlags();
     }
   }
 
@@ -170,15 +202,7 @@ class _VCartMainNavigationPageState extends State<VCartMainNavigationPage>
 
                   return BottomNavigationBar(
                     currentIndex: navController.currentIndex,
-                    onTap: (index) {
-                      navController.setCurrentIndex(index);
-                      if (index == 0) {
-                        debugPrint(
-                          '🏠 Main Navigation: Home tab tapped, resetting navigation flags',
-                        );
-                        VCartRouterClassG.resetNavigationFlags();
-                      }
-                    },
+                    onTap: _onTabTapped,
                     type: BottomNavigationBarType.fixed,
                     backgroundColor: Colors.transparent,
                     elevation: 0,
