@@ -95,11 +95,8 @@ class _VCartMainNavigationPageState extends State<VCartMainNavigationPage>
           },
           child: Scaffold(
             backgroundColor: VCartColors.background,
-            body: PageView(
-              controller: navController.pageController,
-              onPageChanged: (index) {
-                navController.onPageChanged(index);
-              },
+            body: IndexedStack(
+              index: navController.currentIndex,
               children: widget.pages,
             ),
             floatingActionButton: FloatingActionButton(
@@ -134,22 +131,71 @@ class _VCartMainNavigationPageState extends State<VCartMainNavigationPage>
               color: VCartColors.surface,
               shape: const CircularNotchedRectangle(),
               notchMargin: 6.0,
-              child: Container(
+              child: SizedBox(
                 height: 60,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Obx(() {
                   if (navController.isLoading ||
                       navController.navItems.isEmpty) {
                     return const SizedBox.shrink();
                   }
-                  return Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _buildNavItem(navController.navItems[0], navController),
-                      _buildNavItem(navController.navItems[1], navController),
-                      const SizedBox(width: 40),
-                      _buildNavItem(navController.navItems[2], navController),
-                      _buildNavItem(navController.navItems[3], navController),
+
+                  return BottomNavigationBar(
+                    currentIndex: navController.currentIndex,
+                    onTap: (index) {
+                      navController.setCurrentIndex(index);
+                      if (index == 0) {
+                        debugPrint(
+                          '🏠 Main Navigation: Home tab tapped, resetting navigation flags',
+                        );
+                        VCartRouterG.resetNavigationFlags();
+                      }
+                    },
+                    type: BottomNavigationBarType.fixed,
+                    backgroundColor: Colors.transparent,
+                    elevation: 0,
+                    selectedItemColor: VCartColors.primary,
+                    unselectedItemColor: VCartColors.textSecondary,
+                    selectedFontSize: 12,
+                    unselectedFontSize: 10,
+                    selectedLabelStyle: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                    ),
+                    unselectedLabelStyle: const TextStyle(
+                      fontWeight: FontWeight.w400,
+                    ),
+                    items: [
+                      BottomNavigationBarItem(
+                        icon: Icon(
+                          navController.currentIndex == 0
+                              ? Icons.home
+                              : Icons.home_outlined,
+                        ),
+                        label: 'Home',
+                      ),
+                      BottomNavigationBarItem(
+                        icon: Icon(
+                          navController.currentIndex == 1
+                              ? Icons.category
+                              : Icons.category_outlined,
+                        ),
+                        label: 'Categories',
+                      ),
+                      BottomNavigationBarItem(
+                        icon: Icon(
+                          navController.currentIndex == 2
+                              ? Icons.shopping_cart
+                              : Icons.shopping_cart_outlined,
+                        ),
+                        label: 'Cart',
+                      ),
+                      BottomNavigationBarItem(
+                        icon: Icon(
+                          navController.currentIndex == 3
+                              ? Icons.person
+                              : Icons.person_outline,
+                        ),
+                        label: 'Profile',
+                      ),
                     ],
                   );
                 }),
@@ -159,68 +205,5 @@ class _VCartMainNavigationPageState extends State<VCartMainNavigationPage>
         );
       },
     );
-  }
-
-  Widget _buildNavItem(dynamic item, VCartBottomNavController controller) {
-    final isSelected = controller.currentIndex == item.id;
-
-    return GestureDetector(
-      onTap: () {
-        controller.setCurrentIndex(item.id);
-      },
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              child: Icon(
-                _getIcon(item, isSelected),
-                size: 24,
-                color: isSelected
-                    ? VCartColors.primary
-                    : VCartColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: 2),
-            AnimatedDefaultTextStyle(
-              duration: const Duration(milliseconds: 200),
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                color: isSelected
-                    ? VCartColors.primary
-                    : VCartColors.textSecondary,
-              ),
-              child: Text(item.label),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  IconData _getIcon(dynamic item, bool isSelected) {
-    if (item.iconData != null) {
-      if (isSelected && item.activeIconData != null) {
-        return item.activeIconData!;
-      }
-      return item.iconData!;
-    }
-    switch (item.id) {
-      case 0:
-        return isSelected ? Icons.home : Icons.home_outlined;
-      case 1:
-        return isSelected ? Icons.category : Icons.category_outlined;
-      case 2:
-        return isSelected ? Icons.shopping_cart : Icons.shopping_cart_outlined;
-      case 3:
-        return isSelected ? Icons.person : Icons.person_outline;
-      default:
-        return Icons.help_outline;
-    }
   }
 }

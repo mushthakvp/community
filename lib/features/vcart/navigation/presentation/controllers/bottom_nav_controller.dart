@@ -18,20 +18,11 @@ class VCartBottomNavController extends GetxController {
   List<NavItem> get navItems => _navItems;
   bool get isLoading => _isLoading.value;
 
-  late PageController pageController;
-
   @override
   void onInit() {
     super.onInit();
-    pageController = PageController(initialPage: currentIndex);
     _loadNavigationItems();
     _loadCurrentIndex();
-  }
-
-  @override
-  void onClose() {
-    pageController.dispose();
-    super.onClose();
   }
 
   Future<void> _loadNavigationItems() async {
@@ -55,30 +46,18 @@ class VCartBottomNavController extends GetxController {
   void setCurrentIndex(int index) {
     if (index == _currentIndex.value) return;
 
-    _currentIndex.value = index;
+    debugPrint('🧭 Navigation: Setting current index to $index');
 
-    // Update page controller if it has clients
-    if (pageController.hasClients) {
-      pageController.animateToPage(
-        index,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
-    }
+    _currentIndex.value = index;
 
     // Save to repository
     repository.setCurrentIndex(index);
 
     // Update nav items active state
     _updateNavItemsActiveState(index);
-  }
 
-  void onPageChanged(int index) {
-    if (index != _currentIndex.value) {
-      _currentIndex.value = index;
-      repository.setCurrentIndex(index);
-      _updateNavItemsActiveState(index);
-    }
+    // Update the UI
+    update();
   }
 
   void _updateNavItemsActiveState(int activeIndex) {
@@ -89,18 +68,43 @@ class VCartBottomNavController extends GetxController {
 
   // Method to reset to home tab from external calls
   void resetToHome() {
+    debugPrint('🏠 Navigation: Resetting to home tab');
     setCurrentIndex(0);
   }
 
   // Method to force update current index without triggering page change
   void forceUpdateIndex(int index) {
+    debugPrint('🧭 Navigation: Force updating index to $index');
     _currentIndex.value = index;
     _updateNavItemsActiveState(index);
     repository.setCurrentIndex(index);
+    update();
+  }
+
+  // Method to get current tab name for debugging
+  String get currentTabName {
+    switch (_currentIndex.value) {
+      case 0:
+        return 'Home';
+      case 1:
+        return 'Categories';
+      case 2:
+        return 'Cart';
+      case 3:
+        return 'Profile';
+      default:
+        return 'Unknown';
+    }
   }
 
   void _handleFailure(Failure failure) {
     _isLoading.value = false;
     debugPrint('Navigation error: ${failure.message}');
+  }
+
+  @override
+  void onClose() {
+    debugPrint('🧭 Navigation Controller: Closing');
+    super.onClose();
   }
 }

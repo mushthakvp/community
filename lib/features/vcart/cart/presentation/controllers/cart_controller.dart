@@ -103,10 +103,7 @@ class VCartCartController extends GetxController {
   ) async {
     try {
       _setUpdating(true);
-
-      // Optimistically update UI
       _updateCartItemOptimistically(item, action);
-
       final result = await updateCartItemUseCase(
         UpdateCartItemParams(
           productId: item.productId,
@@ -119,36 +116,15 @@ class VCartCartController extends GetxController {
         (failure) async {
           await loadCartData();
           _setUpdating(false);
-          context.showVCartSnackBar(failure.message, isError: true);
         },
         (updatedCartData) {
           _cartData.value = updatedCartData;
           _setUpdating(false);
-
-          String message;
-          switch (action) {
-            case 'increment':
-              message = 'Quantity increased';
-              break;
-            case 'decrement':
-              message = 'Quantity decreased';
-              break;
-            case 'remove':
-              message = 'Item removed from cart';
-              break;
-            default:
-              message = 'Cart updated';
-          }
-          context.showVCartSnackBar(message);
         },
       );
     } catch (e) {
       _setUpdating(false);
-      await loadCartData(); // Refresh to get correct state
-      context.showVCartSnackBar(
-        'Something went wrong. Please try again.',
-        isError: true,
-      );
+      await loadCartData();
     }
   }
 
@@ -165,7 +141,7 @@ class VCartCartController extends GetxController {
               case 'decrement':
                 return cartItem.copyWith(quantity: cartItem.quantity - 1);
               case 'remove':
-                return null; // Will be filtered out
+                return null;
               default:
                 return cartItem;
             }
@@ -207,60 +183,43 @@ class VCartCartController extends GetxController {
       result.fold(
         (failure) {
           _setUpdating(false);
-          context.showVCartSnackBar(failure.message, isError: true);
         },
         (success) {
           _setUpdating(false);
           if (success) {
-            // Refresh cart data to reflect changes
             loadCartData();
-            context.showVCartSnackBar('Item moved to wishlist');
           }
         },
       );
     } catch (e) {
       _setUpdating(false);
-      context.showVCartSnackBar(
-        'Something went wrong. Please try again.',
-        isError: true,
-      );
     }
   }
 
   Future<void> applyCouponWithId(String couponId, BuildContext context) async {
     try {
       _setUpdating(true);
-
       final result = await applyCouponUseCase(
         ApplyCouponParams(couponId: couponId),
       );
-
       result.fold(
         (failure) {
           _setUpdating(false);
-          context.showVCartSnackBar(failure.message, isError: true);
         },
         (updatedCartData) {
           _cartData.value = updatedCartData;
           _setUpdating(false);
-          context.showVCartSnackBar('Coupon applied successfully');
         },
       );
     } catch (e) {
       _setUpdating(false);
-      context.showVCartSnackBar(
-        'Something went wrong. Please try again.',
-        isError: true,
-      );
     }
   }
 
   Future<void> removeCouponFromCart(BuildContext context) async {
     try {
       _setUpdating(true);
-
       final result = await removeCouponUseCase(NoParams());
-
       result.fold(
         (failure) {
           _setUpdating(false);

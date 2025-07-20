@@ -166,17 +166,13 @@ class VCartProductOverviewController extends GetxController {
       result.fold(
         (failure) {
           _isAddingToCart.value = false;
-          context.showVCartSnackBar(failure.message, isError: true);
         },
         (success) {
           _isAddingToCart.value = false;
           if (success) {
-            // Update the selected size cart status
             _selectedSize.value = selectedSize!.copyWith(
               isAddedCart: !selectedSize!.isAddedCart,
             );
-
-            // Update the product detail sizes list
             final updatedSizes =
                 productDetail?.sizes.map((size) {
                   if (size.id == selectedSize!.id) {
@@ -185,8 +181,6 @@ class VCartProductOverviewController extends GetxController {
                   return size;
                 }).toList() ??
                 [];
-
-            // Update the product overview data
             if (productOverviewData != null && productDetail != null) {
               final updatedProductDetail = ProductDetail(
                 id: productDetail!.id,
@@ -218,19 +212,11 @@ class VCartProductOverviewController extends GetxController {
                 totalReviews: productOverviewData!.totalReviews,
               );
             }
-
-            context.showVCartSnackBar(
-              selectedSize!.isAddedCart ? 'Added to cart' : 'Removed from cart',
-            );
           }
         },
       );
     } catch (e) {
       _isAddingToCart.value = false;
-      context.showVCartSnackBar(
-        'Something went wrong. Please try again.',
-        isError: true,
-      );
     }
   }
 
