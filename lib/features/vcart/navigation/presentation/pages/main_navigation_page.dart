@@ -25,18 +25,30 @@ class VCartMainNavigationPage extends StatefulWidget {
 
 class _VCartMainNavigationPageState extends State<VCartMainNavigationPage>
     with WidgetsBindingObserver {
-  late VCartBottomNavController controller;
+  VCartBottomNavController? controller;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    controller = Get.find<VCartBottomNavController>();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      controller.resetToHome();
-      VCartRouterClassG.resetNavigationFlags();
-    });
+    _initializeController();
     _setupSystemBackHandler();
+  }
+
+  void _initializeController() {
+    try {
+      if (Get.isRegistered<VCartBottomNavController>()) {
+        controller = Get.find<VCartBottomNavController>();
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          controller?.resetToHome();
+          VCartRouterClassG.resetNavigationFlags();
+        });
+      } else {
+        debugPrint('VCartBottomNavController not found in GetX registry');
+      }
+    } catch (e) {
+      debugPrint('Error finding VCartBottomNavController: $e');
+    }
   }
 
   void _setupSystemBackHandler() {
@@ -54,13 +66,15 @@ class _VCartMainNavigationPageState extends State<VCartMainNavigationPage>
 
   Future<void> _handleSystemBack() async {
     debugPrint('🔙 Main Navigation: Handle system back');
-    debugPrint('Current tab index: ${controller.currentIndex}');
-    debugPrint('Is in VCart context: ${VCartRouterClassG.isInVCartContext}');
-    if (controller.currentIndex != 0) {
-      debugPrint('Not on home tab, switching to home');
-      controller.setCurrentIndex(0);
-    } else {
-      debugPrint('On home tab, staying in VCart');
+    if (controller != null) {
+      debugPrint('Current tab index: ${controller!.currentIndex}');
+      debugPrint('Is in VCart context: ${VCartRouterClassG.isInVCartContext}');
+      if (controller!.currentIndex != 0) {
+        debugPrint('Not on home tab, switching to home');
+        controller!.setCurrentIndex(0);
+      } else {
+        debugPrint('On home tab, staying in VCart');
+      }
     }
   }
 
@@ -75,13 +89,28 @@ class _VCartMainNavigationPageState extends State<VCartMainNavigationPage>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     debugPrint('🔄 Main Navigation: App lifecycle state changed to $state');
-    if (state == AppLifecycleState.resumed) {
-      controller.resetToHome();
+    if (state == AppLifecycleState.resumed && controller != null) {
+      controller!.resetToHome();
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // If controller is not initialized, show loading or try to get it
+    if (controller == null) {
+      if (Get.isRegistered<VCartBottomNavController>()) {
+        controller = Get.find<VCartBottomNavController>();
+      } else {
+        // Show loading while dependencies are being initialized
+        return const Scaffold(
+          backgroundColor: VCartColors.background,
+          body: Center(
+            child: CircularProgressIndicator(color: VCartColors.primary),
+          ),
+        );
+      }
+    }
+
     return GetBuilder<VCartBottomNavController>(
       init: controller,
       builder: (navController) {
