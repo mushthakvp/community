@@ -304,7 +304,5 @@ class _VCartCartPageState extends State<VCartCartPage>
     );
   }
 
-  void _onCheckoutPressed() {
-    Get.toNamed('/checkout');
-  }
+  void _onCheckoutPressed() {}
 }
