@@ -11,7 +11,6 @@ class CartItemWidget extends StatelessWidget {
   final CartItem item;
   final VoidCallback onIncrement;
   final VoidCallback onDecrement;
-  final VoidCallback onRemove;
   final VoidCallback onMoveToWishlist;
   final bool isUpdating;
 
@@ -20,7 +19,6 @@ class CartItemWidget extends StatelessWidget {
     required this.item,
     required this.onIncrement,
     required this.onDecrement,
-    required this.onRemove,
     required this.onMoveToWishlist,
     this.isUpdating = false,
   });
@@ -210,7 +208,6 @@ class CartItemWidget extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         child: Row(
           children: [
-            // Move to Wishlist button with flexible width
             Flexible(
               flex: 2,
               child: VCartButton(
@@ -220,18 +217,8 @@ class CartItemWidget extends StatelessWidget {
                 height: 36,
               ),
             ),
-
-            // Spacing
-            const SizedBox(width: 8),
-
-            // Quantity controls - fixed width
+            Spacer(),
             _buildQuantityControls(),
-
-            // Spacing
-            const SizedBox(width: 8),
-
-            // Delete button - fixed width
-            _buildDeleteButton(),
           ],
         ),
       ),
@@ -253,7 +240,6 @@ class CartItemWidget extends StatelessWidget {
             color: VCartColors.error,
             onPressed: isUpdating ? null : onDecrement,
           ),
-
           Container(
             constraints: const BoxConstraints(minWidth: 24),
             padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -267,7 +253,6 @@ class CartItemWidget extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
           ),
-
           _buildQuantityButton(
             icon: Icons.add,
             color: VCartColors.primary,
@@ -297,31 +282,6 @@ class CartItemWidget extends StatelessWidget {
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: color, size: 16),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDeleteButton() {
-    return SizedBox(
-      width: 40,
-      height: 40,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: isUpdating ? null : onRemove,
-          borderRadius: BorderRadius.circular(8),
-          child: Container(
-            decoration: BoxDecoration(
-              color: VCartColors.error.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(
-              Icons.delete_outline,
-              color: VCartColors.error,
-              size: 18,
-            ),
           ),
         ),
       ),

@@ -26,7 +26,6 @@ class CartRemoteDataSourceImpl implements CartRemoteDataSource {
   Future<CartDataModel> getCartData() async {
     try {
       final response = await apiClient.get(VCartEndpoints.getCart);
-
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         return CartDataModel.fromJson(data);
@@ -52,9 +51,7 @@ class CartRemoteDataSourceImpl implements CartRemoteDataSource {
         body: data,
         headers: {'Content-Type': 'application/json'},
       );
-
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        // After successful action, fetch updated cart data
         return await getCartData();
       } else {
         final errorData = json.decode(response.body);
@@ -75,7 +72,6 @@ class CartRemoteDataSourceImpl implements CartRemoteDataSource {
         body: data,
         headers: {'Content-Type': 'application/json'},
       );
-
       if (response.statusCode >= 200 && response.statusCode < 300) {
         return true;
       } else {
@@ -99,9 +95,7 @@ class CartRemoteDataSourceImpl implements CartRemoteDataSource {
         body: data,
         headers: {'Content-Type': 'application/json'},
       );
-
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        // After successful coupon application, fetch updated cart data
         return await getCartData();
       } else {
         final errorData = json.decode(response.body);
@@ -120,9 +114,7 @@ class CartRemoteDataSourceImpl implements CartRemoteDataSource {
         VCartEndpoints.removeCoupon,
         headers: {'Content-Type': 'application/json'},
       );
-
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        // After successful coupon removal, fetch updated cart data
         return await getCartData();
       } else {
         final errorData = json.decode(response.body);

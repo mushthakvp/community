@@ -219,10 +219,6 @@ class _VCartCartPageState extends State<VCartCartPage> {
             cartController.cartItems[index],
             context,
           ),
-          onRemove: () => cartController.removeItem(
-            cartController.cartItems[index],
-            context,
-          ),
           onMoveToWishlist: () => cartController.moveItemToWishlist(
             cartController.cartItems[index],
             context,
@@ -248,7 +244,6 @@ class _VCartCartPageState extends State<VCartCartPage> {
       ),
       child: Column(
         children: [
-          // Coupon Section
           if (cartController.hasCoupon)
             AppliedCouponWidget(
               couponData: cartController.cartData!.couponData!,
@@ -260,15 +255,9 @@ class _VCartCartPageState extends State<VCartCartPage> {
               onCouponApplied: (couponId) =>
                   cartController.applyCouponWithId(couponId, context),
             ),
-
           const SizedBox(height: 20),
-
-          // Cart Summary
           CartSummaryWidget(cartData: cartController.cartData!),
-
           const SizedBox(height: 16),
-
-          // Checkout Button
           VCartButton(
             text: "Proceed to Checkout",
             onPressed: cartController.isUpdating ? null : _onCheckoutPressed,

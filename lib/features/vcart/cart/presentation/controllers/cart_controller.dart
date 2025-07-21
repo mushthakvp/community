@@ -93,7 +93,7 @@ class VCartCartController extends GetxController {
   }
 
   Future<void> removeItem(CartItem item, BuildContext context) async {
-    await _updateItemQuantity(item, 'remove', context);
+    await _updateItemQuantity(item, 'decrement', context);
   }
 
   Future<void> _updateItemQuantity(
