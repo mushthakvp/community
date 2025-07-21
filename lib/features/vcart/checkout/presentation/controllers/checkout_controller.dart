@@ -8,6 +8,7 @@ import '../../../../../core/error/failures.dart';
 import '../../../../../core/usecases/usecase.dart';
 import '../../../address/domain/entities/address.dart';
 import '../../../cart/domain/entities/cart_data.dart';
+import '../../../core/router/vcart_router.dart';
 import '../../../core/utils/vcart_extensions.dart';
 import '../../domain/entities/checkout_data.dart';
 import '../../domain/entities/payment_method.dart';
@@ -271,11 +272,11 @@ class VCartCheckoutController extends GetxController {
   }
 
   void _navigateToOrderSuccess(BuildContext context, String orderId) {
-    context.go('/order-success/$orderId');
+    context.go('${VCartRouterClass.orderSuccess}/$orderId');
   }
 
   void navigateToAddAddress(BuildContext context) {
-    context.push('/address/add').then((_) {
+    context.push(VCartRouterClass.addAddress).then((_) {
       // Reload addresses after adding new one
       if (checkoutData != null) {
         loadCheckoutData(checkoutData!.cartData);

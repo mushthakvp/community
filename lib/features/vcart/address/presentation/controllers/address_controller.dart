@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../../core/error/failures.dart';
+import '../../../core/router/vcart_router.dart';
 import '../../../core/utils/vcart_extensions.dart';
 import '../../domain/entities/address.dart';
 import '../../domain/entities/address_form_data.dart';
@@ -140,9 +141,8 @@ class VCartAddressController extends GetxController {
 
     try {
       _setLoading(true);
-
       final formData = AddressFormData(
-        title: titleController.text.trim(),
+        title: "home",
         name: nameController.text.trim(),
         phone: phoneController.text.trim(),
         address: addressController.text.trim(),
@@ -150,19 +150,15 @@ class VCartAddressController extends GetxController {
         state: stateController.text.trim(),
         pinCode: pinCodeController.text.trim(),
       );
-
       final result = await addAddressUseCase(
         AddAddressParams(formData: formData),
       );
-
       result.fold(
         (failure) {
           _setLoading(false);
-          context.showVCartSnackBar(failure.message, isError: true);
         },
         (address) {
           _setLoading(false);
-          context.showVCartSnackBar('Address added successfully');
           _clearForm();
           loadAddresses();
           context.pop();
@@ -170,7 +166,6 @@ class VCartAddressController extends GetxController {
       );
     } catch (e) {
       _setLoading(false);
-      context.showVCartSnackBar('Failed to add address', isError: true);
     }
   }
 
@@ -293,12 +288,12 @@ class VCartAddressController extends GetxController {
 
   void navigateToAddAddress(BuildContext context) {
     _clearForm();
-    context.push('/address/add');
+    context.push(VCartRouterClass.addAddress);
   }
 
   void navigateToEditAddress(BuildContext context, Address address) {
     setEditingAddress(address);
-    context.push('/address/edit/${address.id}');
+    context.push('${VCartRouterClass.editAddress}/${address.id}');
   }
 
   // Helper methods

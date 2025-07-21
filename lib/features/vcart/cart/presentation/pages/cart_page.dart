@@ -1,10 +1,12 @@
+// lib/features/vcart/cart/presentation/pages/cart_page.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:livera/features/vcart/core/router/v_cart_router_g.dart';
+import 'package:go_router/go_router.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../core/constants/vcart_colors.dart';
 import '../../../core/di/vcart_dependency_injection.dart';
+import '../../../core/router/vcart_router.dart';
 import '../../../core/utils/vcart_extensions.dart';
 import '../../../core/widgets/vcart_button.dart';
 import '../../../shared/presentation/widgets/error_widget.dart';
@@ -121,7 +123,7 @@ class _VCartCartPageState extends State<VCartCartPage>
       automaticallyImplyLeading: widget.showBackButton,
       leading: widget.showBackButton
           ? IconButton(
-              onPressed: () => VCartRouterClassG.backInVCart(),
+              onPressed: () => context.pop(),
               icon: Container(
                 height: 36,
                 width: 36,
@@ -292,17 +294,27 @@ class _VCartCartPageState extends State<VCartCartPage>
           const SizedBox(height: 16),
           VCartButton(
             text: "Proceed to Checkout",
-            onPressed: cartController.isUpdating ? null : _onCheckoutPressed,
+            onPressed: cartController.isUpdating
+                ? null
+                : () => _onCheckoutPressed(cartController),
             isLoading: cartController.isUpdating,
             isExpanded: true,
             height: 55,
           ),
-
           SizedBox(height: context.screenHeight * 0.1),
         ],
       ),
     );
   }
 
-  void _onCheckoutPressed() {}
+  void _onCheckoutPressed(VCartCartController cartController) {
+    if (cartController.cartData != null) {
+      context.push(VCartRouterClass.checkout, extra: cartController.cartData!);
+    } else {
+      context.showVCartSnackBar(
+        'Unable to proceed to checkout. Please try again.',
+        isError: true,
+      );
+    }
+  }
 }

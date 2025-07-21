@@ -7,12 +7,14 @@ class VCartMaintenanceWidget extends StatelessWidget {
   final String? title;
   final String? subtitle;
   final String? imageUrl;
+  final VoidCallback? onPressed;
 
   const VCartMaintenanceWidget({
     super.key,
     this.title,
     this.subtitle,
     this.imageUrl,
+    this.onPressed,
   });
 
   @override
@@ -59,6 +61,24 @@ class VCartMaintenanceWidget extends StatelessWidget {
                 fontSize: 14,
               ),
               textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            Visibility(
+              visible: onPressed != null,
+              child: ElevatedButton(
+                onPressed: onPressed,
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 48),
+                  backgroundColor: VCartColors.primary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text(
+                  'Add Address',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
             ),
           ],
         ),

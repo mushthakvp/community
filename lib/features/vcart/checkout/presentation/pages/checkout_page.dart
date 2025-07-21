@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
+import 'package:livera/features/vcart/core/router/vcart_router_extensions.dart';
 
 import '../../../cart/domain/entities/cart_data.dart';
 import '../../../core/constants/vcart_colors.dart';
@@ -119,10 +120,12 @@ class _VCartCheckoutPageState extends State<VCartCheckoutPage> {
 
     if (!checkoutController.hasAddresses && !checkoutController.isLoading) {
       return VCartMaintenanceWidget(
-        imageUrl:
-            'https://via.placeholder.com/200x200/E5E7EB/9CA3AF?text=No+Address',
+        imageUrl: 'https://via.placeholder.com/200x200/',
         title: 'No Addresses Found',
         subtitle: 'Add a delivery address to continue with your order',
+        onPressed: () {
+          context.goToVCartAddAddress();
+        },
       );
     }
 

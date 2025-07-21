@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../address/presentation/pages/address_form_page.dart';
+import '../../address/presentation/pages/address_list_page.dart';
+import '../../cart/domain/entities/cart_data.dart';
 import '../../cart/presentation/pages/cart_page.dart';
 import '../../categories/presentation/pages/categories_page.dart';
+import '../../checkout/presentation/pages/checkout_page.dart';
+import '../../checkout/presentation/pages/order_success_page.dart';
 import '../../coupons/presentation/pages/coupons_page.dart';
 import '../../filter_page/presentation/pages/filter_page.dart';
 import '../../home/presentation/pages/home_page.dart';
@@ -14,6 +19,7 @@ import '../../search/presentation/pages/search_page.dart';
 import '../../section_category/presentation/pages/section_category_page.dart';
 import '../../wishlist/presentation/pages/wishlist_page.dart';
 import '../widgets/vcart_initialization_wrapper.dart';
+import 'v_cart_checkout_address_initialization_wrapper.dart';
 
 class VCartRouterClass {
   static const String _basePath = '/vcart';
@@ -33,6 +39,13 @@ class VCartRouterClass {
   static const String wishlist = '$_basePath/wishlist';
   static const String coupons = '$_basePath/coupons';
 
+  // Checkout and Address routes
+  static const String checkout = '$_basePath/checkout';
+  static const String addressList = '$_basePath/address';
+  static const String addAddress = '$_basePath/address/add';
+  static const String editAddress = '$_basePath/address/edit';
+  static const String orderSuccess = '$_basePath/order-success';
+
   // Main pages for navigation
   static final List<Widget> _mainPages = [
     const VCartInitializationWrapper(pageName: 'Home', child: VCartHomePage()),
@@ -47,9 +60,18 @@ class VCartRouterClass {
     ),
   ];
 
-  // Helper method to wrap pages with initialization
   static Widget _wrapWithInitialization(Widget child, String pageName) {
     return VCartInitializationWrapper(pageName: pageName, child: child);
+  }
+
+  static Widget _wrapWithCheckoutAddressInitialization(
+    Widget child,
+    String pageName,
+  ) {
+    return VCartCheckoutAddressInitializationWrapper(
+      pageName: pageName,
+      child: child,
+    );
   }
 
   // All VCart routes
@@ -162,6 +184,62 @@ class VCartRouterClass {
       name: 'vcart-coupons',
       builder: (context, state) =>
           _wrapWithInitialization(const VCartCouponsPage(), 'Coupons'),
+    ),
+
+    // Checkout and Address routes
+    GoRoute(
+      path: checkout,
+      name: 'vcart-checkout',
+      builder: (context, state) {
+        final cartData = state.extra as CartData?;
+        if (cartData == null) {
+          return const Scaffold(body: Center(child: Text('Invalid cart data')));
+        }
+        return _wrapWithCheckoutAddressInitialization(
+          VCartCheckoutPage(cartData: cartData),
+          'Checkout',
+        );
+      },
+    ),
+    GoRoute(
+      path: addressList,
+      name: 'vcart-address-list',
+      builder: (context, state) => _wrapWithCheckoutAddressInitialization(
+        const VCartAddressListPage(),
+        'Address List',
+      ),
+      routes: [
+        GoRoute(
+          path: '/add',
+          name: 'vcart-address-add',
+          builder: (context, state) => _wrapWithCheckoutAddressInitialization(
+            const VCartAddressFormPage(),
+            'Add Address',
+          ),
+        ),
+        GoRoute(
+          path: '/edit/:addressId',
+          name: 'vcart-address-edit',
+          builder: (context, state) {
+            final addressId = state.pathParameters['addressId'];
+            return _wrapWithCheckoutAddressInitialization(
+              VCartAddressFormPage(addressId: addressId),
+              'Edit Address',
+            );
+          },
+        ),
+      ],
+    ),
+    GoRoute(
+      path: '$orderSuccess/:orderId',
+      name: 'vcart-order-success',
+      builder: (context, state) {
+        final orderId = state.pathParameters['orderId'];
+        return _wrapWithCheckoutAddressInitialization(
+          OrderSuccessPage(orderId: orderId ?? ''),
+          'Order Success',
+        );
+      },
     ),
   ];
 }

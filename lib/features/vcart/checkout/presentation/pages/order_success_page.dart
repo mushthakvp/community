@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:livera/core/constants/app_constants.dart';
+import 'package:livera/features/vcart/core/router/vcart_router_extensions.dart';
 
 class OrderSuccessPage extends StatelessWidget {
   final String orderId;
@@ -9,7 +11,7 @@ class OrderSuccessPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppConstants.black,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -20,7 +22,7 @@ class OrderSuccessPage extends StatelessWidget {
                 width: 120,
                 height: 120,
                 decoration: const BoxDecoration(
-                  color: Colors.green,
+                  color: AppConstants.appPrimaryColor,
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.check, color: Colors.white, size: 64),
@@ -31,20 +33,20 @@ class OrderSuccessPage extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+                  color: Colors.white,
                 ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
               Text(
                 'Order ID: $orderId',
-                style: const TextStyle(fontSize: 16, color: Colors.black54),
+                style: const TextStyle(fontSize: 16, color: Colors.white),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
               const Text(
                 'Thank you for your purchase! You will receive a confirmation email shortly.',
-                style: TextStyle(fontSize: 14, color: Colors.black54),
+                style: TextStyle(fontSize: 14, color: Colors.white),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 48),
@@ -52,9 +54,9 @@ class OrderSuccessPage extends StatelessWidget {
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: () => context.go('/'),
+                  onPressed: () => context.goToVCartHome(),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
+                    backgroundColor: AppConstants.appPrimaryColor,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -76,7 +78,7 @@ class OrderSuccessPage extends StatelessWidget {
                 child: OutlinedButton(
                   onPressed: () => context.go('/orders'),
                   style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Colors.blue),
+                    side: const BorderSide(color: AppConstants.appPrimaryColor),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -84,7 +86,7 @@ class OrderSuccessPage extends StatelessWidget {
                   child: const Text(
                     'View Orders',
                     style: TextStyle(
-                      color: Colors.blue,
+                      color: AppConstants.appPrimaryColor,
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),

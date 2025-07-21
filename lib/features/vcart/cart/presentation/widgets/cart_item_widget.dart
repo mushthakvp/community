@@ -129,7 +129,7 @@ class CartItemWidget extends StatelessWidget {
                 color: VCartColors.surface,
               ),
               child: Text(
-                item.size,
+                item.size.toUpperCase(),
                 style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,

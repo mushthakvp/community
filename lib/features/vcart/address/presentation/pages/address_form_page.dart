@@ -114,13 +114,6 @@ class _VCartAddressFormPageState extends State<VCartAddressFormPage> {
               child: Column(
                 children: [
                   _buildTextField(
-                    controller: addressController.titleController,
-                    label: 'Address Title',
-                    hint: 'e.g., Home, Office, etc.',
-                    validator: _requiredValidator,
-                  ),
-                  const SizedBox(height: 16),
-                  _buildTextField(
                     controller: addressController.nameController,
                     label: 'Full Name',
                     hint: 'Enter your full name',
@@ -204,6 +197,8 @@ class _VCartAddressFormPageState extends State<VCartAddressFormPage> {
         ),
         const SizedBox(height: 8),
         TextFormField(
+          onTapOutside: (event) =>
+              FocusManager.instance.primaryFocus?.unfocus(),
           controller: controller,
           keyboardType: keyboardType,
           maxLines: maxLines,

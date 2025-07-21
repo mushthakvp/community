@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 
 import '../../../address/domain/entities/address.dart';
@@ -25,19 +27,19 @@ class AddressSectionWidget extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionHeader(),
+        _buildSectionHeader(context),
         const SizedBox(height: 16),
         if (isLoading)
           _buildLoadingState()
         else if (addresses.isEmpty)
-          _buildEmptyState()
+          _buildEmptyState(context)
         else
           _buildAddressList(),
       ],
     );
   }
 
-  Widget _buildSectionHeader() {
+  Widget _buildSectionHeader(BuildContext context) {
     return Row(
       children: [
         const Expanded(
@@ -82,7 +84,8 @@ class AddressSectionWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(BuildContext context) {
+    log("No addresses found");
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -111,6 +114,17 @@ class AddressSectionWidget extends StatelessWidget {
           const Text(
             'Add a delivery address to continue',
             style: TextStyle(color: VCartColors.textSecondary, fontSize: 14),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: onAddNewAddress,
+            icon: const Icon(Icons.add, size: 18),
+            label: const Text('Add Address'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: VCartColors.primary,
+              foregroundColor: VCartColors.onPrimary,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            ),
           ),
         ],
       ),

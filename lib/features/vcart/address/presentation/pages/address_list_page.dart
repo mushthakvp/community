@@ -142,8 +142,7 @@ class _VCartAddressListPageState extends State<VCartAddressListPage> {
 
     if (addressController.isEmpty && !addressController.isLoading) {
       return const VCartMaintenanceWidget(
-        imageUrl:
-            'https://via.placeholder.com/200x200/E5E7EB/9CA3AF?text=No+Address',
+        imageUrl: 'https://via.placeholder.com/200x200/E5E7EB/',
         title: 'No Saved Addresses Yet',
         subtitle:
             'Add a new address to make checkout faster and more convenient.',
