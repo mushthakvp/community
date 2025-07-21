@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
+import 'package:livera/features/vcart/core/router/vcart_router_extensions.dart';
 
 import '../../../core/constants/vcart_colors.dart';
 import '../../../core/utils/vcart_extensions.dart';
@@ -67,7 +68,6 @@ class _VCartAddressListPageState extends State<VCartAddressListPage> {
       backgroundColor: VCartColors.background,
       appBar: _buildAppBar(),
       body: _buildBody(),
-      floatingActionButton: _buildFloatingActionButton(),
     );
   }
 
@@ -102,7 +102,7 @@ class _VCartAddressListPageState extends State<VCartAddressListPage> {
       ),
       actions: [
         TextButton.icon(
-          onPressed: () => context.push('/address/add'),
+          onPressed: () => context.goToVCartAddAddress(),
           icon: const Icon(Icons.add, color: VCartColors.primary, size: 20),
           label: const Text(
             'Add New',
@@ -180,14 +180,6 @@ class _VCartAddressListPageState extends State<VCartAddressListPage> {
         },
         separatorBuilder: (context, index) => const SizedBox(height: 12),
       ),
-    );
-  }
-
-  Widget _buildFloatingActionButton() {
-    return FloatingActionButton(
-      onPressed: () => context.push('/address/add'),
-      backgroundColor: VCartColors.primary,
-      child: const Icon(Icons.add, color: VCartColors.onPrimary),
     );
   }
 

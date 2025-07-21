@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:livera/features/vcart/core/router/v_cart_router_g.dart';
+import 'package:livera/features/vcart/core/router/vcart_router_extensions.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../core/constants/vcart_colors.dart';
@@ -83,7 +84,7 @@ class VCartProfilePage extends StatelessWidget {
         ProfileActionItem(
           title: 'Saved Address',
           icon: Icons.location_on_outlined,
-          onTap: () => _navigateToSavedAddress(),
+          onTap: () => _navigateToSavedAddress(context),
         ),
       ],
     );
@@ -106,7 +107,7 @@ class VCartProfilePage extends StatelessWidget {
     VCartRouterClassG.toVCartWishlist();
   }
 
-  void _navigateToSavedAddress() {
-    Get.toNamed('/saved-address');
+  void _navigateToSavedAddress(BuildContext context) {
+    context.goToVCartAddressList();
   }
 }
