@@ -24,7 +24,8 @@ class VCartCartPage extends StatefulWidget {
   State<VCartCartPage> createState() => _VCartCartPageState();
 }
 
-class _VCartCartPageState extends State<VCartCartPage> {
+class _VCartCartPageState extends State<VCartCartPage>
+    with WidgetsBindingObserver {
   VCartCartController? controller;
   bool isInitializing = true;
   String? initializationError;
@@ -32,7 +33,36 @@ class _VCartCartPageState extends State<VCartCartPage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initializeAsync();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  // This method is called when app lifecycle changes
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    // Refresh cart when app becomes active (foreground)
+    if (state == AppLifecycleState.resumed && controller != null) {
+      controller!.onPageFocus();
+    }
+  }
+
+  // This method is called when the page becomes visible again
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Refresh cart data every time page is rebuilt/becomes visible
+    if (controller != null && !isInitializing) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        controller!.onPageFocus();
+      });
+    }
   }
 
   Future<void> _initializeAsync() async {
@@ -60,6 +90,8 @@ class _VCartCartPageState extends State<VCartCartPage> {
         setState(() {
           isInitializing = false;
         });
+        // Load fresh cart data after initialization
+        controller!.onPageFocus();
       }
     } catch (e) {
       debugPrint('❌ Failed to initialize cart page: $e');
@@ -273,7 +305,6 @@ class _VCartCartPageState extends State<VCartCartPage> {
   }
 
   void _onCheckoutPressed() {
-    // Navigate to checkout
     Get.toNamed('/checkout');
   }
 }

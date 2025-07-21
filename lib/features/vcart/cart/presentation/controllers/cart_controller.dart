@@ -61,6 +61,16 @@ class VCartCartController extends GetxController {
     loadCartData();
   }
 
+  @override
+  void onReady() {
+    super.onReady();
+    loadCartData();
+  }
+
+  void onPageFocus() {
+    loadCartData();
+  }
+
   Future<void> loadCartData() async {
     try {
       _setLoading(true);
@@ -140,15 +150,13 @@ class VCartCartController extends GetxController {
                 return cartItem.copyWith(quantity: cartItem.quantity + 1);
               case 'decrement':
                 return cartItem.copyWith(quantity: cartItem.quantity - 1);
-              case 'remove':
-                return null;
               default:
                 return cartItem;
             }
           }
           return cartItem;
         })
-        .where((item) => item != null)
+        .where((item) => item.quantity > 0)
         .cast<CartItem>()
         .toList();
 
