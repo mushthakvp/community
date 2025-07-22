@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import '../../../../../core/error/exceptions.dart';
 import '../../../core/constants/cook_api_endpoints.dart';
 import '../../../core/network/cook_api_client.dart';
@@ -27,6 +29,7 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
     int upcomingPage = 1,
     int upcomingLimit = 10,
   }) async {
+    log('🌐 Fetching cooking home data...');
     final params = <String, String>{
       'currentPage': currentPage.toString(),
       'currentLimit': currentLimit.toString(),

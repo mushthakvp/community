@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:dartz/dartz.dart';
 
 import '../../../../../core/error/exceptions.dart';
@@ -25,7 +27,6 @@ class HomeRepositoryImpl implements HomeRepository {
     int upcomingLimit = 10,
   }) async {
     try {
-      // For search queries, always fetch from remote
       if (search != null && search.isNotEmpty) {
         return await _fetchFromRemote(
           search: search,
@@ -35,14 +36,10 @@ class HomeRepositoryImpl implements HomeRepository {
           upcomingLimit: upcomingLimit,
         );
       }
-
-      // For regular home data, try cache first
       final cachedData = await localDataSource.getCachedCookingHome();
       if (cachedData != null && currentPage == 1) {
         return Right(cachedData);
       }
-
-      // Fetch from remote and cache
       return await _fetchFromRemote(
         search: search,
         currentPage: currentPage,
@@ -69,6 +66,7 @@ class HomeRepositoryImpl implements HomeRepository {
     bool shouldCache = false,
   }) async {
     try {
+      log('🌐 Fetching cooking home data...11111');
       final result = await remoteDataSource.getCookingHome(
         search: search,
         currentPage: currentPage,
@@ -76,12 +74,9 @@ class HomeRepositoryImpl implements HomeRepository {
         upcomingPage: upcomingPage,
         upcomingLimit: upcomingLimit,
       );
-
-      // Cache only non-search results
       if (shouldCache && (search == null || search.isEmpty)) {
         await localDataSource.cacheCookingHome(result);
       }
-
       return Right(result);
     } catch (e) {
       rethrow;

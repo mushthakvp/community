@@ -77,7 +77,24 @@ class CookHomeController extends GetxController {
   }
 
   Future<void> initializeData() async {
-    await _loadCookingHome();
+    try {
+      debugPrint('🏠 Initializing home data...');
+      _resetState();
+      await _loadCookingHome();
+    } catch (e) {
+      debugPrint('❌ Error initializing home data: $e');
+      _handleError(e.toString());
+    }
+  }
+
+  void _resetState() {
+    _isLoading.value = true;
+    _isError.value = false;
+    _errorMessage.value = '';
+    _isSearching.value = false;
+    _noSearchResults.value = false;
+    _upcomingPage.value = 1;
+    _hasMoreUpcomingChallenges.value = true;
   }
 
   Future<void> _loadCookingHome({
@@ -85,6 +102,9 @@ class CookHomeController extends GetxController {
     bool isInitialLoad = true,
   }) async {
     try {
+      debugPrint(
+        '🔄 Loading cooking home data. Search: $search, Initial: $isInitialLoad',
+      );
       if (isInitialLoad) {
         if (search != null && search.isNotEmpty) {
           _isSearching.value = true;
@@ -98,25 +118,33 @@ class CookHomeController extends GetxController {
       } else {
         _isLoadingMore.value = true;
       }
-
       final params = GetCookingHomeParams(
         search: search,
         upcomingPage: _upcomingPage.value,
+        currentPage: 1,
+        currentLimit: 3,
+        upcomingLimit: 10,
       );
-
+      debugPrint('📡 Making API call with params: ${params.toString()}');
       final result = search != null && search.isNotEmpty
           ? await searchChallengesUseCase(params)
           : await getCookingHomeUseCase(params);
-
       result.fold(
         (failure) {
+          debugPrint('❌ API call failed: ${failure.message}');
           _isError.value = true;
           _errorMessage.value = failure.message;
         },
         (data) {
+          debugPrint(
+            '✅ API call successful. Current: ${data.currentChallenges.length}, Upcoming: ${data.upcomingChallenges.length}',
+          );
           if (isInitialLoad) {
             _cookingHome.value = data;
             _checkSearchResults(search, data);
+            debugPrint(
+              '📱 Home data set. Current challenges: ${data.currentChallenges.length}, Upcoming: ${data.upcomingChallenges.length}',
+            );
           } else {
             final currentData = _cookingHome.value;
             if (currentData != null) {
@@ -132,20 +160,30 @@ class CookHomeController extends GetxController {
                 totalCurrentChallenges: data.totalCurrentChallenges,
                 totalUpcomingChallenges: data.totalUpcomingChallenges,
               );
+
               _hasMoreUpcomingChallenges.value =
                   data.upcomingChallenges.isNotEmpty;
+              debugPrint(
+                '📱 Updated upcoming challenges. Total now: ${_cookingHome.value!.upcomingChallenges.length}',
+              );
             }
           }
         },
       );
     } catch (e) {
-      _isError.value = true;
-      _errorMessage.value = e.toString();
+      debugPrint('❌ Exception in _loadCookingHome: $e');
+      _handleError(e.toString());
     } finally {
       _isLoading.value = false;
       _isSearching.value = false;
       _isLoadingMore.value = false;
     }
+  }
+
+  void _handleError(String error) {
+    _isError.value = true;
+    _errorMessage.value = error;
+    debugPrint('❌ Error handled: $error');
   }
 
   void _checkSearchResults(String? search, CookingHome data) {
@@ -154,17 +192,22 @@ class CookHomeController extends GetxController {
           data.currentChallenges.isNotEmpty ||
           data.upcomingChallenges.isNotEmpty;
       _noSearchResults.value = !hasResults;
+      debugPrint(
+        '🔍 Search results check. Query: $search, Has results: $hasResults',
+      );
     } else {
       _noSearchResults.value = false;
     }
   }
 
   Future<void> _performSearch(String query) async {
+    debugPrint('🔍 Performing search for: $query');
     await _loadCookingHome(search: query);
   }
 
   void clearSearch() {
     if (_searchQuery.value.isNotEmpty) {
+      debugPrint('🧹 Clearing search');
       _searchQuery.value = '';
       _isSearching.value = false;
       _noSearchResults.value = false;
@@ -174,6 +217,7 @@ class CookHomeController extends GetxController {
   }
 
   void clearChallenge() {
+    debugPrint('🧹 Clearing challenge search');
     searchController.clear();
     _searchQuery.value = '';
     _isSearching.value = false;
@@ -184,10 +228,14 @@ class CookHomeController extends GetxController {
 
   void onPageChanged(int index) {
     _currentIndex.value = index;
+    debugPrint('📄 Page changed to: $index');
   }
 
   void loadMoreUpcomingChallenges() {
     if (!_isLoadingMore.value && _hasMoreUpcomingChallenges.value) {
+      debugPrint(
+        '📄 Loading more upcoming challenges. Page: ${_upcomingPage.value + 1}',
+      );
       _upcomingPage.value++;
       _loadCookingHome(
         isInitialLoad: false,
@@ -197,7 +245,9 @@ class CookHomeController extends GetxController {
   }
 
   void retryLoading() {
+    debugPrint('🔄 Retrying loading');
     final search = _searchQuery.value.isNotEmpty ? _searchQuery.value : null;
+    _resetState();
     _loadCookingHome(search: search);
   }
 }

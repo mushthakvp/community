@@ -39,6 +39,7 @@ class CookSearchBarWidget extends StatelessWidget {
             ),
             Expanded(
               child: TextField(
+                onTapOutside: (event) => FocusScope.of(context).unfocus(),
                 controller: controller,
                 onChanged: onChanged,
                 readOnly: onTap != null,

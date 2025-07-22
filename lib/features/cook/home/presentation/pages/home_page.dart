@@ -22,13 +22,17 @@ class _CookHomePageState extends State<CookHomePage> {
   @override
   void initState() {
     super.initState();
+    debugPrint('🏠 Home page initializing...');
+
     controller = Get.put(
       CookHomeController(
         getCookingHomeUseCase: Get.find(),
         searchChallengesUseCase: Get.find(),
       ),
     );
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      debugPrint('🏠 Post frame callback - initializing data');
       controller.initializeData();
     });
   }
@@ -39,14 +43,21 @@ class _CookHomePageState extends State<CookHomePage> {
       backgroundColor: AppConstants.black,
       body: SafeArea(
         child: Obx(() {
+          debugPrint(
+            '🏠 Building home page. Loading: ${controller.isLoading}, Error: ${controller.isError}',
+          );
+
           if (controller.isLoading) {
+            debugPrint('🏠 Showing loading view');
             return _buildLoadingView();
           }
 
           if (controller.isError) {
+            debugPrint('🏠 Showing error view: ${controller.errorMessage}');
             return _buildErrorView();
           }
 
+          debugPrint('🏠 Showing home content');
           return _buildHomeContent();
         }),
       ),
@@ -54,43 +65,68 @@ class _CookHomePageState extends State<CookHomePage> {
   }
 
   Widget _buildLoadingView() {
-    return const Center(child: CircularProgressIndicator(color: Colors.amber));
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(color: Colors.amber),
+          SizedBox(height: 16),
+          Text(
+            'Loading challenges...',
+            style: TextStyle(color: Colors.white70, fontSize: 16),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildErrorView() {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.error_outline, color: Colors.red, size: 80),
-          const SizedBox(height: 20),
-          const Text(
-            'Failed to load data',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, color: Colors.red, size: 80),
+            const SizedBox(height: 20),
+            const Text(
+              'Failed to load data',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            controller.errorMessage,
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.7),
-              fontSize: 14,
+            const SizedBox(height: 8),
+            Text(
+              controller.errorMessage.isNotEmpty
+                  ? controller.errorMessage
+                  : 'Something went wrong. Please try again.',
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.7),
+                fontSize: 14,
+              ),
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: controller.retryLoading,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.amber,
-              foregroundColor: Colors.black,
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
+              onPressed: () {
+                controller.retryLoading();
+              },
+              icon: const Icon(Icons.refresh, size: 18),
+              label: const Text('Retry'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.amber,
+                foregroundColor: Colors.black,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+              ),
             ),
-            child: const Text('Retry'),
-          ),
-        ],
+            const SizedBox(height: 10),
+          ],
+        ),
       ),
     );
   }
@@ -104,6 +140,7 @@ class _CookHomePageState extends State<CookHomePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Search loading indicator
                 Obx(
                   () => Visibility(
                     visible: controller.isSearching,
@@ -127,50 +164,69 @@ class _CookHomePageState extends State<CookHomePage> {
                     ),
                   ),
                 ),
+
+                // No results message
                 Obx(
                   () => Visibility(
                     visible: controller.noSearchResults,
                     child: _buildNoResultsView(),
                   ),
                 ),
-                Obx(
-                  () => Visibility(
+
+                // Main content
+                Obx(() {
+                  final cookingHome = controller.cookingHome;
+                  debugPrint(
+                    '🏠 Building main content. CookingHome: ${cookingHome != null}',
+                  );
+
+                  if (cookingHome == null) {
+                    debugPrint('🏠 CookingHome is null, showing empty state');
+                    return _buildEmptyState();
+                  }
+
+                  debugPrint(
+                    '🏠 CookingHome found. Current: ${cookingHome.currentChallenges.length}, Upcoming: ${cookingHome.upcomingChallenges.length}',
+                  );
+
+                  return Visibility(
                     visible: !controller.noSearchResults,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (controller
-                                .cookingHome
-                                ?.currentChallenges
-                                .isNotEmpty ??
-                            false) ...[
+                        // Current challenges carousel
+                        if (cookingHome.currentChallenges.isNotEmpty) ...[
                           const SizedBox(height: 10),
                           CurrentChallengeCarousel(
-                            challenges:
-                                controller.cookingHome!.currentChallenges,
+                            challenges: cookingHome.currentChallenges,
                             onPageChanged: controller.onPageChanged,
                             currentIndex: controller.currentIndex,
                           ),
                         ],
-                        if (controller
-                                .cookingHome
-                                ?.upcomingChallenges
-                                .isNotEmpty ??
-                            false) ...[
+
+                        // Upcoming challenges list
+                        if (cookingHome.upcomingChallenges.isNotEmpty) ...[
                           const SizedBox(height: 38),
                           UpcomingChallengesList(
-                            challenges:
-                                controller.cookingHome!.upcomingChallenges,
+                            challenges: cookingHome.upcomingChallenges,
                             isLoadingMore: controller.isLoadingMore,
                             onLoadMore: controller.loadMoreUpcomingChallenges,
                             onViewAll: () =>
                                 context.push('/cook/my-challenges'),
                           ),
                         ],
+
+                        // Show message when no challenges available
+                        if (cookingHome.currentChallenges.isEmpty &&
+                            cookingHome.upcomingChallenges.isEmpty &&
+                            !controller.isSearching) ...[
+                          _buildNoDataAvailable(),
+                        ],
                       ],
                     ),
-                  ),
-                ),
+                  );
+                }),
+
                 const SizedBox(height: 30),
               ],
             ),
@@ -212,7 +268,7 @@ class _CookHomePageState extends State<CookHomePage> {
           icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 24),
           padding: const EdgeInsets.all(0),
         ),
-        Text(
+        const Text(
           'V-Cook',
           style: TextStyle(
             color: Colors.white,
@@ -259,6 +315,83 @@ class _CookHomePageState extends State<CookHomePage> {
                 color: Colors.white.withOpacity(0.7),
                 fontSize: 14,
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 100, horizontal: 20),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.restaurant_menu, color: Colors.grey, size: 80),
+            const SizedBox(height: 20),
+            const Text(
+              'No challenges available',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'Check back later for new cooking challenges!',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.7),
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
+              onPressed: () {
+                debugPrint('🔄 Refresh button pressed from empty state');
+                controller.retryLoading();
+              },
+              icon: const Icon(Icons.refresh, size: 18),
+              label: const Text('Refresh'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.amber,
+                foregroundColor: Colors.black,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNoDataAvailable() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 50, horizontal: 20),
+      child: Center(
+        child: Column(
+          children: [
+            const Icon(Icons.info_outline, color: Colors.amber, size: 60),
+            const SizedBox(height: 16),
+            const Text(
+              'No challenges available at the moment',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'New challenges will appear here soon!',
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.7),
+                fontSize: 14,
+              ),
+              textAlign: TextAlign.center,
             ),
           ],
         ),

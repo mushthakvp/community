@@ -60,7 +60,7 @@ class UpcomingChallengesList extends StatelessWidget {
             return false;
           },
           child: SizedBox(
-            height: 230,
+            height: 240,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.only(left: 20),
@@ -105,25 +105,27 @@ class UpcomingChallengesList extends StatelessWidget {
           children: [
             _buildChallengeImage(challenge.image),
             const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 5.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    challenge.title,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      challenge.title,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 6),
-                  _buildChallengeDetails(challenge),
-                ],
+                    const SizedBox(height: 6),
+                    Expanded(child: _buildChallengeDetails(challenge)),
+                  ],
+                ),
               ),
             ),
           ],
@@ -169,12 +171,16 @@ class UpcomingChallengesList extends StatelessWidget {
       children: [
         const Icon(Icons.access_time, color: Colors.white, size: 14),
         const SizedBox(width: 6),
-        Text(
-          '${challenge.daysLeft} days left',
-          style: const TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w300,
-            color: Colors.white,
+        Flexible(
+          // Changed from regular Text to handle overflow
+          child: Text(
+            '${challenge.daysLeft} days left',
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w300,
+              color: Colors.white,
+            ),
+            overflow: TextOverflow.ellipsis,
           ),
         ),
       ],
@@ -206,12 +212,15 @@ class UpcomingChallengesList extends StatelessWidget {
       children: [
         const Icon(Icons.calendar_today, color: Colors.white, size: 14),
         const SizedBox(width: 6),
-        Text(
-          challenge.formattedEndDate,
-          style: const TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w300,
-            color: Colors.white,
+        Flexible(
+          child: Text(
+            challenge.formattedEndDate,
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w300,
+              color: Colors.white,
+            ),
+            overflow: TextOverflow.ellipsis,
           ),
         ),
       ],
