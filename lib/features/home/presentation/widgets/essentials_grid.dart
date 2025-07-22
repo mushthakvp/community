@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/route_constants.dart';
 import '../../../../core/widgets/common/text_widget.dart';
+import '../../../cook/core/router/cook_router.dart';
 import '../../../vcart/core/router/v_cart_router_g.dart';
 import '../../../vcart/core/router/vcart_router.dart';
 
@@ -76,7 +77,7 @@ class EssentialsGrid extends StatelessWidget {
         image:
             "https://res.cloudinary.com/fouvtycloud/image/upload/v1753158174/Vivera-New/vcook_gam4b9.gif",
         name: "V - Cook",
-        route: RouteConstants.changePassword,
+        route: CookRouter.cookHome,
         description: "Cook your favorite dishes",
         isExternal: false,
         isNavigationRoute: true,

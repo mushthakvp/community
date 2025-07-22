@@ -11,6 +11,7 @@ import 'core/network/api_client.dart';
 import 'core/network/network_info.dart';
 import 'core/services/cloudinary_service.dart';
 import 'core/services/storage_service.dart';
+import 'features/cook/core/injection/cook_injection.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,6 +19,7 @@ Future<void> main() async {
   CloudinaryService().initialize();
   final providers = await AppProviders.getInitializedProviders();
   _initializeCoreGetXDependencies();
+  CookInjection.init();
   runApp(CommunityApp(providers: providers));
 }
 
