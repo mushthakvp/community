@@ -21,10 +21,10 @@ class EssentialsGrid extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       shrinkWrap: true,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
+        crossAxisCount: 3,
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
-        childAspectRatio: 1.3,
+        childAspectRatio: 1,
       ),
       itemCount: items.length,
       itemBuilder: (context, index) {
@@ -69,6 +69,15 @@ class EssentialsGrid extends StatelessWidget {
         name: "V - Cart",
         route: VCartRouterClass.home,
         description: "Shop online with exclusive deals",
+        isExternal: false,
+        isNavigationRoute: true,
+      ),
+      EssentialItem(
+        image:
+            "https://res.cloudinary.com/fouvtycloud/image/upload/v1753158174/Vivera-New/vcook_gam4b9.gif",
+        name: "V - Cook",
+        route: RouteConstants.changePassword,
+        description: "Cook your favorite dishes",
         isExternal: false,
         isNavigationRoute: true,
       ),
