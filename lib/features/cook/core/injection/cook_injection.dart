@@ -93,6 +93,7 @@ class CookInjection {
     );
     Get.lazyPut<JoinChallengeUseCase>(
       () => JoinChallengeUseCase(Get.find<MyChallengesRepository>()),
+      tag: 'my_challenges_join',
     );
     Get.lazyPut<search.SearchChallengesUseCase>(
       () => search.SearchChallengesUseCase(Get.find<SearchRepository>()),

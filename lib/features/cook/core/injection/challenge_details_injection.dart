@@ -8,19 +8,30 @@ import '../../challenge_details/domain/usecases/join_challenge_usecase.dart';
 
 class ChallengeDetailsInjection {
   static void init() {
+    // Data sources
     Get.lazyPut<ChallengeDetailsRemoteDataSource>(
       () => ChallengeDetailsRemoteDataSourceImpl(apiClient: Get.find()),
+      tag: 'challenge_details',
     );
     Get.lazyPut<ChallengeDetailsRepository>(
       () => ChallengeDetailsRepositoryImpl(
-        remoteDataSource: Get.find<ChallengeDetailsRemoteDataSource>(),
+        remoteDataSource: Get.find<ChallengeDetailsRemoteDataSource>(
+          tag: 'challenge_details',
+        ),
       ),
+      tag: 'challenge_details',
     );
     Get.lazyPut<GetChallengeDetailsUseCase>(
-      () => GetChallengeDetailsUseCase(Get.find<ChallengeDetailsRepository>()),
+      () => GetChallengeDetailsUseCase(
+        Get.find<ChallengeDetailsRepository>(tag: 'challenge_details'),
+      ),
+      tag: 'challenge_details',
     );
-    Get.lazyPut<JoinChallengeUseCase>(
-      () => JoinChallengeUseCase(Get.find<ChallengeDetailsRepository>()),
+    Get.lazyPut<JoinChallengeDetailsUseCase>(
+      () => JoinChallengeDetailsUseCase(
+        Get.find<ChallengeDetailsRepository>(tag: 'challenge_details'),
+      ),
+      tag: 'challenge_details_join',
     );
   }
 }

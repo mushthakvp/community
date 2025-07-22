@@ -5,10 +5,11 @@ import '../../../../../core/error/failures.dart';
 import '../../../../../core/usecases/usecase.dart';
 import '../repositories/challenge_details_repository.dart';
 
-class JoinChallengeUseCase implements UseCase<bool, JoinChallengeParams> {
+class JoinChallengeDetailsUseCase
+    implements UseCase<bool, JoinChallengeParams> {
   final ChallengeDetailsRepository repository;
 
-  JoinChallengeUseCase(this.repository);
+  JoinChallengeDetailsUseCase(this.repository);
 
   @override
   Future<Either<Failure, bool>> call(JoinChallengeParams params) async {

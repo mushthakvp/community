@@ -23,8 +23,12 @@ class _ChallengeDetailsPageState extends State<ChallengeDetailsPage> {
     super.initState();
     controller = Get.put(
       ChallengeDetailsController(
-        getChallengeDetailsUseCase: Get.find(),
-        joinChallengeUseCase: Get.find(),
+        getChallengeDetailsUseCase: Get.find(
+          tag: 'challenge_details',
+        ), // Use tag
+        joinChallengeUseCase: Get.find(
+          tag: 'challenge_details_join',
+        ), // Use tag
       ),
       tag: 'challenge_details_${widget.challengeId}',
     );

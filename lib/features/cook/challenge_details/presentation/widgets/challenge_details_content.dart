@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../domain/entities/challenge_details.dart';
@@ -46,24 +47,10 @@ class ChallengeDetailsContent extends StatelessWidget {
   }
 
   Widget _buildChallengeImage() {
-    return Container(
-      height: 250,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(15),
-        color: Colors.grey[800],
-        image: challengeDetails.image != null
-            ? DecorationImage(
-                image: NetworkImage(challengeDetails.image!),
-                fit: BoxFit.cover,
-              )
-            : null,
-      ),
-      child: challengeDetails.image == null
-          ? const Center(
-              child: Icon(Icons.restaurant, color: Colors.grey, size: 80),
-            )
-          : null,
+    return CachedNetworkImage(
+      imageUrl: challengeDetails.image ?? "",
+      progressIndicatorBuilder: (context, url, progress) =>
+          const Center(child: CircularProgressIndicator(color: Colors.amber)),
     );
   }
 

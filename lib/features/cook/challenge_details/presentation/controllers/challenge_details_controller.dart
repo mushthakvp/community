@@ -7,7 +7,7 @@ import '../../domain/usecases/join_challenge_usecase.dart';
 
 class ChallengeDetailsController extends GetxController {
   final GetChallengeDetailsUseCase getChallengeDetailsUseCase;
-  final JoinChallengeUseCase joinChallengeUseCase;
+  final JoinChallengeDetailsUseCase joinChallengeUseCase;
 
   ChallengeDetailsController({
     required this.getChallengeDetailsUseCase,
@@ -73,9 +73,7 @@ class ChallengeDetailsController extends GetxController {
           );
         },
         (success) async {
-          // Show success dialog
           await _showSuccessDialog();
-          // Refresh challenge details
           await getChallengeDetails(challengeId);
         },
       );
