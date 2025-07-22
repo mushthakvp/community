@@ -30,7 +30,7 @@ class SizeFilterWidget extends StatelessWidget {
             contentPadding: EdgeInsets.zero,
             controlAffinity: ListTileControlAffinity.leading,
             title: Text(
-              size,
+              size.toUpperCase(),
               style: const TextStyle(
                 fontSize: 14,
                 color: VCartColors.textPrimary,

@@ -26,6 +26,7 @@ class FilterSidebar extends StatelessWidget {
         return Column(
           children: [
             _buildFilterOption(
+              context: context,
               title: "Price",
               index: 0,
               isSelected:
@@ -34,24 +35,28 @@ class FilterSidebar extends StatelessWidget {
               selectedCount: 1,
             ),
             _buildFilterOption(
+              context: context,
               title: "Brand",
               index: 1,
               isSelected: controller.filterState.selectedBrands.isNotEmpty,
               selectedCount: controller.filterState.selectedBrands.length,
             ),
             _buildFilterOption(
+              context: context,
               title: "Size",
               index: 2,
               isSelected: controller.filterState.selectedSizes.isNotEmpty,
               selectedCount: controller.filterState.selectedSizes.length,
             ),
             _buildFilterOption(
+              context: context,
               title: "Color",
               index: 3,
               isSelected: controller.filterState.selectedColors.isNotEmpty,
               selectedCount: controller.filterState.selectedColors.length,
             ),
             _buildFilterOption(
+              context: context,
               title: "Offer",
               index: 4,
               isSelected: controller.filterState.selectedOffers.isNotEmpty,
@@ -64,6 +69,7 @@ class FilterSidebar extends StatelessWidget {
   }
 
   Widget _buildFilterOption({
+    required BuildContext context,
     required String title,
     required int index,
     required bool isSelected,
@@ -76,8 +82,8 @@ class FilterSidebar extends StatelessWidget {
       child: Container(
         width: double.infinity,
         padding: EdgeInsets.symmetric(
-          vertical: Get.context!.screenHeight * 0.02,
-          horizontal: Get.context!.screenWidth * 0.04,
+          vertical: context.screenHeight * 0.02,
+          horizontal: context.screenWidth * 0.04,
         ),
         decoration: BoxDecoration(
           gradient: isCurrentSelected

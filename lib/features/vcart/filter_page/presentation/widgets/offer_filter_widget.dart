@@ -12,15 +12,16 @@ class OfferFilterWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(
-      () => ListView.builder(
-        padding: EdgeInsets.only(
-          top: context.screenHeight * 0.02,
-          bottom: context.screenHeight * 0.15,
-        ),
-        itemCount: controller.availableOffers.length,
-        itemBuilder: (context, index) {
-          final offer = controller.availableOffers[index];
+    return ListView.builder(
+      padding: EdgeInsets.only(
+        top: context.screenHeight * 0.02,
+        bottom: context.screenHeight * 0.15,
+      ),
+      itemCount: controller.availableOffers.length,
+      itemBuilder: (context, index) {
+        final offer = controller.availableOffers[index];
+
+        return Obx(() {
           final isSelected = controller.filterState.selectedOffers.contains(
             offer,
           );
@@ -41,8 +42,8 @@ class OfferFilterWidget extends StatelessWidget {
             checkColor: VCartColors.onPrimary,
             activeColor: VCartColors.primary.withOpacity(.8),
           );
-        },
-      ),
+        });
+      },
     );
   }
 }
