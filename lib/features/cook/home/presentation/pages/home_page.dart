@@ -22,7 +22,6 @@ class _CookHomePageState extends State<CookHomePage> {
   @override
   void initState() {
     super.initState();
-    debugPrint('🏠 Home page initializing...');
 
     controller = Get.put(
       CookHomeController(
@@ -32,7 +31,6 @@ class _CookHomePageState extends State<CookHomePage> {
     );
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      debugPrint('🏠 Post frame callback - initializing data');
       controller.initializeData();
     });
   }
@@ -43,21 +41,14 @@ class _CookHomePageState extends State<CookHomePage> {
       backgroundColor: AppConstants.black,
       body: SafeArea(
         child: Obx(() {
-          debugPrint(
-            '🏠 Building home page. Loading: ${controller.isLoading}, Error: ${controller.isError}',
-          );
-
           if (controller.isLoading) {
-            debugPrint('🏠 Showing loading view');
             return _buildLoadingView();
           }
 
           if (controller.isError) {
-            debugPrint('🏠 Showing error view: ${controller.errorMessage}');
             return _buildErrorView();
           }
 
-          debugPrint('🏠 Showing home content');
           return _buildHomeContent();
         }),
       ),
@@ -176,18 +167,10 @@ class _CookHomePageState extends State<CookHomePage> {
                 // Main content
                 Obx(() {
                   final cookingHome = controller.cookingHome;
-                  debugPrint(
-                    '🏠 Building main content. CookingHome: ${cookingHome != null}',
-                  );
 
                   if (cookingHome == null) {
-                    debugPrint('🏠 CookingHome is null, showing empty state');
                     return _buildEmptyState();
                   }
-
-                  debugPrint(
-                    '🏠 CookingHome found. Current: ${cookingHome.currentChallenges.length}, Upcoming: ${cookingHome.upcomingChallenges.length}',
-                  );
 
                   return Visibility(
                     visible: !controller.noSearchResults,
@@ -351,7 +334,6 @@ class _CookHomePageState extends State<CookHomePage> {
             const SizedBox(height: 20),
             ElevatedButton.icon(
               onPressed: () {
-                debugPrint('🔄 Refresh button pressed from empty state');
                 controller.retryLoading();
               },
               icon: const Icon(Icons.refresh, size: 18),
