@@ -1,3 +1,4 @@
+import 'package:fittor/fittor.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
@@ -183,18 +184,19 @@ class _CookHomePageState extends State<CookHomePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SizedBox(height: 24),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: _buildAppBar(),
         ),
-        const SizedBox(height: 31),
+        10.h,
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: CookSearchBarWidget(
-            controller: controller.searchController,
-            onClear: controller.clearChallenge,
-            searchQuery: controller.searchQuery,
+          child: Obx(
+            () => CookSearchBarWidget(
+              controller: controller.searchController,
+              onClear: controller.clearChallenge,
+              searchQuery: controller.searchQuery,
+            ),
           ),
         ),
         const SizedBox(height: 20),
@@ -205,71 +207,30 @@ class _CookHomePageState extends State<CookHomePage> {
   Widget _buildAppBar() {
     return Row(
       children: [
-        const Text(
-          'Cooking',
+        IconButton(
+          onPressed: () => context.pop(),
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 24),
+          padding: const EdgeInsets.all(0),
+        ),
+        Text(
+          'V-Cook',
           style: TextStyle(
             color: Colors.white,
             fontSize: 24,
             fontWeight: FontWeight.w600,
           ),
+          overflow: TextOverflow.ellipsis,
         ),
         const Spacer(),
-        Row(
-          children: [
-            IconButton(
-              onPressed: () => _showProfileOptions(),
-              icon: const Icon(Icons.logout, color: Colors.white, size: 24),
-            ),
-            const SizedBox(width: 10),
-            IconButton(
-              onPressed: () => context.push('/cook/my-challenges'),
-              icon: const Icon(
-                Icons.article_outlined,
-                color: Colors.white,
-                size: 24,
-              ),
-            ),
-          ],
+        IconButton(
+          onPressed: () => context.push('/cook/my-challenges'),
+          icon: const Icon(
+            Icons.article_outlined,
+            color: Colors.white,
+            size: 24,
+          ),
         ),
       ],
-    );
-  }
-
-  void _showProfileOptions() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        return Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 20),
-          decoration: BoxDecoration(
-            color: AppConstants.black,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-            border: Border.all(color: Colors.white24),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.logout, color: Colors.red),
-                title: const Text(
-                  'Logout',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  // Add logout logic here
-                },
-              ),
-            ],
-          ),
-        );
-      },
     );
   }
 

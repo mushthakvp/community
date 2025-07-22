@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 
 class CookSearchBarWidget extends StatelessWidget {
   final TextEditingController controller;
@@ -55,17 +54,14 @@ class CookSearchBarWidget extends StatelessWidget {
                 style: const TextStyle(color: Colors.white, fontSize: 16),
               ),
             ),
-            // Clear button
-            Obx(
-              () => Visibility(
-                visible: searchQuery.isNotEmpty,
-                child: GestureDetector(
-                  onTap: onClear,
-                  child: Icon(
-                    Icons.close,
-                    color: Colors.white.withOpacity(0.6),
-                    size: 20,
-                  ),
+            Visibility(
+              visible: searchQuery.isNotEmpty,
+              child: GestureDetector(
+                onTap: onClear,
+                child: Icon(
+                  Icons.close,
+                  color: Colors.white.withOpacity(0.6),
+                  size: 20,
                 ),
               ),
             ),

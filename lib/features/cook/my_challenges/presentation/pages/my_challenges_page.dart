@@ -26,24 +26,18 @@ class _CookMyChallengesPageState extends State<CookMyChallengesPage>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-
-    // Initialize controller with tag to avoid conflicts
     controller = Get.put(
       MyChallengesController(
         getMyChallengesUseCase: Get.find(tag: 'cook_my_challenges'),
       ),
       tag: 'cook_my_challenges',
     );
-
-    // Listen to tab changes
     _tabController.addListener(() {
       if (!_tabController.indexIsChanging) {
         final status = _tabController.index == 0 ? 'active' : 'completed';
         controller.resetPagination(status);
       }
     });
-
-    // Load initial data
     WidgetsBinding.instance.addPostFrameCallback((_) {
       controller.loadChallenges(status: 'active');
     });
@@ -52,7 +46,6 @@ class _CookMyChallengesPageState extends State<CookMyChallengesPage>
   @override
   void dispose() {
     _tabController.dispose();
-    // Don't delete controller here as it might be used elsewhere
     super.dispose();
   }
 
@@ -95,12 +88,6 @@ class _CookMyChallengesPageState extends State<CookMyChallengesPage>
               fontWeight: FontWeight.w600,
               color: Colors.white,
             ),
-          ),
-          const Spacer(),
-          // Add refresh button
-          IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.white),
-            onPressed: () => _refreshCurrentTab(),
           ),
         ],
       ),
@@ -277,11 +264,6 @@ class _CookMyChallengesPageState extends State<CookMyChallengesPage>
     } else {
       context.pop();
     }
-  }
-
-  void _refreshCurrentTab() {
-    final status = _tabController.index == 0 ? 'active' : 'completed';
-    controller.refreshChallenges(status);
   }
 
   Future<void> _refreshChallenges(String status) async {
