@@ -37,12 +37,10 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
     if (search != null && search.isNotEmpty) {
       params['search'] = search;
     }
-
     final result = await apiClient.get(
       CookApiEndpoints.getHome,
       queryParameters: params,
     );
-
     return result.fold(
       (failure) => throw ServerException(failure.message),
       (data) => CookingHomeModel.fromJson(data),

@@ -1,9 +1,7 @@
-// lib/features/cook/core/injection/cook_injection.dart
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 
 import '../../../../core/network/network_info.dart';
-import '../../home/data/datasources/home_local_data_source.dart';
 import '../../home/data/datasources/home_remote_data_source.dart';
 import '../../home/data/repositories/home_repository_impl.dart';
 import '../../home/domain/repositories/home_repository.dart';
@@ -43,7 +41,6 @@ class CookInjection {
   }
 
   static void _initDataSources() {
-    Get.lazyPut<HomeLocalDataSource>(() => HomeLocalDataSourceImpl());
     Get.lazyPut<HomeRemoteDataSource>(
       () => HomeRemoteDataSourceImpl(apiClient: Get.find<CookApiClient>()),
     );
@@ -65,7 +62,6 @@ class CookInjection {
     Get.lazyPut<HomeRepository>(
       () => HomeRepositoryImpl(
         remoteDataSource: Get.find<HomeRemoteDataSource>(),
-        localDataSource: Get.find<HomeLocalDataSource>(),
       ),
     );
     Get.lazyPut<MyChallengesRepository>(

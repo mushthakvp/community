@@ -4,17 +4,12 @@ import '../../../../../core/error/exceptions.dart';
 import '../../../../../core/error/failures.dart';
 import '../../domain/entities/cooking_home.dart';
 import '../../domain/repositories/home_repository.dart';
-import '../datasources/home_local_data_source.dart';
 import '../datasources/home_remote_data_source.dart';
 
 class HomeRepositoryImpl implements HomeRepository {
   final HomeRemoteDataSource remoteDataSource;
-  final HomeLocalDataSource localDataSource;
 
-  HomeRepositoryImpl({
-    required this.remoteDataSource,
-    required this.localDataSource,
-  });
+  HomeRepositoryImpl({required this.remoteDataSource});
 
   @override
   Future<Either<Failure, CookingHome>> getCookingHome({
@@ -34,16 +29,6 @@ class HomeRepositoryImpl implements HomeRepository {
           upcomingPage: upcomingPage,
           upcomingLimit: upcomingLimit,
         );
-      }
-
-      // For initial load (currentPage == 1), try cache first
-      if (currentPage == 1) {
-        final cachedData = await localDataSource.getCachedCookingHome();
-        if (cachedData != null &&
-            (cachedData.currentChallenges.isNotEmpty ||
-                cachedData.upcomingChallenges.isNotEmpty)) {
-          return Right(cachedData);
-        }
       }
 
       // Always fetch from remote if no valid cache or not first page
@@ -80,10 +65,6 @@ class HomeRepositoryImpl implements HomeRepository {
         upcomingPage: upcomingPage,
         upcomingLimit: upcomingLimit,
       );
-
-      if (shouldCache && (search == null || search.isEmpty)) {
-        await localDataSource.cacheCookingHome(result);
-      }
 
       return Right(result);
     } catch (e) {
