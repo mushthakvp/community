@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../../core/constants/app_constants.dart';
 import '../controllers/home_controller.dart';
+import '../widgets/current_challenge_carousel.dart';
+import '../widgets/search_bar_widget.dart';
+import '../widgets/upcoming_challenges_list.dart';
 
 class CookHomePage extends StatefulWidget {
   const CookHomePage({super.key});
