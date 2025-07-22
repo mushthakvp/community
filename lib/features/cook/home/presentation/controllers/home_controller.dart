@@ -32,6 +32,9 @@ class CookHomeController extends GetxController {
   // Data
   final Rx<CookingHome?> _cookingHome = Rx<CookingHome?>(null);
 
+  // Keep track of loaded challenge IDs to prevent duplicates
+  final Set<String> _loadedChallengeIds = <String>{};
+
   // Search debouncer
   Timer? _searchDebouncer;
   final TextEditingController searchController = TextEditingController();
@@ -93,6 +96,7 @@ class CookHomeController extends GetxController {
     _noSearchResults.value = false;
     _upcomingPage.value = 1;
     _hasMoreUpcomingChallenges.value = true;
+    _loadedChallengeIds.clear(); // Clear loaded IDs
   }
 
   Future<void> _loadCookingHome({
@@ -110,6 +114,7 @@ class CookHomeController extends GetxController {
         _isError.value = false;
         _errorMessage.value = '';
         _upcomingPage.value = 1;
+        _loadedChallengeIds.clear(); // Clear on initial load
       } else {
         _isLoadingMore.value = true;
       }
@@ -135,12 +140,31 @@ class CookHomeController extends GetxController {
           if (isInitialLoad) {
             _cookingHome.value = data;
             _checkSearchResults(search, data);
+            // Add all challenge IDs to the set
+            for (var challenge in data.upcomingChallenges) {
+              _loadedChallengeIds.add(challenge.id);
+            }
+            for (var challenge in data.currentChallenges) {
+              _loadedChallengeIds.add(challenge.id);
+            }
           } else {
             final currentData = _cookingHome.value;
             if (currentData != null) {
+              // Filter out duplicates by checking IDs
+              final newUpcomingChallenges = data.upcomingChallenges
+                  .where(
+                    (challenge) => !_loadedChallengeIds.contains(challenge.id),
+                  )
+                  .toList();
+
+              // Add new challenge IDs to the set
+              for (var challenge in newUpcomingChallenges) {
+                _loadedChallengeIds.add(challenge.id);
+              }
+
               final updatedUpcoming = List<Challenge>.from(
                 currentData.upcomingChallenges,
-              )..addAll(data.upcomingChallenges);
+              )..addAll(newUpcomingChallenges);
 
               _cookingHome.value = CookingHome(
                 message: data.message,
@@ -152,8 +176,10 @@ class CookHomeController extends GetxController {
                 totalUpcomingChallenges: data.totalUpcomingChallenges,
               );
 
+              // Check if we have more data based on new items received
               _hasMoreUpcomingChallenges.value =
-                  data.upcomingChallenges.isNotEmpty;
+                  newUpcomingChallenges.isNotEmpty &&
+                  _upcomingPage.value < data.totalUpcomingPages;
             }
           }
         },
@@ -193,6 +219,7 @@ class CookHomeController extends GetxController {
       _isSearching.value = false;
       _noSearchResults.value = false;
       _upcomingPage.value = 1;
+      _loadedChallengeIds.clear();
       _loadCookingHome();
     }
   }
@@ -203,6 +230,7 @@ class CookHomeController extends GetxController {
     _isSearching.value = false;
     _noSearchResults.value = false;
     _upcomingPage.value = 1;
+    _loadedChallengeIds.clear();
     _loadCookingHome();
   }
 

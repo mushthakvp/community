@@ -131,7 +131,6 @@ class _CookHomePageState extends State<CookHomePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Search loading indicator
                 Obx(
                   () => Visibility(
                     visible: controller.isSearching,
@@ -155,29 +154,22 @@ class _CookHomePageState extends State<CookHomePage> {
                     ),
                   ),
                 ),
-
-                // No results message
                 Obx(
                   () => Visibility(
                     visible: controller.noSearchResults,
                     child: _buildNoResultsView(),
                   ),
                 ),
-
-                // Main content
                 Obx(() {
                   final cookingHome = controller.cookingHome;
-
                   if (cookingHome == null) {
                     return _buildEmptyState();
                   }
-
                   return Visibility(
                     visible: !controller.noSearchResults,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Current challenges carousel
                         if (cookingHome.currentChallenges.isNotEmpty) ...[
                           const SizedBox(height: 10),
                           CurrentChallengeCarousel(
@@ -185,11 +177,9 @@ class _CookHomePageState extends State<CookHomePage> {
                             onPageChanged: controller.onPageChanged,
                             currentIndex: controller.currentIndex,
                           ),
-                        ],
-
-                        // Upcoming challenges list
-                        if (cookingHome.upcomingChallenges.isNotEmpty) ...[
                           const SizedBox(height: 38),
+                        ],
+                        if (cookingHome.upcomingChallenges.isNotEmpty) ...[
                           UpcomingChallengesList(
                             challenges: cookingHome.upcomingChallenges,
                             isLoadingMore: controller.isLoadingMore,
@@ -198,8 +188,6 @@ class _CookHomePageState extends State<CookHomePage> {
                                 context.push('/cook/my-challenges'),
                           ),
                         ],
-
-                        // Show message when no challenges available
                         if (cookingHome.currentChallenges.isEmpty &&
                             cookingHome.upcomingChallenges.isEmpty &&
                             !controller.isSearching) ...[
@@ -209,7 +197,6 @@ class _CookHomePageState extends State<CookHomePage> {
                     ),
                   );
                 }),
-
                 const SizedBox(height: 30),
               ],
             ),
