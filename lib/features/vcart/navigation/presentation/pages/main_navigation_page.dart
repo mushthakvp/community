@@ -34,11 +34,47 @@ class _VCartMainNavigationPageState extends State<VCartMainNavigationPage>
   bool _isInitializing = true;
   String? _initializationError;
 
+  // Store the original status bar style to restore on dispose
+  SystemUiOverlayStyle? _originalStatusBarStyle;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _setStatusBarStyle();
     _initializeAsync();
+  }
+
+  void _setStatusBarStyle() {
+    _originalStatusBarStyle = const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+      statusBarBrightness: Brightness.light,
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarIconBrightness: Brightness.dark,
+    );
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarIconBrightness: Brightness.light,
+      ),
+    );
+  }
+
+  void _restoreStatusBarStyle() {
+    SystemChrome.setSystemUIOverlayStyle(
+      _originalStatusBarStyle ??
+          const SystemUiOverlayStyle(
+            statusBarColor: Colors.transparent,
+            statusBarIconBrightness: Brightness.dark,
+            statusBarBrightness: Brightness.light,
+            systemNavigationBarColor: Colors.transparent,
+            systemNavigationBarIconBrightness: Brightness.dark,
+          ),
+    );
   }
 
   Future<void> _initializeAsync() async {
@@ -193,6 +229,9 @@ class _VCartMainNavigationPageState extends State<VCartMainNavigationPage>
 
   @override
   void dispose() {
+    // Restore the original status bar style before disposing
+    _restoreStatusBarStyle();
+
     WidgetsBinding.instance.removeObserver(this);
     SystemChannels.navigation.setMethodCallHandler(null);
     super.dispose();
@@ -201,8 +240,14 @@ class _VCartMainNavigationPageState extends State<VCartMainNavigationPage>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    if (state == AppLifecycleState.resumed && controller != null) {
-      controller!.resetToHome();
+
+    if (state == AppLifecycleState.resumed) {
+      // Reapply white status bar when returning to this page
+      _setStatusBarStyle();
+
+      if (controller != null) {
+        controller!.resetToHome();
+      }
     }
   }
 
@@ -244,6 +289,22 @@ class _VCartMainNavigationPageState extends State<VCartMainNavigationPage>
     } catch (e) {
       debugPrint('⚠️ Failed to ensure controller for tab $index: $e');
       // Continue anyway, the individual pages will handle missing controllers
+    }
+  }
+
+  void _navigateToMarketplace() {
+    // Restore status bar style before navigating away
+    _restoreStatusBarStyle();
+
+    if (widget.onMarketplaceTap != null) {
+      widget.onMarketplaceTap!();
+    } else {
+      try {
+        context.go(RouteConstants.home);
+      } catch (e) {
+        // Fallback navigation
+        Navigator.of(context).pushReplacementNamed('/home');
+      }
     }
   }
 
@@ -331,18 +392,7 @@ class _VCartMainNavigationPageState extends State<VCartMainNavigationPage>
               ),
               const SizedBox(height: 12),
               TextButton(
-                onPressed: () {
-                  if (widget.onMarketplaceTap != null) {
-                    widget.onMarketplaceTap!();
-                  } else {
-                    try {
-                      context.go(RouteConstants.home);
-                    } catch (e) {
-                      // Fallback navigation
-                      Navigator.of(context).pushReplacementNamed('/home');
-                    }
-                  }
-                },
+                onPressed: _navigateToMarketplace,
                 child: const Text(
                   'Go to Marketplace',
                   style: TextStyle(color: VCartColors.textSecondary),
@@ -377,13 +427,7 @@ class _VCartMainNavigationPageState extends State<VCartMainNavigationPage>
               onPressed: () {
                 debugPrint('🏠 Floating action button pressed - exiting VCart');
                 if (context.mounted) {
-                  try {
-                    context.go(RouteConstants.home);
-                  } catch (e) {
-                    if (widget.onMarketplaceTap != null) {
-                      widget.onMarketplaceTap!();
-                    }
-                  }
+                  _navigateToMarketplace();
                 }
               },
               backgroundColor: VCartColors.primaryOpacity(0.2),

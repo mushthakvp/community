@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:get/get.dart';
 
 import '../../../../../core/error/failures.dart';
@@ -176,6 +178,7 @@ class VCartCategoriesController extends GetxController {
   }
 
   void onSubCategoryTap(SubCategory subCategory) {
+    log("SubCategory tapped: ${subCategory.name}");
     _filterSubCategoryId.value = subCategory.id;
     Get.toNamed(
       '/products',

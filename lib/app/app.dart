@@ -62,9 +62,10 @@ class _AppState extends State<App> with WidgetsBindingObserver {
       fontFamily: AppConstants.fontFamily,
       appBarTheme: AppBarTheme(
         systemOverlayStyle: SystemUiOverlayStyle(
-          statusBarColor: AppConstants.black,
+          statusBarColor: AppConstants.white,
           statusBarIconBrightness: Brightness.light,
           statusBarBrightness: Brightness.light,
+          systemNavigationBarColor: AppConstants.white,
         ),
         surfaceTintColor: AppConstants.black,
         backgroundColor: AppConstants.black,

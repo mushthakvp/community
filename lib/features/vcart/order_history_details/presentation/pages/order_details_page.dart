@@ -108,7 +108,7 @@ class VCartOrderDetailsPage extends StatelessWidget {
             _buildReviewSection(context, controller),
             const SizedBox(height: 24),
           ],
-          const SizedBox(height: 100), // Bottom padding
+          const SizedBox(height: 100),
         ],
       ),
     );

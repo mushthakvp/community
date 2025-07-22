@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/vcart_colors.dart';
+import '../../../core/router/v_cart_router_g.dart';
 
 class CouponSelectorWidget extends StatelessWidget {
   final Function(String) onCouponApplied;
@@ -23,10 +24,17 @@ class CouponSelectorWidget extends StatelessWidget {
         ),
         child: Row(
           children: [
-            const Icon(
-              Icons.local_offer_outlined,
-              color: VCartColors.primary,
-              size: 24,
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: VCartColors.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.local_offer_outlined,
+                color: VCartColors.primary,
+                size: 20,
+              ),
             ),
             const SizedBox(width: 16),
             const Expanded(
@@ -53,10 +61,17 @@ class CouponSelectorWidget extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(
-              Icons.arrow_forward_ios,
-              color: VCartColors.textSecondary,
-              size: 16,
+            Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: VCartColors.surface.withOpacity(0.8),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: const Icon(
+                Icons.arrow_forward_ios,
+                color: VCartColors.textSecondary,
+                size: 16,
+              ),
             ),
           ],
         ),
@@ -65,10 +80,10 @@ class CouponSelectorWidget extends StatelessWidget {
   }
 
   void _navigateToCoupons(BuildContext context) {
-    // VCartRouterG.toVCartCoupons().then((result) {
-    //   if (result != null && result is String) {
-    //     onCouponApplied(result);
-    //   }
-    // });
+    VCartRouterClassG.pushVCartCoupons<String>().then((result) {
+      if (result != null) {
+        onCouponApplied(result);
+      }
+    });
   }
 }

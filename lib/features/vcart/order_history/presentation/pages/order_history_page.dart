@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/vcart_colors.dart';
 import '../../../core/utils/vcart_extensions.dart';
-import '../../../core/widgets/vcart_button.dart';
 import '../../../core/widgets/vcart_loading.dart';
 import '../../../shared/presentation/widgets/error_widget.dart';
 import '../../../shared/presentation/widgets/maintenance_widget.dart';
@@ -59,8 +58,10 @@ class VCartOrderHistoryPage extends StatelessWidget {
         ),
       ),
       actions: [
-        Obx(() => _buildFilterButton(context, controller)),
-        const SizedBox(width: 16),
+        Padding(
+          padding: const EdgeInsets.only(right: 16),
+          child: Obx(() => _buildFilterButton(context, controller)),
+        ),
       ],
     );
   }
@@ -72,19 +73,58 @@ class VCartOrderHistoryPage extends StatelessWidget {
     final hasFilter = controller.selectedYear.isNotEmpty;
 
     return Stack(
+      alignment: Alignment.center,
       children: [
-        VCartButton(
-          text: "Filter",
-          type: VCartButtonType.outline,
-          icon: Icons.tune,
-          onPressed: () => _showFilterBottomSheet(context, controller),
-          width: 80,
-          height: 36,
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => _showFilterBottomSheet(context, controller),
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              height: 40,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: hasFilter
+                    ? VCartColors.primary.withOpacity(0.1)
+                    : VCartColors.surface.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: hasFilter
+                      ? VCartColors.primary.withOpacity(0.3)
+                      : VCartColors.border.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.tune,
+                    size: 18,
+                    color: hasFilter
+                        ? VCartColors.primary
+                        : VCartColors.textSecondary,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    hasFilter ? controller.selectedYear : 'Filter',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: hasFilter
+                          ? VCartColors.primary
+                          : VCartColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
         if (hasFilter)
           Positioned(
-            top: 0,
-            right: 0,
+            top: 6,
+            right: 6,
             child: Container(
               width: 8,
               height: 8,
@@ -124,26 +164,90 @@ class VCartOrderHistoryPage extends StatelessWidget {
       );
     }
 
-    return RefreshIndicator(
-      onRefresh: () => controller.refreshOrderHistory(),
-      color: VCartColors.primary,
-      child: ListView.separated(
-        controller: controller.scrollController,
-        padding: context.defaultPadding,
-        itemCount:
-            controller.orderGroups.length + (controller.hasMoreData ? 1 : 0),
-        itemBuilder: (context, index) {
-          if (index == controller.orderGroups.length) {
-            return _buildLoadMoreIndicator(controller);
-          }
+    return Column(
+      children: [
+        // Active filter indicator
+        Obx(() => _buildActiveFilterChip(controller)),
+        // Orders list
+        Expanded(
+          child: RefreshIndicator(
+            onRefresh: () => controller.refreshOrderHistory(),
+            color: VCartColors.primary,
+            child: ListView.separated(
+              controller: controller.scrollController,
+              padding: context.defaultPadding,
+              itemCount:
+                  controller.orderGroups.length +
+                  (controller.hasMoreData ? 1 : 0),
+              itemBuilder: (context, index) {
+                if (index == controller.orderGroups.length) {
+                  return _buildLoadMoreIndicator(controller);
+                }
 
-          final orderGroup = controller.orderGroups[index];
-          return OrderHistoryItemWidget(
-            orderGroup: orderGroup,
-            controller: controller,
-          );
-        },
-        separatorBuilder: (context, index) => const SizedBox(height: 16),
+                final orderGroup = controller.orderGroups[index];
+                return OrderHistoryItemWidget(
+                  orderGroup: orderGroup,
+                  controller: controller,
+                );
+              },
+              separatorBuilder: (context, index) => const SizedBox(height: 16),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActiveFilterChip(VCartOrderHistoryController controller) {
+    if (controller.selectedYear.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: VCartColors.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: VCartColors.primary.withOpacity(0.2)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.filter_alt, size: 18, color: VCartColors.primary),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Showing orders from ${controller.selectedYear}',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: VCartColors.primary,
+                    ),
+                  ),
+                  const Spacer(),
+                  GestureDetector(
+                    onTap: () => controller.clearYearFilter(),
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        color: VCartColors.primary.withOpacity(0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.close,
+                        size: 14,
+                        color: VCartColors.primary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -169,6 +273,9 @@ class VCartOrderHistoryPage extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (context) =>
           OrderHistoryFilterBottomSheet(controller: controller),
     );

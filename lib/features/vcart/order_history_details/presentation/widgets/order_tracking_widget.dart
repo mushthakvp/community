@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/vcart_colors.dart';
 import '../../../core/widgets/vcart_button.dart';
@@ -43,7 +42,7 @@ class OrderTrackingWidget extends StatelessWidget {
 
   void _navigateToTracking(BuildContext context, String? orderId) {
     if (orderId != null) {
-      context.push('/vcart/order-tracking/$orderId');
+      // context.push('/vcart/order-tracking/$orderId');
     }
   }
 }
