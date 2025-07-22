@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:livera/features/cook/core/router/cook_router.dart';
 
 import '../../domain/entities/challenge.dart';
 
@@ -94,7 +95,9 @@ class UpcomingChallengesList extends StatelessWidget {
     return Builder(
       builder: (context) => GestureDetector(
         onTap: () {
-          context.push('/cook/challenge-details?challengeId=${challenge.id}');
+          context.push(
+            "${CookRouter.challengeDetails}?challengeId=${challenge.id}",
+          );
         },
         child: Container(
           width: width,
