@@ -1,6 +1,6 @@
 class CookConstants {
   static const String moduleName = 'cook';
-  static const String baseUrl = 'https://api.cook.haladoc.vip/user/';
+  static const String baseUrl = 'https://api.cook.liveraapp.com/user/';
 
   // Pagination
   static const int defaultPageSize = 10;
