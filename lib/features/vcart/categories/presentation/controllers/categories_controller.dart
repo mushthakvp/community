@@ -1,8 +1,10 @@
 import 'dart:developer';
 
 import 'package:get/get.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../../core/error/failures.dart';
+import '../../../../../core/router/core_router.dart';
 import '../../domain/entities/category.dart';
 import '../../domain/entities/section.dart';
 import '../../domain/entities/subcategory.dart';
@@ -180,15 +182,32 @@ class VCartCategoriesController extends GetxController {
   void onSubCategoryTap(SubCategory subCategory) {
     log("SubCategory tapped: ${subCategory.name}");
     _filterSubCategoryId.value = subCategory.id;
-    Get.toNamed(
-      '/products',
-      parameters: {
-        'subCategoryId': subCategory.id,
-        'title': subCategory.name,
-        'sectionId': _filterSectionId.value,
-        'categoryId': _filterCategoryId.value,
-      },
-    );
+
+    // Get the current context and navigate using GoRouter
+    final context = CoreRouter.rootNavigatorKey.currentContext;
+    if (context != null) {
+      // Build the URI with query parameters as expected by the router
+      final uri = Uri(
+        path: '/vcart/product-listing',
+        queryParameters: {
+          'title': subCategory.name,
+          'sectionId': _filterSectionId.value.isNotEmpty
+              ? _filterSectionId.value
+              : null,
+          'categoryId': _filterCategoryId.value.isNotEmpty
+              ? _filterCategoryId.value
+              : null,
+          'subCategoryId': subCategory.id,
+        }..removeWhere((key, value) => value == null),
+      );
+
+      // Navigate using GoRouter
+      GoRouter.of(context).push(uri.toString());
+    } else {
+      // Fallback: Log error and show message to user
+      log("Error: No context available for navigation");
+      _handleError('Navigation error: Unable to navigate to products');
+    }
   }
 
   void clearSubCategoryVariables() {
