@@ -188,4 +188,16 @@ class VCartRouterClassG {
 
     return location;
   }
+
+  static void toVCartOrderDetails(String orderId) {
+    _setNavigatingFromVCart();
+    GoRouter.of(
+      _getContext(),
+    ).push('${VCartRouterClass.orderDetails}/$orderId');
+  }
+
+  static void toVCartOrderHistory() {
+    _setNavigatingFromVCart();
+    GoRouter.of(_getContext()).push(VCartRouterClass.orderHistory);
+  }
 }

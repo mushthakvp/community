@@ -100,7 +100,7 @@ class VCartProfilePage extends StatelessWidget {
   }
 
   void _navigateToOrders() {
-    Get.toNamed('/orders');
+    VCartRouterClassG.toVCartOrderHistory();
   }
 
   void _navigateToWishlist() {

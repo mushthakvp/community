@@ -97,6 +97,73 @@ extension VCartRouterExtensions on BuildContext {
     push(VCartRouterClass.profile);
   }
 
+  void goToVCartProductListing({
+    required String title,
+    String? sectionId,
+    String? categoryId,
+    String? subCategoryId,
+    String? brandId,
+  }) {
+    final queryParams = <String, String>{'title': title};
+    if (sectionId != null) queryParams['sectionId'] = sectionId;
+    if (categoryId != null) queryParams['categoryId'] = categoryId;
+    if (subCategoryId != null) queryParams['subCategoryId'] = subCategoryId;
+    if (brandId != null) queryParams['brandId'] = brandId;
+
+    final uri = Uri(
+      path: VCartRouterClass.productListing,
+      queryParameters: queryParams,
+    );
+    push(uri.toString());
+  }
+
+  void goToVCartSectionCategory(String sectionId, {String? title}) {
+    final uri = Uri(
+      path: '${VCartRouterClass.sectionCategory}/$sectionId',
+      queryParameters: title != null ? {'title': title} : null,
+    );
+    push(uri.toString());
+  }
+
+  void goToVCartFilter({String? sectionId, String? brandId}) {
+    final queryParams = <String, String>{};
+    if (sectionId != null) queryParams['sectionId'] = sectionId;
+    if (brandId != null) queryParams['brandId'] = brandId;
+
+    final uri = Uri(
+      path: VCartRouterClass.filter,
+      queryParameters: queryParams.isNotEmpty ? queryParams : null,
+    );
+    push(uri.toString());
+  }
+
+  Future<T?> pushVCartProduct<T extends Object?>(String productId) {
+    return push<T>('${VCartRouterClass.productDetail}/$productId');
+  }
+
+  Future<T?> pushVCartCoupons<T extends Object?>() {
+    return push<T>(VCartRouterClass.coupons);
+  }
+
+  Future<T?> pushVCartSearch<T extends Object?>() {
+    return push<T>(VCartRouterClass.search);
+  }
+
+  Future<T?> pushVCartFilter<T extends Object?>({
+    String? sectionId,
+    String? brandId,
+  }) {
+    final queryParams = <String, String>{};
+    if (sectionId != null) queryParams['sectionId'] = sectionId;
+    if (brandId != null) queryParams['brandId'] = brandId;
+
+    final uri = Uri(
+      path: VCartRouterClass.filter,
+      queryParameters: queryParams.isNotEmpty ? queryParams : null,
+    );
+    return push<T>(uri.toString());
+  }
+
   bool get isVCartRoute {
     final location = GoRouterState.of(this).uri.toString();
     return location.startsWith(VCartRouterClass.basePath);
@@ -106,5 +173,48 @@ extension VCartRouterExtensions on BuildContext {
     final location = GoRouterState.of(this).uri.toString();
     if (!location.startsWith(VCartRouterClass.basePath)) return null;
     return location;
+  }
+
+  bool get isVCartOrderHistoryRoute {
+    final location = GoRouterState.of(this).uri.toString();
+    return location.startsWith(VCartRouterClass.orderHistory);
+  }
+
+  bool get isVCartOrderDetailsRoute {
+    final location = GoRouterState.of(this).uri.toString();
+    return location.contains('/order-details/');
+  }
+
+  bool get isVCartCheckoutRoute {
+    final location = GoRouterState.of(this).uri.toString();
+    return location.startsWith(VCartRouterClass.checkout);
+  }
+
+  String? get currentOrderId {
+    final location = GoRouterState.of(this).uri.toString();
+    if (location.contains('/order-details/')) {
+      final segments = location.split('/');
+      final orderDetailsIndex = segments.indexOf('order-details');
+      if (orderDetailsIndex != -1 && orderDetailsIndex + 1 < segments.length) {
+        return segments[orderDetailsIndex + 1];
+      }
+    }
+    return null;
+  }
+
+  void backInVCart() {
+    if (canPop()) {
+      pop();
+    } else {
+      goToVCartHome();
+    }
+  }
+
+  void replaceWithVCartHome() {
+    go(VCartRouterClass.home);
+  }
+
+  void replaceWithVCartOrderHistory() {
+    go(VCartRouterClass.orderHistory);
   }
 }

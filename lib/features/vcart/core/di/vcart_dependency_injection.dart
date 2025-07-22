@@ -42,6 +42,17 @@ import '../../home/presentation/controllers/home_controller.dart';
 import '../../navigation/data/repositories/navigation_repository_impl.dart';
 import '../../navigation/domain/repositories/navigation_repository.dart';
 import '../../navigation/presentation/controllers/bottom_nav_controller.dart';
+import '../../order_history/data/datasources/order_history_remote_datasource.dart';
+import '../../order_history/data/repositories/order_history_repository_impl.dart';
+import '../../order_history/domain/repositories/order_history_repository.dart';
+import '../../order_history/domain/usecases/get_order_history.dart';
+import '../../order_history/presentation/controllers/order_history_controller.dart';
+import '../../order_history_details/data/datasources/order_details_remote_datasource.dart';
+import '../../order_history_details/data/repositories/order_details_repository_impl.dart';
+import '../../order_history_details/domain/repositories/order_details_repository.dart';
+import '../../order_history_details/domain/usecases/get_order_details.dart';
+import '../../order_history_details/domain/usecases/submit_review.dart';
+import '../../order_history_details/presentation/controllers/order_details_controller.dart';
 import '../../product_listing/data/datasources/product_listing_remote_datasource.dart';
 import '../../product_listing/data/repositories/product_listing_repository_impl.dart';
 import '../../product_listing/domain/repositories/product_listing_repository.dart';
@@ -208,6 +219,19 @@ class VCartDI {
         fenix: true,
       );
 
+      // Order History DataSources
+      Get.lazyPut<OrderHistoryRemoteDataSource>(
+        () =>
+            OrderHistoryRemoteDataSourceImpl(apiClient: Get.find<ApiClient>()),
+        fenix: true,
+      );
+
+      Get.lazyPut<OrderDetailsRemoteDataSource>(
+        () =>
+            OrderDetailsRemoteDataSourceImpl(apiClient: Get.find<ApiClient>()),
+        fenix: true,
+      );
+
       // Product Listing DataSources
       Get.lazyPut<ProductListingRemoteDataSource>(
         () => ProductListingRemoteDataSourceImpl(
@@ -320,6 +344,23 @@ class VCartDI {
         () => HomeRepositoryImpl(
           remoteDataSource: Get.find<HomeRemoteDataSource>(),
           localDataSource: Get.find<HomeLocalDataSource>(),
+          networkInfo: Get.find<NetworkInfo>(),
+        ),
+        fenix: true,
+      );
+
+      // Order History Repositories
+      Get.lazyPut<OrderHistoryRepository>(
+        () => OrderHistoryRepositoryImpl(
+          remoteDataSource: Get.find<OrderHistoryRemoteDataSource>(),
+          networkInfo: Get.find<NetworkInfo>(),
+        ),
+        fenix: true,
+      );
+
+      Get.lazyPut<OrderDetailsRepository>(
+        () => OrderDetailsRepositoryImpl(
+          remoteDataSource: Get.find<OrderDetailsRemoteDataSource>(),
           networkInfo: Get.find<NetworkInfo>(),
         ),
         fenix: true,
@@ -457,6 +498,22 @@ class VCartDI {
 
       Get.lazyPut<GetLocation>(
         () => GetLocation(Get.find<HomeRepository>()),
+        fenix: true,
+      );
+
+      // Order History Use Cases
+      Get.lazyPut<GetOrderHistory>(
+        () => GetOrderHistory(Get.find<OrderHistoryRepository>()),
+        fenix: true,
+      );
+
+      Get.lazyPut<GetOrderDetails>(
+        () => GetOrderDetails(Get.find<OrderDetailsRepository>()),
+        fenix: true,
+      );
+
+      Get.lazyPut<SubmitReview>(
+        () => SubmitReview(Get.find<OrderDetailsRepository>()),
         fenix: true,
       );
 
@@ -598,6 +655,22 @@ class VCartDI {
         fenix: true,
       );
 
+      // Order History Controllers
+      Get.lazyPut<VCartOrderHistoryController>(
+        () => VCartOrderHistoryController(
+          getOrderHistoryUseCase: Get.find<GetOrderHistory>(),
+        ),
+        fenix: true,
+      );
+
+      Get.lazyPut<VCartOrderDetailsController>(
+        () => VCartOrderDetailsController(
+          getOrderDetailsUseCase: Get.find<GetOrderDetails>(),
+          submitReviewUseCase: Get.find<SubmitReview>(),
+        ),
+        fenix: true,
+      );
+
       // Product Listing Controller
       Get.lazyPut<VCartProductListingController>(
         () => VCartProductListingController(
@@ -665,6 +738,8 @@ class VCartDI {
     final criticalControllers = <Type>[
       VCartBottomNavController,
       VCartCartController,
+      VCartOrderHistoryController,
+      VCartOrderDetailsController,
     ];
 
     for (final controllerType in criticalControllers) {
@@ -675,6 +750,10 @@ class VCartDI {
         isRegistered = Get.isRegistered<VCartBottomNavController>();
       } else if (controllerType == VCartCartController) {
         isRegistered = Get.isRegistered<VCartCartController>();
+      } else if (controllerType == VCartOrderHistoryController) {
+        isRegistered = Get.isRegistered<VCartOrderHistoryController>();
+      } else if (controllerType == VCartOrderDetailsController) {
+        isRegistered = Get.isRegistered<VCartOrderDetailsController>();
       }
 
       if (!isRegistered) {
@@ -753,6 +832,8 @@ class VCartDI {
       'categoriesController': Get.isRegistered<VCartCategoriesController>(),
       'couponsController': Get.isRegistered<VCartCouponsController>(),
       'homeController': Get.isRegistered<VCartHomeController>(),
+      'orderHistoryController': Get.isRegistered<VCartOrderHistoryController>(),
+      'orderDetailsController': Get.isRegistered<VCartOrderDetailsController>(),
       'productOverviewController':
           Get.isRegistered<VCartProductOverviewController>(),
       'profileController': Get.isRegistered<VCartProfileController>(),
