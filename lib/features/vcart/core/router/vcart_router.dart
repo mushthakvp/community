@@ -12,6 +12,8 @@ import '../../coupons/presentation/pages/coupons_page.dart';
 import '../../filter_page/presentation/pages/filter_page.dart';
 import '../../home/presentation/pages/home_page.dart';
 import '../../navigation/presentation/pages/main_navigation_page.dart';
+import '../../order_history/presentation/pages/order_history_page.dart';
+import '../../order_history_details/presentation/pages/order_details_page.dart';
 import '../../product_listing/presentation/pages/product_listing_page.dart';
 import '../../product_overview/presentation/pages/product_overview_page.dart';
 import '../../profile/presentation/pages/profile_page.dart';
@@ -20,6 +22,7 @@ import '../../section_category/presentation/pages/section_category_page.dart';
 import '../../wishlist/presentation/pages/wishlist_page.dart';
 import '../widgets/vcart_initialization_wrapper.dart';
 import 'v_cart_checkout_address_initialization_wrapper.dart';
+import 'v_cart_order_history_initialization_wrapper.dart';
 
 class VCartRouterClass {
   static const String _basePath = '/vcart';
@@ -46,6 +49,11 @@ class VCartRouterClass {
   static const String editAddress = '$_basePath/address/edit';
   static const String orderSuccess = '$_basePath/order-success';
 
+  // Order History routes
+  static const String orderHistory = '$_basePath/order-history';
+  static const String orderDetails = '$_basePath/order-details';
+  static const String orderTracking = '$_basePath/order-tracking';
+
   // Main pages for navigation
   static final List<Widget> _mainPages = [
     const VCartInitializationWrapper(pageName: 'Home', child: VCartHomePage()),
@@ -70,6 +78,18 @@ class VCartRouterClass {
   ) {
     return VCartCheckoutAddressInitializationWrapper(
       pageName: pageName,
+      child: child,
+    );
+  }
+
+  static Widget _wrapWithOrderHistoryInitialization(
+    Widget child,
+    String pageName, {
+    bool isOrderDetails = false,
+  }) {
+    return VCartOrderHistoryInitializationWrapper(
+      pageName: pageName,
+      isOrderDetails: isOrderDetails,
       child: child,
     );
   }
@@ -238,6 +258,28 @@ class VCartRouterClass {
         return _wrapWithCheckoutAddressInitialization(
           OrderSuccessPage(orderId: orderId ?? ''),
           'Order Success',
+        );
+      },
+    ),
+
+    // Order History routes
+    GoRoute(
+      path: orderHistory,
+      name: 'vcart-order-history',
+      builder: (context, state) => _wrapWithOrderHistoryInitialization(
+        const VCartOrderHistoryPage(),
+        'Order History',
+      ),
+    ),
+    GoRoute(
+      path: '$orderDetails/:orderId',
+      name: 'vcart-order-details',
+      builder: (context, state) {
+        final orderId = state.pathParameters['orderId']!;
+        return _wrapWithOrderHistoryInitialization(
+          VCartOrderDetailsPage(orderId: orderId),
+          'Order Details',
+          isOrderDetails: true,
         );
       },
     ),
