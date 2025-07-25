@@ -27,4 +27,32 @@ class HelperRouterCook {
   static void navigateToPrizeOverview(BuildContext ctx, String challengeId) {
     ctx.push(prizeOverviewPath(challengeId));
   }
+
+  static void navigateToAddRecipe(context) {
+    context.go(CookRouter.addRecipe);
+  }
+
+  static void navigateToTextRecipe(context) {
+    context.go(CookRouter.addTextRecipe);
+  }
+
+  static void navigateToVideoRecipe(context) {
+    context.go(CookRouter.addVideoRecipe);
+  }
+
+  static void navigateToRecipeSteps(context) {
+    context.go(CookRouter.addRecipeSteps);
+  }
+
+  static void navigateToAddStep(
+    context, {
+    int? editIndex,
+    Map<String, dynamic>? stepData,
+  }) {
+    final path = editIndex != null
+        ? '${CookRouter.addStep}/$editIndex'
+        : CookRouter.addStep;
+
+    context.go(path, extra: stepData);
+  }
 }
