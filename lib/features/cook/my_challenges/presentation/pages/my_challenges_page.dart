@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../../core/constants/app_constants.dart';
+import '../../../core/router/helper_router_cook.dart';
 import '../controllers/my_challenges_controller.dart';
 import '../widgets/challenge_card.dart';
 import '../widgets/empty_state.dart';
@@ -277,16 +278,12 @@ class _CookMyChallengesPageState extends State<CookMyChallengesPage>
 
   void _handleChallengeCardTap(dynamic challenge, String status) {
     if (status == 'active') {
-      // Handle active challenge tap
       if (challenge.isActive) {
-        // Navigate to add recipe page
         _showRecipeDialog(challenge);
       } else {
-        // Show challenge details
         context.push('/cook/challenge-details?challengeId=${challenge.id}');
       }
     } else {
-      // Handle completed challenge tap
       context.push('/cook/challenge-details?challengeId=${challenge.id}');
     }
   }
@@ -313,15 +310,7 @@ class _CookMyChallengesPageState extends State<CookMyChallengesPage>
             ElevatedButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Navigate to Add Recipe for: ${challenge.title}',
-                    ),
-                    backgroundColor: Colors.amber,
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
+                HelperRouterCook.navigateToAddRecipe(context);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.amber,
