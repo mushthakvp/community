@@ -47,10 +47,42 @@ class ChallengeDetailsContent extends StatelessWidget {
   }
 
   Widget _buildChallengeImage() {
-    return CachedNetworkImage(
-      imageUrl: challengeDetails.image ?? "",
-      progressIndicatorBuilder: (context, url, progress) =>
-          const Center(child: CircularProgressIndicator(color: Colors.amber)),
+    if (challengeDetails.image == null || challengeDetails.image!.isEmpty) {
+      return Container(
+        height: 200,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: Colors.grey[800],
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: const Center(
+          child: Icon(Icons.restaurant, color: Colors.grey, size: 80),
+        ),
+      );
+    }
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(15),
+      child: CachedNetworkImage(
+        imageUrl: challengeDetails.image!,
+        height: 200,
+        width: double.infinity,
+        fit: BoxFit.cover,
+        placeholder: (context, url) => Container(
+          height: 200,
+          color: Colors.grey[800],
+          child: const Center(
+            child: CircularProgressIndicator(color: Colors.amber),
+          ),
+        ),
+        errorWidget: (context, url, error) => Container(
+          height: 200,
+          color: Colors.grey[800],
+          child: const Center(
+            child: Icon(Icons.broken_image, color: Colors.grey, size: 80),
+          ),
+        ),
+      ),
     );
   }
 
@@ -68,7 +100,9 @@ class ChallengeDetailsContent extends StatelessWidget {
         ),
         const SizedBox(height: 10),
         Text(
-          challengeDetails.description ?? 'No description available',
+          challengeDetails.description?.isNotEmpty == true
+              ? challengeDetails.description!
+              : 'No description available',
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w300,
@@ -112,6 +146,7 @@ class ChallengeDetailsContent extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xff1E1E1E),
         borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -178,14 +213,68 @@ class ChallengeDetailsContent extends StatelessWidget {
   Widget _buildActionButtons() {
     return Column(
       children: [
+        // Show join button only if user hasn't joined and challenge is active
         if (!challengeDetails.isAlreadyJoined &&
             challengeDetails.isWithinChallengeDate)
           JoinChallengeButton(
             onPressed: onJoinChallenge,
             isLoading: isJoinLoading,
           ),
-        if (challengeDetails.isResultAdded) const SizedBox(height: 10),
-        if (challengeDetails.isResultAdded)
+
+        // Show already joined status
+        if (challengeDetails.isAlreadyJoined) ...[
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            decoration: BoxDecoration(
+              color: Colors.green.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(25),
+              border: Border.all(color: Colors.green, width: 1),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.check_circle, color: Colors.green, size: 20),
+                const SizedBox(width: 8),
+                const Text(
+                  'Already Joined',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.green,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+
+        // Show challenge ended status if not within date
+        if (!challengeDetails.isWithinChallengeDate &&
+            !challengeDetails.isAlreadyJoined) ...[
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            decoration: BoxDecoration(
+              color: Colors.grey.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(25),
+              border: Border.all(color: Colors.grey, width: 1),
+            ),
+            child: const Text(
+              'Challenge Ended',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey,
+              ),
+            ),
+          ),
+        ],
+
+        // Prize overview button if results are added
+        if (challengeDetails.isResultAdded) ...[
+          const SizedBox(height: 10),
           SizedBox(
             width: double.infinity,
             height: 50,
@@ -204,6 +293,7 @@ class ChallengeDetailsContent extends StatelessWidget {
               ),
             ),
           ),
+        ],
       ],
     );
   }

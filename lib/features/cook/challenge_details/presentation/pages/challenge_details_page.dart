@@ -17,22 +17,30 @@ class ChallengeDetailsPage extends StatefulWidget {
 
 class _ChallengeDetailsPageState extends State<ChallengeDetailsPage> {
   late final ChallengeDetailsController controller;
+  late final String controllerTag;
 
   @override
   void initState() {
     super.initState();
+
+    // Create a unique tag for this controller
+    controllerTag = 'challenge_details_${widget.challengeId}';
+
+    // Remove existing controller if it exists
+    if (Get.isRegistered<ChallengeDetailsController>(tag: controllerTag)) {
+      Get.delete<ChallengeDetailsController>(tag: controllerTag);
+    }
+
+    // Create new controller
     controller = Get.put(
       ChallengeDetailsController(
-        getChallengeDetailsUseCase: Get.find(
-          tag: 'challenge_details',
-        ), // Use tag
-        joinChallengeUseCase: Get.find(
-          tag: 'challenge_details_join',
-        ), // Use tag
+        getChallengeDetailsUseCase: Get.find(tag: 'challenge_details'),
+        joinChallengeUseCase: Get.find(tag: 'challenge_details_join'),
       ),
-      tag: 'challenge_details_${widget.challengeId}',
+      tag: controllerTag,
     );
 
+    // Load data after controller is properly initialized
     WidgetsBinding.instance.addPostFrameCallback((_) {
       controller.getChallengeDetails(widget.challengeId);
     });
@@ -40,9 +48,10 @@ class _ChallengeDetailsPageState extends State<ChallengeDetailsPage> {
 
   @override
   void dispose() {
-    Get.delete<ChallengeDetailsController>(
-      tag: 'challenge_details_${widget.challengeId}',
-    );
+    // Clean up controller
+    if (Get.isRegistered<ChallengeDetailsController>(tag: controllerTag)) {
+      Get.delete<ChallengeDetailsController>(tag: controllerTag);
+    }
     super.dispose();
   }
 
@@ -54,34 +63,7 @@ class _ChallengeDetailsPageState extends State<ChallengeDetailsPage> {
         child: Column(
           children: [
             _buildAppBar(),
-            Expanded(
-              child: GetBuilder<ChallengeDetailsController>(
-                tag: 'challenge_details_${widget.challengeId}',
-                builder: (_) {
-                  if (controller.isLoading) {
-                    return _buildLoadingView();
-                  }
-
-                  if (controller.hasError) {
-                    return _buildErrorView();
-                  }
-
-                  final challengeDetails = controller.challengeDetails;
-                  if (challengeDetails != null) {
-                    return ChallengeDetailsContent(
-                      challengeDetails: challengeDetails,
-                      onJoinChallenge: () =>
-                          controller.joinChallenge(widget.challengeId),
-                      isJoinLoading: controller.isJoinLoading,
-                      onNavigateToPrizeOverview: () =>
-                          context.push('/cook/prize-overview'),
-                    );
-                  }
-
-                  return _buildEmptyView();
-                },
-              ),
-            ),
+            Expanded(child: Obx(() => _buildContent())),
           ],
         ),
       ),
@@ -114,6 +96,28 @@ class _ChallengeDetailsPageState extends State<ChallengeDetailsPage> {
         ],
       ),
     );
+  }
+
+  Widget _buildContent() {
+    if (controller.isLoading) {
+      return _buildLoadingView();
+    }
+
+    if (controller.hasError) {
+      return _buildErrorView();
+    }
+
+    final challengeDetails = controller.challengeDetails;
+    if (challengeDetails != null) {
+      return ChallengeDetailsContent(
+        challengeDetails: challengeDetails,
+        onJoinChallenge: () => controller.joinChallenge(widget.challengeId),
+        isJoinLoading: controller.isJoinLoading,
+        onNavigateToPrizeOverview: () => context.push('/cook/prize-overview'),
+      );
+    }
+
+    return _buildEmptyView();
   }
 
   Widget _buildLoadingView() {
@@ -164,6 +168,13 @@ class _ChallengeDetailsPageState extends State<ChallengeDetailsPage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.amber,
                 foregroundColor: Colors.black,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(25),
+                ),
               ),
               child: const Text('Retry'),
             ),
@@ -175,9 +186,21 @@ class _ChallengeDetailsPageState extends State<ChallengeDetailsPage> {
 
   Widget _buildEmptyView() {
     return const Center(
-      child: Text(
-        'No challenge details available',
-        style: TextStyle(color: Colors.white, fontSize: 18),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.info_outline, color: Colors.grey, size: 80),
+          SizedBox(height: 20),
+          Text(
+            'No challenge details available',
+            style: TextStyle(color: Colors.white, fontSize: 18),
+          ),
+          SizedBox(height: 8),
+          Text(
+            'Please try refreshing the page',
+            style: TextStyle(color: Colors.white70, fontSize: 14),
+          ),
+        ],
       ),
     );
   }

@@ -7,7 +7,6 @@ import '../../home/data/repositories/home_repository_impl.dart';
 import '../../home/domain/repositories/home_repository.dart';
 import '../../home/domain/usecases/get_cooking_home_usecase.dart';
 import '../../home/domain/usecases/search_challenges_usecase.dart';
-import '../../my_challenges/data/datasources/my_challenges_local_data_source.dart';
 import '../../my_challenges/data/datasources/my_challenges_remote_data_source.dart';
 import '../../my_challenges/data/repositories/my_challenges_repository_impl.dart';
 import '../../my_challenges/domain/repositories/my_challenges_repository.dart';
@@ -46,9 +45,6 @@ class CookInjection {
     Get.lazyPut<HomeRemoteDataSource>(
       () => HomeRemoteDataSourceImpl(apiClient: Get.find<CookApiClient>()),
     );
-    Get.lazyPut<MyChallengesLocalDataSource>(
-      () => MyChallengesLocalDataSourceImpl(),
-    );
     Get.lazyPut<MyChallengesRemoteDataSource>(
       () => MyChallengesRemoteDataSourceImpl(
         apiClient: Get.find<CookApiClient>(),
@@ -69,7 +65,6 @@ class CookInjection {
     Get.lazyPut<MyChallengesRepository>(
       () => MyChallengesRepositoryImpl(
         remoteDataSource: Get.find<MyChallengesRemoteDataSource>(),
-        localDataSource: Get.find<MyChallengesLocalDataSource>(),
       ),
     );
     Get.lazyPut<SearchRepository>(

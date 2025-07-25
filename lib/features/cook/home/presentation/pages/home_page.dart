@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../../core/constants/app_constants.dart';
+import '../../../core/router/helper_router_cook.dart';
 import '../controllers/home_controller.dart';
 import '../widgets/current_challenge_carousel.dart';
 import '../widgets/search_bar_widget.dart';
@@ -248,12 +249,28 @@ class _CookHomePageState extends State<CookHomePage> {
           overflow: TextOverflow.ellipsis,
         ),
         const Spacer(),
-        IconButton(
-          onPressed: () => context.push('/cook/my-challenges'),
+        TextButton.icon(
+          onPressed: () => HelperRouterCook.myChallenges(context),
           icon: const Icon(
             Icons.article_outlined,
             color: Colors.white,
             size: 24,
+          ),
+          label: const Text(
+            'My Challenges',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            backgroundColor: Colors.transparent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            side: const BorderSide(color: Colors.white, width: 1),
           ),
         ),
       ],
