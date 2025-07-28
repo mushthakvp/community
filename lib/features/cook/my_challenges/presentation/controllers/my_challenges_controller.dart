@@ -9,19 +9,19 @@ class MyChallengesController extends GetxController {
 
   MyChallengesController({required this.getMyChallengesUseCase});
 
-  // State
-  final _activeChallenges = <MyChallenge>[].obs;
-  final _completedChallenges = <MyChallenge>[].obs;
-  final _isLoading = false.obs;
-  final _hasError = false.obs;
-  final _errorMessage = ''.obs;
-  final _isLoadingMore = false.obs;
+  // State - Using RxList for proper reactivity
+  final RxList<MyChallenge> _activeChallenges = <MyChallenge>[].obs;
+  final RxList<MyChallenge> _completedChallenges = <MyChallenge>[].obs;
+  final RxBool _isLoading = false.obs;
+  final RxBool _hasError = false.obs;
+  final RxString _errorMessage = ''.obs;
+  final RxBool _isLoadingMore = false.obs;
 
   // Pagination
-  final _activePage = 1.obs;
-  final _completedPage = 1.obs;
-  final _hasMoreActiveData = true.obs;
-  final _hasMoreCompletedData = true.obs;
+  final RxInt _activePage = 1.obs;
+  final RxInt _completedPage = 1.obs;
+  final RxBool _hasMoreActiveData = true.obs;
+  final RxBool _hasMoreCompletedData = true.obs;
 
   // Getters
   List<MyChallenge> get activeChallenges => _activeChallenges;
@@ -33,8 +33,21 @@ class MyChallengesController extends GetxController {
   bool get hasMoreActiveData => _hasMoreActiveData.value;
   bool get hasMoreCompletedData => _hasMoreCompletedData.value;
 
+  @override
+  void onInit() {
+    super.onInit();
+    debugPrint('MyChallengesController initialized');
+  }
+
+  @override
+  void onClose() {
+    debugPrint('MyChallengesController disposed');
+    super.onClose();
+  }
+
   Future<void> loadChallenges({required String status}) async {
     try {
+      debugPrint('Loading challenges for status: $status');
       _isLoading.value = true;
       _hasError.value = false;
       _errorMessage.value = '';
@@ -49,10 +62,12 @@ class MyChallengesController extends GetxController {
 
       result.fold(
         (failure) {
+          debugPrint('Error loading challenges: ${failure.message}');
           _hasError.value = true;
           _errorMessage.value = failure.message;
         },
         (challenges) {
+          debugPrint('Loaded ${challenges.length} challenges for $status');
           if (status == 'active') {
             _activeChallenges.value = challenges;
             _hasMoreActiveData.value = challenges.length >= 10;
@@ -60,12 +75,14 @@ class MyChallengesController extends GetxController {
             _completedChallenges.value = challenges;
             _hasMoreCompletedData.value = challenges.length >= 10;
           }
+          // Force UI update
+          update();
         },
       );
     } catch (e) {
+      debugPrint('Exception loading challenges: $e');
       _hasError.value = true;
       _errorMessage.value = e.toString();
-      debugPrint('Error loading challenges: $e');
     } finally {
       _isLoading.value = false;
     }
@@ -79,6 +96,7 @@ class MyChallengesController extends GetxController {
     if (_isLoadingMore.value || !hasMoreData) return;
 
     try {
+      debugPrint('Loading more challenges for status: $status');
       _isLoadingMore.value = true;
 
       if (status == 'active') {
@@ -97,6 +115,7 @@ class MyChallengesController extends GetxController {
 
       result.fold(
         (failure) {
+          debugPrint('Error loading more challenges: ${failure.message}');
           // Revert page increment on error
           if (status == 'active') {
             _activePage.value--;
@@ -105,6 +124,9 @@ class MyChallengesController extends GetxController {
           }
         },
         (newChallenges) {
+          debugPrint(
+            'Loaded ${newChallenges.length} more challenges for $status',
+          );
           if (status == 'active') {
             _activeChallenges.addAll(newChallenges);
             _hasMoreActiveData.value = newChallenges.length >= 10;
@@ -112,16 +134,25 @@ class MyChallengesController extends GetxController {
             _completedChallenges.addAll(newChallenges);
             _hasMoreCompletedData.value = newChallenges.length >= 10;
           }
+          // Force UI update
+          update();
         },
       );
     } catch (e) {
-      debugPrint('Error loading more challenges: $e');
+      debugPrint('Exception loading more challenges: $e');
+      // Revert page increment on error
+      if (status == 'active') {
+        _activePage.value--;
+      } else {
+        _completedPage.value--;
+      }
     } finally {
       _isLoadingMore.value = false;
     }
   }
 
   void resetPagination(String status) {
+    debugPrint('Resetting pagination for status: $status');
     if (status == 'active') {
       _activePage.value = 1;
       _activeChallenges.clear();
@@ -135,6 +166,27 @@ class MyChallengesController extends GetxController {
   }
 
   void refreshChallenges(String status) {
+    debugPrint('Refreshing challenges for status: $status');
     resetPagination(status);
+  }
+
+  // Force UI update method
+  void forceUpdate() {
+    update();
+  }
+
+  // Clear all data
+  void clearAllData() {
+    _activeChallenges.clear();
+    _completedChallenges.clear();
+    _hasError.value = false;
+    _errorMessage.value = '';
+    _isLoading.value = false;
+    _isLoadingMore.value = false;
+    _activePage.value = 1;
+    _completedPage.value = 1;
+    _hasMoreActiveData.value = true;
+    _hasMoreCompletedData.value = true;
+    update();
   }
 }

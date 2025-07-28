@@ -27,18 +27,24 @@ class _CookMyChallengesPageState extends State<CookMyChallengesPage>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+
+    // Initialize controller
     controller = Get.put(
       MyChallengesController(
         getMyChallengesUseCase: Get.find(tag: 'cook_my_challenges'),
       ),
       tag: 'cook_my_challenges',
     );
+
+    // Add tab listener
     _tabController.addListener(() {
       if (!_tabController.indexIsChanging) {
         final status = _tabController.index == 0 ? 'active' : 'completed';
         controller.resetPagination(status);
       }
     });
+
+    // Load initial data
     WidgetsBinding.instance.addPostFrameCallback((_) {
       controller.loadChallenges(status: 'active');
     });
@@ -60,12 +66,7 @@ class _CookMyChallengesPageState extends State<CookMyChallengesPage>
           children: [
             _buildHeader(),
             _buildTabBar(),
-            Expanded(
-              child: GetBuilder<MyChallengesController>(
-                tag: 'cook_my_challenges',
-                builder: (controller) => _buildTabBarView(),
-              ),
-            ),
+            Expanded(child: Obx(() => _buildTabBarView())),
           ],
         ),
       ),
@@ -126,12 +127,14 @@ class _CookMyChallengesPageState extends State<CookMyChallengesPage>
   }
 
   Widget _buildTabBarView() {
+    // Show loading state if loading and no data
     if (controller.isLoading &&
         controller.activeChallenges.isEmpty &&
         controller.completedChallenges.isEmpty) {
       return const MyChallengeLoadingState();
     }
 
+    // Show error state
     if (controller.hasError) {
       return _buildErrorState();
     }
@@ -155,6 +158,7 @@ class _CookMyChallengesPageState extends State<CookMyChallengesPage>
     required List challenges,
     required String status,
   }) {
+    // Show empty state if no challenges and not loading
     if (challenges.isEmpty && !controller.isLoading) {
       return MyChallengeEmptyState(status: status);
     }
@@ -294,9 +298,9 @@ class _CookMyChallengesPageState extends State<CookMyChallengesPage>
       builder: (BuildContext context) {
         return AlertDialog(
           backgroundColor: const Color(0xff1E1E1E),
-          title: Text(
+          title: const Text(
             'Add Recipe',
-            style: const TextStyle(color: Colors.white),
+            style: TextStyle(color: Colors.white),
           ),
           content: Text(
             'Would you like to add a recipe for "${challenge.title}"?',
