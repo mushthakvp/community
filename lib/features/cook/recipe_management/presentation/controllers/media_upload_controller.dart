@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../../../core/usecases/usecase.dart';
@@ -38,7 +39,7 @@ class MediaUploadController extends GetxController {
 
     pickResult.fold(
       (failure) =>
-          Get.snackbar('Error', 'Failed to pick image: ${failure.message}'),
+          _showErrorSnackbar('Failed to pick image: ${failure.message}'),
       (file) async {
         if (file != null) {
           await _uploadImage(file);
@@ -52,7 +53,7 @@ class MediaUploadController extends GetxController {
 
     pickResult.fold(
       (failure) =>
-          Get.snackbar('Error', 'Failed to pick video: ${failure.message}'),
+          _showErrorSnackbar('Failed to pick video: ${failure.message}'),
       (file) async {
         if (file != null) {
           await _uploadVideo(file);
@@ -76,7 +77,7 @@ class MediaUploadController extends GetxController {
 
     uploadResult.fold(
       (failure) {
-        Get.snackbar('Error', 'Failed to upload image: ${failure.message}');
+        _showErrorSnackbar('Failed to upload image: ${failure.message}');
         _isImageUploading.value = false;
         _imageUploadProgress.value = 0.0;
       },
@@ -84,7 +85,7 @@ class MediaUploadController extends GetxController {
         _uploadedImageUrl.value = url;
         _isImageUploading.value = false;
         _imageUploadProgress.value = 1.0;
-        Get.snackbar('Success', 'Image uploaded successfully');
+        _showSuccessSnackbar('Image uploaded successfully');
       },
     );
   }
@@ -104,7 +105,7 @@ class MediaUploadController extends GetxController {
 
     uploadResult.fold(
       (failure) {
-        Get.snackbar('Error', 'Failed to upload video: ${failure.message}');
+        _showErrorSnackbar('Failed to upload video: ${failure.message}');
         _isVideoUploading.value = false;
         _videoUploadProgress.value = 0.0;
       },
@@ -112,9 +113,38 @@ class MediaUploadController extends GetxController {
         _uploadedVideoUrl.value = url;
         _isVideoUploading.value = false;
         _videoUploadProgress.value = 1.0;
-        Get.snackbar('Success', 'Video uploaded successfully');
+        _showSuccessSnackbar('Video uploaded successfully');
       },
     );
+  }
+
+  void _showErrorSnackbar(String message) {
+    // Use WidgetsBinding to ensure we're in the right context
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (Get.context != null && Get.isSnackbarOpen != true) {
+        ScaffoldMessenger.of(Get.context!).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    });
+  }
+
+  void _showSuccessSnackbar(String message) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (Get.context != null && Get.isSnackbarOpen != true) {
+        ScaffoldMessenger.of(Get.context!).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    });
   }
 
   void reset() {
