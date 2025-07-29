@@ -15,33 +15,14 @@ class HelperRouterCook {
     ctx.push(CookRouter.cookMyChallenges);
   }
 
-  static void navigateToPreview(
-    BuildContext ctx,
-    Map<String, dynamic> recipeData, {
-    bool isFromPreview = false,
-  }) {
-    final queryParams = isFromPreview ? '?from=preview' : '';
-    ctx.push('${CookRouter.preview}$queryParams', extra: recipeData);
-  }
-
-  static void navigateToPrizeOverview(BuildContext ctx, String challengeId) {
-    ctx.push(prizeOverviewPath(challengeId));
-  }
-
-  static void navigateToAddRecipe(BuildContext context) {
-    context.push(CookRouter.addRecipe);
-  }
-
-  static void navigateToTextRecipe(BuildContext context) {
-    context.push(CookRouter.addTextRecipe);
-  }
-
-  static void navigateToVideoRecipe(BuildContext context) {
-    context.push(CookRouter.addVideoRecipe);
-  }
-
-  static void navigateToRecipeSteps(BuildContext context) {
-    context.push(CookRouter.addRecipeSteps);
+  static void navigateToRecipeTypeSelection(
+    BuildContext context,
+    String challengeId,
+  ) {
+    context.push(
+      CookRouter.recipeTypeSelection,
+      extra: {'challengeId': challengeId},
+    );
   }
 
   static void navigateToAddStep(

@@ -4,6 +4,11 @@ import '../../challenge_details/presentation/pages/challenge_details_page.dart';
 import '../../home/presentation/pages/home_page.dart';
 import '../../my_challenges/presentation/pages/my_challenges_page.dart';
 import '../../prize_view/presentation/pages/prize_overview_page.dart';
+import '../../recipe_management/presentation/pages/add_step_page.dart';
+import '../../recipe_management/presentation/pages/recipe_steps_page.dart';
+import '../../recipe_management/presentation/pages/recipe_type_selection_page.dart';
+import '../../recipe_management/presentation/pages/text_recipe_page.dart';
+import '../../recipe_management/presentation/pages/video_recipe_page.dart';
 import '../../search/presentation/pages/search_page.dart';
 
 class CookRouter {
@@ -11,13 +16,13 @@ class CookRouter {
   static const String cookSearch = '/cook/search';
   static const String cookMyChallenges = '/cook/my-challenges';
   static const String challengeDetails = '/cook/challenge-details';
-  static const String preview = '/cook/preview';
   static const String prizeOverview = '/cook/prize-overview';
-  static const String addRecipe = '/cook/add-recipe';
-  static const String addTextRecipe = '/cook/add-text-recipe';
-  static const String addVideoRecipe = '/cook/add-video-recipe';
-  static const String addRecipeSteps = '/cook/add-recipe-steps';
-  static const String addStep = '/cook/add-step';
+  static const String recipeTypeSelection = '/cook/recipe/type';
+  static const String textRecipe = '/cook/recipe/text';
+  static const String videoRecipe = '/cook/recipe/video';
+  static const String recipeSteps = '/cook/recipe/steps';
+  static const String addStep = '/cook/recipe/steps/add';
+  static const String editStep = '/cook/recipe/steps/edit';
 
   static List<RouteBase> get routes => [
     GoRoute(
@@ -50,7 +55,6 @@ class CookRouter {
         return ChallengeDetailsPage(challengeId: challengeId);
       },
     ),
-
     GoRoute(
       path: prizeOverview,
       name: 'prize_overview',
@@ -60,6 +64,47 @@ class CookRouter {
           throw ArgumentError('challengeId is required');
         }
         return PrizeOverviewPage(challengeId: challengeId);
+      },
+    ),
+    // Recipe-related routes
+    GoRoute(
+      path: recipeTypeSelection,
+      name: 'recipe_type_selection',
+      builder: (context, state) {
+        final challengeId = state.uri.queryParameters['challengeId'];
+        if (challengeId == null) {
+          throw ArgumentError('challengeId is required');
+        }
+        return const RecipeTypeSelectionPage();
+      },
+    ),
+    GoRoute(
+      path: textRecipe,
+      name: 'text_recipe',
+      builder: (context, state) => const TextRecipePage(),
+    ),
+    GoRoute(
+      path: videoRecipe,
+      name: 'video_recipe',
+      builder: (context, state) => const VideoRecipePage(),
+    ),
+    GoRoute(
+      path: recipeSteps,
+      name: 'recipe_steps',
+      builder: (context, state) => const RecipeStepsPage(),
+    ),
+    GoRoute(
+      path: addStep,
+      name: 'add_step',
+      builder: (context, state) => const AddStepPage(),
+    ),
+    GoRoute(
+      path: '$editStep/:index',
+      name: 'edit_step',
+      builder: (context, state) {
+        final indexStr = state.pathParameters['index'];
+        final index = indexStr != null ? int.tryParse(indexStr) : null;
+        return AddStepPage(editIndex: index);
       },
     ),
   ];

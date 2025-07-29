@@ -182,7 +182,6 @@ class _CookMyChallengesPageState extends State<CookMyChallengesPage>
             if (index == challenges.length) {
               return _buildLoadMoreIndicator();
             }
-
             return MyChallengeCard(
               challenge: challenges[index],
               isActive: _tabController.index == 0,
@@ -314,7 +313,10 @@ class _CookMyChallengesPageState extends State<CookMyChallengesPage>
             ElevatedButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                HelperRouterCook.navigateToAddRecipe(context);
+                HelperRouterCook.navigateToRecipeTypeSelection(
+                  context,
+                  challenge.id,
+                );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.amber,

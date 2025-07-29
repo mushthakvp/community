@@ -48,6 +48,10 @@ class AppConstants {
   static const Color transparent = Colors.transparent;
   static const Color chatBackgroundColor = Color(0xFFF7F8FA);
 
+  static const Color darkBlack = Color(0xFF1E1E1E);
+  static const Color hintTextColor = Color(0xFF999999);
+  static const Color amber = Colors.amber;
+
   // Font
   static const String fontFamily = 'Inter';
 
