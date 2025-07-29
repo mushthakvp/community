@@ -45,22 +45,22 @@ class CookRouter {
       },
     ),
     GoRoute(
-      path: challengeDetails,
+      path: '$challengeDetails/:challengeId',
       name: 'challenge_details',
       builder: (context, state) {
-        final challengeId = state.uri.queryParameters['challengeId'];
-        if (challengeId == null) {
+        final challengeId = state.pathParameters['challengeId'];
+        if (challengeId == null || challengeId.isEmpty) {
           throw ArgumentError('challengeId is required');
         }
         return ChallengeDetailsPage(challengeId: challengeId);
       },
     ),
     GoRoute(
-      path: prizeOverview,
+      path: '$prizeOverview/:challengeId',
       name: 'prize_overview',
       builder: (context, state) {
-        final challengeId = state.uri.queryParameters['challengeId'];
-        if (challengeId == null) {
+        final challengeId = state.pathParameters['challengeId'];
+        if (challengeId == null || challengeId.isEmpty) {
           throw ArgumentError('challengeId is required');
         }
         return PrizeOverviewPage(challengeId: challengeId);
@@ -68,14 +68,14 @@ class CookRouter {
     ),
     // Recipe-related routes
     GoRoute(
-      path: recipeTypeSelection,
+      path: '$recipeTypeSelection/:challengeId',
       name: 'recipe_type_selection',
       builder: (context, state) {
-        final challengeId = state.uri.queryParameters['challengeId'];
-        if (challengeId == null) {
+        final challengeId = state.pathParameters['challengeId'];
+        if (challengeId == null || challengeId.isEmpty) {
           throw ArgumentError('challengeId is required');
         }
-        return const RecipeTypeSelectionPage();
+        return RecipeTypeSelectionPage(challengeId: challengeId);
       },
     ),
     GoRoute(

@@ -4,11 +4,11 @@ import 'package:livera/features/cook/core/router/cook_router.dart';
 
 class HelperRouterCook {
   static String challengeDetailsPath(String challengeId) {
-    return '${CookRouter.challengeDetails}?challengeId=$challengeId';
+    return '${CookRouter.challengeDetails}/$challengeId';
   }
 
   static String prizeOverviewPath(String challengeId) {
-    return '${CookRouter.prizeOverview}?challengeId=$challengeId';
+    return '${CookRouter.prizeOverview}/$challengeId';
   }
 
   static void myChallenges(BuildContext ctx) {
@@ -19,10 +19,7 @@ class HelperRouterCook {
     BuildContext context,
     String challengeId,
   ) {
-    context.push(
-      CookRouter.recipeTypeSelection,
-      extra: {'challengeId': challengeId},
-    );
+    context.push('${CookRouter.recipeTypeSelection}/$challengeId');
   }
 
   static void navigateToAddStep(
@@ -31,7 +28,7 @@ class HelperRouterCook {
     Map<String, dynamic>? stepData,
   }) {
     final path = editIndex != null
-        ? '${CookRouter.addStep}/$editIndex'
+        ? '${CookRouter.editStep}/$editIndex'
         : CookRouter.addStep;
 
     context.push(path, extra: stepData);

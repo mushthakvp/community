@@ -9,7 +9,9 @@ import '../widgets/common/recipe_button.dart';
 import '../widgets/recipe_type_selection/recipe_type_option.dart';
 
 class RecipeTypeSelectionPage extends StatelessWidget {
-  const RecipeTypeSelectionPage({super.key});
+  const RecipeTypeSelectionPage({super.key, required this.challengeId});
+
+  final String challengeId;
 
   @override
   Widget build(BuildContext context) {
