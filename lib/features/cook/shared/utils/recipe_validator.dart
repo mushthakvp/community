@@ -1,6 +1,4 @@
 import '../../core/constants/recipe_constants.dart';
-import '../../recipe_management/domain/entities/recipe.dart';
-import '../../recipe_management/domain/entities/recipe_draft.dart';
 
 class RecipeValidator {
   static String? validateTitle(String title) {
@@ -67,43 +65,5 @@ class RecipeValidator {
       return 'Ingredient amount is required';
     }
     return null;
-  }
-
-  static List<String> validateRecipeDraft(RecipeDraft draft) {
-    final errors = <String>[];
-
-    // Title validation
-    final titleError = validateTitle(draft.title ?? '');
-    if (titleError != null) errors.add(titleError);
-
-    // Description validation
-    final descriptionError = validateDescription(draft.description ?? '');
-    if (descriptionError != null) errors.add(descriptionError);
-
-    // Ingredients validation
-    if (draft.ingredients.isEmpty) {
-      errors.add(RecipeConstants.ingredientsRequiredError);
-    }
-
-    // Steps validation for text recipes
-    if (draft.type == RecipeType.text && draft.steps.isEmpty) {
-      errors.add(RecipeConstants.stepsRequiredError);
-    }
-
-    // Video recipe specific validation
-    if (draft.type == RecipeType.video) {
-      if (draft.videoUrl?.isEmpty ?? true) {
-        errors.add(RecipeConstants.videoRequiredError);
-      }
-      if (draft.dishImageUrl?.isEmpty ?? true) {
-        errors.add(RecipeConstants.imageRequiredError);
-      }
-    }
-
-    return errors;
-  }
-
-  static bool isRecipeDraftComplete(RecipeDraft draft) {
-    return validateRecipeDraft(draft).isEmpty;
   }
 }

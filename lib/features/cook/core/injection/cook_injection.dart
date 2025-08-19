@@ -20,7 +20,6 @@ import '../../search/domain/usecases/search_challenges_usecase.dart' as search;
 import '../network/cook_api_client.dart';
 import 'challenge_details_injection.dart';
 import 'prize_view_injection.dart';
-import 'recipe_injection.dart';
 
 class CookInjection {
   static void init() {
@@ -30,7 +29,6 @@ class CookInjection {
     _initUseCases();
     ChallengeDetailsInjection.init();
     PrizeViewInjection.init();
-    RecipeInjection.init();
   }
 
   static void _initCore() {

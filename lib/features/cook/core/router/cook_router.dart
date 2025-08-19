@@ -4,11 +4,6 @@ import '../../challenge_details/presentation/pages/challenge_details_page.dart';
 import '../../home/presentation/pages/home_page.dart';
 import '../../my_challenges/presentation/pages/my_challenges_page.dart';
 import '../../prize_view/presentation/pages/prize_overview_page.dart';
-import '../../recipe_management/presentation/pages/add_step_page.dart';
-import '../../recipe_management/presentation/pages/recipe_steps_page.dart';
-import '../../recipe_management/presentation/pages/recipe_type_selection_page.dart';
-import '../../recipe_management/presentation/pages/text_recipe_page.dart';
-import '../../recipe_management/presentation/pages/video_recipe_page.dart';
 import '../../search/presentation/pages/search_page.dart';
 
 class CookRouter {
@@ -64,47 +59,6 @@ class CookRouter {
           throw ArgumentError('challengeId is required');
         }
         return PrizeOverviewPage(challengeId: challengeId);
-      },
-    ),
-    // Recipe-related routes
-    GoRoute(
-      path: '$recipeTypeSelection/:challengeId',
-      name: 'recipe_type_selection',
-      builder: (context, state) {
-        final challengeId = state.pathParameters['challengeId'];
-        if (challengeId == null || challengeId.isEmpty) {
-          throw ArgumentError('challengeId is required');
-        }
-        return RecipeTypeSelectionPage(challengeId: challengeId);
-      },
-    ),
-    GoRoute(
-      path: textRecipe,
-      name: 'text_recipe',
-      builder: (context, state) => const TextRecipePage(),
-    ),
-    GoRoute(
-      path: videoRecipe,
-      name: 'video_recipe',
-      builder: (context, state) => const VideoRecipePage(),
-    ),
-    GoRoute(
-      path: recipeSteps,
-      name: 'recipe_steps',
-      builder: (context, state) => const RecipeStepsPage(),
-    ),
-    GoRoute(
-      path: addStep,
-      name: 'add_step',
-      builder: (context, state) => const AddStepPage(),
-    ),
-    GoRoute(
-      path: '$editStep/:index',
-      name: 'edit_step',
-      builder: (context, state) {
-        final indexStr = state.pathParameters['index'];
-        final index = indexStr != null ? int.tryParse(indexStr) : null;
-        return AddStepPage(editIndex: index);
       },
     ),
   ];
