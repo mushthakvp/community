@@ -15,7 +15,6 @@ import '../../features/vizzle/ads_listing/domain/usecases/toggle_favorite_usecas
     as ads_toggle;
 import '../../features/vizzle/ads_listing/presentation/providers/ads_listing_provider.dart';
 // Vizzle Core
-import '../../features/vizzle/data/datasources/vizzle_local_data_source.dart';
 import '../../features/vizzle/data/datasources/vizzle_remote_data_source.dart';
 import '../../features/vizzle/data/repositories/vizzle_repository_impl.dart';
 import '../../features/vizzle/domain/usecases/get_categories_usecase.dart'
@@ -114,21 +113,13 @@ class VizzleProviders {
       update: (_, apiClient, __) =>
           VizzleRemoteDataSourceImpl(apiClient: apiClient),
     ),
-    Provider<VizzleLocalDataSource>(create: (_) => VizzleLocalDataSourceImpl()),
 
     // Vizzle Repository
-    ProxyProvider3<
-      VizzleRemoteDataSource,
-      VizzleLocalDataSource,
-      NetworkInfo,
-      VizzleRepositoryImpl
-    >(
-      update: (_, remoteDataSource, localDataSource, networkInfo, __) =>
-          VizzleRepositoryImpl(
-            remoteDataSource: remoteDataSource,
-            localDataSource: localDataSource,
-            networkInfo: networkInfo,
-          ),
+    ProxyProvider2<VizzleRemoteDataSource, NetworkInfo, VizzleRepositoryImpl>(
+      update: (_, remoteDataSource, networkInfo, __) => VizzleRepositoryImpl(
+        remoteDataSource: remoteDataSource,
+        networkInfo: networkInfo,
+      ),
     ),
 
     // Vizzle Use Cases

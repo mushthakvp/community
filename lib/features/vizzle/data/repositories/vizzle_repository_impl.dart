@@ -5,71 +5,42 @@ import '../../../../core/error/failures.dart';
 import '../../../../core/network/network_info.dart';
 import '../../domain/entities/vizzle_entities.dart';
 import '../../domain/repositories/vizzle_repository.dart';
-import '../datasources/vizzle_local_data_source.dart';
 import '../datasources/vizzle_remote_data_source.dart';
 
 class VizzleRepositoryImpl implements VizzleRepository {
   final VizzleRemoteDataSource remoteDataSource;
-  final VizzleLocalDataSource localDataSource;
   final NetworkInfo networkInfo;
 
   VizzleRepositoryImpl({
     required this.remoteDataSource,
-    required this.localDataSource,
     required this.networkInfo,
   });
 
   @override
   Future<Either<Failure, VizzleHomeEntity>> getVizzleHome() async {
-    if (await networkInfo.isConnected) {
-      try {
-        final remoteData = await remoteDataSource.getVizzleHome();
-        await localDataSource.cacheVizzleHome(remoteData);
-        return Right(remoteData.toEntity());
-      } on ServerException catch (e) {
-        try {
-          final localData = await localDataSource.getLastVizzleHome();
-          return Right(localData.toEntity());
-        } on CacheException {
-          return Left(ServerFailure(message: e.message));
-        }
-      }
-    } else {
-      try {
-        final localData = await localDataSource.getLastVizzleHome();
-        return Right(localData.toEntity());
-      } on CacheException {
-        return const Left(NetworkFailure(message: 'No internet connection'));
-      }
+    try {
+      final remoteData = await remoteDataSource.getVizzleHome();
+      return Right(remoteData.toEntity());
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message));
+    } on CacheException catch (e) {
+      return Left(CacheFailure(message: e.message));
+    } on Exception catch (e) {
+      return Left(UnknownFailure(message: e.toString()));
     }
   }
 
   @override
   Future<Either<Failure, List<CategoryEntity>>> getCategories() async {
-    if (await networkInfo.isConnected) {
-      try {
-        final remoteData = await remoteDataSource.getCategories();
-        await localDataSource.cacheCategories(remoteData);
-        return Right(
-          remoteData.map((category) => category.toEntity()).toList(),
-        );
-      } on ServerException catch (e) {
-        try {
-          final localData = await localDataSource.getLastCategories();
-          return Right(
-            localData.map((category) => category.toEntity()).toList(),
-          );
-        } on CacheException {
-          return Left(ServerFailure(message: e.message));
-        }
-      }
-    } else {
-      try {
-        final localData = await localDataSource.getLastCategories();
-        return Right(localData.map((category) => category.toEntity()).toList());
-      } on CacheException {
-        return const Left(NetworkFailure(message: 'No internet connection'));
-      }
+    try {
+      final remoteData = await remoteDataSource.getCategories();
+      return Right(remoteData.map((category) => category.toEntity()).toList());
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message));
+    } on CacheException catch (e) {
+      return Left(CacheFailure(message: e.message));
+    } on Exception catch (e) {
+      return Left(UnknownFailure(message: e.toString()));
     }
   }
 
@@ -275,63 +246,38 @@ class VizzleRepositoryImpl implements VizzleRepository {
 
   @override
   Future<Either<Failure, bool>> addToFavorites(String adId) async {
-    if (await networkInfo.isConnected) {
-      try {
-        final result = await remoteDataSource.addToFavorites(adId);
-        await localDataSource.addToFavorites(adId);
-        return Right(result);
-      } on ServerException catch (e) {
-        return Left(ServerFailure(message: e.message));
-      }
-    } else {
-      return const Left(NetworkFailure(message: 'No internet connection'));
+    try {
+      final result = await remoteDataSource.addToFavorites(adId);
+      return Right(result);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message));
     }
   }
 
   @override
   Future<Either<Failure, bool>> removeFromFavorites(String adId) async {
-    if (await networkInfo.isConnected) {
-      try {
-        final result = await remoteDataSource.removeFromFavorites(adId);
-        await localDataSource.removeFromFavorites(adId);
-        return Right(result);
-      } on ServerException catch (e) {
-        return Left(ServerFailure(message: e.message));
-      }
-    } else {
-      return const Left(NetworkFailure(message: 'No internet connection'));
+    try {
+      final result = await remoteDataSource.removeFromFavorites(adId);
+      return Right(result);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message));
     }
   }
 
   @override
   Future<Either<Failure, List<AdEntity>>> getFavoriteAds() async {
-    if (await networkInfo.isConnected) {
-      try {
-        final remoteData = await remoteDataSource.getFavoriteAds();
-        return Right(remoteData.map((ad) => ad.toEntity()).toList());
-      } on ServerException catch (e) {
-        try {
-          final localData = await localDataSource.getFavoriteAds();
-          return Right(localData.map((ad) => ad.toEntity()).toList());
-        } on CacheException {
-          return Left(ServerFailure(message: e.message));
-        }
-      }
-    } else {
-      try {
-        final localData = await localDataSource.getFavoriteAds();
-        return Right(localData.map((ad) => ad.toEntity()).toList());
-      } on CacheException {
-        return const Left(NetworkFailure(message: 'No internet connection'));
-      }
+    try {
+      final remoteData = await remoteDataSource.getFavoriteAds();
+      return Right(remoteData.map((ad) => ad.toEntity()).toList());
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message));
     }
   }
 
   @override
   Future<Either<Failure, List<AdEntity>>> getRecentlyViewedAds() async {
     try {
-      final localData = await localDataSource.getRecentlyViewedAds();
-      return Right(localData.map((ad) => ad.toEntity()).toList());
+      return Right([]);
     } on CacheException {
       return const Left(CacheFailure(message: 'No recently viewed ads'));
     }
@@ -340,7 +286,6 @@ class VizzleRepositoryImpl implements VizzleRepository {
   @override
   Future<Either<Failure, bool>> addToRecentlyViewed(String adId) async {
     try {
-      await localDataSource.addToRecentlyViewed(adId);
       return const Right(true);
     } on CacheException catch (e) {
       return Left(CacheFailure(message: e.message));

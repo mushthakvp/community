@@ -77,17 +77,26 @@ class VizzleHomeProvider extends ChangeNotifier {
   // Private methods
   Future<void> _fetchVizzleHome() async {
     try {
+      dev.log('🔄 Starting to fetch vizzle home data...');
       final result = await _getVizzleHomeUseCase();
-
-      result.fold((failure) => _setError(_getErrorMessage(failure)), (
-        vizzleHome,
-      ) {
-        _vizzleHome = vizzleHome;
-        _lastLoadTime = DateTime.now();
-        _setLoaded();
-      });
+      result.fold(
+        (failure) {
+          dev.log(
+            '❌ Failed to fetch vizzle home: ${_getErrorMessage(failure)}',
+          );
+          _setError(_getErrorMessage(failure));
+        },
+        (vizzleHome) {
+          dev.log('✅ Successfully fetched vizzle home data');
+          dev.log('Motors count: ${vizzleHome.motors.length}');
+          dev.log('Classifieds count: ${vizzleHome.classifieds.length}');
+          _vizzleHome = vizzleHome;
+          _lastLoadTime = DateTime.now();
+          _setLoaded();
+        },
+      );
     } catch (e) {
-      dev.log('Error fetching vizzle home: $e');
+      dev.log('💥 Exception fetching vizzle home: $e');
       _setError('Failed to load vizzle home. Please try again.');
     }
   }
