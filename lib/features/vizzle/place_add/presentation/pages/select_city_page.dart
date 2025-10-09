@@ -33,7 +33,6 @@ class _SelectCityPageState extends State<SelectCityPage> {
   void _filterCities(String query) {
     final provider = context.read<PlaceAddProvider>();
     final cities = provider.cities;
-
     if (cities != null) {
       setState(() {
         if (query.isEmpty) {

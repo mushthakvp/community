@@ -502,15 +502,14 @@ class PlaceAddProvider extends ChangeNotifier {
 
   // Actions
   Future<void> loadCities() async {
+    debugPrint('Loading cities...');
     _isLoading = true;
     notifyListeners();
-
     final result = await getCitiesUseCase(NoParams());
     result.fold(
       (failure) => _citiesResult = Error(message: failure.message),
       (cities) => _citiesResult = Success(cities),
     );
-
     _isLoading = false;
     notifyListeners();
   }

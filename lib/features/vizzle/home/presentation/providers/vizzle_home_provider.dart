@@ -61,13 +61,8 @@ class VizzleHomeProvider extends ChangeNotifier {
   // Public methods
   Future<void> loadVizzleHome({bool forceRefresh = false}) async {
     if (_status == VizzleHomeStatus.loading) return;
-
-    if (forceRefresh || !_shouldUseCachedData()) {
-      _setLoading();
-      await _fetchVizzleHome();
-    } else if (_vizzleHome != null) {
-      _setLoaded();
-    }
+    _setLoading();
+    await _fetchVizzleHome();
   }
 
   Future<void> refreshData() async {
