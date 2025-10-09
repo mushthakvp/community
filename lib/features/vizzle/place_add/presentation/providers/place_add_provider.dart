@@ -506,10 +506,12 @@ class PlaceAddProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     final result = await getCitiesUseCase(NoParams());
-    result.fold(
-      (failure) => _citiesResult = Error(message: failure.message),
-      (cities) => _citiesResult = Success(cities),
-    );
+    result.fold((failure) {
+      debugPrint(
+        "Error loading cities: ${result.fold((l) => l.message, (r) => '')}",
+      );
+      return _citiesResult = Error(message: failure.message);
+    }, (cities) => _citiesResult = Success(cities));
     _isLoading = false;
     notifyListeners();
   }

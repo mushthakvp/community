@@ -31,16 +31,17 @@ class PlaceAddRemoteDataSourceImpl implements PlaceAddRemoteDataSource {
       final response = await ApiClient.main().get('user/getCities');
       debugPrint('getCities response: ${response.body}');
       final data = jsonDecode(response.body);
-
       if (data['success'] == true) {
         final cities = data['cities'] as List<dynamic>;
         return cities
             .map((city) => CityModel.fromString(city.toString()))
             .toList();
       } else {
+        debugPrint('getCities error: ${data['message']}');
         throw ServerException(data['message'] ?? 'Failed to get cities');
       }
     } catch (e) {
+      debugPrint('getCities exception: $e');
       if (e is ServerException) rethrow;
       throw ServerException('Failed to get cities: $e');
     }

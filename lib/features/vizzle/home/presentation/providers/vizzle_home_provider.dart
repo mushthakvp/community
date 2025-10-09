@@ -19,10 +19,6 @@ class VizzleHomeProvider extends ChangeNotifier {
   VizzleHomeEntity? _vizzleHome;
   String? _errorMessage;
 
-  // Cache
-  DateTime? _lastLoadTime;
-  static const Duration _cacheValidDuration = Duration(minutes: 5);
-
   // Getters
   VizzleHomeStatus get status => _status;
   VizzleHomeEntity? get vizzleHome => _vizzleHome;
@@ -86,7 +82,6 @@ class VizzleHomeProvider extends ChangeNotifier {
           dev.log('Motors count: ${vizzleHome.motors.length}');
           dev.log('Classifieds count: ${vizzleHome.classifieds.length}');
           _vizzleHome = vizzleHome;
-          _lastLoadTime = DateTime.now();
           _setLoaded();
         },
       );
@@ -113,12 +108,6 @@ class VizzleHomeProvider extends ChangeNotifier {
     _errorMessage = message;
     dev.log('Vizzle home provider error: $message');
     notifyListeners();
-  }
-
-  bool _shouldUseCachedData() {
-    return _vizzleHome != null &&
-        _lastLoadTime != null &&
-        DateTime.now().difference(_lastLoadTime!) < _cacheValidDuration;
   }
 
   String _getErrorMessage(Failure failure) {

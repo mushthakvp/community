@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:dartz/dartz.dart';
 
 import '../../../../../core/error/failures.dart';
@@ -12,6 +14,7 @@ class GetCitiesUseCase implements UseCase<List<City>, NoParams> {
 
   @override
   Future<Either<Failure, List<City>>> call(NoParams params) async {
+    log('GetCitiesUseCase called');
     return await repository.getCities();
   }
 }
