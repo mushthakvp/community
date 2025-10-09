@@ -150,7 +150,7 @@ class _SmartLocationFieldsState extends State<SmartLocationFields> {
   Widget _buildStateField(AuthProvider authProvider) {
     return CommonTextField(
       controller: TextEditingController(text: authProvider.selectedState),
-      hintText: 'Select State *',
+      hintText: 'Select Emirates *',
       readOnly: true,
       onTap: _states.isEmpty ? null : () => _showStatePicker(authProvider),
       prefixIcon: const Icon(
@@ -189,8 +189,8 @@ class _SmartLocationFieldsState extends State<SmartLocationFields> {
 
     _showLocationPicker(
       context: context,
-      title: 'Select State',
-      searchHint: 'Search state...',
+      title: 'Select Emirates',
+      searchHint: 'Search Emirates...',
       items: _states,
       displayKey: 'state',
       onSelected: (state) {

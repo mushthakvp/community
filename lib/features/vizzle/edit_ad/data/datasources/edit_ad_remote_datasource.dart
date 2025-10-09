@@ -23,7 +23,7 @@ class EditAdRemoteDataSourceImpl implements EditAdRemoteDataSource {
   @override
   Future<AdvertisementModel> getAdDetails(String adId) async {
     try {
-      final response = await apiClient.get('${ApiConstants.vizzleAds}/$adId');
+      final response = await ApiClient.main().get('${ApiConstants.vizzleAds}/$adId');
       final data = jsonDecode(response.body);
 
       if (data['success'] == true || response.statusCode == 200) {
@@ -40,7 +40,7 @@ class EditAdRemoteDataSourceImpl implements EditAdRemoteDataSource {
   @override
   Future<EditAdResponseModel> editAd(EditAdRequestModel request) async {
     try {
-      final response = await apiClient.put(
+      final response = await ApiClient.main().put(
         '${ApiConstants.vizzleEditAd}/${request.id}',
         body: request.toJson(),
       );

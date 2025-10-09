@@ -26,7 +26,7 @@ class PlaceAddRemoteDataSourceImpl implements PlaceAddRemoteDataSource {
   @override
   Future<List<CityModel>> getCities() async {
     try {
-      final response = await apiClient.get('user/getCities');
+      final response = await ApiClient.main().get('user/getCities');
       final data = jsonDecode(response.body);
 
       if (data['success'] == true) {
@@ -46,7 +46,7 @@ class PlaceAddRemoteDataSourceImpl implements PlaceAddRemoteDataSource {
   @override
   Future<List<CategoryModel>> getCategories() async {
     try {
-      final response = await apiClient.get('user/getCities');
+      final response = await ApiClient.main().get('user/getCities');
       final data = jsonDecode(response.body);
 
       if (data['success'] == true) {
@@ -82,7 +82,7 @@ class PlaceAddRemoteDataSourceImpl implements PlaceAddRemoteDataSource {
     AdCreationRequestModel request,
   ) async {
     try {
-      final response = await apiClient.post(
+      final response = await ApiClient.main().post(
         'user/createAd',
         body: request.toJson(),
       );
@@ -101,7 +101,7 @@ class PlaceAddRemoteDataSourceImpl implements PlaceAddRemoteDataSource {
     double longitude,
   ) async {
     try {
-      final response = await apiClient.get(
+      final response = await ApiClient.main().get(
         'geocoding/reverse',
         queryParameters: {
           'lat': latitude.toString(),

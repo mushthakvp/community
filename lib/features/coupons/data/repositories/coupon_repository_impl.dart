@@ -35,7 +35,7 @@ class CouponRepositoryImpl implements CouponRepository {
         queryParams['search'] = search;
       }
 
-      final response = await _apiClient.get(
+      final response = await ApiClient.main().get(
         ApiConstants.getCoupons,
         queryParameters: queryParams,
       );

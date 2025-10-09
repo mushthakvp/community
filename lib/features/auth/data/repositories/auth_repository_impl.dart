@@ -32,7 +32,7 @@ class AuthRepositoryImpl implements AuthRepository {
         firebaseId: firebaseId ?? "empty token",
       );
 
-      final response = await apiClient.post(
+      final response = await ApiClient.main().post(
         ApiConstants.login,
         body: requestData.toJson(),
       );
@@ -129,7 +129,7 @@ class AuthRepositoryImpl implements AuthRepository {
         referralCode: referralCode,
         firebaseId: firebaseId ?? "empty token",
       );
-      final response = await apiClient.post(
+      final response = await ApiClient.main().post(
         ApiConstants.register,
         body: requestData.toJson(),
       );
@@ -173,7 +173,7 @@ class AuthRepositoryImpl implements AuthRepository {
         method: method,
         firebaseId: firebaseId ?? "empty token",
       );
-      final response = await apiClient.post(
+      final response = await ApiClient.main().post(
         ApiConstants.verifyOtp,
         body: requestData.toJson(),
       );

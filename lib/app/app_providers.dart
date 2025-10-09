@@ -1,5 +1,4 @@
 import 'package:provider/single_child_widget.dart';
-
 import 'providers/app_core_providers.dart';
 import 'providers/auth_providers.dart';
 import 'providers/coupon_promo_providers.dart';
@@ -72,7 +71,7 @@ class AppProviders {
     ...AppCoreProviders.providers,
     ...AuthProviders.providers,
     ...HomeProviders.providers,
-    ...ChatProviders.providers, // Added chat providers to essential
+    ...ChatProviders.providers,
   ];
 
   static int get totalProvidersCount => providers.length;

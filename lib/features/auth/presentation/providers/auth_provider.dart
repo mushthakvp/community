@@ -153,9 +153,9 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  String _selectedCountryCode = 'IN';
-  String _selectedDialCode = '+91';
-  int _selectedCountryLength = 10;
+  String _selectedCountryCode = 'AE';
+  String _selectedDialCode = '+971';
+  int _selectedCountryLength = 9;
 
   String get selectedCountryCode => _selectedCountryCode;
   String get selectedDialCode => _selectedDialCode;
@@ -565,10 +565,12 @@ class AuthProvider extends ChangeNotifier {
       return false;
     }
 
-    if (phoneController.text.trim().length < 10) {
-      _setError('Please enter a valid phone number');
-      return false;
-    }
+    // if (phoneController.text.trim().length != _selectedCountryLength) {
+    //   _setError(
+    //     'Please enter a valid $_selectedCountryLength-digit phone number',
+    //   );
+    //   return false;
+    // }
 
     if (_selectedGender.isEmpty) {
       _setError('Please select your gender');

@@ -22,13 +22,13 @@ class CountryCodeSelector extends StatelessWidget {
   });
 
   static const List<Map<String, dynamic>> countries = [
-    {
-      'name': 'India',
-      'code': 'IN',
-      'dialCode': '+91',
-      'flag': '🇮🇳',
-      'length': 10,
-    },
+    // {
+    //   'name': 'India',
+    //   'code': 'IN',
+    //   'dialCode': '+91',
+    //   'flag': '🇮🇳',
+    //   'length': 10,
+    // },
     {
       'name': 'United Arab Emirates',
       'code': 'AE',
@@ -54,7 +54,7 @@ class CountryCodeSelector extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             CommonTextWidget(
-              text: selectedCountry['dialCode'] ?? '+91',
+              text: selectedCountry['dialCode'] ?? '+971',
               fontSize: 16,
               color: AppConstants.white,
               fontWeight: FontWeight.w500,

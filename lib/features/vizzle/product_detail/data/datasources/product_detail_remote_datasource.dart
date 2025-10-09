@@ -21,7 +21,7 @@ class ProductDetailRemoteDataSourceImpl
   @override
   Future<ProductDetailModel> getProductDetail(String shareUrl) async {
     try {
-      final response = await apiClient.get(shareUrl);
+      final response = await ApiClient.main().get(shareUrl);
       final data = jsonDecode(response.body);
 
       if (data['success'] == true) {

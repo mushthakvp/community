@@ -3,8 +3,8 @@ import 'package:http/http.dart' as http;
 
 import '../../../../core/network/network_info.dart';
 import '../../home/data/datasources/home_remote_data_source.dart';
-import '../../home/data/repositories/home_repository_impl.dart';
-import '../../home/domain/repositories/home_repository.dart';
+import '../../home/data/repositories/home_repository_impl.dart' as cook_impl;
+import '../../home/domain/repositories/home_repository.dart' as cook_repo;
 import '../../home/domain/usecases/get_cooking_home_usecase.dart';
 import '../../home/domain/usecases/search_challenges_usecase.dart';
 import '../../my_challenges/data/datasources/my_challenges_remote_data_source.dart';
@@ -59,8 +59,8 @@ class CookInjection {
   }
 
   static void _initRepositories() {
-    Get.lazyPut<HomeRepository>(
-      () => HomeRepositoryImpl(
+    Get.lazyPut<cook_repo.HomeRepository>(
+      () => cook_impl.HomeRepositoryImpl(
         remoteDataSource: Get.find<HomeRemoteDataSource>(),
       ),
     );
@@ -79,10 +79,10 @@ class CookInjection {
 
   static void _initUseCases() {
     Get.lazyPut<GetCookingHomeUseCase>(
-      () => GetCookingHomeUseCase(Get.find<HomeRepository>()),
+      () => GetCookingHomeUseCase(Get.find<cook_repo.HomeRepository>()),
     );
     Get.lazyPut<SearchChallengesUseCase>(
-      () => SearchChallengesUseCase(Get.find<HomeRepository>()),
+      () => SearchChallengesUseCase(Get.find<cook_repo.HomeRepository>()),
     );
     Get.lazyPut<GetMyChallengesUseCase>(
       () => GetMyChallengesUseCase(Get.find<MyChallengesRepository>()),

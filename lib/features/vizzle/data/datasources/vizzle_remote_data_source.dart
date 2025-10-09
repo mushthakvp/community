@@ -49,7 +49,7 @@ class VizzleRemoteDataSourceImpl implements VizzleRemoteDataSource {
   @override
   Future<VizzleHomeModel> getVizzleHome() async {
     try {
-      final response = await apiClient.get(ApiConstants.vizzleHome);
+      final response = await ApiClient.main().get(ApiConstants.vizzleHome);
       final responseData = json.decode(response.body);
       return VizzleHomeModel.fromJson(responseData);
     } catch (e) {
@@ -60,7 +60,7 @@ class VizzleRemoteDataSourceImpl implements VizzleRemoteDataSource {
   @override
   Future<List<CategoryModel>> getCategories() async {
     try {
-      final response = await apiClient.get('user/getCities');
+      final response = await ApiClient.main().get('user/getCities');
       final responseData = json.decode(response.body);
       if (responseData['categories'] != null) {
         return (responseData['categories'] as List)
@@ -76,7 +76,7 @@ class VizzleRemoteDataSourceImpl implements VizzleRemoteDataSource {
   @override
   Future<CategoryModel> getCategoryById(String categoryId) async {
     try {
-      final response = await apiClient.get('user/getCities/$categoryId');
+      final response = await ApiClient.main().get('user/getCities/$categoryId');
       final responseData = json.decode(response.body);
       return CategoryModel.fromJson(responseData);
     } catch (e) {
@@ -87,7 +87,7 @@ class VizzleRemoteDataSourceImpl implements VizzleRemoteDataSource {
   @override
   Future<List<SubCategoryModel>> getSubCategories(String categoryId) async {
     try {
-      final response = await apiClient.get('user/getCities');
+      final response = await ApiClient.main().get('user/getCities');
       final responseData = json.decode(response.body);
       if (responseData['categories'] != null) {
         final categories = (responseData['categories'] as List)
@@ -109,7 +109,7 @@ class VizzleRemoteDataSourceImpl implements VizzleRemoteDataSource {
   @override
   Future<SubCategoryModel> getSubCategoryById(String subCategoryId) async {
     try {
-      final response = await apiClient.get(
+      final response = await ApiClient.main().get(
         'user/getSubCategory/$subCategoryId',
       );
       final responseData = json.decode(response.body);
@@ -124,7 +124,7 @@ class VizzleRemoteDataSourceImpl implements VizzleRemoteDataSource {
     String subCategoryId,
   ) async {
     try {
-      final response = await apiClient.get(
+      final response = await ApiClient.main().get(
         'user/getSubSubCategories/$subCategoryId',
       );
       final responseData = json.decode(response.body);
@@ -146,7 +146,7 @@ class VizzleRemoteDataSourceImpl implements VizzleRemoteDataSource {
     String subSubCategoryId,
   ) async {
     try {
-      final response = await apiClient.get(
+      final response = await ApiClient.main().get(
         'user/getSubSubCategories/$subSubCategoryId',
       );
       final responseData = json.decode(response.body);
@@ -159,7 +159,7 @@ class VizzleRemoteDataSourceImpl implements VizzleRemoteDataSource {
   @override
   Future<List<SubItemModel>> getSubItems(String subSubCategoryId) async {
     try {
-      final response = await apiClient.get(
+      final response = await ApiClient.main().get(
         '/user/getSubSubCategories/$subSubCategoryId',
       );
       final responseData = json.decode(response.body);
@@ -183,7 +183,7 @@ class VizzleRemoteDataSourceImpl implements VizzleRemoteDataSource {
   @override
   Future<SubItemModel> getSubItemById(String subItemId) async {
     try {
-      final response = await apiClient.get('user/getSubItems/$subItemId');
+      final response = await ApiClient.main().get('user/getSubItems/$subItemId');
       final responseData = json.decode(response.body);
       return SubItemModel.fromJson(responseData);
     } catch (e) {
@@ -239,7 +239,7 @@ class VizzleRemoteDataSourceImpl implements VizzleRemoteDataSource {
   @override
   Future<AdModel> getAdById(String adId) async {
     try {
-      final response = await apiClient.get('user/getAds/$adId');
+      final response = await ApiClient.main().get('user/getAds/$adId');
       final responseData = json.decode(response.body);
       return AdModel.fromJson(responseData);
     } catch (e) {
@@ -283,7 +283,7 @@ class VizzleRemoteDataSourceImpl implements VizzleRemoteDataSource {
   @override
   Future<bool> addToFavorites(String adId) async {
     try {
-      final response = await apiClient.post(
+      final response = await ApiClient.main().post(
         'user/saveFeed/$adId',
         body: {'adId': adId},
       );
@@ -297,7 +297,7 @@ class VizzleRemoteDataSourceImpl implements VizzleRemoteDataSource {
   @override
   Future<bool> removeFromFavorites(String adId) async {
     try {
-      final response = await apiClient.delete('user/removeFeed/$adId');
+      final response = await ApiClient.main().delete('user/removeFeed/$adId');
       final responseData = json.decode(response.body);
       return responseData['success'] ?? false;
     } catch (e) {
@@ -308,7 +308,7 @@ class VizzleRemoteDataSourceImpl implements VizzleRemoteDataSource {
   @override
   Future<List<AdModel>> getFavoriteAds() async {
     try {
-      final response = await apiClient.get('user/savedAds');
+      final response = await ApiClient.main().get('user/savedAds');
       final responseData = json.decode(response.body);
 
       if (responseData['ads'] != null) {

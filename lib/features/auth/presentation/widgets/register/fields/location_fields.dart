@@ -68,35 +68,25 @@ class _LocationFieldsState extends State<LocationFields> {
     final authProvider = context.read<AuthProvider>();
     final dataProvider = RegisterDataProvider.of(context);
     if (dataProvider == null) return;
-    if (authProvider.selectedCountry.isNotEmpty) {
-      // Country already selected, just load states
-      _loadStatesForSelectedCountry(authProvider.selectedCountry);
-      return;
-    }
 
-    final countryCodeToName = {'IN': 'India', 'AE': 'United Arab Emirates'};
-    final phoneCountryCode = authProvider.selectedCountryCode;
-    final countryName = countryCodeToName[phoneCountryCode];
+    // Force UAE as default
+    const countryName = 'United Arab Emirates';
+    final countries = dataProvider.countries;
+    final matchingCountry = countries.firstWhere(
+      (country) => country['country'] == countryName,
+      orElse: () => <String, dynamic>{},
+    );
 
-    if (countryName != null) {
-      final countries = dataProvider.countries;
-      final matchingCountry = countries.firstWhere(
-        (country) => country['country'] == countryName,
-        orElse: () => <String, dynamic>{},
+    if (matchingCountry.isNotEmpty) {
+      authProvider.setLocation(
+        country: countryName,
+        countryCode: matchingCountry['countryCode'] as String? ?? 'AE',
+        onSuccess: (String name) {
+          log("Auto-selected country: $name");
+          _lastProcessedCountry = name;
+          _loadStatesForCountry(matchingCountry);
+        },
       );
-
-      if (matchingCountry.isNotEmpty) {
-        authProvider.setLocation(
-          country: countryName,
-          countryCode:
-              matchingCountry['countryCode'] as String? ?? phoneCountryCode,
-          onSuccess: (String name) {
-            log("Auto-selected country: $name");
-            _lastProcessedCountry = name;
-            _loadStatesForCountry(matchingCountry);
-          },
-        );
-      }
     }
   }
 
@@ -141,7 +131,7 @@ class _LocationFieldsState extends State<LocationFields> {
   Widget _buildStateField(AuthProvider authProvider) {
     return CommonTextField(
       controller: TextEditingController(text: authProvider.selectedState),
-      hintText: 'Select State *',
+      hintText: 'Select Emirates *',
       readOnly: true,
       onTap: authProvider.selectedCountry.isEmpty
           ? null
@@ -175,31 +165,19 @@ class _LocationFieldsState extends State<LocationFields> {
     final dataProvider = RegisterDataProvider.of(context);
     if (dataProvider == null) return;
 
-    final allowedCountries = <String>{'India', 'United Arab Emirates'};
-    final countries = dataProvider.countries.where((country) {
-      final countryName = country['country'] as String;
-      return allowedCountries.contains(countryName);
-    }).toList();
+    final countries = dataProvider.countries
+        .where((country) => country['country'] == 'United Arab Emirates')
+        .toList();
 
-    final searchController = TextEditingController();
-    _showLocationPicker(
-      context: context,
-      title: 'Select Country',
-      searchHint: 'Search country...',
-      items: countries,
-      displayKey: 'country',
-      searchController: searchController,
-      onSelected: (country) {
-        final countryName = country['country'] as String;
-        authProvider.setLocation(
-          country: countryName,
-          countryCode: country['countryCode'] as String,
-        );
-        _lastProcessedCountry = countryName;
-        _loadStatesForCountry(country);
-      },
-      selectedValue: authProvider.selectedCountry,
+    if (countries.isEmpty) return;
+
+    final uae = countries.first;
+    authProvider.setLocation(
+      country: 'United Arab Emirates',
+      countryCode: uae['countryCode'] as String,
     );
+    _lastProcessedCountry = 'United Arab Emirates';
+    _loadStatesForCountry(uae);
   }
 
   void _showStatePicker(AuthProvider authProvider) {
@@ -208,8 +186,8 @@ class _LocationFieldsState extends State<LocationFields> {
     final searchController = TextEditingController();
     _showLocationPicker(
       context: context,
-      title: 'Select State',
-      searchHint: 'Search state...',
+      title: 'Select Emirates',
+      searchHint: 'Search Emirates...',
       items: _states,
       displayKey: 'state',
       searchController: searchController,

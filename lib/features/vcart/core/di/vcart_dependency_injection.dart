@@ -34,8 +34,8 @@ import '../../filter_page/domain/usecases/get_filter_data.dart';
 import '../../filter_page/presentation/controllers/filter_page_controller.dart';
 import '../../home/data/datasources/home_local_datasource.dart';
 import '../../home/data/datasources/home_remote_datasource.dart';
-import '../../home/data/repositories/home_repository_impl.dart';
-import '../../home/domain/repositories/home_repository.dart';
+//import '../../home/data/repositories/home_repository_impl.dart' as vcart_impl;
+//import '../../home/domain/repositories/home_repository.dart' as vcart_repo;
 import '../../home/domain/usecases/get_home_data.dart';
 import '../../home/domain/usecases/get_location.dart';
 import '../../home/presentation/controllers/home_controller.dart';
@@ -93,6 +93,8 @@ import '../../wishlist/domain/repositories/wishlist_repository.dart';
 import '../../wishlist/domain/usecases/get_wishlist_data.dart';
 import '../../wishlist/domain/usecases/toggle_wishlist_item.dart';
 import '../../wishlist/presentation/controllers/wishlist_controller.dart';
+ import 'package:livera/features/vcart/home/domain/repositories/home_repository.dart' as vcart_repo;
+ import 'package:livera/features/vcart/home/data/repositories/home_repository_impl.dart' as vcart_impl;
 
 class VCartDI {
   static bool _isInitialized = false;
@@ -340,8 +342,8 @@ class VCartDI {
       );
 
       // Home Repository
-      Get.lazyPut<HomeRepository>(
-        () => HomeRepositoryImpl(
+      Get.lazyPut<vcart_repo.HomeRepository>(
+        () => vcart_impl.HomeRepositoryImpl(
           remoteDataSource: Get.find<HomeRemoteDataSource>(),
           localDataSource: Get.find<HomeLocalDataSource>(),
           networkInfo: Get.find<NetworkInfo>(),
@@ -492,12 +494,12 @@ class VCartDI {
 
       // Home Use Cases
       Get.lazyPut<GetHomeData>(
-        () => GetHomeData(Get.find<HomeRepository>()),
+        () => GetHomeData(Get.find<vcart_repo.HomeRepository>()),
         fenix: true,
       );
 
       Get.lazyPut<GetLocation>(
-        () => GetLocation(Get.find<HomeRepository>()),
+        () => GetLocation(Get.find<vcart_repo.HomeRepository>()),
         fenix: true,
       );
 

@@ -2,6 +2,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:fittor/fittor.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:livera/features/vcart/core/di/vcart_dependency_injection.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 
@@ -15,11 +16,22 @@ import 'features/cook/core/injection/cook_injection.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   await StorageService.init();
   CloudinaryService().initialize();
-  final providers = await AppProviders.getInitializedProviders();
+
+  // Register core GetX deps first
   _initializeCoreGetXDependencies();
+
+  // Rebuild VCart DI after your import/type fixes
+  await VCartDI.forceReinitialize();
+
+  // Build providers once
+  final providers = await AppProviders.getInitializedProviders();
+
+  // Init other modules
   CookInjection.init();
+
   runApp(CommunityApp(providers: providers));
 }
 

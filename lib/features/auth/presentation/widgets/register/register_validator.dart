@@ -54,7 +54,7 @@ class RegisterValidator {
       return false;
     }
 
-    if (authProvider.phoneController.text.trim().length < 10) {
+    if (authProvider.phoneController.text.trim().length < 9) {
       _showError(context, 'Please enter a valid phone number');
       return false;
     }

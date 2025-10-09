@@ -1,8 +1,9 @@
 class ApiConstants {
   // Base URLs
-  String baseUrlPro = 'https://api.prod.liveraapp.com/';
+  String baseUrlPro = 'http://192.168.1.21:3553/';
   String baseUrlDev = 'http://192.168.3.6:3553/';
-  static String baseUrl = 'https://api.prod.liveraapp.com/';
+  // static String baseUrl = 'https://uae.api.vivera.liveraapp.com/';
+  static String baseUrl = 'http://192.168.1.15:3553/';
 
   // Request Configuration
   static const int timeoutDuration = 30;
@@ -61,7 +62,7 @@ class ApiConstants {
   static const String vizzleHome = 'user/getVizzleHome';
 
   // Categories & Hierarchical Data
-  static const String vizzleCategories = 'user/getCities';
+  static const String vizzleCategorie = 'user/getCities';
   static const String vizzleSubCategories = 'user/getSubCategories';
   static const String vizzleSubSubCategories = 'user/getSubSubCategories';
   static const String vizzleSubItems = 'user/getSubItems';

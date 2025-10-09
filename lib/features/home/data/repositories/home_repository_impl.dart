@@ -20,7 +20,7 @@ class HomeRepositoryImpl implements HomeRepository {
   @override
   Future<Either<Failure, UserDetailsEntity>> getUserDetails() async {
     try {
-      final response = await _apiClient.get(ApiConstants.getHome);
+      final response = await ApiClient.main().get(ApiConstants.getHome);
       final responseData = json.decode(response.body);
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
@@ -53,7 +53,9 @@ class HomeRepositoryImpl implements HomeRepository {
   @override
   Future<Either<Failure, List<NotificationEntity>>> getNotifications() async {
     try {
-      final response = await _apiClient.get(ApiConstants.getNotifications);
+      final response = await ApiClient.main().get(
+        ApiConstants.getNotifications,
+      );
       final responseData = json.decode(response.body);
       if (response.statusCode >= 200 && response.statusCode < 300) {
         final notificationModel = ViveraNotificationModel.fromJson(

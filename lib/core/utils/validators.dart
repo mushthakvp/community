@@ -48,7 +48,7 @@ class Validators {
       return 'Please enter your phone number';
     }
 
-    final phoneRegex = RegExp(r'^\+?[\d\s\-\(\)]{10,}');
+    final phoneRegex = RegExp(r'^\+?[\d\s\-\(\)]{9,}');
     if (!phoneRegex.hasMatch(value)) {
       return 'Please enter a valid phone number';
     }
