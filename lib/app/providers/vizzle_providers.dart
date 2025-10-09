@@ -3,7 +3,6 @@ import 'package:provider/single_child_widget.dart';
 
 import '../../core/network/api_client.dart';
 import '../../core/network/network_info.dart';
-import '../../features/vizzle/ads_listing/data/datasources/ads_local_data_source.dart';
 import '../../features/vizzle/ads_listing/data/datasources/ads_remote_data_source.dart';
 import '../../features/vizzle/ads_listing/data/repositories/ads_repository_impl.dart';
 import '../../features/vizzle/ads_listing/domain/repositories/ads_repository.dart';
@@ -24,7 +23,6 @@ import '../../features/vizzle/domain/usecases/get_sub_items_usecase.dart';
 import '../../features/vizzle/domain/usecases/get_sub_sub_categories_usecase.dart';
 import '../../features/vizzle/domain/usecases/get_vizzle_home_usecase.dart';
 // Vizzle Edit Ad
-import '../../features/vizzle/edit_ad/data/datasources/edit_ad_local_datasource.dart';
 import '../../features/vizzle/edit_ad/data/datasources/edit_ad_remote_datasource.dart';
 import '../../features/vizzle/edit_ad/data/repositories/edit_ad_repository_impl.dart';
 import '../../features/vizzle/edit_ad/domain/repositories/edit_ad_repository.dart';
@@ -198,21 +196,13 @@ class VizzleProviders {
       update: (_, apiClient, __) =>
           AdsRemoteDataSourceImpl(apiClient: apiClient),
     ),
-    Provider<AdsLocalDataSource>(create: (_) => AdsLocalDataSourceImpl()),
 
     // Ads Repository
-    ProxyProvider3<
-      AdsRemoteDataSource,
-      AdsLocalDataSource,
-      NetworkInfo,
-      AdsRepository
-    >(
-      update: (_, remoteDataSource, localDataSource, networkInfo, __) =>
-          AdsRepositoryImpl(
-            remoteDataSource: remoteDataSource,
-            localDataSource: localDataSource,
-            networkInfo: networkInfo,
-          ),
+    ProxyProvider2<AdsRemoteDataSource, NetworkInfo, AdsRepository>(
+      update: (_, remoteDataSource, networkInfo, __) => AdsRepositoryImpl(
+        remoteDataSource: remoteDataSource,
+        networkInfo: networkInfo,
+      ),
     ),
 
     // Ads Use Cases
@@ -267,21 +257,12 @@ class VizzleProviders {
       update: (_, apiClient, __) =>
           EditAdRemoteDataSourceImpl(apiClient: apiClient),
     ),
-    Provider<EditAdLocalDataSource>(create: (_) => EditAdLocalDataSourceImpl()),
 
-    // Edit Ad Repository
-    ProxyProvider3<
-      EditAdRemoteDataSource,
-      EditAdLocalDataSource,
-      NetworkInfo,
-      EditAdRepository
-    >(
-      update: (_, remoteDataSource, localDataSource, networkInfo, __) =>
-          EditAdRepositoryImpl(
-            remoteDataSource: remoteDataSource,
-            localDataSource: localDataSource,
-            networkInfo: networkInfo,
-          ),
+    ProxyProvider2<EditAdRemoteDataSource, NetworkInfo, EditAdRepository>(
+      update: (_, remoteDataSource, networkInfo, __) => EditAdRepositoryImpl(
+        remoteDataSource: remoteDataSource,
+        networkInfo: networkInfo,
+      ),
     ),
 
     // Edit Ad Use Cases

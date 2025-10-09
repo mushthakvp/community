@@ -44,7 +44,7 @@ class AdsRemoteDataSourceImpl implements AdsRemoteDataSource {
         'Making request to ${ApiConstants.vizzleAds} with params: $queryParams',
       );
 
-      final response = await apiClient.get(
+      final response = await ApiClient.main().get(
         ApiConstants.vizzleAds,
         queryParameters: queryParams,
       );
@@ -62,7 +62,9 @@ class AdsRemoteDataSourceImpl implements AdsRemoteDataSource {
   @override
   Future<AdModel> getAdById(String adId) async {
     try {
-      final response = await apiClient.get('${ApiConstants.vizzleAds}/$adId');
+      final response = await ApiClient.main().get(
+        '${ApiConstants.vizzleAds}/$adId',
+      );
       final responseData = json.decode(response.body);
 
       return AdModel.fromJson(responseData['ad'] ?? responseData);
@@ -75,7 +77,7 @@ class AdsRemoteDataSourceImpl implements AdsRemoteDataSource {
   @override
   Future<bool> toggleFavorite(String adId) async {
     try {
-      final response = await apiClient.post(
+      final response = await ApiClient.main().post(
         '${ApiConstants.vizzleAddToFavorite}/$adId',
       );
       final responseData = json.decode(response.body);
@@ -90,7 +92,7 @@ class AdsRemoteDataSourceImpl implements AdsRemoteDataSource {
   @override
   Future<List<AdModel>> getFavoriteAds() async {
     try {
-      final response = await apiClient.get(ApiConstants.vizzleSavedAds);
+      final response = await ApiClient.main().get(ApiConstants.vizzleSavedAds);
       final responseData = json.decode(response.body);
 
       final adsData = responseData['ads'] ?? [];
@@ -106,7 +108,7 @@ class AdsRemoteDataSourceImpl implements AdsRemoteDataSource {
   @override
   Future<List<String>> getLocations() async {
     try {
-      final response = await apiClient.get('user/getLocations');
+      final response = await ApiClient.main().get('user/getLocations');
       final responseData = json.decode(response.body);
 
       final locations = responseData['locations'] ?? [];
@@ -120,7 +122,7 @@ class AdsRemoteDataSourceImpl implements AdsRemoteDataSource {
   @override
   Future<Map<String, List<String>>> getFilterOptions() async {
     try {
-      final response = await apiClient.get('user/getFilterOptions');
+      final response = await ApiClient.main().get('user/getFilterOptions');
       final responseData = json.decode(response.body);
 
       return Map<String, List<String>>.from(

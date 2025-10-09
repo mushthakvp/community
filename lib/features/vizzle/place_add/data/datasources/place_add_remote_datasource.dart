@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../../core/error/exceptions.dart';
@@ -26,7 +27,9 @@ class PlaceAddRemoteDataSourceImpl implements PlaceAddRemoteDataSource {
   @override
   Future<List<CityModel>> getCities() async {
     try {
+      debugPrint('getCities called');
       final response = await ApiClient.main().get('user/getCities');
+      debugPrint('getCities response: ${response.body}');
       final data = jsonDecode(response.body);
 
       if (data['success'] == true) {
