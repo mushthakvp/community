@@ -395,9 +395,19 @@ class AppUtils {
     if (password == null || password.isEmpty) {
       return 'Password is required';
     }
-    if (password.length < 6) {
-      return 'Password must be at least 6 characters';
+    if (password.length < 8) {
+      return 'Password must be at least 8 characters long';
     }
+    
+    // Check password strength - must contain uppercase, lowercase, and number
+    final hasUppercase = password.contains(RegExp(r'[A-Z]'));
+    final hasLowercase = password.contains(RegExp(r'[a-z]'));
+    final hasNumber = password.contains(RegExp(r'[0-9]'));
+    
+    if (!hasUppercase || !hasLowercase || !hasNumber) {
+      return 'Password must contain at least one uppercase letter, one lowercase letter, and one number';
+    }
+    
     return null;
   }
 

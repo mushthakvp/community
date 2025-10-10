@@ -31,7 +31,6 @@ class AuthRepositoryImpl implements AuthRepository {
         password: password,
         firebaseId: firebaseId ?? "empty token",
       );
-
       final response = await ApiClient.main().post(
         ApiConstants.login,
         body: requestData.toJson(),
@@ -129,6 +128,7 @@ class AuthRepositoryImpl implements AuthRepository {
         referralCode: referralCode,
         firebaseId: firebaseId ?? "empty token",
       );
+      debugPrint('Register request data: ${requestData.toJson()}');
       final response = await ApiClient.main().post(
         ApiConstants.register,
         body: requestData.toJson(),

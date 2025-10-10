@@ -508,9 +508,12 @@ class VizzleProviders {
     // ========================================
 
     // Place Add Data Sources
-    ProxyProvider<ApiClient, PlaceAddRemoteDataSource>(
-      update: (_, apiClient, __) =>
-          PlaceAddRemoteDataSourceImpl(apiClient: apiClient),
+    ProxyProvider2<ApiClient, NetworkInfo, PlaceAddRemoteDataSource>(
+      update: (_, apiClient, networkInfo, __) =>
+          PlaceAddRemoteDataSourceImpl(
+            apiClient: apiClient,
+            networkInfo: networkInfo,
+          ),
     ),
 
     // Place Add Repository

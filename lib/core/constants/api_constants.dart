@@ -1,12 +1,12 @@
 class ApiConstants {
   // Base URLs
-  String baseUrlPro = 'http://192.168.1.21:3553/';
-  String baseUrlDev = 'http://192.168.3.6:3553/';
+  String baseUrlPro = 'http://192.168.1.9:3553/';
+  String baseUrlDev = 'http://192.168.3.9:3553/';
   // static String baseUrl = 'https://uae.api.vivera.liveraapp.com/';
-  static String baseUrl = 'http://192.168.1.15:3553/';
+  static String baseUrl = 'http://192.168.1.9:3553/';
 
   // Request Configuration
-  static const int timeoutDuration = 30;
+  static const int timeoutDuration = 60;
 
   // ========== AUTH ENDPOINTS ==========
   static const String login = 'user/login';

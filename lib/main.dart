@@ -16,22 +16,12 @@ import 'features/cook/core/injection/cook_injection.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
   await StorageService.init();
   CloudinaryService().initialize();
-
-  // Register core GetX deps first
   _initializeCoreGetXDependencies();
-
-  // Rebuild VCart DI after your import/type fixes
   await VCartDI.forceReinitialize();
-
-  // Build providers once
   final providers = await AppProviders.getInitializedProviders();
-
-  // Init other modules
   CookInjection.init();
-
   runApp(CommunityApp(providers: providers));
 }
 
