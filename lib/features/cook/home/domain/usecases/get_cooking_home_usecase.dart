@@ -8,7 +8,7 @@ import '../repositories/home_repository.dart';
 
 class GetCookingHomeUseCase
     implements UseCase<CookingHome, GetCookingHomeParams> {
-  final HomeRepository repository;
+  final CookHomeRepository repository;
 
   GetCookingHomeUseCase(this.repository);
 

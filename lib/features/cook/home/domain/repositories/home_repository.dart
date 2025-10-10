@@ -3,7 +3,7 @@ import 'package:dartz/dartz.dart';
 import '../../../../../core/error/failures.dart';
 import '../entities/cooking_home.dart';
 
-abstract class HomeRepository {
+abstract class CookHomeRepository {
   Future<Either<Failure, CookingHome>> getCookingHome({
     String? search,
     int currentPage = 1,

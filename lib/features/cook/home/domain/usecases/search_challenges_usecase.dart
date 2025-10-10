@@ -8,7 +8,7 @@ import 'get_cooking_home_usecase.dart';
 
 class SearchChallengesUseCase
     implements UseCase<CookingHome, GetCookingHomeParams> {
-  final HomeRepository repository;
+  final CookHomeRepository repository;
 
   SearchChallengesUseCase(this.repository);
 

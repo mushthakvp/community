@@ -6,7 +6,7 @@ import '../../domain/entities/cooking_home.dart';
 import '../../domain/repositories/home_repository.dart';
 import '../datasources/home_remote_data_source.dart';
 
-class HomeRepositoryImpl implements HomeRepository {
+class HomeRepositoryImpl implements CookHomeRepository {
   final HomeRemoteDataSource remoteDataSource;
 
   HomeRepositoryImpl({required this.remoteDataSource});

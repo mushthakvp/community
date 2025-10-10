@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../../core/constants/app_constants.dart';
+import '../../domain/usecases/search_challenges_usecase.dart';
 import '../controllers/search_controller.dart';
 import '../widgets/search_results_grid.dart';
 
@@ -20,7 +21,7 @@ class _CookSearchPageState extends State<CookSearchPage> {
   void initState() {
     super.initState();
     controller = Get.put(
-      CookSearchController(searchChallengesUseCase: Get.find()),
+      CookSearchController(searchChallengesUseCase: Get.find<SearchChallengesUseCase>()),
     );
   }
 

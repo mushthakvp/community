@@ -46,6 +46,7 @@ class CookInjection {
   static void _initDataSources() {
     Get.lazyPut<HomeRemoteDataSource>(
       () => HomeRemoteDataSourceImpl(apiClient: Get.find<CookApiClient>()),
+      tag: 'cook_home',
     );
     Get.lazyPut<MyChallengesRemoteDataSource>(
       () => MyChallengesRemoteDataSourceImpl(
@@ -59,9 +60,9 @@ class CookInjection {
   }
 
   static void _initRepositories() {
-    Get.lazyPut<cook_repo.HomeRepository>(
+    Get.lazyPut<cook_repo.CookHomeRepository>(
       () => cook_impl.HomeRepositoryImpl(
-        remoteDataSource: Get.find<HomeRemoteDataSource>(),
+        remoteDataSource: Get.find<HomeRemoteDataSource>(tag: 'cook_home'),
       ),
     );
     Get.lazyPut<MyChallengesRepository>(
@@ -79,10 +80,10 @@ class CookInjection {
 
   static void _initUseCases() {
     Get.lazyPut<GetCookingHomeUseCase>(
-      () => GetCookingHomeUseCase(Get.find<cook_repo.HomeRepository>()),
+      () => GetCookingHomeUseCase(Get.find<cook_repo.CookHomeRepository>()),
     );
     Get.lazyPut<SearchChallengesUseCase>(
-      () => SearchChallengesUseCase(Get.find<cook_repo.HomeRepository>()),
+      () => SearchChallengesUseCase(Get.find<cook_repo.CookHomeRepository>()),
     );
     Get.lazyPut<GetMyChallengesUseCase>(
       () => GetMyChallengesUseCase(Get.find<MyChallengesRepository>()),

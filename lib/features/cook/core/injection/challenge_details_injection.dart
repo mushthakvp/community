@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 
+import '../network/cook_api_client.dart';
 import '../../challenge_details/data/datasources/challenge_details_remote_data_source.dart';
 import '../../challenge_details/data/repositories/challenge_details_repository_impl.dart';
 import '../../challenge_details/domain/repositories/challenge_details_repository.dart';
@@ -10,7 +11,7 @@ class ChallengeDetailsInjection {
   static void init() {
     // Data sources
     Get.lazyPut<ChallengeDetailsRemoteDataSource>(
-      () => ChallengeDetailsRemoteDataSourceImpl(apiClient: Get.find()),
+      () => ChallengeDetailsRemoteDataSourceImpl(apiClient: Get.find<CookApiClient>()),
       tag: 'challenge_details',
     );
     Get.lazyPut<ChallengeDetailsRepository>(

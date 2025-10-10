@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../../core/constants/app_constants.dart';
 import '../../../core/router/helper_router_cook.dart';
+import '../../domain/usecases/get_cooking_home_usecase.dart';
+import '../../domain/usecases/search_challenges_usecase.dart';
 import '../controllers/home_controller.dart';
 import '../widgets/current_challenge_carousel.dart';
 import '../widgets/search_bar_widget.dart';
@@ -26,8 +28,8 @@ class _CookHomePageState extends State<CookHomePage> {
 
     controller = Get.put(
       CookHomeController(
-        getCookingHomeUseCase: Get.find(),
-        searchChallengesUseCase: Get.find(),
+        getCookingHomeUseCase: Get.find<GetCookingHomeUseCase>(),
+        searchChallengesUseCase: Get.find<SearchChallengesUseCase>(),
       ),
     );
 
