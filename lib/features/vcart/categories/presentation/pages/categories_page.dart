@@ -14,7 +14,6 @@ class VCartCategoriesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Ensure controller is initialized before building
     return GetBuilder<VCartCategoriesController>(
       init: Get.find<VCartCategoriesController>(),
       builder: (controller) {
@@ -28,7 +27,6 @@ class VCartCategoriesPage extends StatelessWidget {
                 onRetry: () => controller.refreshData(),
               );
             }
-
             if (controller.sections.isEmpty && !controller.isLoading) {
               return const VCartMaintenanceWidget(
                 title: 'Oops!',
@@ -36,7 +34,6 @@ class VCartCategoriesPage extends StatelessWidget {
                     'We are not able to fetch categories at the moment. Please try again later.',
               );
             }
-
             return Skeletonizer(
               enabled: controller.isLoading,
               child: Row(

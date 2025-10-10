@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:livera/features/vcart/home/data/repositories/home_repository_impl.dart'
+    as vcart_impl;
+import 'package:livera/features/vcart/home/domain/repositories/home_repository.dart'
+    as vcart_repo;
 
 import '../../../../../core/network/api_client.dart';
 import '../../../../../core/network/network_info.dart';
@@ -12,7 +16,6 @@ import '../../cart/domain/usecases/manage_coupon.dart';
 import '../../cart/domain/usecases/move_to_wishlist.dart';
 import '../../cart/domain/usecases/update_cart_item.dart';
 import '../../cart/presentation/controllers/cart_controller.dart';
-import '../../categories/data/datasources/categories_local_datasource.dart';
 import '../../categories/data/datasources/categories_remote_datasource.dart';
 import '../../categories/data/repositories/categories_repository_impl.dart';
 import '../../categories/domain/repositories/categories_repository.dart';
@@ -93,8 +96,6 @@ import '../../wishlist/domain/repositories/wishlist_repository.dart';
 import '../../wishlist/domain/usecases/get_wishlist_data.dart';
 import '../../wishlist/domain/usecases/toggle_wishlist_item.dart';
 import '../../wishlist/presentation/controllers/wishlist_controller.dart';
- import 'package:livera/features/vcart/home/domain/repositories/home_repository.dart' as vcart_repo;
- import 'package:livera/features/vcart/home/data/repositories/home_repository_impl.dart' as vcart_impl;
 
 class VCartDI {
   static bool _isInitialized = false;
@@ -190,11 +191,6 @@ class VCartDI {
       // Categories DataSources
       Get.lazyPut<CategoriesRemoteDataSource>(
         () => CategoriesRemoteDataSourceImpl(apiClient: Get.find<ApiClient>()),
-        fenix: true,
-      );
-
-      Get.lazyPut<CategoriesLocalDataSource>(
-        () => CategoriesLocalDataSourceImpl(),
         fenix: true,
       );
 
@@ -317,7 +313,6 @@ class VCartDI {
       Get.lazyPut<CategoriesRepository>(
         () => CategoriesRepositoryImpl(
           remoteDataSource: Get.find<CategoriesRemoteDataSource>(),
-          localDataSource: Get.find<CategoriesLocalDataSource>(),
           networkInfo: Get.find<NetworkInfo>(),
         ),
         fenix: true,

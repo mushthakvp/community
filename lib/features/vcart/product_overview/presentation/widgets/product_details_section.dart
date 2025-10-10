@@ -98,7 +98,7 @@ class ProductDetailsSection extends StatelessWidget {
       children: [
         Text.rich(
           TextSpan(
-            text: "RS.${controller.finalOfferPrice.toStringAsFixed(2)} ",
+            text: "AED ${controller.finalOfferPrice.toStringAsFixed(2)} ",
             style: const TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
@@ -107,7 +107,7 @@ class ProductDetailsSection extends StatelessWidget {
             children: [
               if (controller.hasDiscount)
                 TextSpan(
-                  text: "RS.${controller.finalPrice.toStringAsFixed(2)}",
+                  text: "AED ${controller.finalPrice.toStringAsFixed(2)}",
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
@@ -171,29 +171,49 @@ class ProductDetailsSection extends StatelessWidget {
                     // Handle variant selection
                     controller.getProductDetail(variant.variantId);
                   },
-                  child: Container(
-                    height: 56,
-                    width: 56,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(
-                        VCartConstants.defaultRadius,
-                      ),
-                      border: Border.all(color: VCartColors.border),
-                      image: variant.images.isNotEmpty
-                          ? DecorationImage(
-                              image: CachedNetworkImageProvider(
-                                variant.images.first,
-                              ),
-                              fit: BoxFit.cover,
-                            )
-                          : null,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(
+                      VCartConstants.defaultRadius,
                     ),
-                    child: variant.images.isEmpty
-                        ? const Icon(
-                            Icons.image_outlined,
-                            color: VCartColors.textSecondary,
-                          )
-                        : null,
+                    child: Container(
+                      height: 56,
+                      width: 56,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: VCartColors.border),
+                      ),
+                      child: variant.images.isNotEmpty
+                          ? CachedNetworkImage(
+                              imageUrl: variant.images.first,
+                              fit: BoxFit.cover,
+                              placeholder: (context, url) => Container(
+                                color: VCartColors.surface,
+                                child: const Center(
+                                  child: Icon(
+                                    Icons.image_outlined,
+                                    color: VCartColors.textSecondary,
+                                  ),
+                                ),
+                              ),
+                              errorWidget: (context, url, error) => Container(
+                                color: VCartColors.surface,
+                                child: const Center(
+                                  child: Icon(
+                                    Icons.image_outlined,
+                                    color: VCartColors.textSecondary,
+                                  ),
+                                ),
+                              ),
+                            )
+                          : Container(
+                              color: VCartColors.surface,
+                              child: const Center(
+                                child: Icon(
+                                  Icons.image_outlined,
+                                  color: VCartColors.textSecondary,
+                                ),
+                              ),
+                            ),
+                    ),
                   ),
                 ),
               );

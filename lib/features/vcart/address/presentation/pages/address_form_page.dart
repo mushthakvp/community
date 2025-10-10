@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
+import 'package:livera/core/utils/extensions.dart';
 
 import '../../../core/constants/vcart_colors.dart';
 import '../../../core/utils/vcart_extensions.dart';
@@ -120,12 +122,110 @@ class _VCartAddressFormPageState extends State<VCartAddressFormPage> {
                     validator: _requiredValidator,
                   ),
                   const SizedBox(height: 16),
-                  _buildTextField(
-                    controller: addressController.phoneController,
-                    label: 'Phone Number',
-                    hint: 'Enter your phone number',
-                    keyboardType: TextInputType.phone,
-                    validator: _phoneValidator,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Phone Number',
+                        style: TextStyle(
+                          color: VCartColors.textPrimary,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Container(
+                            height: 53,
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            decoration: BoxDecoration(
+                              color: VCartColors.surface.withOpacity(0.5),
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(12),
+                                bottomLeft: Radius.circular(12),
+                              ),
+                              border: Border.all(color: VCartColors.border),
+                            ),
+                            child: const Center(
+                              child: Text(
+                                '+971',
+                                style: TextStyle(
+                                  color: VCartColors.textPrimary,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: TextFormField(
+                              onTapOutside: (event) =>
+                                  FocusManager.instance.primaryFocus?.unfocus(),
+                              controller: addressController.phoneController,
+                              keyboardType: TextInputType.phone,
+                              maxLength: 9,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                              ],
+                              validator: _phoneValidator,
+                              style: const TextStyle(
+                                color: VCartColors.textPrimary,
+                              ),
+                              decoration: InputDecoration(
+                                hintText: 'Enter your phone number',
+                                hintStyle: const TextStyle(
+                                  color: VCartColors.textSecondary,
+                                ),
+                                filled: true,
+                                fillColor: VCartColors.surface.withOpacity(0.5),
+                                counterText: '',
+                                border: OutlineInputBorder(
+                                  borderRadius: const BorderRadius.only(
+                                    topRight: Radius.circular(12),
+                                    bottomRight: Radius.circular(12),
+                                  ),
+                                  borderSide: const BorderSide(
+                                    color: VCartColors.border,
+                                  ),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: const BorderRadius.only(
+                                    topRight: Radius.circular(12),
+                                    bottomRight: Radius.circular(12),
+                                  ),
+                                  borderSide: const BorderSide(
+                                    color: VCartColors.border,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: const BorderRadius.only(
+                                    topRight: Radius.circular(12),
+                                    bottomRight: Radius.circular(12),
+                                  ),
+                                  borderSide: const BorderSide(
+                                    color: VCartColors.primary,
+                                  ),
+                                ),
+                                errorBorder: OutlineInputBorder(
+                                  borderRadius: const BorderRadius.only(
+                                    topRight: Radius.circular(12),
+                                    bottomRight: Radius.circular(12),
+                                  ),
+                                  borderSide: const BorderSide(
+                                    color: VCartColors.error,
+                                  ),
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 16,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 16),
                   _buildTextField(
@@ -165,7 +265,7 @@ class _VCartAddressFormPageState extends State<VCartAddressFormPage> {
                     keyboardType: TextInputType.number,
                     validator: _pinCodeValidator,
                   ),
-                  const SizedBox(height: 100), // Space for bottom button
+                  const SizedBox(height: 100),
                 ],
               ),
             ),
@@ -252,12 +352,17 @@ class _VCartAddressFormPageState extends State<VCartAddressFormPage> {
   }
 
   void _handleSubmit(VCartAddressController addressController) {
+    if (!isEditing) {
+      addressController.titleController.text = 'home';
+    }
     if (_formKey.currentState?.validate() ?? false) {
       if (isEditing) {
         addressController.updateExistingAddress(context);
       } else {
         addressController.addNewAddress(context);
       }
+    } else {
+      context.showSnackBar('Please fix the errors in the form');
     }
   }
 
@@ -272,8 +377,12 @@ class _VCartAddressFormPageState extends State<VCartAddressFormPage> {
     if (value == null || value.trim().isEmpty) {
       return 'Phone number is required';
     }
-    if (value.length < 10) {
-      return 'Enter a valid phone number';
+    if (value.length != 9) {
+      return 'Enter a valid 9-digit phone number';
+    }
+    // Check if it starts with 5 (UAE mobile numbers typically start with 5)
+    if (!value.startsWith('5')) {
+      return 'UAE mobile numbers should start with 5';
     }
     return null;
   }

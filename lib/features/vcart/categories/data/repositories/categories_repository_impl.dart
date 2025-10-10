@@ -7,17 +7,14 @@ import '../../domain/entities/category.dart';
 import '../../domain/entities/section.dart';
 import '../../domain/entities/subcategory.dart';
 import '../../domain/repositories/categories_repository.dart';
-import '../datasources/categories_local_datasource.dart';
 import '../datasources/categories_remote_datasource.dart';
 
 class CategoriesRepositoryImpl implements CategoriesRepository {
   final CategoriesRemoteDataSource remoteDataSource;
-  final CategoriesLocalDataSource localDataSource;
   final NetworkInfo networkInfo;
 
   CategoriesRepositoryImpl({
     required this.remoteDataSource,
-    required this.localDataSource,
     required this.networkInfo,
   });
 
@@ -27,33 +24,14 @@ class CategoriesRepositoryImpl implements CategoriesRepository {
     int limit = 1000,
   }) async {
     try {
-      if (await networkInfo.isConnected) {
-        try {
-          final remoteData = await remoteDataSource.getSections(
-            page: page,
-            limit: limit,
-          );
-          await localDataSource.cacheSections(remoteData);
-          return Right(remoteData);
-        } catch (e) {
-          final cachedData = await localDataSource.getCachedSections();
-          if (cachedData != null) {
-            return Right(cachedData);
-          } else {
-            return Left(_handleException(e));
-          }
-        }
-      } else {
-        final cachedData = await localDataSource.getCachedSections();
-        if (cachedData != null) {
-          return Right(cachedData);
-        } else {
-          return const Left(
-            NetworkFailure(
-              message: 'No internet connection and no cached data available',
-            ),
-          );
-        }
+      try {
+        final remoteData = await remoteDataSource.getSections(
+          page: page,
+          limit: limit,
+        );
+        return Right(remoteData);
+      } catch (e) {
+        return Left(_handleException(e));
       }
     } catch (e) {
       return Left(_handleException(e));
@@ -67,36 +45,15 @@ class CategoriesRepositoryImpl implements CategoriesRepository {
     int limit = 1000,
   }) async {
     try {
-      if (await networkInfo.isConnected) {
-        try {
-          final remoteData = await remoteDataSource.getCategoriesBySection(
-            sectionId: sectionId,
-            page: page,
-            limit: limit,
-          );
-          await localDataSource.cacheCategories(sectionId, remoteData);
-          return Right(remoteData);
-        } catch (e) {
-          final cachedData = await localDataSource.getCachedCategories(
-            sectionId,
-          );
-          if (cachedData != null) {
-            return Right(cachedData);
-          } else {
-            return Left(_handleException(e));
-          }
-        }
-      } else {
-        final cachedData = await localDataSource.getCachedCategories(sectionId);
-        if (cachedData != null) {
-          return Right(cachedData);
-        } else {
-          return const Left(
-            NetworkFailure(
-              message: 'No internet connection and no cached data available',
-            ),
-          );
-        }
+      try {
+        final remoteData = await remoteDataSource.getCategoriesBySection(
+          sectionId: sectionId,
+          page: page,
+          limit: limit,
+        );
+        return Right(remoteData);
+      } catch (e) {
+        return Left(_handleException(e));
       }
     } catch (e) {
       return Left(_handleException(e));

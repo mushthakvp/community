@@ -34,9 +34,15 @@ class FloatingBottomSheet extends StatelessWidget {
         child: Obx(
           () => Row(
             children: [
-              _buildPriceSection(),
-              const Spacer(),
-              _buildActionButton(context),
+              Expanded(
+                flex: 3,
+                child: _buildPriceSection(),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 2,
+                child: _buildActionButton(context),
+              ),
             ],
           ),
         ),
@@ -48,6 +54,7 @@ class FloatingBottomSheet extends StatelessWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
         const Text(
           "Price",
@@ -57,26 +64,31 @@ class FloatingBottomSheet extends StatelessWidget {
             color: VCartColors.textSecondary,
           ),
         ),
-        Text.rich(
-          TextSpan(
-            text: "RS.${controller.finalOfferPrice.toStringAsFixed(2)} ",
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: VCartColors.textPrimary,
-            ),
-            children: [
-              if (controller.hasDiscount)
-                TextSpan(
-                  text: "RS.${controller.finalPrice.toStringAsFixed(2)}",
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    color: VCartColors.textSecondary,
-                    decoration: TextDecoration.lineThrough,
+        const SizedBox(height: 4),
+        Flexible(
+          child: Text.rich(
+            TextSpan(
+              text: "AED ${controller.finalOfferPrice.toStringAsFixed(2)} ",
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: VCartColors.textPrimary,
+              ),
+              children: [
+                if (controller.hasDiscount)
+                  TextSpan(
+                    text: "AED ${controller.finalPrice.toStringAsFixed(2)}",
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: VCartColors.textSecondary,
+                      decoration: TextDecoration.lineThrough,
+                    ),
                   ),
-                ),
-            ],
+              ],
+            ),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
           ),
         ),
       ],
@@ -97,7 +109,6 @@ class FloatingBottomSheet extends StatelessWidget {
         }
       },
       isLoading: controller.isAddingToCart,
-      width: context.screenWidth * 0.4,
       height: context.screenHeight * 0.06,
     );
   }

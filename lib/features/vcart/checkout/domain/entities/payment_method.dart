@@ -22,7 +22,7 @@ class PaymentMethod extends Equatable {
 
   String get displayBalance {
     if (isWallet && walletBalance != null) {
-      return 'Balance: ₹${walletBalance!.toStringAsFixed(2)}';
+      return 'Balance: AED ${walletBalance!.toStringAsFixed(2)}';
     }
     return '';
   }

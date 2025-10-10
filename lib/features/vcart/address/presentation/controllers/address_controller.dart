@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
@@ -277,6 +279,9 @@ class VCartAddressController extends GetxController {
   }
 
   bool _validateForm() {
+    log(
+      "All Field Data ${titleController.text.trim().isNotEmpty} ${nameController.text.trim().isNotEmpty} ${phoneController.text.trim().isNotEmpty} ${addressController.text.trim().isNotEmpty} ${cityController.text.trim().isNotEmpty} ${stateController.text.trim().isNotEmpty} ${pinCodeController.text.trim().isNotEmpty}",
+    );
     return titleController.text.trim().isNotEmpty &&
         nameController.text.trim().isNotEmpty &&
         phoneController.text.trim().isNotEmpty &&

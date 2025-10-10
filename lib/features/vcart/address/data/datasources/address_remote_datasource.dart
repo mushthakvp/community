@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import '../../../../../core/error/exceptions.dart';
 import '../../../../../core/network/api_client.dart';
@@ -46,6 +47,7 @@ class AddressRemoteDataSourceImpl implements AddressRemoteDataSource {
   @override
   Future<AddressModel> addAddress(Map<String, dynamic> addressData) async {
     try {
+      log('Adding address with data: $addressData');
       final response = await apiClient.post(
         VCartEndpoints.addAddress,
         body: addressData,

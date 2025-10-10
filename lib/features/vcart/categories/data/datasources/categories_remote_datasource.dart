@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:flutter/rendering.dart';
+
 import '../../../../../core/error/exceptions.dart';
 import '../../../../../core/network/api_client.dart';
 import '../../../core/constants/vcart_endpoints.dart';
@@ -34,9 +36,9 @@ class CategoriesRemoteDataSourceImpl implements CategoriesRemoteDataSource {
     int limit = 1000,
   }) async {
     try {
+      debugPrint('Fetching sections from remote data source');
       final url = '${VCartEndpoints.sections}?limit=$limit&page=$page';
       final response = await apiClient.get(url);
-
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         final sectionsResponse = SectionsResponseModel.fromJson(data);

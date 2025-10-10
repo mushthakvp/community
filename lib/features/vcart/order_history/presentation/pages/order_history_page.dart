@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/vcart_colors.dart';
 import '../../../core/utils/vcart_extensions.dart';
 import '../../../core/widgets/vcart_loading.dart';
-import '../../../shared/presentation/widgets/error_widget.dart';
 import '../../../shared/presentation/widgets/maintenance_widget.dart';
 import '../controllers/order_history_controller.dart';
 import '../widgets/order_history_filter_bottom_sheet.dart';
@@ -147,9 +146,13 @@ class VCartOrderHistoryPage extends StatelessWidget {
     }
 
     if (controller.hasError && controller.orderGroups.isEmpty) {
-      return VCartErrorWidget(
-        message: controller.errorMessage,
-        onRetry: () => controller.loadOrderHistory(refresh: true),
+      return VCartMaintenanceWidget(
+        imageUrl:
+            'https://via.placeholder.com/200x200/2A2A2A/FFFFFF?text=No+Orders',
+        title: 'Your Order History is Empty',
+        subtitle:
+            'Your order history will show here as soon as you make a purchase.',
+        // onPressed: () => context.go('/vcart/home'),
       );
     }
 
@@ -160,7 +163,7 @@ class VCartOrderHistoryPage extends StatelessWidget {
         title: 'Your Order History is Empty',
         subtitle:
             'Your order history will show here as soon as you make a purchase.',
-        onPressed: () => context.go('/vcart/home'),
+        // onPressed: () => context.go('/vcart/home'),
       );
     }
 

@@ -51,6 +51,6 @@ extension VCartStringExtensions on String? {
 }
 
 extension VCartNumberExtensions on num {
-  String get formatPrice => 'RS.${toStringAsFixed(2)}';
-  String get formatPriceWithoutDecimal => 'RS.${toInt()}';
+  String get formatPrice => 'AED ${toStringAsFixed(2)}';
+  String get formatPriceWithoutDecimal => 'AED ${toInt()}';
 }

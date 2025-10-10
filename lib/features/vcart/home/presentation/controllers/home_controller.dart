@@ -114,7 +114,7 @@ class VCartHomeController extends GetxController {
           specifications: product.specifications,
           rating: product.rating,
           reviewCount: product.reviewCount,
-          isWishlisted: isWishlisted, // Update the wishlist status
+          isWishlisted: isWishlisted,
           inStock: product.inStock,
           stockCount: product.stockCount,
         );

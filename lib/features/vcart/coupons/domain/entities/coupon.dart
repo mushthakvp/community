@@ -50,7 +50,7 @@ class Coupon extends Equatable {
     if (isPercentageDiscount) {
       return '${discount.toInt()}%';
     } else {
-      return 'RS.${discount.toStringAsFixed(0)}';
+      return 'AED ${discount.toStringAsFixed(0)}';
     }
   }
 
