@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -6,7 +8,6 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/route_constants.dart';
 import '../../../../core/widgets/common/text_widget.dart';
-import '../../../cook/core/router/cook_router.dart';
 import '../../../vcart/core/router/v_cart_router_g.dart';
 import '../../../vcart/core/router/vcart_router.dart';
 
@@ -77,7 +78,7 @@ class EssentialsGrid extends StatelessWidget {
         image:
             "https://res.cloudinary.com/fouvtycloud/image/upload/v1753158174/Vivera-New/vcook_gam4b9.gif",
         name: "V - Cook",
-        route: CookRouter.cookHome,
+        route: RouteConstants.vcook,
         description: "Cook your favorite dishes",
         isExternal: false,
         isNavigationRoute: true,
@@ -220,77 +221,66 @@ class EssentialsGrid extends StatelessWidget {
   }
 
   void _handleItemTap(BuildContext context, EssentialItem item) {
-    if (item.isExternal) {
-      _launchExternalApp(context, item);
-    } else if (item.isNavigationRoute) {
-      if (item.route == VCartRouterClass.home) {
-        VCartRouterClassG.toVCartHome();
-      } else {
-        context.push(item.route);
-      }
+    if (item.route == VCartRouterClass.home) {
+      VCartRouterClassG.toVCartHome();
+    } else if (item.route == RouteConstants.vcook) {
+      openCookingApp(context);
+    } else {
+      context.push(item.route);
     }
   }
 
-  Future<void> _launchExternalApp(
-    BuildContext context,
-    EssentialItem item,
-  ) async {
+  static const String cookingAppBundleId = 'com.vivera.cooking';
+  static const String appleAppId = '6744088577';
+
+  Future<void> openCookingApp(BuildContext context) async {
     try {
-      if (item.route.isNotEmpty) {
-        final Uri uri = Uri.parse(item.route);
-        final bool launched = await launchUrl(
-          uri,
-          mode: LaunchMode.externalApplication,
-        );
-        if (!launched) {
-          _openAppStore(context, item);
+      if (Platform.isIOS) {
+        final Uri appUri = Uri.parse('$cookingAppBundleId://');
+        if (await canLaunchUrl(appUri)) {
+          await launchUrl(appUri, mode: LaunchMode.externalApplication);
+        } else {
+          await _openAppStore();
         }
-      } else {
-        _openAppStore(context, item);
+      } else if (Platform.isAndroid) {
+        final Uri appUri = Uri.parse('$cookingAppBundleId://');
+        if (await canLaunchUrl(appUri)) {
+          await launchUrl(appUri, mode: LaunchMode.externalApplication);
+        } else {
+          final Uri playStoreUri = Uri.parse(
+            'market://details?id=$cookingAppBundleId',
+          );
+          if (await canLaunchUrl(playStoreUri)) {
+            await launchUrl(playStoreUri, mode: LaunchMode.externalApplication);
+          } else {
+            final Uri webPlayStore = Uri.parse(
+              'https://play.google.com/store/apps/details?id=$cookingAppBundleId',
+            );
+            await launchUrl(webPlayStore, mode: LaunchMode.externalApplication);
+          }
+        }
       }
     } catch (e) {
-      _openAppStore(context, item);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Could not open the Cooking App: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
-  Future<void> _openAppStore(BuildContext context, EssentialItem item) async {
-    try {
-      Uri storeUri;
-
-      // For iOS
-      if (Theme.of(context).platform == TargetPlatform.iOS) {
-        storeUri = Uri.parse(
-          'https://apps.apple.com/app/id${item.appStoreId ?? ''}',
-        );
-      } else {
-        // For Android
-        storeUri = Uri.parse(
-          'https://play.google.com/store/apps/details?id=${item.appPackageName ?? ''}',
-        );
-      }
-
-      final bool launched = await launchUrl(
-        storeUri,
-        mode: LaunchMode.externalApplication,
-      );
-
-      if (!launched) {
-        _showErrorMessage(context, "Could not open app store");
-      }
-    } catch (e) {
-      _showErrorMessage(context, "Error opening app store");
-    }
-  }
-
-  void _showErrorMessage(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
-      ),
+  Future<void> _openAppStore() async {
+    final Uri appStoreUri = Uri.parse(
+      'https://apps.apple.com/app/id$appleAppId',
     );
+    if (await canLaunchUrl(appStoreUri)) {
+      await launchUrl(appStoreUri, mode: LaunchMode.externalApplication);
+    } else {
+      throw 'Could not open App Store';
+    }
   }
 }
 

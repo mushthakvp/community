@@ -5,6 +5,10 @@ class RouteConstants {
   static const String register = '/register';
   static const String otpVerification = '/otp-verification';
 
+  // ==================== OPEN ANOTHER APPS ====================
+
+  static const String vcook = 'vcook://home';
+
   // ==================== MAIN APP ROUTES ====================
   static const String home = '/home';
   static const String promos = '/promos';

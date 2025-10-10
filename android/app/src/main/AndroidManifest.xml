@@ -59,6 +59,10 @@
     </application>
     
     <queries>
+        <!-- For opening the cooking app -->
+        <package android:name="com.vivera.cooking" />
+        
+        <!-- Existing query -->
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>

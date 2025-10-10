@@ -68,5 +68,12 @@
 	<!-- Microphone Permissions -->
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Some message to describe why you need this permission</string>
+
+	<!-- Open Cooking App -->
+
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>com.vivera.cooking</string>
+	</array>
 </dict>
 </plist>

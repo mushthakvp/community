@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../features/cook/core/router/cook_router.dart';
 import '../../features/vcart/core/router/vcart_router.dart';
 import '../constants/route_constants.dart';
 import '../widgets/navigation/bottom_navigation.dart';
@@ -50,9 +49,6 @@ class CoreRouter {
       ...ProfileRouter.routes,
       ...NotificationRouter.routes,
       ...VCartRouterClass.routes,
-
-      // ==================== COOK ROUTES ====================
-      ...CookRouter.routes,
     ],
   );
 
